@@ -1,5 +1,5 @@
 use gpui::*;
-use gpui_component::{button::Button, Root, Sizable};
+use gpui_component::{button::{Button, ButtonVariants}, tag::Tag, Root, Sizable};
 use gpui_flow::*;
 
 pub struct WorkflowApp {
@@ -14,44 +14,44 @@ impl WorkflowApp {
             FlowNode::new("schedule", 50.0, 150.0)
                 .label("On Schedule")
                 .node_type("trigger")
-                .size(160.0, 80.0)
+                .size(200.0, 110.0)
                 .handles(vec![HandleDef::source(HandlePosition::Right)]),
-            FlowNode::new("fetch", 300.0, 150.0)
+            FlowNode::new("fetch", 320.0, 150.0)
                 .label("Fetch Data")
                 .node_type("action")
-                .size(160.0, 80.0)
+                .size(200.0, 110.0)
                 .handles(vec![
                     HandleDef::target(HandlePosition::Left),
                     HandleDef::source(HandlePosition::Right),
                 ]),
-            FlowNode::new("validate", 550.0, 150.0)
+            FlowNode::new("validate", 590.0, 150.0)
                 .label("Validate?")
                 .node_type("condition")
-                .size(160.0, 80.0)
+                .size(200.0, 110.0)
                 .handles(vec![
                     HandleDef::target(HandlePosition::Left),
                     HandleDef::source(HandlePosition::Right),
                 ]),
-            FlowNode::new("email", 800.0, 80.0)
+            FlowNode::new("email", 860.0, 70.0)
                 .label("Send Email")
                 .node_type("action")
-                .size(160.0, 80.0)
+                .size(200.0, 110.0)
                 .handles(vec![HandleDef::target(HandlePosition::Left)]),
-            FlowNode::new("success", 800.0, 240.0)
+            FlowNode::new("success", 860.0, 260.0)
                 .label("Success")
                 .node_type("output")
-                .size(140.0, 60.0)
+                .size(180.0, 90.0)
                 .handles(vec![HandleDef::target(HandlePosition::Left)]),
         ];
 
         let edges = vec![
             FlowEdge::new("e1", "schedule", "fetch")
                 .edge_type(EdgeType::Bezier { curvature: 0.25 })
-                .color(0x3b82f6)
+                .color(0x6366f1)
                 .stroke_width(2.0),
             FlowEdge::new("e2", "fetch", "validate")
                 .edge_type(EdgeType::Bezier { curvature: 0.25 })
-                .color(0x3b82f6)
+                .color(0x6366f1)
                 .stroke_width(2.0),
             FlowEdge::new("e3", "validate", "email")
                 .edge_type(EdgeType::Bezier { curvature: 0.25 })
@@ -69,31 +69,69 @@ impl WorkflowApp {
 
         let flow_graph = cx.new(|cx| {
             FlowGraph::new(state.clone(), cx)
-                .bg_color(0x09090b)
-                .grid_color(0x18181b)
+                .bg_color(0x0a0a0f)
+                .grid_color(0x1a1a23)
                 .bg_pattern(BackgroundPattern::Cross)
+                .node_bg_color(0x111118)
+                .node_border_color(0x27273a)
                 .node_renderer("trigger", |node, _window, _cx| {
                     div()
                         .flex()
                         .flex_col()
-                        .gap_1()
-                        .p_2()
-                        .rounded_md()
+                        .rounded_lg()
+                        .shadow_md()
+                        .overflow_hidden()
                         .border_1()
-                        .border_color(gpui::rgb(0x7c3aed))
-                        .bg(gpui::rgb(0x1e1b4b))
+                        .border_color(gpui::rgb(0x27273a))
                         .child(
                             div()
-                                .text_sm()
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(gpui::rgb(0xc4b5fd))
-                                .child(node.label.to_string()),
+                                .h(px(3.0))
+                                .w_full()
+                                .bg(gpui::rgb(0x8b5cf6)),
                         )
                         .child(
-                            Button::new("run_trigger")
-                                .small()
-                                .label("Run")
-                                .on_click(|_, _, _| println!("Trigger fired!")),
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap_2()
+                                .p_3()
+                                .bg(gpui::rgb(0x111118))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .justify_between()
+                                        .child(
+                                            div()
+                                                .text_base()
+                                                .font_weight(FontWeight::SEMIBOLD)
+                                                .text_color(gpui::rgb(0xeae6ff))
+                                                .child(node.label.to_string()),
+                                        )
+                                        .child(
+                                            Tag::new()
+                                                .small()
+                                                .outline()
+                                                .child("Trigger"),
+                                        ),
+                                )
+                                .child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(gpui::rgb(0x6b6680))
+                                        .child("Fires at 9:00 AM daily"),
+                                )
+                                .child(
+                                    div()
+                                        .mt_1()
+                                        .child(
+                                            Button::new("run_trigger")
+                                                .xsmall()
+                                                .ghost()
+                                                .label("Run Now")
+                                                .on_click(|_, _, _| println!("Trigger fired!")),
+                                        ),
+                                ),
                         )
                         .into_any_element()
                 })
@@ -101,24 +139,60 @@ impl WorkflowApp {
                     div()
                         .flex()
                         .flex_col()
-                        .gap_1()
-                        .p_2()
-                        .rounded_md()
+                        .rounded_lg()
+                        .shadow_md()
+                        .overflow_hidden()
                         .border_1()
-                        .border_color(gpui::rgb(0x3b82f6))
-                        .bg(gpui::rgb(0x172554))
+                        .border_color(gpui::rgb(0x27273a))
                         .child(
                             div()
-                                .text_sm()
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(gpui::rgb(0x93c5fd))
-                                .child(node.label.to_string()),
+                                .h(px(3.0))
+                                .w_full()
+                                .bg(gpui::rgb(0x3b82f6)),
                         )
                         .child(
-                            Button::new("run_action")
-                                .small()
-                                .label("Execute")
-                                .on_click(|_, _, _| println!("Action running!")),
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap_2()
+                                .p_3()
+                                .bg(gpui::rgb(0x111118))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .justify_between()
+                                        .child(
+                                            div()
+                                                .text_base()
+                                                .font_weight(FontWeight::SEMIBOLD)
+                                                .text_color(gpui::rgb(0xdbeafe))
+                                                .child(node.label.to_string()),
+                                        )
+                                        .child(
+                                            Tag::new()
+                                                .small()
+                                                .outline()
+                                                .child("Action"),
+                                        ),
+                                )
+                                .child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(gpui::rgb(0x6b7a90))
+                                        .child("Execute API request"),
+                                )
+                                .child(
+                                    div()
+                                        .mt_1()
+                                        .child(
+                                            Button::new("run_action")
+                                                .xsmall()
+                                                .ghost()
+                                                .label("Execute")
+                                                .on_click(|_, _, _| println!("Action running!")),
+                                        ),
+                                ),
                         )
                         .into_any_element()
                 })
@@ -126,24 +200,60 @@ impl WorkflowApp {
                     div()
                         .flex()
                         .flex_col()
-                        .gap_1()
-                        .p_2()
-                        .rounded_md()
+                        .rounded_lg()
+                        .shadow_md()
+                        .overflow_hidden()
                         .border_1()
-                        .border_color(gpui::rgb(0xeab308))
-                        .bg(gpui::rgb(0x422006))
+                        .border_color(gpui::rgb(0x27273a))
                         .child(
                             div()
-                                .text_sm()
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(gpui::rgb(0xfde047))
-                                .child(node.label.to_string()),
+                                .h(px(3.0))
+                                .w_full()
+                                .bg(gpui::rgb(0xf59e0b)),
                         )
                         .child(
-                            Button::new("check_condition")
-                                .small()
-                                .label("Check")
-                                .on_click(|_, _, _| println!("Condition checked!")),
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap_2()
+                                .p_3()
+                                .bg(gpui::rgb(0x111118))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .justify_between()
+                                        .child(
+                                            div()
+                                                .text_base()
+                                                .font_weight(FontWeight::SEMIBOLD)
+                                                .text_color(gpui::rgb(0xfef3c7))
+                                                .child(node.label.to_string()),
+                                        )
+                                        .child(
+                                            Tag::new()
+                                                .small()
+                                                .outline()
+                                                .child("Condition"),
+                                        ),
+                                )
+                                .child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(gpui::rgb(0x8b7d6b))
+                                        .child("Check response validity"),
+                                )
+                                .child(
+                                    div()
+                                        .mt_1()
+                                        .child(
+                                            Button::new("check_condition")
+                                                .xsmall()
+                                                .ghost()
+                                                .label("Evaluate")
+                                                .on_click(|_, _, _| println!("Condition checked!")),
+                                        ),
+                                ),
                         )
                         .into_any_element()
                 })
@@ -151,24 +261,60 @@ impl WorkflowApp {
                     div()
                         .flex()
                         .flex_col()
-                        .gap_1()
-                        .p_2()
-                        .rounded_md()
+                        .rounded_lg()
+                        .shadow_md()
+                        .overflow_hidden()
                         .border_1()
-                        .border_color(gpui::rgb(0x22c55e))
-                        .bg(gpui::rgb(0x052e16))
+                        .border_color(gpui::rgb(0x27273a))
                         .child(
                             div()
-                                .text_sm()
-                                .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(gpui::rgb(0x86efac))
-                                .child(node.label.to_string()),
+                                .h(px(3.0))
+                                .w_full()
+                                .bg(gpui::rgb(0x22c55e)),
                         )
                         .child(
-                            Button::new("publish_output")
-                                .small()
-                                .label("Publish")
-                                .on_click(|_, _, _| println!("Output published!")),
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap_2()
+                                .p_3()
+                                .bg(gpui::rgb(0x111118))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .justify_between()
+                                        .child(
+                                            div()
+                                                .text_base()
+                                                .font_weight(FontWeight::SEMIBOLD)
+                                                .text_color(gpui::rgb(0xdcfce7))
+                                                .child(node.label.to_string()),
+                                        )
+                                        .child(
+                                            Tag::new()
+                                                .small()
+                                                .outline()
+                                                .child("Output"),
+                                        ),
+                                )
+                                .child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(gpui::rgb(0x6b8f6b))
+                                        .child("Final result endpoint"),
+                                )
+                                .child(
+                                    div()
+                                        .mt_1()
+                                        .child(
+                                            Button::new("publish_output")
+                                                .xsmall()
+                                                .ghost()
+                                                .label("Publish")
+                                                .on_click(|_, _, _| println!("Output published!")),
+                                        ),
+                                ),
                         )
                         .into_any_element()
                 })
