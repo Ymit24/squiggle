@@ -2186,7 +2186,16 @@ version = "0.1.0"
 dependencies = [
  "gpui",
  "gpui-component",
+ "gpui-flow",
  "gpui_platform",
+]
+
+[[package]]
+name = "gpui-flow"
+version = "0.1.0"
+source = "git+https://github.com/pacifio/gpui-flow#cfa578758ee251657f15f281d893a08b85aedbff"
+dependencies = [
+ "gpui",
 ]
 
 [[package]]
