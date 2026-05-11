@@ -5,6 +5,8 @@ use crate::app::WorkflowApp;
 
 mod app;
 mod feature;
+mod shape_canvas;
+mod toolbar;
 
 fn main() {
     gpui_platform::application()
