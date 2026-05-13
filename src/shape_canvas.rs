@@ -120,10 +120,14 @@ impl RenderOnce for ShapeCanvas {
 }
 
 fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mut Window) {
-    const CELLS_X: i32 = 20i32;
-    let cell_width: f32 = f32::from((bounds.size.width) / (CELLS_X as f32));
+    const BASE_CELL_SIZE: f32 = 128.;
+    let virtual_width = bounds.size.width * state.camera_zoom;
+
+    let cell_width = BASE_CELL_SIZE / state.camera_zoom;
+    let cell_count_x: i32 = (virtual_width.as_f32() / cell_width).ceil() as i32;
     let camera_position = point(px(state.camera_x), px(state.camera_y));
-    for i in 0..CELLS_X + 1 {
+
+    for i in 0..cell_count_x + 1 {
         let x = px((i as f32) * cell_width);
         window.paint_quad(fill(
             Bounds::new(
