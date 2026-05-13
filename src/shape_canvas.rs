@@ -119,8 +119,8 @@ impl RenderOnce for ShapeCanvas {
                 state_for_pinch.update(cx, |state, _| {
                     let camera_zoom_prev = state.camera_zoom;
 
-                    state.camera_zoom -= delta / 0.4;
-                    state.camera_zoom = state.camera_zoom.clamp(1., 10.);
+                    state.camera_zoom *= 1. - 0.6 * (delta / 0.4);
+                    state.camera_zoom = state.camera_zoom.clamp(0.05, 10.);
 
                     let dcx = event.position.x * (camera_zoom_prev - state.camera_zoom);
                     let dcy = event.position.y * (camera_zoom_prev - state.camera_zoom);
