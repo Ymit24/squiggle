@@ -39,6 +39,7 @@ impl RenderOnce for ShapeCanvas {
         let features = self.features;
         let state = self.state.clone();
         let state_for_wheel = self.state.clone();
+        let state_for_pinch = self.state.clone();
         div()
             .child(
                 canvas(
@@ -95,24 +96,37 @@ impl RenderOnce for ShapeCanvas {
             .on_scroll_wheel(move |event, _, cx| {
                 let delta = event.delta.pixel_delta(px(1.));
 
-                let zoom = state_for_wheel.update(cx, |state, _| {
+                state_for_wheel.update(cx, |state, _| {
                     let camera_zoom_prev = state.camera_zoom;
 
                     state.camera_zoom += delta.y.as_f32() / 40.;
                     state.camera_zoom = state.camera_zoom.clamp(1., 10.);
-
-                    let camera_position = point(px(state.camera_x), px(state.camera_y));
-                    let mouse_world_position = event.position * state.camera_zoom + camera_position;
 
                     let dcx = event.position.x * (camera_zoom_prev - state.camera_zoom);
                     let dcy = event.position.y * (camera_zoom_prev - state.camera_zoom);
 
                     state.camera_x += dcx.as_f32();
                     state.camera_y += dcy.as_f32();
-
-                    state.camera_zoom
                 });
                 cx.notify(state_for_wheel.entity_id());
+            })
+            .on_pinch(move |event, _, cx| {
+                println!("On pinch! : {:?}", event.delta);
+                let delta = event.delta;
+
+                state_for_pinch.update(cx, |state, _| {
+                    let camera_zoom_prev = state.camera_zoom;
+
+                    state.camera_zoom -= delta / 0.4;
+                    state.camera_zoom = state.camera_zoom.clamp(1., 10.);
+
+                    let dcx = event.position.x * (camera_zoom_prev - state.camera_zoom);
+                    let dcy = event.position.y * (camera_zoom_prev - state.camera_zoom);
+
+                    state.camera_x += dcx.as_f32();
+                    state.camera_y += dcy.as_f32();
+                });
+                cx.notify(state_for_pinch.entity_id());
             })
             .on_mouse_move(move |event, _window, cx| {
                 if !event.dragging() {
