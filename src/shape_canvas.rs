@@ -1,12 +1,10 @@
 use gpui::*;
 
-use crate::feature::Feature;
+use crate::{camera::Camera, feature::Feature};
 
 #[derive(Clone)]
 pub struct ShapeCanvasState {
-    pub camera_x: f32,
-    pub camera_y: f32,
-    pub camera_zoom: f32,
+    pub camera: Camera,
 
     last_mouse_pos: Option<Point<Pixels>>,
 }
@@ -14,9 +12,7 @@ pub struct ShapeCanvasState {
 impl ShapeCanvasState {
     pub fn new() -> Self {
         Self {
-            camera_x: 0.,
-            camera_y: 0.,
-            camera_zoom: 1.,
+            camera: Camera::default(),
             last_mouse_pos: None,
         }
     }
@@ -50,40 +46,31 @@ impl RenderOnce for ShapeCanvas {
                         for feature in &features {
                             match feature {
                                 Feature::Rectangle { x, y, w, h } => {
+                                    let world_bounds =
+                                        Bounds::new(point(px(*x), px(*y)), size(px(*w), px(*h)));
                                     window.paint_quad(fill(
-                                        Bounds::new(
-                                            point(
-                                                bounds.origin.x
-                                                    + (px(*x - state.camera_x) / state.camera_zoom),
-                                                bounds.origin.y
-                                                    + (px(*y - state.camera_y) / state.camera_zoom),
-                                            ),
-                                            size(
-                                                px(*w / state.camera_zoom),
-                                                px(*h / state.camera_zoom),
-                                            ),
-                                        ),
+                                        state
+                                            .camera
+                                            .world_to_screen_bounds(bounds.origin, world_bounds),
                                         rgb(0xcba6f7),
                                     ));
                                 }
                                 Feature::Circle { x, y, r } => {
-                                    let diameter = px(*r * 2.0);
+                                    let world_bounds = Bounds::new(
+                                        point(px(*x), px(*y)),
+                                        size(px(*r * 2.0), px(*r * 2.0)),
+                                    );
                                     window.paint_quad(
                                         fill(
-                                            Bounds::new(
-                                                point(
-                                                    bounds.origin.x
-                                                        + px((*x - state.camera_x)
-                                                            / state.camera_zoom),
-                                                    bounds.origin.y
-                                                        + px((*y - state.camera_y)
-                                                            / state.camera_zoom),
-                                                ),
-                                                size(diameter, diameter) / state.camera_zoom,
+                                            state.camera.world_to_screen_bounds(
+                                                bounds.origin,
+                                                world_bounds,
                                             ),
                                             rgb(0xf38ba8),
                                         )
-                                        .corner_radii(px(*r / state.camera_zoom)),
+                                        .corner_radii(
+                                            state.camera.world_length_to_screen_length(*r),
+                                        ),
                                     );
                                 }
                             }
@@ -97,19 +84,7 @@ impl RenderOnce for ShapeCanvas {
                 let delta = event.delta.pixel_delta(px(1.));
 
                 state_for_wheel.update(cx, |state, _| {
-                    // let camera_zoom_prev = state.camera_zoom;
-
-                    state.camera_x -= delta.x.as_f32() * state.camera_zoom;
-                    state.camera_y -= delta.y.as_f32() * state.camera_zoom;
-
-                    // state.camera_zoom += delta.y.as_f32() / 40.;
-                    // state.camera_zoom = state.camera_zoom.clamp(1., 10.);
-
-                    // let dcx = event.position.x * (camera_zoom_prev - state.camera_zoom);
-                    // let dcy = event.position.y * (camera_zoom_prev - state.camera_zoom);
-
-                    // state.camera_x += dcx.as_f32();
-                    // state.camera_y += dcy.as_f32();
+                    state.camera.pan_by_screen_delta(delta);
                 });
                 cx.notify(state_for_wheel.entity_id());
             })
@@ -117,16 +92,9 @@ impl RenderOnce for ShapeCanvas {
                 let delta = event.delta;
 
                 state_for_pinch.update(cx, |state, _| {
-                    let camera_zoom_prev = state.camera_zoom;
-
-                    state.camera_zoom *= 1. - 0.6 * (delta / 0.4);
-                    state.camera_zoom = state.camera_zoom.clamp(0.05, 10.);
-
-                    let dcx = event.position.x * (camera_zoom_prev - state.camera_zoom);
-                    let dcy = event.position.y * (camera_zoom_prev - state.camera_zoom);
-
-                    state.camera_x += dcx.as_f32();
-                    state.camera_y += dcy.as_f32();
+                    state
+                        .camera
+                        .zoom_toward(event.position, 1. - 0.6 * (delta / 0.4));
                 });
                 cx.notify(state_for_pinch.entity_id());
             })
@@ -145,8 +113,7 @@ impl RenderOnce for ShapeCanvas {
                     };
                     state.last_mouse_pos = Some(event.position);
 
-                    state.camera_x -= delta.x.as_f32() * state.camera_zoom;
-                    state.camera_y -= delta.y.as_f32() * state.camera_zoom;
+                    state.camera.pan_by_screen_delta(delta);
                 });
                 cx.notify(self.state.entity_id());
             })
@@ -155,11 +122,13 @@ impl RenderOnce for ShapeCanvas {
 
 fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mut Window) {
     const BASE_CELL_SIZE: f32 = 128.;
-    let virtual_width = bounds.size.width * state.camera_zoom;
+    let virtual_width = state
+        .camera
+        .screen_length_to_world_length(bounds.size.width);
 
-    let cell_width = BASE_CELL_SIZE / state.camera_zoom;
+    let cell_width = BASE_CELL_SIZE / state.camera.zoom();
     let cell_count_x: i32 = (virtual_width.as_f32() / cell_width).ceil() as i32;
-    let camera_position = point(px(state.camera_x), px(state.camera_y));
+    let camera_position = state.camera.location();
 
     for i in 0..cell_count_x + 1 {
         let x = px((i as f32) * BASE_CELL_SIZE);
@@ -167,7 +136,7 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
             Bounds::new(
                 bounds.origin
                     + (point(
-                        (x - (camera_position.x % px(BASE_CELL_SIZE))) / state.camera_zoom,
+                        (x - (camera_position.x % px(BASE_CELL_SIZE))) / state.camera.zoom(),
                         px(0.),
                     )),
                 size(px(1.0), bounds.size.height),
@@ -183,7 +152,7 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
                 bounds.origin
                     + (point(
                         px(0.),
-                        (y - (camera_position.y % px(BASE_CELL_SIZE))) / state.camera_zoom,
+                        (y - (camera_position.y % px(BASE_CELL_SIZE))) / state.camera.zoom(),
                     )),
                 size(bounds.size.width, px(1.0)),
             ),

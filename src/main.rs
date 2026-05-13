@@ -4,6 +4,7 @@ use gpui_component::Root;
 use crate::app::WorkflowApp;
 
 mod app;
+mod camera;
 mod feature;
 mod shape_canvas;
 mod toolbar;
