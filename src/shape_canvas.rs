@@ -122,38 +122,34 @@ impl RenderOnce for ShapeCanvas {
 
 fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mut Window) {
     const BASE_CELL_SIZE: f32 = 128.;
-    let virtual_width = state
-        .camera
-        .screen_length_to_world_length(bounds.size.width);
+    let camera = &state.camera;
+    let cell_screen = camera.world_length_to_screen_length(BASE_CELL_SIZE);
+    let cam = camera.location();
 
-    let cell_width = BASE_CELL_SIZE / state.camera.zoom();
-    let cell_count_x: i32 = (virtual_width.as_f32() / cell_width).ceil() as i32;
-    let camera_position = state.camera.location();
+    let first_grid = point(
+        px((cam.x.as_f32() / BASE_CELL_SIZE).floor() * BASE_CELL_SIZE),
+        px((cam.y.as_f32() / BASE_CELL_SIZE).floor() * BASE_CELL_SIZE),
+    );
+    let grid_origin = bounds.origin + camera.world_to_screen(first_grid);
+    let grid_x = grid_origin.x;
+    let grid_y = grid_origin.y;
 
-    for i in 0..cell_count_x + 1 {
-        let x = px((i as f32) * BASE_CELL_SIZE);
+    let cell_count_x = (bounds.size.width.as_f32() / cell_screen).ceil() as i32 + 2;
+    let cell_count_y = (bounds.size.height.as_f32() / cell_screen).ceil() as i32 + 2;
+
+    for i in 0..cell_count_x {
         window.paint_quad(fill(
             Bounds::new(
-                bounds.origin
-                    + (point(
-                        (x - (camera_position.x % px(BASE_CELL_SIZE))) / state.camera.zoom(),
-                        px(0.),
-                    )),
+                point(grid_x + px(i as f32 * cell_screen), bounds.origin.y),
                 size(px(1.0), bounds.size.height),
             ),
             rgb(0x45475a),
         ));
     }
-    let cells_y: i32 = (bounds.size.height / cell_width).as_f32().ceil() as i32;
-    for j in 0..cells_y + 1 {
-        let y = px((j as f32) * BASE_CELL_SIZE);
+    for j in 0..cell_count_y {
         window.paint_quad(fill(
             Bounds::new(
-                bounds.origin
-                    + (point(
-                        px(0.),
-                        (y - (camera_position.y % px(BASE_CELL_SIZE))) / state.camera.zoom(),
-                    )),
+                point(bounds.origin.x, grid_y + px(j as f32 * cell_screen)),
                 size(bounds.size.width, px(1.0)),
             ),
             rgb(0x45475a),
