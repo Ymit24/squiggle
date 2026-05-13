@@ -172,7 +172,7 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
                     )),
                 size(px(1.0), bounds.size.height),
             ),
-            rgb(0x444444),
+            rgb(0x45475a),
         ));
     }
     let cells_y: i32 = (bounds.size.height / cell_width).as_f32().ceil() as i32;
@@ -187,7 +187,7 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
                     )),
                 size(bounds.size.width, px(1.0)),
             ),
-            rgb(0x444444),
+            rgb(0x45475a),
         ));
     }
 }
