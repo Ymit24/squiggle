@@ -52,10 +52,15 @@ impl RenderOnce for ShapeCanvas {
                                     window.paint_quad(fill(
                                         Bounds::new(
                                             point(
-                                                bounds.origin.x + (px(state.camera_x - *x)),
-                                                bounds.origin.y + (px(state.camera_y - *y)),
+                                                bounds.origin.x
+                                                    + (px(*x - state.camera_x) / state.camera_zoom),
+                                                bounds.origin.y
+                                                    + (px(*y - state.camera_y) / state.camera_zoom),
                                             ),
-                                            size(px(*w), px(*h)),
+                                            size(
+                                                px(*w / state.camera_zoom),
+                                                px(*h / state.camera_zoom),
+                                            ),
                                         ),
                                         rgb(0xcba6f7),
                                     ));
@@ -66,14 +71,18 @@ impl RenderOnce for ShapeCanvas {
                                         fill(
                                             Bounds::new(
                                                 point(
-                                                    bounds.origin.x + px((state.camera_x - *x)),
-                                                    bounds.origin.y + px((state.camera_y - *y)),
+                                                    bounds.origin.x
+                                                        + px((*x - state.camera_x)
+                                                            / state.camera_zoom),
+                                                    bounds.origin.y
+                                                        + px((*y - state.camera_y)
+                                                            / state.camera_zoom),
                                                 ),
-                                                size(diameter, diameter),
+                                                size(diameter, diameter) / state.camera_zoom,
                                             ),
                                             rgb(0xf38ba8),
                                         )
-                                        .corner_radii(px(*r)),
+                                        .corner_radii(px(*r / state.camera_zoom)),
                                     );
                                 }
                             }
@@ -87,8 +96,19 @@ impl RenderOnce for ShapeCanvas {
                 let delta = event.delta.pixel_delta(px(1.));
 
                 let zoom = state_for_wheel.update(cx, |state, _| {
+                    let camera_zoom_prev = state.camera_zoom;
+
                     state.camera_zoom += delta.y.as_f32() / 40.;
                     state.camera_zoom = state.camera_zoom.clamp(1., 10.);
+
+                    let camera_position = point(px(state.camera_x), px(state.camera_y));
+                    let mouse_world_position = event.position * state.camera_zoom + camera_position;
+
+                    let dcx = event.position.x * (camera_zoom_prev - state.camera_zoom);
+                    let dcy = event.position.y * (camera_zoom_prev - state.camera_zoom);
+
+                    state.camera_x += dcx.as_f32();
+                    state.camera_y += dcy.as_f32();
 
                     state.camera_zoom
                 });
