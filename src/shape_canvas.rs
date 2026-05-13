@@ -52,12 +52,10 @@ impl RenderOnce for ShapeCanvas {
                                     window.paint_quad(fill(
                                         Bounds::new(
                                             point(
-                                                bounds.origin.x
-                                                    + (px(state.camera_x - *x) / state.camera_zoom),
-                                                bounds.origin.y
-                                                    + (px(state.camera_y - *y) / state.camera_zoom),
+                                                bounds.origin.x + (px(state.camera_x - *x)),
+                                                bounds.origin.y + (px(state.camera_y - *y)),
                                             ),
-                                            size(px(*w), px(*h)) / state.camera_zoom,
+                                            size(px(*w), px(*h)),
                                         ),
                                         rgb(0xcba6f7),
                                     ));
@@ -68,14 +66,10 @@ impl RenderOnce for ShapeCanvas {
                                         fill(
                                             Bounds::new(
                                                 point(
-                                                    bounds.origin.x
-                                                        + px((state.camera_x - *x)
-                                                            / state.camera_zoom),
-                                                    bounds.origin.y
-                                                        + px((state.camera_y - *y)
-                                                            / state.camera_zoom),
+                                                    bounds.origin.x + px((state.camera_x - *x)),
+                                                    bounds.origin.y + px((state.camera_y - *y)),
                                                 ),
-                                                size(diameter, diameter) / state.camera_zoom,
+                                                size(diameter, diameter),
                                             ),
                                             rgb(0xf38ba8),
                                         )
@@ -99,7 +93,6 @@ impl RenderOnce for ShapeCanvas {
                     state.camera_zoom
                 });
                 cx.notify(state_for_wheel.entity_id());
-                println!("Delta scroll: {:?} {:?}", delta, zoom);
             })
             .on_mouse_move(move |event, _window, cx| {
                 if !event.dragging() {
@@ -122,31 +115,30 @@ impl RenderOnce for ShapeCanvas {
                     delta
                 });
                 cx.notify(self.state.entity_id());
-                println!("dragging lmb: {:?}, DELTA: {:?}", event.position, delta);
             })
     }
 }
 
 fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mut Window) {
     const CELLS_X: i32 = 20i32;
-    let cell_width: f32 = f32::from((bounds.size.width / state.camera_zoom) / (CELLS_X as f32));
+    let cell_width: f32 = f32::from((bounds.size.width) / (CELLS_X as f32));
     let camera_position = point(px(state.camera_x), px(state.camera_y));
-    for i in 1..CELLS_X {
+    for i in 0..CELLS_X + 1 {
         let x = px((i as f32) * cell_width);
         window.paint_quad(fill(
             Bounds::new(
-                bounds.origin + ((camera_position - point(x, px(0.))) / state.camera_zoom),
+                bounds.origin + (point((camera_position.x % px(cell_width)) + x, px(0.))),
                 size(px(1.0), bounds.size.height),
             ),
             rgb(0x444444),
         ));
     }
     let cells_y: i32 = (bounds.size.height / cell_width).as_f32().ceil() as i32;
-    for j in 1..cells_y {
+    for j in 0..cells_y + 1 {
         let y = bounds.origin.y + px((j as f32) * cell_width);
         window.paint_quad(fill(
             Bounds::new(
-                bounds.origin + ((camera_position - point(px(0.), y)) / state.camera_zoom),
+                bounds.origin + (point(px(0.), y + (camera_position.y % px(cell_width)))),
                 size(bounds.size.width, px(1.0)),
             ),
             rgb(0x444444),
