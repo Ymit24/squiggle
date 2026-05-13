@@ -148,10 +148,14 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
     let camera_position = point(px(state.camera_x), px(state.camera_y));
 
     for i in 0..cell_count_x + 1 {
-        let x = px((i as f32) * cell_width);
+        let x = px((i as f32) * BASE_CELL_SIZE);
         window.paint_quad(fill(
             Bounds::new(
-                bounds.origin + (point((camera_position.x % px(cell_width)) + x, px(0.))),
+                bounds.origin
+                    + (point(
+                        (x - (camera_position.x % px(BASE_CELL_SIZE))) / state.camera_zoom,
+                        px(0.),
+                    )),
                 size(px(1.0), bounds.size.height),
             ),
             rgb(0x444444),
@@ -159,10 +163,14 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
     }
     let cells_y: i32 = (bounds.size.height / cell_width).as_f32().ceil() as i32;
     for j in 0..cells_y + 1 {
-        let y = bounds.origin.y + px((j as f32) * cell_width);
+        let y = px((j as f32) * BASE_CELL_SIZE);
         window.paint_quad(fill(
             Bounds::new(
-                bounds.origin + (point(px(0.), y + (camera_position.y % px(cell_width)))),
+                bounds.origin
+                    + (point(
+                        px(0.),
+                        (y - (camera_position.y % px(BASE_CELL_SIZE))) / state.camera_zoom,
+                    )),
                 size(bounds.size.width, px(1.0)),
             ),
             rgb(0x444444),
