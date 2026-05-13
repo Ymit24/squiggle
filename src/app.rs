@@ -29,11 +29,7 @@ impl WorkflowApp {
                 .into_iter()
                 .map(|feature| cx.new(|_cx| feature))
                 .collect(),
-            canvas_state: cx.new(|_cx| ShapeCanvasState {
-                camera_x: 0.0,
-                camera_y: 0.0,
-                camera_zoom: 1.0,
-            }),
+            canvas_state: cx.new(|_cx| ShapeCanvasState::new()),
         }
     }
 }
