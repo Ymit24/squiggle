@@ -5,6 +5,7 @@ use crate::app::WorkflowApp;
 
 mod app;
 mod camera;
+mod document;
 mod feature;
 mod shape_canvas;
 mod toolbar;
