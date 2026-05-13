@@ -2,6 +2,7 @@ use gpui::*;
 
 use crate::document::{Command, Document};
 use crate::feature::Feature;
+use crate::fps_counter::FpsCounter;
 use crate::shape_canvas::{ShapeCanvas, ShapeCanvasState};
 use crate::toolbar::{CreateDemoRect, toolbar};
 
@@ -9,6 +10,7 @@ pub struct WorkflowApp {
     document: Entity<Document>,
     canvas_state: Entity<ShapeCanvasState>,
     focus_handle: FocusHandle,
+    fps_counter: Entity<FpsCounter>,
 }
 
 actions!(workflow, [CreateDemoCircle]);
@@ -29,13 +31,22 @@ impl WorkflowApp {
             },
         ];
         // initial features should have 1000 random things
-        for _ in 0..1000 {
-            initial_features.push(Feature::Rectangle {
-                x: rand::random::<f32>() * 1000.,
-                y: rand::random::<f32>() * 1000.,
-                w: 40.,
-                h: 40.,
-            });
+        let size = 1000.;
+        for _ in 0..50 {
+            if rand::random::<bool>() {
+                initial_features.push(Feature::Circle {
+                    x: rand::random::<f32>() * size,
+                    y: rand::random::<f32>() * size,
+                    r: 30.,
+                });
+            } else {
+                initial_features.push(Feature::Rectangle {
+                    x: rand::random::<f32>() * size,
+                    y: rand::random::<f32>() * size,
+                    w: 40.,
+                    h: 40.,
+                });
+            }
         }
 
         let document = cx.new(|_cx| Document::new(initial_features));
@@ -49,6 +60,7 @@ impl WorkflowApp {
             document,
             canvas_state: cx.new(|_cx| ShapeCanvasState::new()),
             focus_handle,
+            fps_counter: cx.new(|_cx| FpsCounter::new()),
         }
     }
 }
@@ -58,6 +70,7 @@ impl Render for WorkflowApp {
         let document = self.document.read(cx);
 
         div()
+            .relative()
             .size_full()
             .bg(rgb(0x1e1e2e))
             .track_focus(&self.focus_handle)
@@ -78,5 +91,6 @@ impl Render for WorkflowApp {
                 });
             }))
             .child(toolbar())
+            .child(self.fps_counter.clone())
     }
 }

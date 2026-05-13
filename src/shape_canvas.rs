@@ -43,38 +43,53 @@ impl RenderOnce for ShapeCanvas {
                     move |bounds: Bounds<Pixels>, _prepaint, window: &mut Window, cx: &mut App| {
                         let state = state.read(cx);
                         draw_grid_lines(state, bounds, window);
-                        for feature in &features {
-                            match feature {
-                                Feature::Rectangle { x, y, w, h } => {
-                                    let world_bounds =
-                                        Bounds::new(point(px(*x), px(*y)), size(px(*w), px(*h)));
-                                    window.paint_quad(fill(
-                                        state
-                                            .camera
-                                            .world_to_screen_bounds(bounds.origin, world_bounds),
-                                        rgb(0xcba6f7),
-                                    ));
-                                }
-                                Feature::Circle { x, y, r } => {
-                                    let world_bounds = Bounds::new(
-                                        point(px(*x), px(*y)),
-                                        size(px(*r * 2.0), px(*r * 2.0)),
-                                    );
-                                    window.paint_quad(
-                                        fill(
-                                            state.camera.world_to_screen_bounds(
-                                                bounds.origin,
-                                                world_bounds,
-                                            ),
-                                            rgb(0xf38ba8),
-                                        )
-                                        .corner_radii(
-                                            state.camera.world_length_to_screen_length(*r),
-                                        ),
-                                    );
+                        let zoom = state.camera.zoom();
+                        let visible_world = Bounds::new(
+                            state.camera.location(),
+                            size(bounds.size.width * zoom, bounds.size.height * zoom),
+                        );
+
+                        window.paint_layer(bounds, |window| {
+                            for feature in &features {
+                                match feature {
+                                    Feature::Rectangle { x, y, w, h } => {
+                                        let world_bounds = Bounds::new(
+                                            point(px(*x), px(*y)),
+                                            size(px(*w), px(*h)),
+                                        );
+                                        if !world_bounds.intersect(&visible_world).is_empty() {
+                                            window.paint_quad(fill(
+                                                state.camera.world_to_screen_bounds(
+                                                    bounds.origin,
+                                                    world_bounds,
+                                                ),
+                                                rgb(0xcba6f7),
+                                            ));
+                                        }
+                                    }
+                                    Feature::Circle { x, y, r } => {
+                                        let world_bounds = Bounds::new(
+                                            point(px(*x), px(*y)),
+                                            size(px(*r * 2.0), px(*r * 2.0)),
+                                        );
+                                        if !world_bounds.intersect(&visible_world).is_empty() {
+                                            window.paint_quad(
+                                                fill(
+                                                    state.camera.world_to_screen_bounds(
+                                                        bounds.origin,
+                                                        world_bounds,
+                                                    ),
+                                                    rgb(0xf38ba8),
+                                                )
+                                                .corner_radii(
+                                                    state.camera.world_length_to_screen_length(*r),
+                                                ),
+                                            );
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        });
                     },
                 )
                 .size_full(),

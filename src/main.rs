@@ -7,6 +7,7 @@ mod app;
 mod camera;
 mod document;
 mod feature;
+mod fps_counter;
 mod shape_canvas;
 mod toolbar;
 
