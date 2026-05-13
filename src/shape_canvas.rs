@@ -121,7 +121,7 @@ impl RenderOnce for ShapeCanvas {
                     });
                     return;
                 }
-                let delta = self.state.update(cx, |state, _| {
+                self.state.update(cx, |state, _| {
                     let delta = if let Some(last) = state.last_mouse_pos {
                         event.position - last
                     } else {
@@ -129,10 +129,8 @@ impl RenderOnce for ShapeCanvas {
                     };
                     state.last_mouse_pos = Some(event.position);
 
-                    state.camera_x += delta.x.as_f32();
-                    state.camera_y += delta.y.as_f32();
-
-                    delta
+                    state.camera_x -= delta.x.as_f32() * state.camera_zoom;
+                    state.camera_y -= delta.y.as_f32() * state.camera_zoom;
                 });
                 cx.notify(self.state.entity_id());
             })
