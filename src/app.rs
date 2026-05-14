@@ -18,34 +18,25 @@ actions!(workflow, [CreateDemoCircle]);
 impl WorkflowApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let mut initial_features = vec![
-            Feature::Rectangle {
-                x: 20.,
-                y: 20.,
-                w: 100.,
-                h: 60.,
-            },
-            Feature::Circle {
-                x: 150.,
-                y: 20.,
-                r: 30.,
-            },
+            Feature::new_rectangle(20., 20., 100., 60.),
+            Feature::new_circle(150., 20., 30.),
         ];
 
         let size = 1000.;
         for _ in 0..50 {
             if rand::random::<bool>() {
-                initial_features.push(Feature::Circle {
-                    x: rand::random::<f32>() * size,
-                    y: rand::random::<f32>() * size,
-                    r: 30.,
-                });
+                initial_features.push(Feature::new_circle(
+                    rand::random::<f32>() * size,
+                    rand::random::<f32>() * size,
+                    30.,
+                ));
             } else {
-                initial_features.push(Feature::Rectangle {
-                    x: rand::random::<f32>() * size,
-                    y: rand::random::<f32>() * size,
-                    w: 40.,
-                    h: 40.,
-                });
+                initial_features.push(Feature::new_rectangle(
+                    rand::random::<f32>() * size,
+                    rand::random::<f32>() * size,
+                    40.,
+                    40.,
+                ));
             }
         }
 
@@ -81,12 +72,12 @@ impl Render for WorkflowApp {
             .on_action(cx.listener(|this, event: &CreateDemoRect, _, cx| {
                 println!("Action! {:?}", event.x);
                 this.document.update(cx, |doc, cx| {
-                    doc.execute_command(Command::AddFeature(Feature::Rectangle {
-                        x: event.x,
-                        y: event.y,
-                        w: event.width,
-                        h: event.height,
-                    }));
+                    doc.execute_command(Command::AddFeature(Feature::new_rectangle(
+                        event.x,
+                        event.y,
+                        event.width,
+                        event.height,
+                    )));
                     cx.notify();
                 });
             }))

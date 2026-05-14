@@ -1,6 +1,6 @@
 use gpui::*;
 
-use crate::{camera::Camera, feature::Feature};
+use crate::{camera::Camera, feature::{Feature, FeatureKind}};
 
 #[derive(Clone)]
 pub struct ShapeCanvasState {
@@ -51,11 +51,11 @@ impl RenderOnce for ShapeCanvas {
 
                         window.paint_layer(bounds, |window| {
                             for feature in &features {
-                                match feature {
-                                    Feature::Rectangle { x, y, w, h } => {
+                                match feature.kind {
+                                    FeatureKind::Rectangle { w, h } => {
                                         let world_bounds = Bounds::new(
-                                            point(px(*x), px(*y)),
-                                            size(px(*w), px(*h)),
+                                            point(px(feature.x), px(feature.y)),
+                                            size(px(w), px(h)),
                                         );
                                         if !world_bounds.intersect(&visible_world).is_empty() {
                                             window.paint_quad(fill(
@@ -67,10 +67,10 @@ impl RenderOnce for ShapeCanvas {
                                             ));
                                         }
                                     }
-                                    Feature::Circle { x, y, r } => {
+                                    FeatureKind::Circle { r } => {
                                         let world_bounds = Bounds::new(
-                                            point(px(*x), px(*y)),
-                                            size(px(*r * 2.0), px(*r * 2.0)),
+                                            point(px(feature.x), px(feature.y)),
+                                            size(px(r * 2.0), px(r * 2.0)),
                                         );
                                         if !world_bounds.intersect(&visible_world).is_empty() {
                                             window.paint_quad(
@@ -82,7 +82,7 @@ impl RenderOnce for ShapeCanvas {
                                                     rgb(0xf38ba8),
                                                 )
                                                 .corner_radii(
-                                                    state.camera.world_length_to_screen_length(*r),
+                                                    state.camera.world_length_to_screen_length(r),
                                                 ),
                                             );
                                         }
