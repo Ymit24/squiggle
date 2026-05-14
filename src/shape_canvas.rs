@@ -1,6 +1,10 @@
 use gpui::*;
 
-use crate::{camera::Camera, feature::{Feature, FeatureKind}};
+use crate::{
+    camera::Camera,
+    document::Document,
+    feature::FeatureKind,
+};
 
 #[derive(Clone)]
 pub struct ShapeCanvasState {
@@ -21,18 +25,18 @@ impl ShapeCanvasState {
 #[derive(IntoElement)]
 pub struct ShapeCanvas {
     state: Entity<ShapeCanvasState>,
-    features: Vec<Feature>,
+    document: Entity<Document>,
 }
 
 impl ShapeCanvas {
-    pub fn new(state: Entity<ShapeCanvasState>, features: Vec<Feature>) -> Self {
-        Self { state, features }
+    pub fn new(state: Entity<ShapeCanvasState>, document: Entity<Document>) -> Self {
+        Self { state, document }
     }
 }
 
 impl RenderOnce for ShapeCanvas {
     fn render(self, _window: &mut Window, _: &mut App) -> impl IntoElement {
-        let features = self.features;
+        let document = self.document;
         let state = self.state.clone();
         let state_for_wheel = self.state.clone();
         let state_for_pinch = self.state.clone();
@@ -42,6 +46,7 @@ impl RenderOnce for ShapeCanvas {
                     move |_bounds: Bounds<Pixels>, _window, _cx| {},
                     move |bounds: Bounds<Pixels>, _prepaint, window: &mut Window, cx: &mut App| {
                         let state = state.read(cx);
+                        let features = &document.read(cx).features;
                         draw_grid_lines(state, bounds, window);
                         let zoom = state.camera.zoom();
                         let visible_world = Bounds::new(
@@ -50,7 +55,7 @@ impl RenderOnce for ShapeCanvas {
                         );
 
                         window.paint_layer(bounds, |window| {
-                            for feature in &features {
+                            for feature in features {
                                 let world_bounds = feature.bounds();
                                 if !world_bounds.intersect(&visible_world).is_empty() {
                                     match feature.kind {
@@ -73,7 +78,9 @@ impl RenderOnce for ShapeCanvas {
                                                     rgb(0xf38ba8),
                                                 )
                                                 .corner_radii(
-                                                    state.camera.world_length_to_screen_length(radius),
+                                                    state
+                                                        .camera
+                                                        .world_length_to_screen_length(radius),
                                                 ),
                                             );
                                         }

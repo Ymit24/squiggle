@@ -2,6 +2,7 @@ use gpui::*;
 
 use crate::document::{Command, Document};
 use crate::feature::Feature;
+use crate::feature_id::FeatureId;
 use crate::fps_counter::FpsCounter;
 use crate::shape_canvas::{ShapeCanvas, ShapeCanvasState};
 use crate::toolbar::{CreateDemoRect, toolbar};
@@ -9,6 +10,7 @@ use crate::toolbar::{CreateDemoRect, toolbar};
 pub struct WorkflowApp {
     document: Entity<Document>,
     canvas_state: Entity<ShapeCanvasState>,
+    selected_features: Vec<FeatureId>,
     focus_handle: FocusHandle,
     fps_counter: Entity<FpsCounter>,
 }
@@ -51,6 +53,7 @@ impl WorkflowApp {
             document,
             canvas_state: cx.new(|_cx| ShapeCanvasState::new()),
             focus_handle,
+            selected_features: Vec::new(),
             fps_counter: cx.new(|_cx| FpsCounter::new()),
         }
     }
@@ -58,8 +61,6 @@ impl WorkflowApp {
 
 impl Render for WorkflowApp {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let document = self.document.read(cx);
-
         div()
             .relative()
             .size_full()
@@ -67,11 +68,11 @@ impl Render for WorkflowApp {
             .track_focus(&self.focus_handle)
             .child(ShapeCanvas::new(
                 self.canvas_state.clone(),
-                document.features.clone(),
+                self.document.clone(),
             ))
             .on_action(cx.listener(|this, event: &CreateDemoRect, _, cx| {
                 println!("Action! {:?}", event.x);
-                this.document.update(cx, |doc, cx| {
+                this.document.update(cx, |doc: &mut Document, cx: &mut Context<Document>| {
                     doc.execute_command(Command::AddFeature(Feature::new_rectangle(
                         px(event.x),
                         px(event.y),
