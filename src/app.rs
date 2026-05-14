@@ -30,7 +30,7 @@ impl WorkflowApp {
                 r: 30.,
             },
         ];
-        // initial features should have 1000 random things
+
         let size = 1000.;
         for _ in 0..50 {
             if rand::random::<bool>() {
