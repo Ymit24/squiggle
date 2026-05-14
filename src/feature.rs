@@ -1,7 +1,12 @@
 use gpui::*;
 
+pub type FeatureId = u64;
+
+pub const NO_ID: FeatureId = 0;
+
 #[derive(Clone, Copy)]
 pub struct Feature {
+    pub id: FeatureId,
     pub origin: Point<Pixels>,
     pub kind: FeatureKind,
 }
@@ -15,6 +20,7 @@ pub enum FeatureKind {
 impl Feature {
     pub fn new_rectangle(x: Pixels, y: Pixels, w: Pixels, h: Pixels) -> Self {
         Self {
+            id: NO_ID,
             origin: point(x, y),
             kind: FeatureKind::Rectangle { size: size(w, h) },
         }
@@ -22,6 +28,7 @@ impl Feature {
 
     pub fn new_circle(x: Pixels, y: Pixels, r: Pixels) -> Self {
         Self {
+            id: NO_ID,
             origin: point(x, y),
             kind: FeatureKind::Circle { radius: r },
         }
