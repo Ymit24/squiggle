@@ -1,10 +1,6 @@
 use gpui::*;
 
-use crate::{
-    camera::Camera,
-    document::Document,
-    feature::FeatureKind,
-};
+use crate::{camera::Camera, document::Document, feature::FeatureKind};
 
 #[derive(Clone)]
 pub struct ShapeCanvasState {
@@ -36,17 +32,23 @@ impl ShapeCanvas {
 
 impl RenderOnce for ShapeCanvas {
     fn render(self, _window: &mut Window, _: &mut App) -> impl IntoElement {
-        let document = self.document;
+        let document_for_render = self.document.clone();
+        let document_for_hit_test = self.document.clone();
         let state = self.state.clone();
         let state_for_wheel = self.state.clone();
         let state_for_pinch = self.state.clone();
+        let state_for_hit_test = self.state.clone();
+
         div()
             .child(
                 canvas(
                     move |_bounds: Bounds<Pixels>, _window, _cx| {},
                     move |bounds: Bounds<Pixels>, _prepaint, window: &mut Window, cx: &mut App| {
+                        state.update(cx, |state, _| {
+                            state.camera.set_viewport_origin(bounds.origin);
+                        });
                         let state = state.read(cx);
-                        let features = &document.read(cx).features;
+                        let features = &document_for_render.read(cx).features;
                         draw_grid_lines(state, bounds, window);
                         let zoom = state.camera.zoom();
                         let visible_world = Bounds::new(
@@ -61,20 +63,14 @@ impl RenderOnce for ShapeCanvas {
                                     match feature.kind {
                                         FeatureKind::Rectangle { .. } => {
                                             window.paint_quad(fill(
-                                                state.camera.world_to_screen_bounds(
-                                                    bounds.origin,
-                                                    world_bounds,
-                                                ),
+                                                state.camera.world_to_screen_bounds(world_bounds),
                                                 rgb(0xcba6f7),
                                             ));
                                         }
                                         FeatureKind::Circle { radius } => {
                                             window.paint_quad(
                                                 fill(
-                                                    state.camera.world_to_screen_bounds(
-                                                        bounds.origin,
-                                                        world_bounds,
-                                                    ),
+                                                    state.camera.world_to_screen_bounds(world_bounds),
                                                     rgb(0xf38ba8),
                                                 )
                                                 .corner_radii(
@@ -130,6 +126,18 @@ impl RenderOnce for ShapeCanvas {
                 });
                 cx.notify(self.state.entity_id());
             })
+            .on_mouse_down(MouseButton::Left, move |event, _window, cx| {
+                let document = document_for_hit_test.read(cx);
+                let state = state_for_hit_test.read(cx);
+                let mouse_world = state.camera.screen_to_world(event.position);
+
+                for feature in &document.features {
+                    if feature.bounds().contains(&mouse_world) {
+                        println!("Intersects: {:?}", feature.id);
+                        break;
+                    }
+                }
+            })
     }
 }
 
@@ -143,7 +151,7 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
         px((cam.x.as_f32() / BASE_CELL_SIZE.as_f32()).floor() * BASE_CELL_SIZE.as_f32()),
         px((cam.y.as_f32() / BASE_CELL_SIZE.as_f32()).floor() * BASE_CELL_SIZE.as_f32()),
     );
-    let grid_origin = bounds.origin + camera.world_to_screen(first_grid);
+    let grid_origin = camera.world_to_screen(first_grid);
     let grid_x = grid_origin.x;
     let grid_y = grid_origin.y;
 

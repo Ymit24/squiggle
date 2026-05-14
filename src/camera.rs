@@ -4,21 +4,34 @@ use gpui::*;
 pub struct Camera {
     location: Point<Pixels>,
     zoom: f32,
+    viewport_origin: Point<Pixels>,
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        Self::new(Point::default(), 1.0)
+        Self {
+            location: Point::default(),
+            zoom: 1.0,
+            viewport_origin: Point::default(),
+        }
     }
 }
 
 impl Camera {
     pub fn new(location: Point<Pixels>, zoom: f32) -> Self {
-        Self { location, zoom }
+        Self {
+            location,
+            zoom,
+            viewport_origin: Point::default(),
+        }
+    }
+
+    pub fn set_viewport_origin(&mut self, origin: Point<Pixels>) {
+        self.viewport_origin = origin;
     }
 
     pub fn world_to_screen(&self, location: Point<Pixels>) -> Point<Pixels> {
-        (location - self.location) / self.zoom
+        self.viewport_origin + (location - self.location) / self.zoom
     }
 
     pub fn world_size_to_screen_size(&self, size: Size<Pixels>) -> Size<Pixels> {
@@ -34,7 +47,7 @@ impl Camera {
     }
 
     pub fn screen_to_world(&self, point: Point<Pixels>) -> Point<Pixels> {
-        point * self.zoom + self.location
+        (point - self.viewport_origin) * self.zoom + self.location
     }
 
     pub fn location(&self) -> Point<Pixels> {
@@ -50,6 +63,7 @@ impl Camera {
     }
 
     pub fn zoom_toward(&mut self, anchor: Point<Pixels>, factor: f32) {
+        let anchor = anchor - self.viewport_origin;
         let prev_zoom = self.zoom;
         self.zoom *= factor;
         self.zoom = self.zoom.clamp(0.05, 10.);
@@ -58,11 +72,10 @@ impl Camera {
 
     pub fn world_to_screen_bounds(
         &self,
-        viewport_origin: Point<Pixels>,
         world_bounds: Bounds<Pixels>,
     ) -> Bounds<Pixels> {
         Bounds::new(
-            viewport_origin + self.world_to_screen(world_bounds.origin),
+            self.world_to_screen(world_bounds.origin),
             self.world_size_to_screen_size(world_bounds.size),
         )
     }
