@@ -48,13 +48,10 @@ impl RenderOnce for ShapeCanvas {
         let state_for_pinch = self.state.clone();
         let state_for_hit_test = self.state.clone();
 
-        let selection_state_for_render = self.selection_state.clone();
         let selection_state_for_hit_test = self.selection_state.clone();
+        let selection_state_for_paint = self.selection_state.clone();
+
         div()
-            .child(format!(
-                "number of selected features: {}",
-                selection_state_for_render.read(cx).selected_features.len()
-            ))
             .child(
                 canvas(
                     move |_bounds: Bounds<Pixels>, _window, _cx| {},
@@ -64,6 +61,7 @@ impl RenderOnce for ShapeCanvas {
                         });
                         let state = state.read(cx);
                         let features = &document_for_render.read(cx).features;
+                        let selected_ids = &selection_state_for_paint.read(cx).selected_features;
                         draw_grid_lines(state, bounds, window);
                         let zoom = state.camera.zoom();
                         let visible_world = Bounds::new(
@@ -72,31 +70,55 @@ impl RenderOnce for ShapeCanvas {
                         );
 
                         window.paint_layer(bounds, |window| {
+                            // First pass: draw all features normally.
                             for feature in features {
                                 let world_bounds = feature.bounds();
                                 if !world_bounds.intersect(&visible_world).is_empty() {
+                                    let screen_bounds =
+                                        state.camera.world_to_screen_bounds(world_bounds);
                                     match feature.kind {
                                         FeatureKind::Rectangle { .. } => {
-                                            window.paint_quad(fill(
-                                                state.camera.world_to_screen_bounds(world_bounds),
-                                                rgb(0xcba6f7),
-                                            ));
+                                            window.paint_quad(fill(screen_bounds, rgb(0xcba6f7)));
                                         }
                                         FeatureKind::Circle { radius } => {
                                             window.paint_quad(
-                                                fill(
-                                                    state
-                                                        .camera
-                                                        .world_to_screen_bounds(world_bounds),
-                                                    rgb(0xf38ba8),
-                                                )
-                                                .corner_radii(
+                                                fill(screen_bounds, rgb(0xf38ba8)).corner_radii(
                                                     state
                                                         .camera
                                                         .world_length_to_screen_length(radius),
                                                 ),
                                             );
                                         }
+                                    }
+                                }
+                            }
+
+                            // Second pass: draw selection outlines on top.
+                            const SELECTION_PADDING: Pixels = px(8.);
+                            for feature in features {
+                                if selected_ids.contains(&feature.id) {
+                                    let world_bounds = feature.bounds();
+                                    if !world_bounds.intersect(&visible_world).is_empty() {
+                                        let screen_bounds =
+                                            state.camera.world_to_screen_bounds(world_bounds);
+                                        let padded_bounds = Bounds::new(
+                                            point(
+                                                screen_bounds.origin.x - SELECTION_PADDING,
+                                                screen_bounds.origin.y - SELECTION_PADDING,
+                                            ),
+                                            size(
+                                                screen_bounds.size.width + SELECTION_PADDING * 2.,
+                                                screen_bounds.size.height + SELECTION_PADDING * 2.,
+                                            ),
+                                        );
+                                        window.paint_quad(
+                                            outline(
+                                                padded_bounds,
+                                                rgb(0xffffff),
+                                                BorderStyle::default(),
+                                            )
+                                            .border_widths(px(2.)),
+                                        );
                                     }
                                 }
                             }
@@ -153,7 +175,6 @@ impl RenderOnce for ShapeCanvas {
                     .iter()
                     .find(|feature| feature.bounds().contains(&mouse_world));
 
-                println!("Intersects: {:?}", selected_feature.map(|f| f.id));
                 let selected_feature_id = selected_feature.map(|f| f.id);
 
                 selection_state_for_hit_test.update(cx, |state, _| {
