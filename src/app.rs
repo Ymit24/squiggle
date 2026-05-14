@@ -18,24 +18,24 @@ actions!(workflow, [CreateDemoCircle]);
 impl WorkflowApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let mut initial_features = vec![
-            Feature::new_rectangle(20., 20., 100., 60.),
-            Feature::new_circle(150., 20., 30.),
+            Feature::new_rectangle(px(20.), px(20.), px(100.), px(60.)),
+            Feature::new_circle(px(150.), px(20.), px(30.)),
         ];
 
         let size = 1000.;
         for _ in 0..50 {
             if rand::random::<bool>() {
                 initial_features.push(Feature::new_circle(
-                    rand::random::<f32>() * size,
-                    rand::random::<f32>() * size,
-                    30.,
+                    px(rand::random::<f32>() * size),
+                    px(rand::random::<f32>() * size),
+                    px(30.),
                 ));
             } else {
                 initial_features.push(Feature::new_rectangle(
-                    rand::random::<f32>() * size,
-                    rand::random::<f32>() * size,
-                    40.,
-                    40.,
+                    px(rand::random::<f32>() * size),
+                    px(rand::random::<f32>() * size),
+                    px(40.),
+                    px(40.),
                 ));
             }
         }
@@ -73,10 +73,10 @@ impl Render for WorkflowApp {
                 println!("Action! {:?}", event.x);
                 this.document.update(cx, |doc, cx| {
                     doc.execute_command(Command::AddFeature(Feature::new_rectangle(
-                        event.x,
-                        event.y,
-                        event.width,
-                        event.height,
+                        px(event.x),
+                        px(event.y),
+                        px(event.width),
+                        px(event.height),
                     )));
                     cx.notify();
                 });

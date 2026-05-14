@@ -25,7 +25,7 @@ impl Camera {
         size / self.zoom
     }
 
-    pub fn world_length_to_screen_length(&self, size: f32) -> f32 {
+    pub fn world_length_to_screen_length(&self, size: Pixels) -> Pixels {
         size / self.zoom
     }
 

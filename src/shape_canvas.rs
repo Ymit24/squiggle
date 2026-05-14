@@ -51,13 +51,10 @@ impl RenderOnce for ShapeCanvas {
 
                         window.paint_layer(bounds, |window| {
                             for feature in &features {
-                                match feature.kind {
-                                    FeatureKind::Rectangle { w, h } => {
-                                        let world_bounds = Bounds::new(
-                                            point(px(feature.x), px(feature.y)),
-                                            size(px(w), px(h)),
-                                        );
-                                        if !world_bounds.intersect(&visible_world).is_empty() {
+                                let world_bounds = feature.bounds();
+                                if !world_bounds.intersect(&visible_world).is_empty() {
+                                    match feature.kind {
+                                        FeatureKind::Rectangle { .. } => {
                                             window.paint_quad(fill(
                                                 state.camera.world_to_screen_bounds(
                                                     bounds.origin,
@@ -66,13 +63,7 @@ impl RenderOnce for ShapeCanvas {
                                                 rgb(0xcba6f7),
                                             ));
                                         }
-                                    }
-                                    FeatureKind::Circle { r } => {
-                                        let world_bounds = Bounds::new(
-                                            point(px(feature.x), px(feature.y)),
-                                            size(px(r * 2.0), px(r * 2.0)),
-                                        );
-                                        if !world_bounds.intersect(&visible_world).is_empty() {
+                                        FeatureKind::Circle { radius } => {
                                             window.paint_quad(
                                                 fill(
                                                     state.camera.world_to_screen_bounds(
@@ -82,7 +73,7 @@ impl RenderOnce for ShapeCanvas {
                                                     rgb(0xf38ba8),
                                                 )
                                                 .corner_radii(
-                                                    state.camera.world_length_to_screen_length(r),
+                                                    state.camera.world_length_to_screen_length(radius),
                                                 ),
                                             );
                                         }
@@ -136,26 +127,26 @@ impl RenderOnce for ShapeCanvas {
 }
 
 fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mut Window) {
-    const BASE_CELL_SIZE: f32 = 128.;
+    const BASE_CELL_SIZE: Pixels = px(128.);
     let camera = &state.camera;
     let cell_screen = camera.world_length_to_screen_length(BASE_CELL_SIZE);
     let cam = camera.location();
 
     let first_grid = point(
-        px((cam.x.as_f32() / BASE_CELL_SIZE).floor() * BASE_CELL_SIZE),
-        px((cam.y.as_f32() / BASE_CELL_SIZE).floor() * BASE_CELL_SIZE),
+        px((cam.x.as_f32() / BASE_CELL_SIZE.as_f32()).floor() * BASE_CELL_SIZE.as_f32()),
+        px((cam.y.as_f32() / BASE_CELL_SIZE.as_f32()).floor() * BASE_CELL_SIZE.as_f32()),
     );
     let grid_origin = bounds.origin + camera.world_to_screen(first_grid);
     let grid_x = grid_origin.x;
     let grid_y = grid_origin.y;
 
-    let cell_count_x = (bounds.size.width.as_f32() / cell_screen).ceil() as i32 + 2;
-    let cell_count_y = (bounds.size.height.as_f32() / cell_screen).ceil() as i32 + 2;
+    let cell_count_x = (bounds.size.width.as_f32() / cell_screen.as_f32()).ceil() as i32 + 2;
+    let cell_count_y = (bounds.size.height.as_f32() / cell_screen.as_f32()).ceil() as i32 + 2;
 
     for i in 0..cell_count_x {
         window.paint_quad(fill(
             Bounds::new(
-                point(grid_x + px(i as f32 * cell_screen), bounds.origin.y),
+                point(grid_x + cell_screen * i as f32, bounds.origin.y),
                 size(px(1.0), bounds.size.height),
             ),
             rgb(0x45475a),
@@ -164,7 +155,7 @@ fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mu
     for j in 0..cell_count_y {
         window.paint_quad(fill(
             Bounds::new(
-                point(bounds.origin.x, grid_y + px(j as f32 * cell_screen)),
+                point(bounds.origin.x, grid_y + cell_screen * j as f32),
                 size(bounds.size.width, px(1.0)),
             ),
             rgb(0x45475a),

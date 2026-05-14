@@ -1,3 +1,5 @@
+use gpui::*;
+
 use crate::feature::Feature;
 
 pub struct Document {
@@ -20,7 +22,7 @@ impl Default for Document {
 pub enum Command {
     AddFeature(Feature),
     RemoveFeature(usize),
-    MoveFeature(usize, f32, f32),
+    MoveFeature(usize, Point<Pixels>),
 }
 
 impl Document {
@@ -40,8 +42,8 @@ impl Document {
             Command::RemoveFeature(index) => {
                 self.features.remove(index);
             }
-            Command::MoveFeature(index, x, y) => {
-                self.features[index].move_to(x, y);
+            Command::MoveFeature(index, origin) => {
+                self.features[index].move_to(origin);
             }
         };
     }
