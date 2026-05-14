@@ -1,6 +1,7 @@
 use gpui::*;
 
-use crate::feature::{Feature, FeatureId, NO_ID};
+use crate::feature::Feature;
+use crate::feature_id::{FeatureId, NO_ID};
 
 pub struct Document {
     pub features: Vec<Feature>,
@@ -13,7 +14,7 @@ impl Default for Document {
     fn default() -> Self {
         Self {
             features: Vec::new(),
-            next_id: 1,
+            next_id: FeatureId::new(1),
             undo_stack: Vec::new(),
             redo_stack: Vec::new(),
         }
@@ -38,7 +39,7 @@ impl Document {
 
     pub fn generate_id(&mut self) -> FeatureId {
         let id = self.next_id;
-        self.next_id += 1;
+        self.next_id.next();
         id
     }
 

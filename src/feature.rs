@@ -1,8 +1,6 @@
-use gpui::*;
+use gpui::{Bounds, Pixels, Point, Size, point, size};
 
-pub type FeatureId = u64;
-
-pub const NO_ID: FeatureId = 0;
+use crate::feature_id::{FeatureId, NO_ID};
 
 #[derive(Clone, Copy)]
 pub struct Feature {
@@ -63,5 +61,120 @@ impl Feature {
 
     pub fn move_to(&mut self, origin: Point<Pixels>) {
         self.origin = origin;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gpui::px;
+
+    #[test]
+    fn test_new_rectangle_creates_rectangle_feature() {
+        let feature = Feature::new_rectangle(px(10.0), px(20.0), px(100.0), px(50.0));
+        assert_eq!(feature.id, NO_ID);
+        assert_eq!(feature.origin, point(px(10.0), px(20.0)));
+        match feature.kind {
+            FeatureKind::Rectangle { size } => {
+                assert_eq!(size.width, px(100.0));
+                assert_eq!(size.height, px(50.0));
+            }
+            _ => panic!("expected Rectangle variant"),
+        }
+    }
+
+    #[test]
+    fn test_new_circle_creates_circle_feature() {
+        let feature = Feature::new_circle(px(50.0), px(50.0), px(25.0));
+        assert_eq!(feature.id, NO_ID);
+        assert_eq!(feature.origin, point(px(50.0), px(50.0)));
+        match feature.kind {
+            FeatureKind::Circle { radius } => {
+                assert_eq!(radius, px(25.0));
+            }
+            _ => panic!("expected Circle variant"),
+        }
+    }
+
+    #[test]
+    fn test_width_rectangle_returns_width() {
+        let feature = Feature::new_rectangle(px(0.0), px(0.0), px(100.0), px(50.0));
+        assert_eq!(feature.width(), px(100.0));
+    }
+
+    #[test]
+    fn test_width_circle_returns_diameter() {
+        let feature = Feature::new_circle(px(0.0), px(0.0), px(25.0));
+        assert_eq!(feature.width(), px(50.0));
+    }
+
+    #[test]
+    fn test_height_rectangle_returns_height() {
+        let feature = Feature::new_rectangle(px(0.0), px(0.0), px(100.0), px(50.0));
+        assert_eq!(feature.height(), px(50.0));
+    }
+
+    #[test]
+    fn test_height_circle_returns_diameter() {
+        let feature = Feature::new_circle(px(0.0), px(0.0), px(25.0));
+        assert_eq!(feature.height(), px(50.0));
+    }
+
+    #[test]
+    fn test_size_returns_correct_dimensions() {
+        let rectangle = Feature::new_rectangle(px(0.0), px(0.0), px(100.0), px(50.0));
+        let size = rectangle.size();
+        assert_eq!(size.width, px(100.0));
+        assert_eq!(size.height, px(50.0));
+
+        let circle = Feature::new_circle(px(0.0), px(0.0), px(25.0));
+        let size = circle.size();
+        assert_eq!(size.width, px(50.0));
+        assert_eq!(size.height, px(50.0));
+    }
+
+    #[test]
+    fn test_bounds_returns_correct_bounds() {
+        let feature = Feature::new_rectangle(px(10.0), px(20.0), px(100.0), px(50.0));
+        let bounds = feature.bounds();
+        assert_eq!(bounds.origin, point(px(10.0), px(20.0)));
+        assert_eq!(bounds.size.width, px(100.0));
+        assert_eq!(bounds.size.height, px(50.0));
+    }
+
+    #[test]
+    fn test_center_calculates_midpoint_correctly() {
+        let rectangle = Feature::new_rectangle(px(0.0), px(0.0), px(100.0), px(50.0));
+        let center = rectangle.center();
+        assert_eq!(center.x, px(50.0));
+        assert_eq!(center.y, px(25.0));
+
+        let circle = Feature::new_circle(px(10.0), px(20.0), px(25.0));
+        let center = circle.center();
+        assert_eq!(center.x, px(35.0));
+        assert_eq!(center.y, px(45.0));
+    }
+
+    #[test]
+    fn test_move_to_updates_origin() {
+        let mut feature = Feature::new_rectangle(px(0.0), px(0.0), px(100.0), px(50.0));
+        feature.move_to(point(px(200.0), px(300.0)));
+        assert_eq!(feature.origin, point(px(200.0), px(300.0)));
+        match feature.kind {
+            FeatureKind::Rectangle { size } => {
+                assert_eq!(size.width, px(100.0));
+                assert_eq!(size.height, px(50.0));
+            }
+            _ => panic!("expected Rectangle variant"),
+        }
+    }
+
+    #[test]
+    fn test_feature_is_clone_and_copy() {
+        let feature = Feature::new_circle(px(10.0), px(20.0), px(15.0));
+        let copied = feature;
+        assert_eq!(copied.origin, feature.origin);
+        let cloned = feature.clone();
+        assert_eq!(cloned.origin, feature.origin);
     }
 }
