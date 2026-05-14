@@ -1,6 +1,6 @@
 use gpui::*;
 
-use crate::{camera::Camera, document::Document, feature::FeatureKind};
+use crate::{app::SelectionState, camera::Camera, document::Document, feature::FeatureKind};
 
 #[derive(Clone)]
 pub struct ShapeCanvasState {
@@ -22,16 +22,25 @@ impl ShapeCanvasState {
 pub struct ShapeCanvas {
     state: Entity<ShapeCanvasState>,
     document: Entity<Document>,
+    selection_state: Entity<SelectionState>,
 }
 
 impl ShapeCanvas {
-    pub fn new(state: Entity<ShapeCanvasState>, document: Entity<Document>) -> Self {
-        Self { state, document }
+    pub fn new(
+        state: Entity<ShapeCanvasState>,
+        document: Entity<Document>,
+        selection_state: Entity<SelectionState>,
+    ) -> Self {
+        Self {
+            state,
+            document,
+            selection_state,
+        }
     }
 }
 
 impl RenderOnce for ShapeCanvas {
-    fn render(self, _window: &mut Window, _: &mut App) -> impl IntoElement {
+    fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
         let document_for_render = self.document.clone();
         let document_for_hit_test = self.document.clone();
         let state = self.state.clone();
@@ -39,7 +48,13 @@ impl RenderOnce for ShapeCanvas {
         let state_for_pinch = self.state.clone();
         let state_for_hit_test = self.state.clone();
 
+        let selection_state_for_render = self.selection_state.clone();
+        let selection_state_for_hit_test = self.selection_state.clone();
         div()
+            .child(format!(
+                "number of selected features: {}",
+                selection_state_for_render.read(cx).selected_features.len()
+            ))
             .child(
                 canvas(
                     move |_bounds: Bounds<Pixels>, _window, _cx| {},
@@ -70,7 +85,9 @@ impl RenderOnce for ShapeCanvas {
                                         FeatureKind::Circle { radius } => {
                                             window.paint_quad(
                                                 fill(
-                                                    state.camera.world_to_screen_bounds(world_bounds),
+                                                    state
+                                                        .camera
+                                                        .world_to_screen_bounds(world_bounds),
                                                     rgb(0xf38ba8),
                                                 )
                                                 .corner_radii(
@@ -131,12 +148,20 @@ impl RenderOnce for ShapeCanvas {
                 let state = state_for_hit_test.read(cx);
                 let mouse_world = state.camera.screen_to_world(event.position);
 
-                for feature in &document.features {
-                    if feature.bounds().contains(&mouse_world) {
-                        println!("Intersects: {:?}", feature.id);
-                        break;
+                let selected_feature = document
+                    .features
+                    .iter()
+                    .find(|feature| feature.bounds().contains(&mouse_world));
+
+                println!("Intersects: {:?}", selected_feature.map(|f| f.id));
+                let selected_feature_id = selected_feature.map(|f| f.id);
+
+                selection_state_for_hit_test.update(cx, |state, _| {
+                    state.selected_features.clear();
+                    if let Some(id) = selected_feature_id {
+                        state.selected_features.push(id);
                     }
-                }
+                });
             })
     }
 }

@@ -7,10 +7,22 @@ use crate::fps_counter::FpsCounter;
 use crate::shape_canvas::{ShapeCanvas, ShapeCanvasState};
 use crate::toolbar::{CreateDemoRect, toolbar};
 
+pub struct SelectionState {
+    pub selected_features: Vec<FeatureId>,
+}
+
+impl SelectionState {
+    pub fn new() -> Self {
+        Self {
+            selected_features: Vec::new(),
+        }
+    }
+}
+
 pub struct WorkflowApp {
     document: Entity<Document>,
     canvas_state: Entity<ShapeCanvasState>,
-    selected_features: Vec<FeatureId>,
+    selection_state: Entity<SelectionState>,
     focus_handle: FocusHandle,
     fps_counter: Entity<FpsCounter>,
 }
@@ -53,7 +65,7 @@ impl WorkflowApp {
             document,
             canvas_state: cx.new(|_cx| ShapeCanvasState::new()),
             focus_handle,
-            selected_features: Vec::new(),
+            selection_state: cx.new(|_cx| SelectionState::new()),
             fps_counter: cx.new(|_cx| FpsCounter::new()),
         }
     }
@@ -69,18 +81,20 @@ impl Render for WorkflowApp {
             .child(ShapeCanvas::new(
                 self.canvas_state.clone(),
                 self.document.clone(),
+                self.selection_state.clone(),
             ))
             .on_action(cx.listener(|this, event: &CreateDemoRect, _, cx| {
                 println!("Action! {:?}", event.x);
-                this.document.update(cx, |doc: &mut Document, cx: &mut Context<Document>| {
-                    doc.execute_command(Command::AddFeature(Feature::new_rectangle(
-                        px(event.x),
-                        px(event.y),
-                        px(event.width),
-                        px(event.height),
-                    )));
-                    cx.notify();
-                });
+                this.document
+                    .update(cx, |doc: &mut Document, cx: &mut Context<Document>| {
+                        doc.execute_command(Command::AddFeature(Feature::new_rectangle(
+                            px(event.x),
+                            px(event.y),
+                            px(event.width),
+                            px(event.height),
+                        )));
+                        cx.notify();
+                    });
             }))
             .child(toolbar())
             .child(self.fps_counter.clone())
