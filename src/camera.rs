@@ -1,6 +1,6 @@
 use gpui::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct Camera {
     location: Point<Pixels>,
     zoom: f32,
@@ -70,10 +70,7 @@ impl Camera {
         self.location += anchor * (prev_zoom - self.zoom);
     }
 
-    pub fn world_to_screen_bounds(
-        &self,
-        world_bounds: Bounds<Pixels>,
-    ) -> Bounds<Pixels> {
+    pub fn world_to_screen_bounds(&self, world_bounds: Bounds<Pixels>) -> Bounds<Pixels> {
         Bounds::new(
             self.world_to_screen(world_bounds.origin),
             self.world_size_to_screen_size(world_bounds.size),

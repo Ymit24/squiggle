@@ -1,19 +1,25 @@
 use gpui::*;
 
-use crate::{app::SelectionState, camera::Camera, document::Document, feature::FeatureKind};
+use crate::{
+    app::SelectionState,
+    camera::Camera,
+    document::{Command, Document},
+    feature::FeatureKind,
+};
 
 #[derive(Clone)]
 pub struct ShapeCanvasState {
     pub camera: Camera,
 
-    last_mouse_pos: Option<Point<Pixels>>,
+    selected_feature_move_offset: Vec<Point<Pixels>>,
+    expected_drag: bool,
 }
 
 impl ShapeCanvasState {
     pub fn new() -> Self {
         Self {
             camera: Camera::default(),
-            last_mouse_pos: None,
+            selected_feature_move_offset: Vec::new(),
         }
     }
 }
@@ -43,13 +49,17 @@ impl RenderOnce for ShapeCanvas {
     fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
         let document_for_render = self.document.clone();
         let document_for_hit_test = self.document.clone();
+        let document_for_drag = self.document.clone();
+
         let state = self.state.clone();
         let state_for_wheel = self.state.clone();
         let state_for_pinch = self.state.clone();
         let state_for_hit_test = self.state.clone();
+        let state_for_drag = self.state.clone();
 
         let selection_state_for_hit_test = self.selection_state.clone();
         let selection_state_for_paint = self.selection_state.clone();
+        let selection_state_for_drag = self.selection_state.clone();
 
         div()
             .child(
@@ -115,9 +125,9 @@ impl RenderOnce for ShapeCanvas {
                                             outline(
                                                 padded_bounds,
                                                 rgb(0xffffff),
-                                                BorderStyle::default(),
+                                                BorderStyle::Dashed,
                                             )
-                                            .border_widths(px(2.)),
+                                            .border_widths(px(4.)),
                                         );
                                     }
                                 }
@@ -147,27 +157,47 @@ impl RenderOnce for ShapeCanvas {
                 cx.notify(state_for_pinch.entity_id());
             })
             .on_mouse_move(move |event, _window, cx| {
-                if !event.dragging() {
-                    self.state.update(cx, |state, _| {
-                        state.last_mouse_pos = None;
-                    });
+                let selected_features = selection_state_for_drag.read(cx).selected_features.clone();
+                let state = state_for_drag.read(cx);
+                let camera = state.camera.clone();
+
+                if !event.dragging() || selected_features.is_empty() {
                     return;
                 }
-                self.state.update(cx, |state, _| {
-                    let delta = if let Some(last) = state.last_mouse_pos {
-                        event.position - last
-                    } else {
-                        point(px(0.), px(0.))
-                    };
-                    state.last_mouse_pos = Some(event.position);
 
-                    state.camera.pan_by_screen_delta(delta);
+                let last_mouse_pos = state.selected_feature_move_offset.clone();
+
+                document_for_drag.update(cx, |document, _cx| {
+                    for (feature_id, offset) in selected_features.iter().zip(last_mouse_pos) {
+                        document.execute_command(Command::MoveFeature(
+                            feature_id.clone(),
+                            camera.screen_to_world(event.position) - offset,
+                        ));
+                    }
                 });
-                cx.notify(self.state.entity_id());
             })
+            // .on_mouse_move(move |event, _window, cx| {
+            //     if !event.dragging() {
+            //         self.state.update(cx, |state, _| {
+            //             state.last_mouse_pos = None;
+            //         });
+            //         return;
+            //     }
+            //     self.state.update(cx, |state, _| {
+            //         let delta = if let Some(last) = state.last_mouse_pos {
+            //             event.position - last
+            //         } else {
+            //             point(px(0.), px(0.))
+            //         };
+            //         state.last_mouse_pos = Some(event.position);
+            //         state.camera.pan_by_screen_delta(delta);
+            //     });
+            //     cx.notify(self.state.entity_id());
+            // })
+            .on_mouse_up(MouseButton::Left, move |event, _window, cx| {})
             .on_mouse_down(MouseButton::Left, move |event, _window, cx| {
                 let document = document_for_hit_test.read(cx);
-                let state = state_for_hit_test.read(cx);
+                let state = state_for_hit_test.read(cx).clone();
                 let mouse_world = state.camera.screen_to_world(event.position);
 
                 let selected_feature = document
@@ -177,8 +207,31 @@ impl RenderOnce for ShapeCanvas {
 
                 let selected_feature_id = selected_feature.map(|f| f.id);
 
+                let selected_feature = selected_feature.map(|x| x.clone());
+
+                if let Some(feature) = selected_feature {
+                    self.state.update(cx, move |state, _cx| {
+                        if !event.modifiers.shift {
+                            state.selected_feature_move_offset.clear();
+                        }
+                        state
+                            .selected_feature_move_offset
+                            .push(state.camera.screen_to_world(event.position) - feature.origin);
+                    });
+                } else {
+                    self.state.update(cx, move |state, _cx| {
+                        state.selected_feature_move_offset.clear();
+                    });
+                    selection_state_for_hit_test.update(cx, |state, _| {
+                        state.selected_features.clear();
+                    });
+                }
+
                 selection_state_for_hit_test.update(cx, |state, _| {
-                    state.selected_features.clear();
+                    if selected_feature_id.is_none() {
+                        state.selected_features.clear();
+                    }
+
                     if let Some(id) = selected_feature_id {
                         state.selected_features.push(id);
                     }
