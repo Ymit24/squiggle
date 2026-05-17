@@ -7,242 +7,211 @@ use crate::{
     feature::FeatureKind,
 };
 
-#[derive(Clone)]
-pub struct ShapeCanvasState {
-    pub camera: Camera,
-
-    selected_feature_move_offset: Vec<Point<Pixels>>,
-    expected_drag: bool,
-}
-
-impl ShapeCanvasState {
-    pub fn new() -> Self {
-        Self {
-            camera: Camera::default(),
-            selected_feature_move_offset: Vec::new(),
-        }
-    }
-}
-
-#[derive(IntoElement)]
 pub struct ShapeCanvas {
-    state: Entity<ShapeCanvasState>,
+    camera: Camera,
+    selected_feature_move_offset: Vec<Point<Pixels>>,
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
 }
 
 impl ShapeCanvas {
-    pub fn new(
-        state: Entity<ShapeCanvasState>,
-        document: Entity<Document>,
-        selection_state: Entity<SelectionState>,
-    ) -> Self {
+    pub fn new(document: Entity<Document>, selection_state: Entity<SelectionState>) -> Self {
         Self {
-            state,
+            camera: Camera::default(),
+            selected_feature_move_offset: Vec::new(),
             document,
             selection_state,
         }
     }
 }
 
-impl RenderOnce for ShapeCanvas {
-    fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let document_for_render = self.document.clone();
-        let document_for_hit_test = self.document.clone();
-        let document_for_drag = self.document.clone();
+impl ShapeCanvas {
+    fn on_scroll_wheel(
+        &mut self,
+        event: &ScrollWheelEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let delta = event.delta.pixel_delta(px(1.));
 
-        let state = self.state.clone();
-        let state_for_wheel = self.state.clone();
-        let state_for_pinch = self.state.clone();
-        let state_for_hit_test = self.state.clone();
-        let state_for_drag = self.state.clone();
+        self.camera.pan_by_screen_delta(delta);
+        cx.notify();
+    }
 
-        let selection_state_for_hit_test = self.selection_state.clone();
-        let selection_state_for_paint = self.selection_state.clone();
-        let selection_state_for_drag = self.selection_state.clone();
+    fn on_pinch(&mut self, event: &PinchEvent, cx: &mut Context<Self>) {
+        let delta = event.delta;
+        self.camera
+            .zoom_toward(event.position, 1. - 0.6 * (delta / 0.4));
+        cx.notify();
+    }
+
+    fn on_mouse_move(
+        &mut self,
+        event: &MouseMoveEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let selected_features = self.selection_state.read(cx).selected_features.clone();
+        let camera = self.camera.clone();
+
+        if !event.dragging() || selected_features.is_empty() {
+            return;
+        }
+
+        let last_mouse_pos = self.selected_feature_move_offset.clone();
+
+        self.document.update(cx, |document, _cx| {
+            for (feature_id, offset) in selected_features.iter().zip(last_mouse_pos) {
+                document.execute_command(Command::MoveFeature(
+                    feature_id.clone(),
+                    camera.screen_to_world(event.position) - offset,
+                ));
+            }
+        });
+    }
+
+    fn on_mouse_down(
+        &mut self,
+        event: &MouseDownEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let doc = self.document.read(cx);
+        let mouse_world = self.camera.screen_to_world(event.position);
+
+        let selected_feature = doc
+            .features
+            .iter()
+            .find(|feature| feature.bounds().contains(&mouse_world));
+
+        let selected_feature_id = selected_feature.map(|f| f.id);
+        let selected_feature = selected_feature.map(|x| x.clone());
+
+        if let Some(feature) = selected_feature {
+            if !event.modifiers.shift {
+                self.selected_feature_move_offset.clear();
+            }
+            self.selected_feature_move_offset
+                .push(self.camera.screen_to_world(event.position) - feature.origin);
+        } else {
+            self.selected_feature_move_offset.clear();
+            self.selection_state.update(cx, |state, _| {
+                state.selected_features.clear();
+            });
+        }
+
+        self.selection_state.update(cx, |state, _| {
+            if selected_feature_id.is_none() {
+                state.selected_features.clear();
+            }
+
+            if let Some(id) = selected_feature_id {
+                state.selected_features.push(id);
+            }
+        });
+    }
+
+    fn paint_canvas(
+        &mut self,
+        bounds: Bounds<Pixels>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.camera.set_viewport_origin(bounds.origin);
+        let features = &self.document.read(cx).features;
+        let selected_ids = &self.selection_state.read(cx).selected_features;
+        draw_grid_lines(&self.camera, bounds, window);
+        let zoom = self.camera.zoom();
+        let visible_world = Bounds::new(
+            self.camera.location(),
+            size(bounds.size.width * zoom, bounds.size.height * zoom),
+        );
+
+        window.paint_layer(bounds, |window| {
+            for feature in features {
+                let world_bounds = feature.bounds();
+                if !world_bounds.intersect(&visible_world).is_empty() {
+                    let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
+                    match feature.kind {
+                        FeatureKind::Rectangle { .. } => {
+                            window.paint_quad(fill(screen_bounds, rgb(0xcba6f7)));
+                        }
+                        FeatureKind::Circle { radius } => {
+                            window.paint_quad(
+                                fill(screen_bounds, rgb(0xf38ba8)).corner_radii(
+                                    self.camera.world_length_to_screen_length(radius),
+                                ),
+                            );
+                        }
+                    }
+                }
+            }
+
+            const SELECTION_PADDING: Pixels = px(8.);
+            for feature in features {
+                if selected_ids.contains(&feature.id) {
+                    let world_bounds = feature.bounds();
+                    if !world_bounds.intersect(&visible_world).is_empty() {
+                        let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
+                        let padded_bounds = Bounds::new(
+                            point(
+                                screen_bounds.origin.x - SELECTION_PADDING,
+                                screen_bounds.origin.y - SELECTION_PADDING,
+                            ),
+                            size(
+                                screen_bounds.size.width + SELECTION_PADDING * 2.,
+                                screen_bounds.size.height + SELECTION_PADDING * 2.,
+                            ),
+                        );
+                        window.paint_quad(
+                            outline(padded_bounds, rgb(0xffffff), BorderStyle::Dashed)
+                                .border_widths(px(4.)),
+                        );
+                    }
+                }
+            }
+        });
+    }
+}
+
+impl Render for ShapeCanvas {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let this = cx.entity();
 
         div()
             .child(
                 canvas(
-                    move |_bounds: Bounds<Pixels>, _window, _cx| {},
+                    move |_, _, _| {},
                     move |bounds: Bounds<Pixels>, _prepaint, window: &mut Window, cx: &mut App| {
-                        state.update(cx, |state, _| {
-                            state.camera.set_viewport_origin(bounds.origin);
-                        });
-                        let state = state.read(cx);
-                        let features = &document_for_render.read(cx).features;
-                        let selected_ids = &selection_state_for_paint.read(cx).selected_features;
-                        draw_grid_lines(state, bounds, window);
-                        let zoom = state.camera.zoom();
-                        let visible_world = Bounds::new(
-                            state.camera.location(),
-                            size(bounds.size.width * zoom, bounds.size.height * zoom),
-                        );
-
-                        window.paint_layer(bounds, |window| {
-                            // First pass: draw all features normally.
-                            for feature in features {
-                                let world_bounds = feature.bounds();
-                                if !world_bounds.intersect(&visible_world).is_empty() {
-                                    let screen_bounds =
-                                        state.camera.world_to_screen_bounds(world_bounds);
-                                    match feature.kind {
-                                        FeatureKind::Rectangle { .. } => {
-                                            window.paint_quad(fill(screen_bounds, rgb(0xcba6f7)));
-                                        }
-                                        FeatureKind::Circle { radius } => {
-                                            window.paint_quad(
-                                                fill(screen_bounds, rgb(0xf38ba8)).corner_radii(
-                                                    state
-                                                        .camera
-                                                        .world_length_to_screen_length(radius),
-                                                ),
-                                            );
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Second pass: draw selection outlines on top.
-                            const SELECTION_PADDING: Pixels = px(8.);
-                            for feature in features {
-                                if selected_ids.contains(&feature.id) {
-                                    let world_bounds = feature.bounds();
-                                    if !world_bounds.intersect(&visible_world).is_empty() {
-                                        let screen_bounds =
-                                            state.camera.world_to_screen_bounds(world_bounds);
-                                        let padded_bounds = Bounds::new(
-                                            point(
-                                                screen_bounds.origin.x - SELECTION_PADDING,
-                                                screen_bounds.origin.y - SELECTION_PADDING,
-                                            ),
-                                            size(
-                                                screen_bounds.size.width + SELECTION_PADDING * 2.,
-                                                screen_bounds.size.height + SELECTION_PADDING * 2.,
-                                            ),
-                                        );
-                                        window.paint_quad(
-                                            outline(
-                                                padded_bounds,
-                                                rgb(0xffffff),
-                                                BorderStyle::Dashed,
-                                            )
-                                            .border_widths(px(4.)),
-                                        );
-                                    }
-                                }
-                            }
+                        this.update(cx, |this, cx| {
+                            this.paint_canvas(bounds, window, cx);
                         });
                     },
                 )
                 .size_full(),
             )
             .size_full()
-            .on_scroll_wheel(move |event, _, cx| {
-                let delta = event.delta.pixel_delta(px(1.));
-
-                state_for_wheel.update(cx, |state, _| {
-                    state.camera.pan_by_screen_delta(delta);
-                });
-                cx.notify(state_for_wheel.entity_id());
-            })
-            .on_pinch(move |event, _, cx| {
-                let delta = event.delta;
-
-                state_for_pinch.update(cx, |state, _| {
-                    state
-                        .camera
-                        .zoom_toward(event.position, 1. - 0.6 * (delta / 0.4));
-                });
-                cx.notify(state_for_pinch.entity_id());
-            })
-            .on_mouse_move(move |event, _window, cx| {
-                let selected_features = selection_state_for_drag.read(cx).selected_features.clone();
-                let state = state_for_drag.read(cx);
-                let camera = state.camera.clone();
-
-                if !event.dragging() || selected_features.is_empty() {
-                    return;
-                }
-
-                let last_mouse_pos = state.selected_feature_move_offset.clone();
-
-                document_for_drag.update(cx, |document, _cx| {
-                    for (feature_id, offset) in selected_features.iter().zip(last_mouse_pos) {
-                        document.execute_command(Command::MoveFeature(
-                            feature_id.clone(),
-                            camera.screen_to_world(event.position) - offset,
-                        ));
-                    }
-                });
-            })
-            // .on_mouse_move(move |event, _window, cx| {
-            //     if !event.dragging() {
-            //         self.state.update(cx, |state, _| {
-            //             state.last_mouse_pos = None;
-            //         });
-            //         return;
-            //     }
-            //     self.state.update(cx, |state, _| {
-            //         let delta = if let Some(last) = state.last_mouse_pos {
-            //             event.position - last
-            //         } else {
-            //             point(px(0.), px(0.))
-            //         };
-            //         state.last_mouse_pos = Some(event.position);
-            //         state.camera.pan_by_screen_delta(delta);
-            //     });
-            //     cx.notify(self.state.entity_id());
-            // })
-            .on_mouse_up(MouseButton::Left, move |event, _window, cx| {})
-            .on_mouse_down(MouseButton::Left, move |event, _window, cx| {
-                let document = document_for_hit_test.read(cx);
-                let state = state_for_hit_test.read(cx).clone();
-                let mouse_world = state.camera.screen_to_world(event.position);
-
-                let selected_feature = document
-                    .features
-                    .iter()
-                    .find(|feature| feature.bounds().contains(&mouse_world));
-
-                let selected_feature_id = selected_feature.map(|f| f.id);
-
-                let selected_feature = selected_feature.map(|x| x.clone());
-
-                if let Some(feature) = selected_feature {
-                    self.state.update(cx, move |state, _cx| {
-                        if !event.modifiers.shift {
-                            state.selected_feature_move_offset.clear();
-                        }
-                        state
-                            .selected_feature_move_offset
-                            .push(state.camera.screen_to_world(event.position) - feature.origin);
-                    });
-                } else {
-                    self.state.update(cx, move |state, _cx| {
-                        state.selected_feature_move_offset.clear();
-                    });
-                    selection_state_for_hit_test.update(cx, |state, _| {
-                        state.selected_features.clear();
-                    });
-                }
-
-                selection_state_for_hit_test.update(cx, |state, _| {
-                    if selected_feature_id.is_none() {
-                        state.selected_features.clear();
-                    }
-
-                    if let Some(id) = selected_feature_id {
-                        state.selected_features.push(id);
-                    }
-                });
-            })
+            .on_scroll_wheel(cx.listener(|this, event, window, cx| {
+                this.on_scroll_wheel(event, window, cx);
+            }))
+            .on_pinch(cx.listener(|this, event, _, cx| {
+                this.on_pinch(event, cx);
+            }))
+            .on_mouse_move(cx.listener(|this, event, window, cx| {
+                this.on_mouse_move(event, window, cx);
+            }))
+            .on_mouse_up(MouseButton::Left, |_event, _window, _cx| {})
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, event, window, cx| {
+                    this.on_mouse_down(event, window, cx);
+                }),
+            )
     }
 }
 
-fn draw_grid_lines(state: &ShapeCanvasState, bounds: Bounds<Pixels>, window: &mut Window) {
+fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window) {
     const BASE_CELL_SIZE: Pixels = px(128.);
-    let camera = &state.camera;
     let cell_screen = camera.world_length_to_screen_length(BASE_CELL_SIZE);
     let cam = camera.location();
 

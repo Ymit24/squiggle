@@ -4,7 +4,7 @@ use crate::document::{Command, Document};
 use crate::feature::Feature;
 use crate::feature_id::FeatureId;
 use crate::fps_counter::FpsCounter;
-use crate::shape_canvas::{ShapeCanvas, ShapeCanvasState};
+use crate::shape_canvas::ShapeCanvas;
 use crate::toolbar::{CreateDemoRect, toolbar};
 
 pub struct SelectionState {
@@ -21,8 +21,8 @@ impl SelectionState {
 
 pub struct WorkflowApp {
     document: Entity<Document>,
-    canvas_state: Entity<ShapeCanvasState>,
     selection_state: Entity<SelectionState>,
+    shape_canvas: Entity<ShapeCanvas>,
     focus_handle: FocusHandle,
     fps_counter: Entity<FpsCounter>,
 }
@@ -55,17 +55,20 @@ impl WorkflowApp {
         }
 
         let document = cx.new(|_cx| Document::new(initial_features));
+        let selection_state = cx.new(|_cx| SelectionState::new());
 
         cx.bind_keys([KeyBinding::new("r", CreateDemoCircle, None)]);
 
         let focus_handle = cx.focus_handle();
         focus_handle.focus(window, cx);
 
+        let shape_canvas = cx.new(|_cx| ShapeCanvas::new(document.clone(), selection_state.clone()));
+
         Self {
             document,
-            canvas_state: cx.new(|_cx| ShapeCanvasState::new()),
+            selection_state,
+            shape_canvas,
             focus_handle,
-            selection_state: cx.new(|_cx| SelectionState::new()),
             fps_counter: cx.new(|_cx| FpsCounter::new()),
         }
     }
@@ -78,11 +81,7 @@ impl Render for WorkflowApp {
             .size_full()
             .bg(rgb(0x1e1e2e))
             .track_focus(&self.focus_handle)
-            .child(ShapeCanvas::new(
-                self.canvas_state.clone(),
-                self.document.clone(),
-                self.selection_state.clone(),
-            ))
+            .child(self.shape_canvas.clone())
             .on_action(cx.listener(|this, event: &CreateDemoRect, _, cx| {
                 println!("Action! {:?}", event.x);
                 this.document
