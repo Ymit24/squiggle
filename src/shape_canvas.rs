@@ -58,10 +58,16 @@ impl ShapeCanvas {
     fn handle_selection_box_drag(
         &mut self,
         position: Point<Pixels>,
-        has_hovered_feature: bool,
+        mouse_world: Point<Pixels>,
         shift: bool,
         cx: &mut Context<Self>,
     ) -> bool {
+        let document = self.document.read(cx);
+        let has_hovered_feature = document
+            .features
+            .iter()
+            .any(|feature| feature.bounds().contains(&mouse_world));
+
         if (self.did_drag && self.selection_box.is_some())
             || (!self.did_drag && !has_hovered_feature)
         {
@@ -120,19 +126,10 @@ impl ShapeCanvas {
         }
 
         let mouse_world = self.camera.screen_to_world(event.position);
-        let has_hovered_feature = {
-            let document = self.document.read(cx);
-            document
-                .features
-                .iter()
-                .any(|feature| feature.bounds().contains(&mouse_world))
-        };
 
-        if self.handle_selection_box_drag(event.position, has_hovered_feature, event.modifiers.shift, cx) {
+        if self.handle_selection_box_drag(event.position, mouse_world, event.modifiers.shift, cx) {
             return;
         }
-
-        let document = self.document.read(cx);
 
         if selected_features.is_empty() {
             return;
@@ -140,6 +137,7 @@ impl ShapeCanvas {
 
         self.did_drag = true;
 
+        let document = self.document.read(cx);
         let chase_feature = document
             .feature_by_id(selected_features.last().unwrap().clone())
             .unwrap();
