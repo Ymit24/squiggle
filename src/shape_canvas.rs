@@ -4,7 +4,7 @@ use crate::{
     app::SelectionState,
     camera::Camera,
     document::{Command, Document},
-    feature::{Feature, FeatureKind},
+    feature::FeatureKind,
     feature_id::FeatureId,
 };
 
@@ -13,6 +13,7 @@ pub struct ShapeCanvas {
     selected_feature_move_offset: Point<Pixels>,
     did_drag: bool,
     did_select: bool,
+    active_selection_box: Option<Bounds<Pixels>>,
 
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
@@ -25,6 +26,10 @@ impl ShapeCanvas {
             selected_feature_move_offset: Point::new(px(0.), px(0.)),
             did_drag: false,
             did_select: false,
+            active_selection_box: Some(Bounds::centered_at(
+                point(px(50.), px(50.)),
+                size(px(100.), px(100.)),
+            )),
             document,
             selection_state,
         }
@@ -67,8 +72,6 @@ impl ShapeCanvas {
         }
 
         self.did_drag = true;
-
-        // note: last selected_features will be used to calculate the offset
 
         let chase_feature = document
             .feature_by_id(selected_features.last().unwrap().clone())
@@ -234,6 +237,14 @@ impl ShapeCanvas {
                         );
                     }
                 }
+            }
+
+            if let Some(active_selection_box) = &self.active_selection_box {
+                let screen_bounds = self.camera.world_to_screen_bounds(*active_selection_box);
+                window.paint_quad(
+                    outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed)
+                        .border_widths(px(4.)),
+                );
             }
         });
     }
