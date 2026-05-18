@@ -11,6 +11,8 @@ use crate::{
 pub struct ShapeCanvas {
     camera: Camera,
     selected_feature_move_offset: Point<Pixels>,
+    did_drag: bool,
+    did_select: bool,
 
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
@@ -21,6 +23,8 @@ impl ShapeCanvas {
         Self {
             camera: Camera::default(),
             selected_feature_move_offset: Point::new(px(0.), px(0.)),
+            did_drag: false,
+            did_select: false,
             document,
             selection_state,
         }
@@ -61,6 +65,8 @@ impl ShapeCanvas {
         if !event.dragging() || selected_features.is_empty() {
             return;
         }
+
+        self.did_drag = true;
 
         // note: last selected_features will be used to calculate the offset
 
@@ -112,6 +118,9 @@ impl ShapeCanvas {
                 self.camera.screen_to_world(event.position) - feature.origin;
 
             let id = feature.id.clone();
+            if !selection_state.contains(&id) {
+                self.did_select = true;
+            }
             self.selection_state.update(cx, move |state, _| {
                 if !event.modifiers.shift {
                     if !selection_state.contains(&id) {
@@ -125,6 +134,43 @@ impl ShapeCanvas {
                 self.selected_feature_move_offset = point(px(0.), px(0.));
                 self.selection_state.update(cx, |state, _| {
                     state.selected_features.clear();
+                });
+            }
+        }
+    }
+
+    fn on_mouse_up(&mut self, event: &MouseUpEvent, _window: &mut Window, cx: &mut Context<Self>) {
+        let doc = self.document.read(cx);
+        let mouse_world = self.camera.screen_to_world(event.position);
+
+        let hovered_feature = doc
+            .features
+            .iter()
+            .find(|feature| feature.bounds().contains(&mouse_world))
+            .map(Clone::clone);
+
+        if let Some(hovered_feature) = hovered_feature {
+            if self.did_drag {
+                self.did_drag = false;
+                self.did_select = false;
+                return;
+            }
+
+            if event.modifiers.shift {
+                println!("Did select: {:?}", self.did_select);
+                if !self.did_select {
+                    self.selection_state.update(cx, |state, _| {
+                        state
+                            .selected_features
+                            .retain(|id| id != &hovered_feature.id);
+                    });
+                } else {
+                    self.did_select = false;
+                }
+            } else {
+                self.selection_state.update(cx, |state, _| {
+                    state.selected_features.clear();
+                    state.selected_features.push(hovered_feature.id);
                 });
             }
         }
@@ -219,7 +265,12 @@ impl Render for ShapeCanvas {
             .on_mouse_move(cx.listener(|this, event, window, cx| {
                 this.on_mouse_move(event, window, cx);
             }))
-            .on_mouse_up(MouseButton::Left, |_event, _window, _cx| {})
+            .on_mouse_up(
+                MouseButton::Left,
+                cx.listener(|this, event, window, cx| {
+                    this.on_mouse_up(event, window, cx);
+                }),
+            )
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(|this, event, window, cx| {
