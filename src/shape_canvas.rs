@@ -84,7 +84,6 @@ impl ShapeCanvas {
 
             let selection_bounds = self.selection_box_bounds().unwrap();
 
-            let document = self.document.read(cx);
             let selectable_features: Vec<FeatureId> = document
                 .features
                 .iter()
@@ -106,7 +105,6 @@ impl ShapeCanvas {
                 });
             }
         } else {
-            let mouse_world = self.camera.screen_to_world(position);
             self.selection_box = Some((mouse_world, mouse_world));
         }
 
@@ -119,9 +117,6 @@ impl ShapeCanvas {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let selected_features = self.selection_state.read(cx).selected_features.clone();
-        let camera = self.camera.clone();
-
         if !event.dragging() {
             return;
         }
@@ -132,6 +127,11 @@ impl ShapeCanvas {
             return;
         }
 
+        self.handle_drag_features(mouse_world, cx);
+    }
+
+    fn handle_drag_features(&mut self, mouse_world: Point<Pixels>, cx: &mut Context<Self>) {
+        let selected_features = self.selection_state.read(cx).selected_features.clone();
         if selected_features.is_empty() {
             return;
         }
@@ -157,7 +157,7 @@ impl ShapeCanvas {
             for (id, offset) in selected_features.into_iter() {
                 document.execute_command(Command::MoveFeature(
                     id,
-                    (camera.screen_to_world(event.position) - last_mouse_pos) + offset,
+                    (mouse_world - last_mouse_pos) + offset,
                 ));
             }
         });
