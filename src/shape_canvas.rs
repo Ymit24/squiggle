@@ -4,12 +4,14 @@ use crate::{
     app::SelectionState,
     camera::Camera,
     document::{Command, Document},
-    feature::FeatureKind,
+    feature::{Feature, FeatureKind},
+    feature_id::FeatureId,
 };
 
 pub struct ShapeCanvas {
     camera: Camera,
-    selected_feature_move_offset: Vec<Point<Pixels>>,
+    selected_feature_move_offset: Point<Pixels>,
+
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
 }
@@ -18,7 +20,7 @@ impl ShapeCanvas {
     pub fn new(document: Entity<Document>, selection_state: Entity<SelectionState>) -> Self {
         Self {
             camera: Camera::default(),
-            selected_feature_move_offset: Vec::new(),
+            selected_feature_move_offset: Point::new(px(0.), px(0.)),
             document,
             selection_state,
         }
@@ -52,19 +54,35 @@ impl ShapeCanvas {
         cx: &mut Context<Self>,
     ) {
         let selected_features = self.selection_state.read(cx).selected_features.clone();
+        let document = self.document.read(cx);
+
         let camera = self.camera.clone();
 
         if !event.dragging() || selected_features.is_empty() {
             return;
         }
 
+        // note: last selected_features will be used to calculate the offset
+
+        let chase_feature = document
+            .feature_by_id(selected_features.last().unwrap().clone())
+            .unwrap();
+
         let last_mouse_pos = self.selected_feature_move_offset.clone();
 
+        let selected_features: Vec<(FeatureId, Point<Pixels>)> = selected_features
+            .iter()
+            .map(|id| {
+                let feature = document.feature_by_id(id.clone()).unwrap().clone();
+                (feature.id, feature.origin - chase_feature.origin)
+            })
+            .collect();
+
         self.document.update(cx, |document, _cx| {
-            for (feature_id, offset) in selected_features.iter().zip(last_mouse_pos) {
+            for (id, offset) in selected_features.into_iter() {
                 document.execute_command(Command::MoveFeature(
-                    feature_id.clone(),
-                    camera.screen_to_world(event.position) - offset,
+                    id,
+                    (camera.screen_to_world(event.position) - last_mouse_pos) + offset,
                 ));
             }
         });
@@ -84,31 +102,25 @@ impl ShapeCanvas {
             .iter()
             .find(|feature| feature.bounds().contains(&mouse_world));
 
-        let selected_feature_id = selected_feature.map(|f| f.id);
-        let selected_feature = selected_feature.map(|x| x.clone());
-
         if let Some(feature) = selected_feature {
             if !event.modifiers.shift {
-                self.selected_feature_move_offset.clear();
+                self.selected_feature_move_offset = point(px(0.), px(0.));
             }
-            self.selected_feature_move_offset
-                .push(self.camera.screen_to_world(event.position) - feature.origin);
-        } else {
-            self.selected_feature_move_offset.clear();
+            self.selected_feature_move_offset =
+                self.camera.screen_to_world(event.position) - feature.origin;
+
+            let id = feature.id.clone();
             self.selection_state.update(cx, |state, _| {
-                state.selected_features.clear();
-            });
-        }
-
-        self.selection_state.update(cx, |state, _| {
-            if selected_feature_id.is_none() {
-                state.selected_features.clear();
-            }
-
-            if let Some(id) = selected_feature_id {
                 state.selected_features.push(id);
+            });
+        } else {
+            if !event.modifiers.shift {
+                self.selected_feature_move_offset = point(px(0.), px(0.));
+                self.selection_state.update(cx, |state, _| {
+                    state.selected_features.clear();
+                });
             }
-        });
+        }
     }
 
     fn paint_canvas(
