@@ -4,7 +4,7 @@ use crate::{
     app::SelectionState,
     camera::Camera,
     document::{Command, Document},
-    feature::FeatureKind,
+    feature::{Feature, FeatureKind},
     feature_id::FeatureId,
 };
 
@@ -79,13 +79,46 @@ impl ShapeCanvas {
                 .iter()
                 .find(|feature| feature.bounds().contains(&mouse_world));
 
-            if (self.selection_box.is_some() || selected_feature.is_none()) && !self.did_select {
+            println!(
+                "Did drag: {}, selected_feature: {:?}",
+                self.did_drag,
+                selected_feature.is_some()
+            );
+            if (self.did_drag && self.selection_box.is_some())
+                || (!self.did_drag && selected_feature.is_none())
+            {
+                // }
+
+                // if (self.selection_box.is_some() || selected_feature.is_none()) && !self.did_select {
                 self.did_drag = true;
 
                 if let Some((point1, _)) = self.selection_box {
                     let point2 = self.camera.screen_to_world(event.position);
 
                     self.selection_box = Some((point1, point2));
+
+                    let selection_bounds = self.selection_box_bounds().unwrap();
+
+                    let selectable_features: Vec<FeatureId> = document
+                        .features
+                        .iter()
+                        .filter(|feature| feature.bounds().intersects(&selection_bounds))
+                        .map(|feature| feature.id.clone())
+                        .collect();
+
+                    if event.modifiers.shift {
+                        self.selection_state.update(cx, move |state, _cx| {
+                            for feature in &selectable_features {
+                                if !state.selected_features.contains(feature) {
+                                    state.selected_features.push(feature.clone());
+                                }
+                            }
+                        });
+                    } else {
+                        self.selection_state.update(cx, move |state, _cx| {
+                            state.selected_features = selectable_features;
+                        });
+                    }
                 } else {
                     let mouse_world = self.camera.screen_to_world(event.position);
                     self.selection_box = Some((mouse_world, mouse_world));
@@ -207,6 +240,8 @@ impl ShapeCanvas {
                     state.selected_features.push(hovered_feature.id);
                 });
             }
+        } else {
+            self.did_drag = false;
         }
     }
 
@@ -269,20 +304,22 @@ impl ShapeCanvas {
                     }
                 }
             }
-
-            if let Some((point1, point2)) = &self.selection_box {
-                let min_point = point1.min(point2);
-                let max_point = point1.max(point2);
-                let screen_bounds = self.camera.world_to_screen_bounds(Bounds::new(
-                    min_point,
-                    Size::from(max_point - min_point),
-                ));
+            if let Some(bounds) = self.selection_box_bounds() {
+                let screen_bounds = self.camera.world_to_screen_bounds(bounds);
                 window.paint_quad(
                     outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed)
                         .border_widths(px(4.)),
                 );
             }
         });
+    }
+
+    fn selection_box_bounds(&self) -> Option<Bounds<Pixels>> {
+        self.selection_box.map(|(point1, point2)| {
+            let min_point = point1.min(&point2);
+            let max_point = point1.max(&point2);
+            Bounds::new(min_point, Size::from(max_point - min_point))
+        })
     }
 }
 
