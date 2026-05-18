@@ -68,48 +68,49 @@ impl ShapeCanvas {
             .iter()
             .any(|feature| feature.bounds().contains(&mouse_world));
 
-        if (self.did_drag && self.selection_box.is_some())
-            || (!self.did_drag && !has_hovered_feature)
-        {
-            self.did_drag = true;
-
-            if let Some((point1, _)) = self.selection_box {
-                let point2 = self.camera.screen_to_world(position);
-
-                self.selection_box = Some((point1, point2));
-
-                let selection_bounds = self.selection_box_bounds().unwrap();
-
-                let document = self.document.read(cx);
-                let selectable_features: Vec<FeatureId> = document
-                    .features
-                    .iter()
-                    .filter(|feature| feature.bounds().intersects(&selection_bounds))
-                    .map(|feature| feature.id.clone())
-                    .collect();
-
-                if shift {
-                    self.selection_state.update(cx, move |state, _cx| {
-                        for feature in &selectable_features {
-                            if !state.selected_features.contains(feature) {
-                                state.selected_features.push(feature.clone());
-                            }
-                        }
-                    });
-                } else {
-                    self.selection_state.update(cx, move |state, _cx| {
-                        state.selected_features = selectable_features;
-                    });
-                }
-            } else {
-                let mouse_world = self.camera.screen_to_world(position);
-                self.selection_box = Some((mouse_world, mouse_world));
-            }
-
-            return true;
+        let is_starting_selecting_box = !self.did_drag && !has_hovered_feature;
+        let is_continueing_selection_box = self.did_drag && self.selection_box.is_some();
+        let is_drawing_selecion_box = is_starting_selecting_box || is_continueing_selection_box;
+        if !is_drawing_selecion_box {
+            return false;
         }
 
-        false
+        self.did_drag = true;
+
+        if let Some((point1, _)) = self.selection_box {
+            let point2 = self.camera.screen_to_world(position);
+
+            self.selection_box = Some((point1, point2));
+
+            let selection_bounds = self.selection_box_bounds().unwrap();
+
+            let document = self.document.read(cx);
+            let selectable_features: Vec<FeatureId> = document
+                .features
+                .iter()
+                .filter(|feature| feature.bounds().intersects(&selection_bounds))
+                .map(|feature| feature.id.clone())
+                .collect();
+
+            if shift {
+                self.selection_state.update(cx, move |state, _cx| {
+                    for feature in &selectable_features {
+                        if !state.selected_features.contains(feature) {
+                            state.selected_features.push(feature.clone());
+                        }
+                    }
+                });
+            } else {
+                self.selection_state.update(cx, move |state, _cx| {
+                    state.selected_features = selectable_features;
+                });
+            }
+        } else {
+            let mouse_world = self.camera.screen_to_world(position);
+            self.selection_box = Some((mouse_world, mouse_world));
+        }
+
+        true
     }
 
     fn on_mouse_move(
