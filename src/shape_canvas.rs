@@ -13,7 +13,8 @@ pub struct ShapeCanvas {
     selected_feature_move_offset: Point<Pixels>,
     did_drag: bool,
     did_select: bool,
-    active_selection_box: Option<Bounds<Pixels>>,
+
+    selection_box: Option<(Point<Pixels>, Point<Pixels>)>,
 
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
@@ -26,10 +27,8 @@ impl ShapeCanvas {
             selected_feature_move_offset: Point::new(px(0.), px(0.)),
             did_drag: false,
             did_select: false,
-            active_selection_box: Some(Bounds::centered_at(
-                point(px(50.), px(50.)),
-                size(px(100.), px(100.)),
-            )),
+
+            selection_box: None,
             document,
             selection_state,
         }
@@ -67,7 +66,35 @@ impl ShapeCanvas {
 
         let camera = self.camera.clone();
 
-        if !event.dragging() || selected_features.is_empty() {
+        if !event.dragging() {
+            return;
+        }
+
+        {
+            // selection box stuff
+            let mouse_world = self.camera.screen_to_world(event.position);
+
+            let selected_feature = document
+                .features
+                .iter()
+                .find(|feature| feature.bounds().contains(&mouse_world));
+
+            if (self.selection_box.is_some() || selected_feature.is_none()) && !self.did_select {
+                self.did_drag = true;
+
+                if let Some((point1, _)) = self.selection_box {
+                    let point2 = self.camera.screen_to_world(event.position);
+
+                    self.selection_box = Some((point1, point2));
+                } else {
+                    let mouse_world = self.camera.screen_to_world(event.position);
+                    self.selection_box = Some((mouse_world, mouse_world));
+                }
+
+                return;
+            }
+        }
+        if selected_features.is_empty() {
             return;
         }
 
@@ -145,6 +172,10 @@ impl ShapeCanvas {
     fn on_mouse_up(&mut self, event: &MouseUpEvent, _window: &mut Window, cx: &mut Context<Self>) {
         let doc = self.document.read(cx);
         let mouse_world = self.camera.screen_to_world(event.position);
+
+        if self.selection_box.is_some() {
+            self.selection_box = None;
+        }
 
         let hovered_feature = doc
             .features
@@ -239,8 +270,13 @@ impl ShapeCanvas {
                 }
             }
 
-            if let Some(active_selection_box) = &self.active_selection_box {
-                let screen_bounds = self.camera.world_to_screen_bounds(*active_selection_box);
+            if let Some((point1, point2)) = &self.selection_box {
+                let min_point = point1.min(point2);
+                let max_point = point1.max(point2);
+                let screen_bounds = self.camera.world_to_screen_bounds(Bounds::new(
+                    min_point,
+                    Size::from(max_point - min_point),
+                ));
                 window.paint_quad(
                     outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed)
                         .border_widths(px(4.)),
