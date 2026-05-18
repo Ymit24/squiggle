@@ -37,7 +37,7 @@ impl WorkflowApp {
         ];
 
         let size = 1000.;
-        for _ in 0..50 {
+        for _ in 0..100 {
             if rand::random::<bool>() {
                 initial_features.push(Feature::new_circle(
                     px(rand::random::<f32>() * size),
@@ -62,7 +62,8 @@ impl WorkflowApp {
         let focus_handle = cx.focus_handle();
         focus_handle.focus(window, cx);
 
-        let shape_canvas = cx.new(|_cx| ShapeCanvas::new(document.clone(), selection_state.clone()));
+        let shape_canvas =
+            cx.new(|_cx| ShapeCanvas::new(document.clone(), selection_state.clone()));
 
         Self {
             document,

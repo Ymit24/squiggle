@@ -79,11 +79,6 @@ impl ShapeCanvas {
                 .iter()
                 .find(|feature| feature.bounds().contains(&mouse_world));
 
-            println!(
-                "Did drag: {}, selected_feature: {:?}",
-                self.did_drag,
-                selected_feature.is_some()
-            );
             if (self.did_drag && self.selection_box.is_some())
                 || (!self.did_drag && selected_feature.is_none())
             {
