@@ -4,7 +4,7 @@ use crate::{
     app::SelectionState,
     camera::Camera,
     document::{Command, Document},
-    feature::{Feature, FeatureKind},
+    feature::FeatureKind,
     feature_id::FeatureId,
 };
 
@@ -55,6 +55,57 @@ impl ShapeCanvas {
         cx.notify();
     }
 
+    fn handle_selection_box_drag(
+        &mut self,
+        position: Point<Pixels>,
+        has_hovered_feature: bool,
+        shift: bool,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        if (self.did_drag && self.selection_box.is_some())
+            || (!self.did_drag && !has_hovered_feature)
+        {
+            self.did_drag = true;
+
+            if let Some((point1, _)) = self.selection_box {
+                let point2 = self.camera.screen_to_world(position);
+
+                self.selection_box = Some((point1, point2));
+
+                let selection_bounds = self.selection_box_bounds().unwrap();
+
+                let document = self.document.read(cx);
+                let selectable_features: Vec<FeatureId> = document
+                    .features
+                    .iter()
+                    .filter(|feature| feature.bounds().intersects(&selection_bounds))
+                    .map(|feature| feature.id.clone())
+                    .collect();
+
+                if shift {
+                    self.selection_state.update(cx, move |state, _cx| {
+                        for feature in &selectable_features {
+                            if !state.selected_features.contains(feature) {
+                                state.selected_features.push(feature.clone());
+                            }
+                        }
+                    });
+                } else {
+                    self.selection_state.update(cx, move |state, _cx| {
+                        state.selected_features = selectable_features;
+                    });
+                }
+            } else {
+                let mouse_world = self.camera.screen_to_world(position);
+                self.selection_box = Some((mouse_world, mouse_world));
+            }
+
+            return true;
+        }
+
+        false
+    }
+
     fn on_mouse_move(
         &mut self,
         event: &MouseMoveEvent,
@@ -62,66 +113,27 @@ impl ShapeCanvas {
         cx: &mut Context<Self>,
     ) {
         let selected_features = self.selection_state.read(cx).selected_features.clone();
-        let document = self.document.read(cx);
-
         let camera = self.camera.clone();
 
         if !event.dragging() {
             return;
         }
 
-        {
-            // selection box stuff
-            let mouse_world = self.camera.screen_to_world(event.position);
-
-            let selected_feature = document
+        let mouse_world = self.camera.screen_to_world(event.position);
+        let has_hovered_feature = {
+            let document = self.document.read(cx);
+            document
                 .features
                 .iter()
-                .find(|feature| feature.bounds().contains(&mouse_world));
+                .any(|feature| feature.bounds().contains(&mouse_world))
+        };
 
-            if (self.did_drag && self.selection_box.is_some())
-                || (!self.did_drag && selected_feature.is_none())
-            {
-                // }
-
-                // if (self.selection_box.is_some() || selected_feature.is_none()) && !self.did_select {
-                self.did_drag = true;
-
-                if let Some((point1, _)) = self.selection_box {
-                    let point2 = self.camera.screen_to_world(event.position);
-
-                    self.selection_box = Some((point1, point2));
-
-                    let selection_bounds = self.selection_box_bounds().unwrap();
-
-                    let selectable_features: Vec<FeatureId> = document
-                        .features
-                        .iter()
-                        .filter(|feature| feature.bounds().intersects(&selection_bounds))
-                        .map(|feature| feature.id.clone())
-                        .collect();
-
-                    if event.modifiers.shift {
-                        self.selection_state.update(cx, move |state, _cx| {
-                            for feature in &selectable_features {
-                                if !state.selected_features.contains(feature) {
-                                    state.selected_features.push(feature.clone());
-                                }
-                            }
-                        });
-                    } else {
-                        self.selection_state.update(cx, move |state, _cx| {
-                            state.selected_features = selectable_features;
-                        });
-                    }
-                } else {
-                    let mouse_world = self.camera.screen_to_world(event.position);
-                    self.selection_box = Some((mouse_world, mouse_world));
-                }
-
-                return;
-            }
+        if self.handle_selection_box_drag(event.position, has_hovered_feature, event.modifiers.shift, cx) {
+            return;
         }
+
+        let document = self.document.read(cx);
+
         if selected_features.is_empty() {
             return;
         }
