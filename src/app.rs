@@ -21,7 +21,6 @@ impl SelectionState {
 
 pub struct WorkflowApp {
     document: Entity<Document>,
-    selection_state: Entity<SelectionState>,
     shape_canvas: Entity<ShapeCanvas>,
     focus_handle: FocusHandle,
     fps_counter: Entity<FpsCounter>,
@@ -67,7 +66,6 @@ impl WorkflowApp {
 
         Self {
             document,
-            selection_state,
             shape_canvas,
             focus_handle,
             fps_counter: cx.new(|_cx| FpsCounter::new()),

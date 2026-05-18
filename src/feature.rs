@@ -54,11 +54,6 @@ impl Feature {
         Bounds::new(self.origin, self.size())
     }
 
-    pub fn center(&self) -> Point<Pixels> {
-        let s = self.size() / 2.0;
-        self.origin + point(s.width, s.height)
-    }
-
     pub fn move_to(&mut self, origin: Point<Pixels>) {
         self.origin = origin;
     }

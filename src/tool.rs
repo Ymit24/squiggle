@@ -1,4 +1,4 @@
-use gpui::{Pixels, Point, Window, px};
+use gpui::{Pixels, Point, Window};
 
 use crate::{app::SelectionState, camera::Camera, document::Document, tools::select::SelectTool};
 

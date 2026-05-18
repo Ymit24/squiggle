@@ -18,14 +18,6 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn new(location: Point<Pixels>, zoom: f32) -> Self {
-        Self {
-            location,
-            zoom,
-            viewport_origin: Point::default(),
-        }
-    }
-
     pub fn set_viewport_origin(&mut self, origin: Point<Pixels>) {
         self.viewport_origin = origin;
     }
