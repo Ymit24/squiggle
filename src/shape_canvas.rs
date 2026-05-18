@@ -224,7 +224,6 @@ impl ShapeCanvas {
             }
 
             if event.modifiers.shift {
-                println!("Did select: {:?}", self.did_select);
                 if !self.did_select {
                     self.selection_state.update(cx, |state, _| {
                         state
