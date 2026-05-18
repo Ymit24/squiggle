@@ -5,6 +5,7 @@ use crate::app::WorkflowApp;
 
 mod app;
 mod camera;
+mod canvas_interaction;
 mod document;
 mod feature;
 mod feature_id;

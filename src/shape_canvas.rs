@@ -3,6 +3,7 @@ use gpui::*;
 use crate::{
     app::SelectionState,
     camera::Camera,
+    canvas_interaction::Tool,
     document::{Command, Document},
     feature::FeatureKind,
     feature_id::FeatureId,
@@ -10,12 +11,7 @@ use crate::{
 
 pub struct ShapeCanvas {
     camera: Camera,
-    selected_feature_move_offset: Point<Pixels>,
-    did_drag: bool,
-    did_select: bool,
-
-    selection_box: Option<(Point<Pixels>, Point<Pixels>)>,
-
+    tool: Tool,
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
 }
@@ -24,11 +20,14 @@ impl ShapeCanvas {
     pub fn new(document: Entity<Document>, selection_state: Entity<SelectionState>) -> Self {
         Self {
             camera: Camera::default(),
-            selected_feature_move_offset: Point::new(px(0.), px(0.)),
-            did_drag: false,
-            did_select: false,
 
-            selection_box: None,
+            tool: Tool::new_selection(),
+
+            // selected_feature_move_offset: Point::new(px(0.), px(0.)),
+            // did_drag: false,
+            // did_select: false,
+
+            // selection_box: None,
             document,
             selection_state,
         }
@@ -55,61 +54,61 @@ impl ShapeCanvas {
         cx.notify();
     }
 
-    fn handle_selection_box_drag(
-        &mut self,
-        position: Point<Pixels>,
-        mouse_world: Point<Pixels>,
-        shift: bool,
-        cx: &mut Context<Self>,
-    ) -> bool {
-        let document = self.document.read(cx);
-        let has_hovered_feature = document
-            .features
-            .iter()
-            .any(|feature| feature.bounds().contains(&mouse_world));
+    // fn handle_selection_box_drag(
+    //     &mut self,
+    //     position: Point<Pixels>,
+    //     mouse_world: Point<Pixels>,
+    //     shift: bool,
+    //     cx: &mut Context<Self>,
+    // ) -> bool {
+    //     let document = self.document.read(cx);
+    //     let has_hovered_feature = document
+    //         .features
+    //         .iter()
+    //         .any(|feature| feature.bounds().contains(&mouse_world));
 
-        let is_starting_selecting_box = !self.did_drag && !has_hovered_feature;
-        let is_continueing_selection_box = self.did_drag && self.selection_box.is_some();
-        let is_drawing_selecion_box = is_starting_selecting_box || is_continueing_selection_box;
-        if !is_drawing_selecion_box {
-            return false;
-        }
+    //     let is_starting_selecting_box = !self.did_drag && !has_hovered_feature;
+    //     let is_continueing_selection_box = self.did_drag && self.selection_box.is_some();
+    //     let is_drawing_selecion_box = is_starting_selecting_box || is_continueing_selection_box;
+    //     if !is_drawing_selecion_box {
+    //         return false;
+    //     }
 
-        self.did_drag = true;
+    //     self.did_drag = true;
 
-        if let Some((point1, _)) = self.selection_box {
-            let point2 = self.camera.screen_to_world(position);
+    //     if let Some((point1, _)) = self.selection_box {
+    //         let point2 = self.camera.screen_to_world(position);
 
-            self.selection_box = Some((point1, point2));
+    //         self.selection_box = Some((point1, point2));
 
-            let selection_bounds = self.selection_box_bounds().unwrap();
+    //         let selection_bounds = self.selection_box_bounds().unwrap();
 
-            let selectable_features: Vec<FeatureId> = document
-                .features
-                .iter()
-                .filter(|feature| feature.bounds().intersects(&selection_bounds))
-                .map(|feature| feature.id.clone())
-                .collect();
+    //         let selectable_features: Vec<FeatureId> = document
+    //             .features
+    //             .iter()
+    //             .filter(|feature| feature.bounds().intersects(&selection_bounds))
+    //             .map(|feature| feature.id.clone())
+    //             .collect();
 
-            if shift {
-                self.selection_state.update(cx, move |state, _cx| {
-                    for feature in &selectable_features {
-                        if !state.selected_features.contains(feature) {
-                            state.selected_features.push(feature.clone());
-                        }
-                    }
-                });
-            } else {
-                self.selection_state.update(cx, move |state, _cx| {
-                    state.selected_features = selectable_features;
-                });
-            }
-        } else {
-            self.selection_box = Some((mouse_world, mouse_world));
-        }
+    //         if shift {
+    //             self.selection_state.update(cx, move |state, _cx| {
+    //                 for feature in &selectable_features {
+    //                     if !state.selected_features.contains(feature) {
+    //                         state.selected_features.push(feature.clone());
+    //                     }
+    //                 }
+    //             });
+    //         } else {
+    //             self.selection_state.update(cx, move |state, _cx| {
+    //                 state.selected_features = selectable_features;
+    //             });
+    //         }
+    //     } else {
+    //         self.selection_box = Some((mouse_world, mouse_world));
+    //     }
 
-        true
-    }
+    //     true
+    // }
 
     fn on_mouse_move(
         &mut self,
@@ -117,51 +116,64 @@ impl ShapeCanvas {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if !event.dragging() {
+        let is_dragging = event.dragging();
+        if !is_dragging {
             return;
         }
 
         let mouse_world = self.camera.screen_to_world(event.position);
 
-        if self.handle_selection_box_drag(event.position, mouse_world, event.modifiers.shift, cx) {
-            return;
-        }
-
-        self.handle_drag_features(mouse_world, cx);
-    }
-
-    fn handle_drag_features(&mut self, mouse_world: Point<Pixels>, cx: &mut Context<Self>) {
-        let selected_features = self.selection_state.read(cx).selected_features.clone();
-        if selected_features.is_empty() {
-            return;
-        }
-
-        self.did_drag = true;
-
-        let document = self.document.read(cx);
-        let chase_feature = document
-            .feature_by_id(selected_features.last().unwrap().clone())
-            .unwrap();
-
-        let last_mouse_pos = self.selected_feature_move_offset.clone();
-
-        let selected_features: Vec<(FeatureId, Point<Pixels>)> = selected_features
-            .iter()
-            .map(|id| {
-                let feature = document.feature_by_id(id.clone()).unwrap().clone();
-                (feature.id, feature.origin - chase_feature.origin)
-            })
-            .collect();
-
-        self.document.update(cx, |document, _cx| {
-            for (id, offset) in selected_features.into_iter() {
-                document.execute_command(Command::MoveFeature(
-                    id,
-                    (mouse_world - last_mouse_pos) + offset,
-                ));
-            }
+        self.document.update(cx, |state, cx| {
+            self.selection_state.update(cx, |selection_state, _| {
+                self.tool.on_mouse_move(
+                    state,
+                    mouse_world,
+                    is_dragging,
+                    selection_state,
+                    event.modifiers.shift,
+                );
+            });
         });
+
+        // if self.handle_selection_box_drag(event.position, mouse_world, event.modifiers.shift, cx) {
+        //     return;
+        // }
+
+        // self.handle_drag_features(mouse_world, cx);
     }
+
+    // fn handle_drag_features(&mut self, mouse_world: Point<Pixels>, cx: &mut Context<Self>) {
+    //     let selected_features = self.selection_state.read(cx).selected_features.clone();
+    //     if selected_features.is_empty() {
+    //         return;
+    //     }
+
+    //     self.did_drag = true;
+
+    //     let document = self.document.read(cx);
+    //     let chase_feature = document
+    //         .feature_by_id(selected_features.last().unwrap().clone())
+    //         .unwrap();
+
+    //     let last_mouse_pos = self.selected_feature_move_offset.clone();
+
+    //     let selected_features: Vec<(FeatureId, Point<Pixels>)> = selected_features
+    //         .iter()
+    //         .map(|id| {
+    //             let feature = document.feature_by_id(id.clone()).unwrap().clone();
+    //             (feature.id, feature.origin - chase_feature.origin)
+    //         })
+    //         .collect();
+
+    //     self.document.update(cx, |document, _cx| {
+    //         for (id, offset) in selected_features.into_iter() {
+    //             document.execute_command(Command::MoveFeature(
+    //                 id,
+    //                 (mouse_world - last_mouse_pos) + offset,
+    //             ));
+    //         }
+    //     });
+    // }
 
     fn on_mouse_down(
         &mut self,
@@ -169,85 +181,96 @@ impl ShapeCanvas {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let doc = self.document.read(cx);
         let mouse_world = self.camera.screen_to_world(event.position);
 
-        let selection_state = self.selection_state.read(cx).selected_features.clone();
+        self.selection_state.update(cx, |selection_state, cx| {
+            let document = self.document.read(cx);
+            self.tool.on_mouse_down(
+                document,
+                mouse_world,
+                selection_state,
+                event.modifiers.shift,
+            );
+        });
 
-        let selected_feature = doc
-            .features
-            .iter()
-            .find(|feature| feature.bounds().contains(&mouse_world));
+        // let selected_feature = doc
+        //     .features
+        //     .iter()
+        //     .find(|feature| feature.bounds().contains(&mouse_world));
 
-        if let Some(feature) = selected_feature {
-            if !event.modifiers.shift {
-                self.selected_feature_move_offset = point(px(0.), px(0.));
-            }
-            self.selected_feature_move_offset =
-                self.camera.screen_to_world(event.position) - feature.origin;
+        // if let Some(feature) = selected_feature {
+        //     if !event.modifiers.shift {
+        //         self.selected_feature_move_offset = point(px(0.), px(0.));
+        //     }
+        //     self.selected_feature_move_offset =
+        //         self.camera.screen_to_world(event.position) - feature.origin;
 
-            let id = feature.id.clone();
-            if !selection_state.contains(&id) {
-                self.did_select = true;
-            }
-            self.selection_state.update(cx, move |state, _| {
-                if !event.modifiers.shift {
-                    if !selection_state.contains(&id) {
-                        state.selected_features.clear();
-                    }
-                }
-                state.selected_features.push(id);
-            });
-        } else {
-            if !event.modifiers.shift {
-                self.selected_feature_move_offset = point(px(0.), px(0.));
-                self.selection_state.update(cx, |state, _| {
-                    state.selected_features.clear();
-                });
-            }
-        }
+        //     let id = feature.id.clone();
+        //     if !selection_state.contains(&id) {
+        //         self.did_select = true;
+        //     }
+        //     self.selection_state.update(cx, move |state, _| {
+        //         if !event.modifiers.shift {
+        //             if !selection_state.contains(&id) {
+        //                 state.selected_features.clear();
+        //             }
+        //         }
+        //         state.selected_features.push(id);
+        //     });
+        // } else {
+        //     if !event.modifiers.shift {
+        //         self.selected_feature_move_offset = point(px(0.), px(0.));
+        //         self.selection_state.update(cx, |state, _| {
+        //             state.selected_features.clear();
+        //         });
+        //     }
+        // }
     }
 
     fn on_mouse_up(&mut self, event: &MouseUpEvent, _window: &mut Window, cx: &mut Context<Self>) {
-        let doc = self.document.read(cx);
         let mouse_world = self.camera.screen_to_world(event.position);
 
-        if self.selection_box.is_some() {
-            self.selection_box = None;
-        }
+        self.selection_state.update(cx, |selection_state, cx| {
+            let doc = self.document.read(cx);
+            self.tool
+                .on_mouse_up(doc, mouse_world, selection_state, event.modifiers.shift);
+        });
+        // if self.selection_box.is_some() {
+        //     self.selection_box = None;
+        // }
 
-        let hovered_feature = doc
-            .features
-            .iter()
-            .find(|feature| feature.bounds().contains(&mouse_world))
-            .map(Clone::clone);
+        // let hovered_feature = doc
+        //     .features
+        //     .iter()
+        //     .find(|feature| feature.bounds().contains(&mouse_world))
+        //     .map(Clone::clone);
 
-        if let Some(hovered_feature) = hovered_feature {
-            if self.did_drag {
-                self.did_drag = false;
-                self.did_select = false;
-                return;
-            }
+        // if let Some(hovered_feature) = hovered_feature {
+        //     if self.did_drag {
+        //         self.did_drag = false;
+        //         self.did_select = false;
+        //         return;
+        //     }
 
-            if event.modifiers.shift {
-                if !self.did_select {
-                    self.selection_state.update(cx, |state, _| {
-                        state
-                            .selected_features
-                            .retain(|id| id != &hovered_feature.id);
-                    });
-                } else {
-                    self.did_select = false;
-                }
-            } else {
-                self.selection_state.update(cx, |state, _| {
-                    state.selected_features.clear();
-                    state.selected_features.push(hovered_feature.id);
-                });
-            }
-        } else {
-            self.did_drag = false;
-        }
+        //     if event.modifiers.shift {
+        //         if !self.did_select {
+        //             self.selection_state.update(cx, |state, _| {
+        //                 state
+        //                     .selected_features
+        //                     .retain(|id| id != &hovered_feature.id);
+        //             });
+        //         } else {
+        //             self.did_select = false;
+        //         }
+        //     } else {
+        //         self.selection_state.update(cx, |state, _| {
+        //             state.selected_features.clear();
+        //             state.selected_features.push(hovered_feature.id);
+        //         });
+        //     }
+        // } else {
+        //     self.did_drag = false;
+        // }
     }
 
     fn paint_canvas(
@@ -309,23 +332,24 @@ impl ShapeCanvas {
                     }
                 }
             }
-            if let Some(bounds) = self.selection_box_bounds() {
-                let screen_bounds = self.camera.world_to_screen_bounds(bounds);
-                window.paint_quad(
-                    outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed)
-                        .border_widths(px(4.)),
-                );
-            }
+            self.tool.render(window, &self.camera);
+            // if let Some(bounds) = self.selection_box_bounds() {
+            //     let screen_bounds = self.camera.world_to_screen_bounds(bounds);
+            //     window.paint_quad(
+            //         outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed)
+            //             .border_widths(px(4.)),
+            //     );
+            // }
         });
     }
 
-    fn selection_box_bounds(&self) -> Option<Bounds<Pixels>> {
-        self.selection_box.map(|(point1, point2)| {
-            let min_point = point1.min(&point2);
-            let max_point = point1.max(&point2);
-            Bounds::new(min_point, Size::from(max_point - min_point))
-        })
-    }
+    // fn selection_box_bounds(&self) -> Option<Bounds<Pixels>> {
+    //     self.selection_box.map(|(point1, point2)| {
+    //         let min_point = point1.min(&point2);
+    //         let max_point = point1.max(&point2);
+    //         Bounds::new(min_point, Size::from(max_point - min_point))
+    //     })
+    // }
 }
 
 impl Render for ShapeCanvas {
