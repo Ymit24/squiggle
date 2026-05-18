@@ -5,13 +5,14 @@ use crate::app::WorkflowApp;
 
 mod app;
 mod camera;
-mod canvas_interaction;
 mod document;
 mod feature;
 mod feature_id;
 mod fps_counter;
 mod shape_canvas;
+mod tool;
 mod toolbar;
+mod tools;
 
 fn main() {
     gpui_platform::application()

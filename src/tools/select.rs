@@ -1,5 +1,4 @@
 use gpui::{BorderStyle, Bounds, Pixels, Point, Size, Window, outline, point, px, rgb};
-use gpui_component::select::SelectState;
 
 use crate::{
     app::SelectionState,
@@ -16,69 +15,16 @@ pub struct SelectTool {
     selection_box: Option<(Point<Pixels>, Point<Pixels>)>,
 }
 
-pub enum Tool {
-    Selection(SelectTool),
-}
-
-impl Tool {
-    pub fn new_selection() -> Self {
-        Self::Selection(SelectTool {
+impl SelectTool {
+    pub fn new() -> Self {
+        Self {
             selected_feature_move_offset: Point::new(px(0.), px(0.)),
             did_drag: false,
             did_select: false,
             selection_box: None,
-        })
-    }
-
-    pub fn on_mouse_down(
-        &mut self,
-        document: &Document,
-        mouse_world: Point<Pixels>,
-        selection_state: &mut SelectionState,
-        shift: bool,
-    ) {
-        match self {
-            Self::Selection(tool) => {
-                tool.on_mouse_down(document, mouse_world, selection_state, shift)
-            }
         }
     }
 
-    pub fn on_mouse_move(
-        &mut self,
-        document: &mut Document,
-        mouse_world: Point<Pixels>,
-        is_dragging: bool,
-        selection_state: &mut SelectionState,
-        shift: bool,
-    ) {
-        match self {
-            Self::Selection(tool) => {
-                tool.on_mouse_move(document, mouse_world, is_dragging, selection_state, shift)
-            }
-        }
-    }
-
-    pub fn on_mouse_up(
-        &mut self,
-        doc: &Document,
-        mouse_world: Point<Pixels>,
-        selection_state: &mut SelectionState,
-        shift: bool,
-    ) {
-        match self {
-            Self::Selection(tool) => tool.on_mouse_up(doc, mouse_world, selection_state, shift),
-        }
-    }
-
-    pub fn render(&self, window: &mut Window, camera: &Camera) {
-        match self {
-            Self::Selection(tool) => tool.render(window, camera),
-        }
-    }
-}
-
-impl SelectTool {
     pub fn on_mouse_down(
         &mut self,
         document: &Document,
@@ -101,20 +47,18 @@ impl SelectTool {
             if !selection_state.selected_features.contains(&id) {
                 self.did_select = true;
             }
-            // self.selection_state.update(cx, move |state, _| {
+
             if !shift {
                 if !selection_state.selected_features.contains(&id) {
                     selection_state.selected_features.clear();
                 }
             }
             selection_state.selected_features.push(id);
-            // });
         } else {
             if !shift {
                 self.selected_feature_move_offset = point(px(0.), px(0.));
-                // self.selection_state.update(cx, |state, _| {
+
                 selection_state.selected_features.clear();
-                // });
             }
         }
     }
@@ -138,21 +82,18 @@ impl SelectTool {
         self.handle_drag_features(document, mouse_world, selection_state);
     }
 
-    fn on_mouse_up(
+    pub fn on_mouse_up(
         &mut self,
-        doc: &Document,
+        document: &Document,
         mouse_world: Point<Pixels>,
         selection_state: &mut SelectionState,
         shift: bool,
     ) {
-        // let doc = self.document.read(cx);
-        // let mouse_world = self.camera.screen_to_world(event.position);
-
         if self.selection_box.is_some() {
             self.selection_box = None;
         }
 
-        let hovered_feature = doc
+        let hovered_feature = document
             .features
             .iter()
             .find(|feature| feature.bounds().contains(&mouse_world))
@@ -167,26 +108,20 @@ impl SelectTool {
 
             if shift {
                 if !self.did_select {
-                    // self.selection_state.update(cx, |state, _| {
                     selection_state
                         .selected_features
                         .retain(|id| id != &hovered_feature.id);
-                    // });
                 } else {
                     self.did_select = false;
                 }
             } else {
-                // self.selection_state.update(cx, |state, _| {
                 selection_state.selected_features.clear();
                 selection_state.selected_features.push(hovered_feature.id);
-                // });
             }
         } else {
             self.did_drag = false;
         }
     }
-
-    ///////
 
     fn handle_selection_box_drag(
         &mut self,
@@ -224,17 +159,13 @@ impl SelectTool {
                 .collect();
 
             if shift {
-                // self.selection_state.update(cx, move |state, _cx| {
                 for feature in &selectable_features {
                     if !selection_state.selected_features.contains(feature) {
                         selection_state.selected_features.push(feature.clone());
                     }
                 }
-                // });
             } else {
-                // self.selection_state.update(cx, move |state, _cx| {
                 selection_state.selected_features = selectable_features;
-                // });
             }
         } else {
             self.selection_box = Some((mouse_world, mouse_world));
@@ -270,14 +201,12 @@ impl SelectTool {
             })
             .collect();
 
-        // self.document.update(cx, |document, _cx| {
         for (id, offset) in selected_features.into_iter() {
             document.execute_command(Command::MoveFeature(
                 id,
                 (mouse_world - last_mouse_pos) + offset,
             ));
         }
-        // });
     }
 
     pub fn render(&self, window: &mut Window, camera: &Camera) {
