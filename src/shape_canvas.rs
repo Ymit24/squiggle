@@ -97,6 +97,8 @@ impl ShapeCanvas {
         let doc = self.document.read(cx);
         let mouse_world = self.camera.screen_to_world(event.position);
 
+        let selection_state = self.selection_state.read(cx).selected_features.clone();
+
         let selected_feature = doc
             .features
             .iter()
@@ -110,7 +112,12 @@ impl ShapeCanvas {
                 self.camera.screen_to_world(event.position) - feature.origin;
 
             let id = feature.id.clone();
-            self.selection_state.update(cx, |state, _| {
+            self.selection_state.update(cx, move |state, _| {
+                if !event.modifiers.shift {
+                    if !selection_state.contains(&id) {
+                        state.selected_features.clear();
+                    }
+                }
                 state.selected_features.push(id);
             });
         } else {
