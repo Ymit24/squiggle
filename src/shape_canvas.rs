@@ -1,8 +1,6 @@
 use gpui::*;
 
-use crate::{
-    app::SelectionState, camera::Camera, document::Document, feature::FeatureKind, tool::Tool,
-};
+use crate::{app::SelectionState, camera::Camera, document::Document, tool::Tool};
 
 pub struct ShapeCanvas {
     camera: Camera,
