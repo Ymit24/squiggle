@@ -86,3 +86,45 @@ impl CreateRect {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::SelectionState;
+    use crate::document::Document;
+    use gpui::{point, px};
+
+    fn doc_with_features(features: Vec<Feature>) -> Document {
+        Document::new(features)
+    }
+
+    fn point_px(x: f32, y: f32) -> Point<Pixels> {
+        point(px(x), px(y))
+    }
+
+    #[test]
+    fn test_clicking_down_then_release_without_drag_does_nothing() {
+        let mut tool = CreateRect::new();
+        let mut doc = doc_with_features(vec![]);
+        let mut selection_state = SelectionState::new();
+
+        tool.on_mouse_down(&doc, point_px(0., 0.), &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(0., 0.), &mut selection_state, false);
+
+        assert!(doc.features.is_empty());
+    }
+
+    #[test]
+    fn test_clicking_down_then_moving_then_releasing_creates_rect() {
+        let mut tool = CreateRect::new();
+        let mut doc = doc_with_features(vec![]);
+        let mut selection_state = SelectionState::new();
+
+        tool.on_mouse_down(&doc, point_px(0., 0.), &mut selection_state, false);
+        tool.on_mouse_move(&mut doc, point_px(0., 0.), true, &mut selection_state, false);
+        tool.on_mouse_move(&mut doc, point_px(100., 100.), true, &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(100., 100.), &mut selection_state, false);
+
+        assert_eq!(doc.features.len(), 1);
+    }
+}

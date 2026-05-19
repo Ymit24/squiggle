@@ -69,6 +69,10 @@ impl Feature {
         };
     }
 
+    pub fn center(&self) -> Point<Pixels> {
+        self.bounds().center()
+    }
+
     pub fn move_to(&mut self, origin: Point<Pixels>) {
         self.origin = origin;
     }

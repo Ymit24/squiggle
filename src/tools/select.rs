@@ -430,10 +430,10 @@ mod tests {
         let mut tool = SelectTool::new();
         tool.did_drag = true;
         tool.did_select = true;
-        let doc = doc_with_features(vec![make_rect(0., 0., 100., 100.)]);
+        let mut doc = doc_with_features(vec![make_rect(0., 0., 100., 100.)]);
         let mut selection_state = SelectionState::new();
 
-        tool.on_mouse_up(&doc, point_px(50., 50.), &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(50., 50.), &mut selection_state, false);
 
         assert!(!tool.did_drag);
         assert!(!tool.did_select);
@@ -442,14 +442,14 @@ mod tests {
     #[test]
     fn test_on_mouse_up_clicks_feature_without_shift_selects_only_that_feature() {
         let mut tool = SelectTool::new();
-        let doc = doc_with_features(vec![
+        let mut doc = doc_with_features(vec![
             make_rect(0., 0., 50., 50.),
             make_rect(100., 0., 50., 50.),
         ]);
         let mut selection_state = SelectionState::new();
         selection_state.selected_features.push(doc.features[0].id);
 
-        tool.on_mouse_up(&doc, point_px(25., 25.), &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, false);
 
         assert_eq!(selection_state.selected_features.len(), 1);
         assert!(
@@ -467,7 +467,7 @@ mod tests {
     #[test]
     fn test_on_mouse_up_clicks_feature_with_shift_removes_from_selection() {
         let mut tool = SelectTool::new();
-        let doc = doc_with_features(vec![
+        let mut doc = doc_with_features(vec![
             make_rect(0., 0., 50., 50.),
             make_rect(100., 0., 50., 50.),
         ]);
@@ -475,7 +475,7 @@ mod tests {
         selection_state.selected_features.push(doc.features[0].id);
         selection_state.selected_features.push(doc.features[1].id);
 
-        tool.on_mouse_up(&doc, point_px(25., 25.), &mut selection_state, true);
+        tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, true);
 
         assert_eq!(selection_state.selected_features.len(), 1);
         assert!(
@@ -493,11 +493,11 @@ mod tests {
     #[test]
     fn test_on_mouse_up_clicks_empty_preserves_selection() {
         let mut tool = SelectTool::new();
-        let doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
+        let mut doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
         let mut selection_state = SelectionState::new();
         selection_state.selected_features.push(doc.features[0].id);
 
-        tool.on_mouse_up(&doc, point_px(200., 200.), &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(200., 200.), &mut selection_state, false);
 
         assert_eq!(selection_state.selected_features.len(), 1);
         assert!(!tool.did_drag);
@@ -507,10 +507,10 @@ mod tests {
     fn test_on_mouse_up_after_selection_box_clears_box() {
         let mut tool = SelectTool::new();
         tool.selection_box = Some((point_px(0., 0.), point_px(100., 100.)));
-        let doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
+        let mut doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
         let mut selection_state = SelectionState::new();
 
-        tool.on_mouse_up(&doc, point_px(25., 25.), &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, false);
 
         assert!(tool.selection_box.is_none());
     }
@@ -575,7 +575,7 @@ mod tests {
     #[test]
     fn test_on_mouse_up_shift_with_did_select_preserves_feature() {
         let mut tool = SelectTool::new();
-        let doc = doc_with_features(vec![
+        let mut doc = doc_with_features(vec![
             make_rect(0., 0., 50., 50.),
             make_rect(100., 0., 50., 50.),
         ]);
@@ -583,7 +583,7 @@ mod tests {
         selection_state.selected_features.push(doc.features[0].id);
         tool.did_select = true;
 
-        tool.on_mouse_up(&doc, point_px(25., 25.), &mut selection_state, true);
+        tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, true);
 
         assert_eq!(selection_state.selected_features.len(), 1);
         assert!(
