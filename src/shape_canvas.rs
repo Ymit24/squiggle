@@ -15,7 +15,7 @@ impl ShapeCanvas {
     pub fn new(document: Entity<Document>, selection_state: Entity<SelectionState>) -> Self {
         Self {
             camera: Camera::default(),
-            tool: Tool::new_selection(),
+            tool: Tool::new_create_rect(),
             document,
             selection_state,
         }
@@ -57,6 +57,7 @@ impl ShapeCanvas {
 
         self.document.update(cx, |document, cx| {
             self.selection_state.update(cx, |selection_state, _| {
+                // NOTE: May not work since this can update self.tool interior
                 self.tool.on_mouse_move(
                     document,
                     mouse_world,
@@ -90,14 +91,15 @@ impl ShapeCanvas {
     fn on_mouse_up(&mut self, event: &MouseUpEvent, _window: &mut Window, cx: &mut Context<Self>) {
         let mouse_world = self.camera.screen_to_world(event.position);
 
-        self.selection_state.update(cx, |selection_state, cx| {
-            let document = self.document.read(cx);
-            self.tool.on_mouse_up(
-                document,
-                mouse_world,
-                selection_state,
-                event.modifiers.shift,
-            );
+        self.document.update(cx, |document, cx| {
+            self.selection_state.update(cx, |selection_state, _| {
+                self.tool.on_mouse_up(
+                    document,
+                    mouse_world,
+                    selection_state,
+                    event.modifiers.shift,
+                );
+            });
         });
     }
 
@@ -122,18 +124,7 @@ impl ShapeCanvas {
                 let world_bounds = feature.bounds();
                 if !world_bounds.intersect(&visible_world).is_empty() {
                     let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
-                    match feature.kind {
-                        FeatureKind::Rectangle { .. } => {
-                            window.paint_quad(fill(screen_bounds, rgb(0xcba6f7)));
-                        }
-                        FeatureKind::Circle { radius } => {
-                            window.paint_quad(
-                                fill(screen_bounds, rgb(0xf38ba8)).corner_radii(
-                                    self.camera.world_length_to_screen_length(radius),
-                                ),
-                            );
-                        }
-                    }
+                    feature.render(screen_bounds, window);
                 }
             }
 

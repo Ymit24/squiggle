@@ -1,6 +1,9 @@
-use gpui::{Bounds, Pixels, Point, Size, point, size};
+use gpui::{Bounds, Pixels, Point, Size, Window, fill, point, rgb, size};
 
-use crate::feature_id::{FeatureId, NO_ID};
+use crate::{
+    camera::Camera,
+    feature_id::{FeatureId, NO_ID},
+};
 
 #[derive(Clone, Copy)]
 pub struct Feature {
@@ -54,8 +57,33 @@ impl Feature {
         Bounds::new(self.origin, self.size())
     }
 
+    pub fn set_bounds(&mut self, bounds: Bounds<Pixels>) {
+        self.origin = bounds.origin;
+        match self.kind {
+            FeatureKind::Rectangle { ref mut size } => {
+                *size = bounds.size;
+            }
+            FeatureKind::Circle { ref mut radius } => {
+                *radius = bounds.size.width / 2.;
+            }
+        };
+    }
+
     pub fn move_to(&mut self, origin: Point<Pixels>) {
         self.origin = origin;
+    }
+
+    pub fn render(&self, screen_bounds: Bounds<Pixels>, window: &mut Window) {
+        match self.kind {
+            FeatureKind::Rectangle { .. } => {
+                window.paint_quad(fill(screen_bounds, rgb(0xcba6f7)));
+            }
+            FeatureKind::Circle { .. } => {
+                window.paint_quad(
+                    fill(screen_bounds, rgb(0xf38ba8)).corner_radii(screen_bounds.size.width / 2.),
+                );
+            }
+        }
     }
 }
 

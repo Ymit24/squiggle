@@ -58,7 +58,7 @@ impl Tool {
 
     pub fn on_mouse_up(
         &mut self,
-        document: &Document,
+        document: &mut Document,
         mouse_world: Point<Pixels>,
         selection_state: &mut SelectionState,
         shift: bool,
