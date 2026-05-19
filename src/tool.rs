@@ -1,14 +1,24 @@
 use gpui::{Pixels, Point, Window};
 
-use crate::{app::SelectionState, camera::Camera, document::Document, tools::select::SelectTool};
+use crate::{
+    app::SelectionState,
+    camera::Camera,
+    document::Document,
+    tools::{create_rect::CreateRect, select::SelectTool},
+};
 
 pub enum Tool {
     Selection(SelectTool),
+    CreateRect(CreateRect),
 }
 
 impl Tool {
     pub fn new_selection() -> Self {
         Self::Selection(SelectTool::new())
+    }
+
+    pub fn new_create_rect() -> Self {
+        Self::CreateRect(CreateRect::new())
     }
 
     pub fn on_mouse_down(
@@ -20,6 +30,9 @@ impl Tool {
     ) {
         match self {
             Self::Selection(tool) => {
+                tool.on_mouse_down(document, mouse_world, selection_state, shift)
+            }
+            Self::CreateRect(tool) => {
                 tool.on_mouse_down(document, mouse_world, selection_state, shift)
             }
         }
@@ -37,6 +50,9 @@ impl Tool {
             Self::Selection(tool) => {
                 tool.on_mouse_move(document, mouse_world, is_dragging, selection_state, shift)
             }
+            Self::CreateRect(tool) => {
+                tool.on_mouse_move(document, mouse_world, is_dragging, selection_state, shift)
+            }
         }
     }
 
@@ -51,12 +67,16 @@ impl Tool {
             Self::Selection(tool) => {
                 tool.on_mouse_up(document, mouse_world, selection_state, shift)
             }
+            Self::CreateRect(tool) => {
+                tool.on_mouse_up(document, mouse_world, selection_state, shift)
+            }
         }
     }
 
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         match self {
             Self::Selection(tool) => tool.render(window, camera),
+            Self::CreateRect(tool) => tool.render(window, camera),
         }
     }
 }
