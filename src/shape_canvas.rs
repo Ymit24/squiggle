@@ -1,19 +1,23 @@
 use gpui::*;
 
-use crate::{app::SelectionState, camera::Camera, document::Document, tool::Tool};
+use crate::{app::SelectionState, camera::Camera, document::Document, tool_store::ToolStore};
 
 pub struct ShapeCanvas {
     camera: Camera,
-    tool: Tool,
+    tool_store: Entity<ToolStore>,
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
 }
 
 impl ShapeCanvas {
-    pub fn new(document: Entity<Document>, selection_state: Entity<SelectionState>) -> Self {
+    pub fn new(
+        document: Entity<Document>,
+        selection_state: Entity<SelectionState>,
+        tool_store: Entity<ToolStore>,
+    ) -> Self {
         Self {
             camera: Camera::default(),
-            tool: Tool::new_create_rect(),
+            tool_store,
             document,
             selection_state,
         }
@@ -54,15 +58,16 @@ impl ShapeCanvas {
         let mouse_world = self.camera.screen_to_world(event.position);
 
         self.document.update(cx, |document, cx| {
-            self.selection_state.update(cx, |selection_state, _| {
-                // NOTE: May not work since this can update self.tool interior
-                self.tool.on_mouse_move(
-                    document,
-                    mouse_world,
-                    is_dragging,
-                    selection_state,
-                    event.modifiers.shift,
-                );
+            self.selection_state.update(cx, |selection_state, cx| {
+                self.tool_store.update(cx, |tool_store, _| {
+                    tool_store.tool.on_mouse_move(
+                        document,
+                        mouse_world,
+                        is_dragging,
+                        selection_state,
+                        event.modifiers.shift,
+                    );
+                });
             });
         });
     }
@@ -76,27 +81,36 @@ impl ShapeCanvas {
         let mouse_world = self.camera.screen_to_world(event.position);
 
         self.selection_state.update(cx, |selection_state, cx| {
-            let document = self.document.read(cx);
-            self.tool.on_mouse_down(
-                document,
-                mouse_world,
-                selection_state,
-                event.modifiers.shift,
-            );
-        });
-    }
-
-    fn on_mouse_up(&mut self, event: &MouseUpEvent, _window: &mut Window, cx: &mut Context<Self>) {
-        let mouse_world = self.camera.screen_to_world(event.position);
-
-        self.document.update(cx, |document, cx| {
-            self.selection_state.update(cx, |selection_state, _| {
-                self.tool.on_mouse_up(
+            self.tool_store.update(cx, |tool_store, cx| {
+                let document = self.document.read(cx);
+                tool_store.tool.on_mouse_down(
                     document,
                     mouse_world,
                     selection_state,
                     event.modifiers.shift,
                 );
+            });
+        });
+    }
+
+    fn on_mouse_up(
+        &mut self,
+        event: &MouseUpEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let mouse_world = self.camera.screen_to_world(event.position);
+
+        self.document.update(cx, |document, cx| {
+            self.selection_state.update(cx, |selection_state, cx| {
+                self.tool_store.update(cx, |tool_store, _| {
+                    tool_store.tool.on_mouse_up(
+                        document,
+                        mouse_world,
+                        selection_state,
+                        event.modifiers.shift,
+                    );
+                });
             });
         });
     }
@@ -149,7 +163,7 @@ impl ShapeCanvas {
                     }
                 }
             }
-            self.tool.render(window, &self.camera);
+            self.tool_store.read(cx).tool.render(window, &self.camera);
         });
     }
 }

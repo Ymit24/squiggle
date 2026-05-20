@@ -11,6 +11,7 @@ mod feature_id;
 mod fps_counter;
 mod shape_canvas;
 mod tool;
+mod tool_store;
 mod toolbar;
 mod tools;
 
