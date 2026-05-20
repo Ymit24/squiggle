@@ -75,6 +75,9 @@ impl CreateRect {
         }
     }
 
+    pub fn deactivate(&mut self, _selection_state: &mut SelectionState) {
+    }
+
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         match self.state {
             FSM::Idle => {}

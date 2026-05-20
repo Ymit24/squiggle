@@ -56,7 +56,7 @@ impl WorkflowApp {
 
         let document = cx.new(|_cx| Document::new(initial_features));
         let selection_state = cx.new(|_cx| SelectionState::new());
-        let tool_store = cx.new(|_cx| ToolStore::new());
+        let tool_store = cx.new(|_cx| ToolStore::new(selection_state.clone()));
 
         bind_tool_keys(cx);
 

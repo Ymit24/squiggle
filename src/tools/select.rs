@@ -209,6 +209,10 @@ impl SelectTool {
         }
     }
 
+    pub fn deactivate(&mut self, selection_state: &mut SelectionState) {
+        selection_state.selected_features.clear();
+    }
+
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         if let Some(bounds) = self.selection_box_bounds() {
             let screen_bounds = camera.world_to_screen_bounds(bounds);
@@ -592,5 +596,17 @@ mod tests {
                 .contains(&doc.features[0].id)
         );
         assert!(!tool.did_select);
+    }
+
+    #[test]
+    fn test_deactivate_clears_selection() {
+        let mut tool = SelectTool::new();
+        let doc = doc_with_features(vec![make_rect(0., 0., 100., 100.)]);
+        let mut selection_state = SelectionState::new();
+        selection_state.selected_features.push(doc.features[0].id);
+
+        tool.deactivate(&mut selection_state);
+
+        assert!(selection_state.selected_features.is_empty());
     }
 }

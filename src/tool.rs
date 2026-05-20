@@ -73,6 +73,13 @@ impl Tool {
         }
     }
 
+    pub fn deactivate(&mut self, selection_state: &mut SelectionState) {
+        match self {
+            Self::Selection(tool) => tool.deactivate(selection_state),
+            Self::CreateRect(tool) => tool.deactivate(selection_state),
+        }
+    }
+
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         match self {
             Self::Selection(tool) => tool.render(window, camera),
