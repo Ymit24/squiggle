@@ -2,7 +2,16 @@ use gpui::*;
 use gpui::prelude::FluentBuilder;
 
 use crate::tool::Tool;
-use crate::tool_store::{ActivateCreateRectTool, ActivateSelectTool, ToolStore};
+use crate::tool_store::ToolStore;
+
+actions!(toolbar, [ActivateSelectTool, ActivateCreateRectTool]);
+
+pub fn bind_tool_keys<T: 'static>(cx: &mut Context<T>) {
+    cx.bind_keys([
+        KeyBinding::new("v", ActivateSelectTool, None),
+        KeyBinding::new("r", ActivateCreateRectTool, None),
+    ]);
+}
 
 pub struct Toolbar {
     tool_store: Entity<ToolStore>,

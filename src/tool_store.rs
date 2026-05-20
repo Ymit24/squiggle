@@ -18,5 +18,3 @@ impl ToolStore {
         cx.notify();
     }
 }
-
-actions!(tool_store, [ActivateSelectTool, ActivateCreateRectTool]);

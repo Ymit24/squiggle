@@ -5,8 +5,9 @@ use crate::feature::Feature;
 use crate::feature_id::FeatureId;
 use crate::fps_counter::FpsCounter;
 use crate::shape_canvas::ShapeCanvas;
-use crate::toolbar::Toolbar;
-use crate::tool_store::{ActivateCreateRectTool, ActivateSelectTool, ToolStore};
+use crate::toolbar::{bind_tool_keys, ActivateCreateRectTool, ActivateSelectTool, Toolbar};
+use crate::tool::Tool;
+use crate::tool_store::ToolStore;
 
 pub struct SelectionState {
     pub selected_features: Vec<FeatureId>,
@@ -57,10 +58,7 @@ impl WorkflowApp {
         let selection_state = cx.new(|_cx| SelectionState::new());
         let tool_store = cx.new(|_cx| ToolStore::new());
 
-        cx.bind_keys([
-            KeyBinding::new("v", ActivateSelectTool, None),
-            KeyBinding::new("r", ActivateCreateRectTool, None),
-        ]);
+        bind_tool_keys(cx);
 
         let focus_handle = cx.focus_handle();
         focus_handle.focus(window, cx);
@@ -88,12 +86,12 @@ impl Render for WorkflowApp {
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(|this, _: &ActivateSelectTool, _, cx| {
                 this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(crate::tool::Tool::new_selection(), cx);
+                    tool_store.set_tool(Tool::new_selection(), cx);
                 });
             }))
             .on_action(cx.listener(|this, _: &ActivateCreateRectTool, _, cx| {
                 this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(crate::tool::Tool::new_create_rect(), cx);
+                    tool_store.set_tool(Tool::new_create_rect(), cx);
                 });
             }))
             .child(self.shape_canvas.clone())
