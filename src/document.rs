@@ -65,11 +65,6 @@ impl Document {
                 }
                 self.features.push(feature);
             }
-            Command::RemoveFeature(id) => {
-                if let Some(index) = self.feature_index_by_id(id) {
-                    self.features.remove(index);
-                }
-            }
             Command::RemoveFeatures(ids) => {
                 for id in ids {
                     if let Some(index) = self.feature_index_by_id(id) {
