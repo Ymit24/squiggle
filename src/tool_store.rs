@@ -1,6 +1,6 @@
 use gpui::*;
 
-use crate::app::SelectionState;
+use crate::editor::SelectionState;
 use crate::tool::Tool;
 
 pub struct ToolStore {

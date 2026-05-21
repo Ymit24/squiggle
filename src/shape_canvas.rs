@@ -1,7 +1,7 @@
 use gpui::*;
 
 use crate::{
-    app::SelectionState,
+    editor::SelectionState,
     camera::Camera,
     colors,
     document::Document,

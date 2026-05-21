@@ -7,6 +7,7 @@ mod app;
 mod assets;
 mod camera;
 mod document;
+mod editor;
 mod feature;
 mod feature_id;
 mod fps_counter;

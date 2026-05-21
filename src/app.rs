@@ -2,32 +2,13 @@ use gpui::*;
 
 use crate::colors;
 use crate::document::Document;
+use crate::editor::Editor;
 use crate::feature::Feature;
-use crate::feature_id::FeatureId;
 use crate::fps_counter::FpsCounter;
-use crate::shape_canvas::ShapeCanvas;
-use crate::toolbar::{bind_tool_keys, ActivateCreateRectTool, ActivateSelectTool, Toolbar};
-use crate::tool::Tool;
-use crate::tool_store::ToolStore;
-
-pub struct SelectionState {
-    pub selected_features: Vec<FeatureId>,
-}
-
-impl SelectionState {
-    pub fn new() -> Self {
-        Self {
-            selected_features: Vec::new(),
-        }
-    }
-}
 
 pub struct WorkflowApp {
-    shape_canvas: Entity<ShapeCanvas>,
-    toolbar: Entity<Toolbar>,
-    focus_handle: FocusHandle,
+    editor: Entity<Editor>,
     fps_counter: Entity<FpsCounter>,
-    tool_store: Entity<ToolStore>,
 }
 
 impl WorkflowApp {
@@ -56,47 +37,25 @@ impl WorkflowApp {
         }
 
         let document = cx.new(|_cx| Document::new(initial_features));
-        let selection_state = cx.new(|_cx| SelectionState::new());
-        let tool_store = cx.new(|_cx| ToolStore::new(selection_state.clone()));
-
-        bind_tool_keys(cx);
-
-        let focus_handle = cx.focus_handle();
-        focus_handle.focus(window, cx);
-
-        let shape_canvas =
-            cx.new(|_cx| ShapeCanvas::new(document.clone(), selection_state.clone(), tool_store.clone()));
-        let toolbar = cx.new(|_cx| Toolbar::new(tool_store.clone()));
+        let editor = cx.new(|cx| Editor::new(document, cx));
+        editor.update(cx, |editor, cx| {
+            editor.request_focus(window, cx);
+        });
 
         Self {
-            shape_canvas,
-            toolbar,
-            focus_handle,
+            editor,
             fps_counter: cx.new(|_cx| FpsCounter::new()),
-            tool_store,
         }
     }
 }
 
 impl Render for WorkflowApp {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .relative()
             .size_full()
             .bg(colors::base())
-            .track_focus(&self.focus_handle)
-            .on_action(cx.listener(|this, _: &ActivateSelectTool, _, cx| {
-                this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(Tool::new_selection(), cx);
-                });
-            }))
-            .on_action(cx.listener(|this, _: &ActivateCreateRectTool, _, cx| {
-                this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(Tool::new_create_rect(), cx);
-                });
-            }))
-            .child(self.shape_canvas.clone())
-            .child(self.toolbar.clone())
+            .child(self.editor.clone())
             .child(self.fps_counter.clone())
     }
 }

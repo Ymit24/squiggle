@@ -1,7 +1,7 @@
 use gpui::{Pixels, Point, Window};
 
 use crate::{
-    app::SelectionState,
+    editor::SelectionState,
     camera::Camera,
     document::Document,
     tools::{create_rect::CreateRect, select::SelectTool},

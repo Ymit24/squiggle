@@ -2,7 +2,7 @@ use gpui::{BorderStyle, Bounds, Corners, Pixels, Point, Size, Window, point, px,
 
 use crate::{
     colors,
-    app::SelectionState,
+    editor::SelectionState,
     camera::Camera,
     document::{Command, Document},
     feature_id::FeatureId,
@@ -240,7 +240,7 @@ impl SelectTool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::app::SelectionState;
+    use crate::editor::SelectionState;
     use crate::document::Document;
     use crate::feature::Feature;
     use gpui::px;

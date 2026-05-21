@@ -1,7 +1,7 @@
 use gpui::{Bounds, Pixels, Point, Size, Window, px};
 
 use crate::{
-    app::SelectionState,
+    editor::SelectionState,
     camera::Camera,
     document::{Command, Document},
     feature::Feature,
@@ -94,7 +94,7 @@ impl CreateRect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::app::SelectionState;
+    use crate::editor::SelectionState;
     use crate::document::Document;
     use gpui::{point, px};
 
