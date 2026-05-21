@@ -1,5 +1,6 @@
-use gpui::*;
 use gpui::prelude::FluentBuilder;
+use gpui::*;
+use gpui_component::{Icon, Sizable};
 
 use crate::tool::Tool;
 use crate::tool_store::ToolStore;
@@ -23,6 +24,41 @@ impl Toolbar {
     }
 }
 
+fn tool_button<A: Action + Clone + 'static>(
+    icon_path: &'static str,
+    active: bool,
+    action: A,
+    cx: &mut Context<Toolbar>,
+) -> impl IntoElement {
+    let icon = Icon::empty()
+        .path(icon_path)
+        .with_size(px(20.))
+        .text_color(if active {
+            rgb(0xcdd6f4)
+        } else {
+            rgb(0xa6adc8)
+        });
+
+    div()
+        .flex()
+        .items_center()
+        .justify_center()
+        .size(px(36.))
+        .rounded_md()
+        .cursor_pointer()
+        .child(icon)
+        .when(active, |this| this.bg(rgb(0x45475a)))
+        .when(!active, |this| {
+            this.hover(|style| style.bg(rgb(0x313244)))
+        })
+        .on_mouse_down(
+            MouseButton::Left,
+            cx.listener(move |_this, _, window, cx| {
+                window.dispatch_action(Box::new(action.clone()), cx);
+            }),
+        )
+}
+
 impl Render for Toolbar {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let tool_store = self.tool_store.read(cx);
@@ -30,40 +66,41 @@ impl Render for Toolbar {
         let is_create_rect = matches!(tool_store.tool, Tool::CreateRect(_));
 
         div()
-            .flex()
-            .gap_1()
-            .px_2()
-            .py_1()
-            .child(
-                div()
-                    .px_3()
-                    .py_1()
-                    .child("Select")
-                    .when(is_select, |this| this.bg(rgb(0x6c7086)))
-                    .when(!is_select, |this| this.bg(rgb(0x45475a)))
-                    .text_color(rgb(0xcdd6f4))
-                    .cursor_pointer()
-                    .on_mouse_down(MouseButton::Left, cx.listener(|_this, _, window, cx| {
-                        window.dispatch_action(Box::new(ActivateSelectTool), cx);
-                    })),
-            )
-            .child(
-                div()
-                    .px_3()
-                    .py_1()
-                    .child("Create Rect")
-                    .when(is_create_rect, |this| this.bg(rgb(0x6c7086)))
-                    .when(!is_create_rect, |this| this.bg(rgb(0x45475a)))
-                    .text_color(rgb(0xcdd6f4))
-                    .cursor_pointer()
-                    .on_mouse_down(MouseButton::Left, cx.listener(|_this, _, window, cx| {
-                        window.dispatch_action(Box::new(ActivateCreateRectTool), cx);
-                    })),
-            )
-            .bg(rgb(0x313244))
-            .rounded_md()
             .absolute()
-            .top_4()
-            .left_1_2()
+            .top(px(20.))
+            .left_0()
+            .right_0()
+            .flex()
+            .justify_center()
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap(px(2.))
+                    .p_1()
+                    .bg(rgb(0x181825))
+                    .border_1()
+                    .border_color(rgb(0x45475a))
+                    .rounded_xl()
+                    .child(tool_button(
+                        "icons/arrow_selector_tool.svg",
+                        is_select,
+                        ActivateSelectTool,
+                        cx,
+                    ))
+                    .child(
+                        div()
+                            .w(px(1.))
+                            .h(px(20.))
+                            .mx(px(2.))
+                            .bg(rgb(0x45475a)),
+                    )
+                    .child(tool_button(
+                        "icons/crop_square.svg",
+                        is_create_rect,
+                        ActivateCreateRectTool,
+                        cx,
+                    )),
+            )
     }
 }

@@ -1,6 +1,12 @@
 use gpui::*;
 
-use crate::{app::SelectionState, camera::Camera, document::Document, tool_store::ToolStore};
+use crate::{
+    app::SelectionState,
+    camera::Camera,
+    colors,
+    document::Document,
+    tool_store::ToolStore,
+};
 
 pub struct ShapeCanvas {
     camera: Camera,
@@ -140,28 +146,14 @@ impl ShapeCanvas {
                 }
             }
 
-            const SELECTION_PADDING: Pixels = px(8.);
-            for feature in features {
-                if selected_ids.contains(&feature.id) {
-                    let world_bounds = feature.bounds();
-                    if !world_bounds.intersect(&visible_world).is_empty() {
-                        let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
-                        let padded_bounds = Bounds::new(
-                            point(
-                                screen_bounds.origin.x - SELECTION_PADDING,
-                                screen_bounds.origin.y - SELECTION_PADDING,
-                            ),
-                            size(
-                                screen_bounds.size.width + SELECTION_PADDING * 2.,
-                                screen_bounds.size.height + SELECTION_PADDING * 2.,
-                            ),
-                        );
-                        window.paint_quad(
-                            outline(padded_bounds, rgb(0xffffff), BorderStyle::Dashed)
-                                .border_widths(px(4.)),
-                        );
-                    }
-                }
+            let selected: Vec<_> = features
+                .iter()
+                .filter(|f| selected_ids.contains(&f.id))
+                .collect();
+            for feature in &selected {
+                let world_bounds = feature.bounds();
+                let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
+                paint_feature_selection(window, screen_bounds);
             }
             self.tool_store.read(cx).tool.render(window, &self.camera);
         });
@@ -207,6 +199,28 @@ impl Render for ShapeCanvas {
                 }),
             )
     }
+}
+
+fn paint_feature_selection(window: &mut Window, screen_bounds: Bounds<Pixels>) {
+    const PADDING: Pixels = px(5.);
+    let bounds = Bounds::new(
+        point(
+            screen_bounds.origin.x - PADDING,
+            screen_bounds.origin.y - PADDING,
+        ),
+        size(
+            screen_bounds.size.width + PADDING * 2.,
+            screen_bounds.size.height + PADDING * 2.,
+        ),
+    );
+    window.paint_quad(quad(
+        bounds,
+        Corners::all(px(0.)),
+        colors::ACCENT.alpha(0.),
+        px(2.),
+        colors::ACCENT,
+        BorderStyle::Solid,
+    ));
 }
 
 fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window) {

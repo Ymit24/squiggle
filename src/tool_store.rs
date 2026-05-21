@@ -11,7 +11,7 @@ pub struct ToolStore {
 impl ToolStore {
     pub fn new(selection_state: Entity<SelectionState>) -> Self {
         Self {
-            tool: Tool::new_create_rect(),
+            tool: Tool::new_selection(),
             selection_state,
         }
     }

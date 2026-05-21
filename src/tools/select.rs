@@ -1,6 +1,7 @@
-use gpui::{BorderStyle, Bounds, Pixels, Point, Size, Window, outline, point, px, rgb};
+use gpui::{BorderStyle, Bounds, Corners, Pixels, Point, Size, Window, point, px, quad};
 
 use crate::{
+    colors,
     app::SelectionState,
     camera::Camera,
     document::{Command, Document},
@@ -216,9 +217,14 @@ impl SelectTool {
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         if let Some(bounds) = self.selection_box_bounds() {
             let screen_bounds = camera.world_to_screen_bounds(bounds);
-            window.paint_quad(
-                outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed).border_widths(px(4.)),
-            );
+            window.paint_quad(quad(
+                screen_bounds,
+                Corners::all(px(0.)),
+                colors::ACCENT.alpha(0.06),
+                px(1.5),
+                colors::ACCENT,
+                BorderStyle::Dashed,
+            ));
         }
     }
 
