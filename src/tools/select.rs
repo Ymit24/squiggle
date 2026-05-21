@@ -1,6 +1,7 @@
-use gpui::{BorderStyle, Bounds, Pixels, Point, Size, Window, outline, point, px, rgb};
+use gpui::{BorderStyle, Bounds, Corners, Pixels, Point, Size, Window, point, px, quad};
 
 use crate::{
+    colors,
     app::SelectionState,
     camera::Camera,
     document::{Command, Document},
@@ -209,12 +210,21 @@ impl SelectTool {
         }
     }
 
+    pub fn deactivate(&mut self, selection_state: &mut SelectionState) {
+        selection_state.selected_features.clear();
+    }
+
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         if let Some(bounds) = self.selection_box_bounds() {
             let screen_bounds = camera.world_to_screen_bounds(bounds);
-            window.paint_quad(
-                outline(screen_bounds, rgb(0xffffff), BorderStyle::Dashed).border_widths(px(4.)),
-            );
+            window.paint_quad(quad(
+                screen_bounds,
+                Corners::all(px(0.)),
+                colors::accent().alpha(0.06),
+                px(1.5),
+                colors::accent(),
+                BorderStyle::Dashed,
+            ));
         }
     }
 
@@ -592,5 +602,17 @@ mod tests {
                 .contains(&doc.features[0].id)
         );
         assert!(!tool.did_select);
+    }
+
+    #[test]
+    fn test_deactivate_clears_selection() {
+        let mut tool = SelectTool::new();
+        let doc = doc_with_features(vec![make_rect(0., 0., 100., 100.)]);
+        let mut selection_state = SelectionState::new();
+        selection_state.selected_features.push(doc.features[0].id);
+
+        tool.deactivate(&mut selection_state);
+
+        assert!(selection_state.selected_features.is_empty());
     }
 }

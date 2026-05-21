@@ -1,19 +1,29 @@
 use gpui::*;
 
-use crate::{app::SelectionState, camera::Camera, document::Document, tool::Tool};
+use crate::{
+    app::SelectionState,
+    camera::Camera,
+    colors,
+    document::Document,
+    tool_store::ToolStore,
+};
 
 pub struct ShapeCanvas {
     camera: Camera,
-    tool: Tool,
+    tool_store: Entity<ToolStore>,
     document: Entity<Document>,
     selection_state: Entity<SelectionState>,
 }
 
 impl ShapeCanvas {
-    pub fn new(document: Entity<Document>, selection_state: Entity<SelectionState>) -> Self {
+    pub fn new(
+        document: Entity<Document>,
+        selection_state: Entity<SelectionState>,
+        tool_store: Entity<ToolStore>,
+    ) -> Self {
         Self {
             camera: Camera::default(),
-            tool: Tool::new_create_rect(),
+            tool_store,
             document,
             selection_state,
         }
@@ -54,15 +64,16 @@ impl ShapeCanvas {
         let mouse_world = self.camera.screen_to_world(event.position);
 
         self.document.update(cx, |document, cx| {
-            self.selection_state.update(cx, |selection_state, _| {
-                // NOTE: May not work since this can update self.tool interior
-                self.tool.on_mouse_move(
-                    document,
-                    mouse_world,
-                    is_dragging,
-                    selection_state,
-                    event.modifiers.shift,
-                );
+            self.selection_state.update(cx, |selection_state, cx| {
+                self.tool_store.update(cx, |tool_store, _| {
+                    tool_store.tool.on_mouse_move(
+                        document,
+                        mouse_world,
+                        is_dragging,
+                        selection_state,
+                        event.modifiers.shift,
+                    );
+                });
             });
         });
     }
@@ -76,27 +87,36 @@ impl ShapeCanvas {
         let mouse_world = self.camera.screen_to_world(event.position);
 
         self.selection_state.update(cx, |selection_state, cx| {
-            let document = self.document.read(cx);
-            self.tool.on_mouse_down(
-                document,
-                mouse_world,
-                selection_state,
-                event.modifiers.shift,
-            );
-        });
-    }
-
-    fn on_mouse_up(&mut self, event: &MouseUpEvent, _window: &mut Window, cx: &mut Context<Self>) {
-        let mouse_world = self.camera.screen_to_world(event.position);
-
-        self.document.update(cx, |document, cx| {
-            self.selection_state.update(cx, |selection_state, _| {
-                self.tool.on_mouse_up(
+            self.tool_store.update(cx, |tool_store, cx| {
+                let document = self.document.read(cx);
+                tool_store.tool.on_mouse_down(
                     document,
                     mouse_world,
                     selection_state,
                     event.modifiers.shift,
                 );
+            });
+        });
+    }
+
+    fn on_mouse_up(
+        &mut self,
+        event: &MouseUpEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let mouse_world = self.camera.screen_to_world(event.position);
+
+        self.document.update(cx, |document, cx| {
+            self.selection_state.update(cx, |selection_state, cx| {
+                self.tool_store.update(cx, |tool_store, _| {
+                    tool_store.tool.on_mouse_up(
+                        document,
+                        mouse_world,
+                        selection_state,
+                        event.modifiers.shift,
+                    );
+                });
             });
         });
     }
@@ -126,30 +146,16 @@ impl ShapeCanvas {
                 }
             }
 
-            const SELECTION_PADDING: Pixels = px(8.);
-            for feature in features {
-                if selected_ids.contains(&feature.id) {
-                    let world_bounds = feature.bounds();
-                    if !world_bounds.intersect(&visible_world).is_empty() {
-                        let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
-                        let padded_bounds = Bounds::new(
-                            point(
-                                screen_bounds.origin.x - SELECTION_PADDING,
-                                screen_bounds.origin.y - SELECTION_PADDING,
-                            ),
-                            size(
-                                screen_bounds.size.width + SELECTION_PADDING * 2.,
-                                screen_bounds.size.height + SELECTION_PADDING * 2.,
-                            ),
-                        );
-                        window.paint_quad(
-                            outline(padded_bounds, rgb(0xffffff), BorderStyle::Dashed)
-                                .border_widths(px(4.)),
-                        );
-                    }
-                }
+            let selected: Vec<_> = features
+                .iter()
+                .filter(|f| selected_ids.contains(&f.id))
+                .collect();
+            for feature in &selected {
+                let world_bounds = feature.bounds();
+                let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
+                paint_feature_selection(window, screen_bounds);
             }
-            self.tool.render(window, &self.camera);
+            self.tool_store.read(cx).tool.render(window, &self.camera);
         });
     }
 }
@@ -195,6 +201,28 @@ impl Render for ShapeCanvas {
     }
 }
 
+fn paint_feature_selection(window: &mut Window, screen_bounds: Bounds<Pixels>) {
+    const PADDING: Pixels = px(5.);
+    let bounds = Bounds::new(
+        point(
+            screen_bounds.origin.x - PADDING,
+            screen_bounds.origin.y - PADDING,
+        ),
+        size(
+            screen_bounds.size.width + PADDING * 2.,
+            screen_bounds.size.height + PADDING * 2.,
+        ),
+    );
+    window.paint_quad(quad(
+        bounds,
+        Corners::all(px(0.)),
+        colors::accent().alpha(0.),
+        px(2.),
+        colors::accent(),
+        BorderStyle::Solid,
+    ));
+}
+
 fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window) {
     const BASE_CELL_SIZE: Pixels = px(128.);
     let cell_screen = camera.world_length_to_screen_length(BASE_CELL_SIZE);
@@ -217,7 +245,7 @@ fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window)
                 point(grid_x + cell_screen * i as f32, bounds.origin.y),
                 size(px(1.0), bounds.size.height),
             ),
-            rgb(0x45475a),
+            colors::surface1(),
         ));
     }
     for j in 0..cell_count_y {
@@ -226,7 +254,7 @@ fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window)
                 point(bounds.origin.x, grid_y + cell_screen * j as f32),
                 size(bounds.size.width, px(1.0)),
             ),
-            rgb(0x45475a),
+            colors::surface1(),
         ));
     }
 }

@@ -56,7 +56,9 @@ impl CreateRect {
                 start,
                 ref mut ghost,
             } => {
-                let new_bounds = Bounds::new(start, Size::from(mouse_world - start));
+                let min_point = start.min(&mouse_world);
+                let max_point = start.max(&mouse_world);
+                let new_bounds = Bounds::new(min_point, Size::from(max_point - min_point));
                 ghost.set_bounds(new_bounds);
             }
         };
@@ -74,6 +76,8 @@ impl CreateRect {
             self.state = FSM::Idle;
         }
     }
+
+    pub fn deactivate(&mut self, _selection_state: &mut SelectionState) {}
 
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         match self.state {
@@ -121,8 +125,20 @@ mod tests {
         let mut selection_state = SelectionState::new();
 
         tool.on_mouse_down(&doc, point_px(0., 0.), &mut selection_state, false);
-        tool.on_mouse_move(&mut doc, point_px(0., 0.), true, &mut selection_state, false);
-        tool.on_mouse_move(&mut doc, point_px(100., 100.), true, &mut selection_state, false);
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(0., 0.),
+            true,
+            &mut selection_state,
+            false,
+        );
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(100., 100.),
+            true,
+            &mut selection_state,
+            false,
+        );
         tool.on_mouse_up(&mut doc, point_px(100., 100.), &mut selection_state, false);
 
         assert_eq!(doc.features.len(), 1);

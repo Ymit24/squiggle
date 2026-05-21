@@ -1,11 +1,14 @@
 use gpui::*;
 
-use crate::document::{Command, Document};
+use crate::colors;
+use crate::document::Document;
 use crate::feature::Feature;
 use crate::feature_id::FeatureId;
 use crate::fps_counter::FpsCounter;
 use crate::shape_canvas::ShapeCanvas;
-use crate::toolbar::{CreateDemoRect, toolbar};
+use crate::toolbar::{bind_tool_keys, ActivateCreateRectTool, ActivateSelectTool, Toolbar};
+use crate::tool::Tool;
+use crate::tool_store::ToolStore;
 
 pub struct SelectionState {
     pub selected_features: Vec<FeatureId>,
@@ -20,13 +23,12 @@ impl SelectionState {
 }
 
 pub struct WorkflowApp {
-    document: Entity<Document>,
     shape_canvas: Entity<ShapeCanvas>,
+    toolbar: Entity<Toolbar>,
     focus_handle: FocusHandle,
     fps_counter: Entity<FpsCounter>,
+    tool_store: Entity<ToolStore>,
 }
-
-actions!(workflow, [CreateDemoCircle]);
 
 impl WorkflowApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
@@ -55,20 +57,23 @@ impl WorkflowApp {
 
         let document = cx.new(|_cx| Document::new(initial_features));
         let selection_state = cx.new(|_cx| SelectionState::new());
+        let tool_store = cx.new(|_cx| ToolStore::new(selection_state.clone()));
 
-        cx.bind_keys([KeyBinding::new("r", CreateDemoCircle, None)]);
+        bind_tool_keys(cx);
 
         let focus_handle = cx.focus_handle();
         focus_handle.focus(window, cx);
 
         let shape_canvas =
-            cx.new(|_cx| ShapeCanvas::new(document.clone(), selection_state.clone()));
+            cx.new(|_cx| ShapeCanvas::new(document.clone(), selection_state.clone(), tool_store.clone()));
+        let toolbar = cx.new(|_cx| Toolbar::new(tool_store.clone()));
 
         Self {
-            document,
             shape_canvas,
+            toolbar,
             focus_handle,
             fps_counter: cx.new(|_cx| FpsCounter::new()),
+            tool_store,
         }
     }
 }
@@ -78,23 +83,20 @@ impl Render for WorkflowApp {
         div()
             .relative()
             .size_full()
-            .bg(rgb(0x1e1e2e))
+            .bg(colors::base())
             .track_focus(&self.focus_handle)
-            .child(self.shape_canvas.clone())
-            .on_action(cx.listener(|this, event: &CreateDemoRect, _, cx| {
-                println!("Action! {:?}", event.x);
-                this.document
-                    .update(cx, |doc: &mut Document, cx: &mut Context<Document>| {
-                        doc.execute_command(Command::AddFeature(Feature::new_rectangle(
-                            px(event.x),
-                            px(event.y),
-                            px(event.width),
-                            px(event.height),
-                        )));
-                        cx.notify();
-                    });
+            .on_action(cx.listener(|this, _: &ActivateSelectTool, _, cx| {
+                this.tool_store.update(cx, |tool_store, cx| {
+                    tool_store.set_tool(Tool::new_selection(), cx);
+                });
             }))
-            .child(toolbar())
+            .on_action(cx.listener(|this, _: &ActivateCreateRectTool, _, cx| {
+                this.tool_store.update(cx, |tool_store, cx| {
+                    tool_store.set_tool(Tool::new_create_rect(), cx);
+                });
+            }))
+            .child(self.shape_canvas.clone())
+            .child(self.toolbar.clone())
             .child(self.fps_counter.clone())
     }
 }
