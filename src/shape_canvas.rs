@@ -216,9 +216,9 @@ fn paint_feature_selection(window: &mut Window, screen_bounds: Bounds<Pixels>) {
     window.paint_quad(quad(
         bounds,
         Corners::all(px(0.)),
-        colors::ACCENT.alpha(0.),
+        colors::accent().alpha(0.),
         px(2.),
-        colors::ACCENT,
+        colors::accent(),
         BorderStyle::Solid,
     ));
 }
@@ -245,7 +245,7 @@ fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window)
                 point(grid_x + cell_screen * i as f32, bounds.origin.y),
                 size(px(1.0), bounds.size.height),
             ),
-            rgb(0x45475a),
+            colors::surface1(),
         ));
     }
     for j in 0..cell_count_y {
@@ -254,7 +254,7 @@ fn draw_grid_lines(camera: &Camera, bounds: Bounds<Pixels>, window: &mut Window)
                 point(bounds.origin.x, grid_y + cell_screen * j as f32),
                 size(bounds.size.width, px(1.0)),
             ),
-            rgb(0x45475a),
+            colors::surface1(),
         ));
     }
 }

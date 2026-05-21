@@ -1,6 +1,8 @@
 use gpui::*;
 use std::time::{Duration, Instant};
 
+use crate::colors;
+
 pub struct FpsCounter {
     last_frame: Option<Instant>,
     frame_times: Vec<f64>,
@@ -61,11 +63,11 @@ impl Render for FpsCounter {
         let fps = self.fps();
 
         let (color, label) = if fps >= 55.0 {
-            (rgb(0xa6e3a1), "Smooth")
+            (colors::green(), "Smooth")
         } else if fps >= 30.0 {
-            (rgb(0xf9e2af), "OK")
+            (colors::yellow(), "OK")
         } else {
-            (rgb(0xf38ba8), "Slow")
+            (colors::red(), "Slow")
         };
 
         div()
@@ -75,9 +77,9 @@ impl Render for FpsCounter {
             .px_3()
             .py_1()
             .rounded_md()
-            .bg(rgb(0x1e1e2e))
+            .bg(colors::base())
             .border_1()
-            .border_color(rgb(0x45475a))
+            .border_color(colors::surface1())
             .shadow_md()
             .flex()
             .flex_col()
@@ -93,7 +95,7 @@ impl Render for FpsCounter {
             .child(
                 div()
                     .text_xs()
-                    .text_color(rgb(0x6c7086))
+                    .text_color(colors::overlay0())
                     .child(label),
             )
     }

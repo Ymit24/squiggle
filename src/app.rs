@@ -1,5 +1,6 @@
 use gpui::*;
 
+use crate::colors;
 use crate::document::Document;
 use crate::feature::Feature;
 use crate::feature_id::FeatureId;
@@ -82,7 +83,7 @@ impl Render for WorkflowApp {
         div()
             .relative()
             .size_full()
-            .bg(rgb(0x1e1e2e))
+            .bg(colors::base())
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(|this, _: &ActivateSelectTool, _, cx| {
                 this.tool_store.update(cx, |tool_store, cx| {

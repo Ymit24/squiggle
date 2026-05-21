@@ -2,6 +2,7 @@ use gpui::prelude::FluentBuilder;
 use gpui::*;
 use gpui_component::{Icon, Sizable};
 
+use crate::colors;
 use crate::tool::Tool;
 use crate::tool_store::ToolStore;
 
@@ -34,9 +35,9 @@ fn tool_button<A: Action + Clone + 'static>(
         .path(icon_path)
         .with_size(px(20.))
         .text_color(if active {
-            rgb(0xcdd6f4)
+            colors::text()
         } else {
-            rgb(0xa6adc8)
+            colors::subtext0()
         });
 
     div()
@@ -47,9 +48,9 @@ fn tool_button<A: Action + Clone + 'static>(
         .rounded_md()
         .cursor_pointer()
         .child(icon)
-        .when(active, |this| this.bg(rgb(0x45475a)))
+        .when(active, |this| this.bg(colors::surface1()))
         .when(!active, |this| {
-            this.hover(|style| style.bg(rgb(0x313244)))
+            this.hover(|style| style.bg(colors::surface0()))
         })
         .on_mouse_down(
             MouseButton::Left,
@@ -78,9 +79,9 @@ impl Render for Toolbar {
                     .items_center()
                     .gap(px(2.))
                     .p_1()
-                    .bg(rgb(0x181825))
+                    .bg(colors::mantle())
                     .border_1()
-                    .border_color(rgb(0x45475a))
+                    .border_color(colors::surface1())
                     .rounded_xl()
                     .child(tool_button(
                         "icons/arrow_selector_tool.svg",
@@ -93,7 +94,7 @@ impl Render for Toolbar {
                             .w(px(1.))
                             .h(px(20.))
                             .mx(px(2.))
-                            .bg(rgb(0x45475a)),
+                            .bg(colors::surface1()),
                     )
                     .child(tool_button(
                         "icons/crop_square.svg",

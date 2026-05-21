@@ -1,6 +1,7 @@
-use gpui::{Bounds, Pixels, Point, Size, Window, fill, point, rgb, size};
+use gpui::{Bounds, Pixels, Point, Size, Window, fill, point, size};
 
 use crate::{
+    colors,
     camera::Camera,
     feature_id::{FeatureId, NO_ID},
 };
@@ -80,11 +81,12 @@ impl Feature {
     pub fn render(&self, screen_bounds: Bounds<Pixels>, window: &mut Window) {
         match self.kind {
             FeatureKind::Rectangle { .. } => {
-                window.paint_quad(fill(screen_bounds, rgb(0xcba6f7)));
+                window.paint_quad(fill(screen_bounds, colors::mauve()));
             }
             FeatureKind::Circle { .. } => {
                 window.paint_quad(
-                    fill(screen_bounds, rgb(0xf38ba8)).corner_radii(screen_bounds.size.width / 2.),
+                    fill(screen_bounds, colors::red())
+                        .corner_radii(screen_bounds.size.width / 2.),
                 );
             }
         }

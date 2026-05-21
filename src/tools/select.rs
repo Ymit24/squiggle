@@ -220,9 +220,9 @@ impl SelectTool {
             window.paint_quad(quad(
                 screen_bounds,
                 Corners::all(px(0.)),
-                colors::ACCENT.alpha(0.06),
+                colors::accent().alpha(0.06),
                 px(1.5),
-                colors::ACCENT,
+                colors::accent(),
                 BorderStyle::Dashed,
             ));
         }
