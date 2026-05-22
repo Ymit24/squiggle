@@ -67,7 +67,6 @@ impl SelectTool {
             }
             selection_state.selected_features.push(id);
         } else {
-            println!("down: SELECTING");
             self.state = FSM::Selecting(SelectionFSMState {
                 selection_box: (mouse_world, mouse_world),
             });
@@ -91,11 +90,9 @@ impl SelectTool {
 
         match self.state {
             FSM::Moving(ref mut state) => {
-                println!("move: MOVE");
                 handle_drag_features(state, document, mouse_world, selection_state);
             }
             FSM::Selecting(ref mut state) => {
-                println!("move: SELECT");
                 handle_selection_box_drag(state, document, mouse_world, selection_state, shift);
             }
             _ => {}
@@ -118,7 +115,6 @@ impl SelectTool {
         match self.state {
             FSM::Idle => {}
             FSM::Moving(ref state) => {
-                println!("up: MOVE");
                 if let Some(hovered_feature) = hovered_feature {
                     if !state.did_move {
                         if shift {
@@ -134,9 +130,7 @@ impl SelectTool {
                     }
                 }
             }
-            FSM::Selecting(_) => {
-                println!("up: SELECT");
-            }
+            FSM::Selecting(_) => {}
             _ => {}
         };
 
