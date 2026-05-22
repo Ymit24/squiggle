@@ -46,9 +46,7 @@ impl Feature {
             id: NO_ID,
             origin,
             size,
-            kind: FeatureKind::Text {
-                contents
-            },
+            kind: FeatureKind::Text { contents },
         }
     }
 
@@ -238,7 +236,8 @@ mod tests {
 
     #[test]
     fn test_move_to_updates_origin() {
-        let mut feature = Feature::new_rectangle(point(px(0.0), px(0.0)), size(px(100.0), px(50.0)));
+        let mut feature =
+            Feature::new_rectangle(point(px(0.0), px(0.0)), size(px(100.0), px(50.0)));
         feature.move_to(point(px(200.0), px(300.0)));
         assert_eq!(feature.origin, point(px(200.0), px(300.0)));
         assert_eq!(feature.size.width, px(100.0));
