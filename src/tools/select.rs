@@ -1,29 +1,19 @@
-use gpui::{BorderStyle, Bounds, Corners, Pixels, Point, Size, Window, point, px, quad};
+mod moving_fsm;
+mod selection_fsm;
 
-use crate::{
-    camera::Camera,
-    colors,
-    document::{Command, Document},
-    editor::SelectionState,
-    feature::Feature,
-    feature_id::FeatureId,
-};
+use gpui::{px, quad, BorderStyle, Bounds, Corners, Pixels, Point, Window};
+
+use crate::{camera::Camera, colors, document::Document, editor::SelectionState, feature::Feature};
+
+use moving_fsm::MovingFSMState;
+use selection_fsm::{selection_box_bounds, SelectionFSMState};
+
+#[cfg(test)]
+use gpui::point;
 
 #[derive(Clone)]
 pub struct SelectTool {
     state: FSM,
-}
-
-#[derive(Clone)]
-struct SelectionFSMState {
-    selection_box: (Point<Pixels>, Point<Pixels>),
-}
-
-#[derive(Clone)]
-struct MovingFSMState {
-    selected_feature_move_offset: Point<Pixels>,
-    is_first_time_select: bool,
-    did_move: bool,
 }
 
 #[derive(Clone)]
@@ -167,85 +157,6 @@ impl SelectTool {
             }
             _ => {}
         }
-    }
-}
-
-impl MovingFSMState {
-    fn on_mouse_move(
-        &mut self,
-        document: &mut Document,
-        mouse_world: Point<Pixels>,
-        selection_state: &mut SelectionState,
-    ) {
-        let selected_features = selection_state.selected_features.clone();
-        if selected_features.is_empty() {
-            return;
-        }
-
-        self.did_move = true;
-
-        let chase_feature = document
-            .feature_by_id(selected_features.last().unwrap().clone())
-            .unwrap();
-
-        let last_mouse_pos = self.selected_feature_move_offset.clone();
-
-        let selected_features: Vec<(FeatureId, Point<Pixels>)> = selected_features
-            .iter()
-            .map(|id| {
-                let feature = document.feature_by_id(id.clone()).unwrap().clone();
-                (feature.id, feature.origin - chase_feature.origin)
-            })
-            .collect();
-
-        for (id, offset) in selected_features.into_iter() {
-            document.execute_command(Command::MoveFeature(
-                id,
-                (mouse_world - last_mouse_pos) + offset,
-            ));
-        }
-    }
-}
-
-fn selection_box_bounds(selection_box: (Point<Pixels>, Point<Pixels>)) -> Bounds<Pixels> {
-    let (point1, point2) = selection_box;
-    let min_point = point1.min(&point2);
-    let max_point = point1.max(&point2);
-    Bounds::new(min_point, Size::from(max_point - min_point))
-}
-impl SelectionFSMState {
-    fn on_mouse_move(
-        &mut self,
-        document: &Document,
-        mouse_world: Point<Pixels>,
-        selection_state: &mut SelectionState,
-        shift: bool,
-    ) -> bool {
-        let point1 = self.selection_box.0;
-        let point2 = mouse_world;
-
-        self.selection_box = (point1, point2);
-
-        let selection_bounds = selection_box_bounds(self.selection_box);
-
-        let selectable_features: Vec<FeatureId> = document
-            .features
-            .iter()
-            .filter(|feature| feature.bounds().intersects(&selection_bounds))
-            .map(|feature| feature.id.clone())
-            .collect();
-
-        if shift {
-            for feature in &selectable_features {
-                if !selection_state.selected_features.contains(feature) {
-                    selection_state.selected_features.push(feature.clone());
-                }
-            }
-        } else {
-            selection_state.selected_features = selectable_features;
-        }
-
-        true
     }
 }
 
