@@ -98,7 +98,7 @@ mod tests {
     use super::*;
     use crate::editor::SelectionState;
     use crate::document::Document;
-    use gpui::{point, px};
+    use gpui::{point, px, size};
 
     fn doc_with_features(features: Vec<Feature>) -> Document {
         Document::new(features)
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_clicking_down_then_release_without_drag_does_nothing() {
-        let mut tool = CreateFeature::new(Feature::new_rectangle(px(0.), px(0.), px(1.), px(1.)));
+        let mut tool = CreateFeature::new(Feature::new_rectangle(point(px(0.), px(0.)), size(px(1.), px(1.))));
         let mut doc = doc_with_features(vec![]);
         let mut selection_state = SelectionState::new();
 
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_clicking_down_then_moving_then_releasing_creates_rect() {
-        let mut tool = CreateFeature::new(Feature::new_rectangle(px(0.), px(0.), px(1.), px(1.)));
+        let mut tool = CreateFeature::new(Feature::new_rectangle(point(px(0.), px(0.)), size(px(1.), px(1.))));
         let mut doc = doc_with_features(vec![]);
         let mut selection_state = SelectionState::new();
 

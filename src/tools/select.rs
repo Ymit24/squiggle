@@ -244,10 +244,10 @@ mod tests {
     use crate::editor::SelectionState;
     use crate::document::Document;
     use crate::feature::Feature;
-    use gpui::px;
+    use gpui::{px, size};
 
     fn make_rect(x: f32, y: f32, w: f32, h: f32) -> Feature {
-        Feature::new_rectangle(px(x), px(y), px(w), px(h))
+        Feature::new_rectangle(point(px(x), px(y)), size(px(w), px(h)))
     }
 
     fn doc_with_features(features: Vec<Feature>) -> Document {

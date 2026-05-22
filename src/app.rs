@@ -14,26 +14,26 @@ pub struct WorkflowApp {
 impl WorkflowApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let mut initial_features = vec![
-            Feature::new_rectangle(px(20.), px(20.), px(100.), px(60.)),
-            Feature::new_circle(px(150.), px(20.), px(30.),px(30.)),
-            Feature::new_text(px(120.), px(30.), "now THIS is some _example_ test text!!".into())
+            Feature::new_rectangle(point(px(20.), px(20.)), size(px(100.), px(60.))),
+            Feature::new_circle(point(px(150.), px(20.)), size(px(30.), px(30.))),
+            Feature::new_text(
+                point(px(120.), px(30.)),
+                size(px(120.), px(24.)),
+                "now THIS is some _example_ test text!!".into(),
+            )
         ];
 
-        let size = 1000.;
+        let spread = 1000.;
         for _ in 0..100 {
             if rand::random::<bool>() {
                 initial_features.push(Feature::new_circle(
-                    px(rand::random::<f32>() * size),
-                    px(rand::random::<f32>() * size),
-                    px(30.),
-                    px(30.),
+                    point(px(rand::random::<f32>() * spread), px(rand::random::<f32>() * spread)),
+                    size(px(30.), px(30.)),
                 ));
             } else {
                 initial_features.push(Feature::new_rectangle(
-                    px(rand::random::<f32>() * size),
-                    px(rand::random::<f32>() * size),
-                    px(40.),
-                    px(40.),
+                    point(px(rand::random::<f32>() * spread), px(rand::random::<f32>() * spread)),
+                    size(px(40.), px(40.)),
                 ));
             }
         }

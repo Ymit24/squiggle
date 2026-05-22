@@ -98,12 +98,12 @@ impl Render for Editor {
             }))
             .on_action(cx.listener(|this, _: &ActivateCreateRectTool, _, cx| {
                 this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(Tool::new_create_rect(Feature::new_rectangle(px(0.), px(0.), px(1.), px(1.))), cx);
+                    tool_store.set_tool(Tool::new_create_rect(Feature::new_rectangle(point(px(0.), px(0.)), size(px(1.), px(1.)))), cx);
                 });
             }))
             .on_action(cx.listener(|this, _: &ActivateCreateCircleTool, _, cx| {
                 this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(Tool::new_create_circle(Feature::new_circle(px(0.), px(0.), px(1.), px(1.))), cx);
+                    tool_store.set_tool(Tool::new_create_circle(Feature::new_circle(point(px(0.), px(0.)), size(px(1.), px(1.)))), cx);
                 });
             }))
             .on_action(cx.listener(|this, _: &DeleteSelected, _, cx| {
