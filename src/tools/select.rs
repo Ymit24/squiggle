@@ -1,12 +1,12 @@
 mod moving_fsm;
 mod selection_fsm;
 
-use gpui::{px, quad, BorderStyle, Bounds, Corners, Pixels, Point, Window};
+use gpui::{BorderStyle, Bounds, Corners, Pixels, Point, Window, px, quad};
 
 use crate::{camera::Camera, colors, document::Document, editor::SelectionState, feature::Feature};
 
 use moving_fsm::MovingFSMState;
-use selection_fsm::{selection_box_bounds, SelectionFSMState};
+use selection_fsm::{SelectionFSMState, selection_box_bounds};
 
 #[cfg(test)]
 use gpui::point;
@@ -248,35 +248,10 @@ mod tests {
     }
 
     #[test]
-    fn test_on_mouse_move_non_dragging_does_nothing() {
-        let mut tool = SelectTool::new();
-        let mut doc = doc_with_features(vec![make_rect(0., 0., 100., 100.)]);
-        let mut selection_state = SelectionState::new();
-
-        tool.on_mouse_move(
-            &mut doc,
-            point_px(50., 50.),
-            false,
-            &mut selection_state,
-            false,
-        );
-
-        assert!(selection_state.selected_features.is_empty());
-        assert!(!tool.did_drag);
-    }
-
-    #[test]
-    fn test_selection_box_bounds_returns_none_when_no_selection_box() {
-        let tool = SelectTool::new();
-        assert!(tool.selection_box_bounds().is_none());
-    }
-
-    #[test]
     fn test_selection_box_bounds_returns_correct_bounds() {
-        let mut tool = SelectTool::new();
-        tool.selection_box = Some((point_px(10., 10.), point_px(110., 60.)));
+        let selection_box = (point_px(10., 10.), point_px(110., 60.));
 
-        let bounds = tool.selection_box_bounds().unwrap();
+        let bounds = selection_box_bounds(selection_box);
 
         assert_eq!(bounds.origin, point_px(10., 10.));
         assert_eq!(bounds.size.width, px(100.));
@@ -285,10 +260,9 @@ mod tests {
 
     #[test]
     fn test_selection_box_bounds_handles_reverse_points() {
-        let mut tool = SelectTool::new();
-        tool.selection_box = Some((point_px(110., 60.), point_px(10., 10.)));
+        let selection_box = (point_px(110., 60.), point_px(10., 10.));
 
-        let bounds = tool.selection_box_bounds().unwrap();
+        let bounds = selection_box_bounds(selection_box);
 
         assert_eq!(bounds.origin, point_px(10., 10.));
         assert_eq!(bounds.size.width, px(100.));
@@ -298,6 +272,7 @@ mod tests {
     #[test]
     fn test_handle_selection_box_drag_starting_box_on_empty_space() {
         let mut tool = SelectTool::new();
+
         let doc = doc_with_features(vec![
             make_rect(0., 0., 50., 50.),
             make_rect(100., 0., 50., 50.),
@@ -305,11 +280,18 @@ mod tests {
         let mut selection_state = SelectionState::new();
         let mouse_world = point_px(200., 200.);
 
-        let result = tool.handle_selection_box_drag(&doc, mouse_world, &mut selection_state, false);
+        tool.on_mouse_down(&doc, mouse_world, &mut selection_state, false);
+
+        assert!(matches!(tool.state, FSM::Selecting(..)));
+
+        let state = match &mut tool.state {
+            FSM::Selecting(state) => state,
+            _ => unreachable!(),
+        };
+
+        let result = state.on_mouse_move(&doc, mouse_world, &mut selection_state, false);
 
         assert!(result);
-        assert!(tool.did_drag);
-        assert!(tool.selection_box.is_some());
         assert!(selection_state.selected_features.is_empty());
     }
 
@@ -321,29 +303,43 @@ mod tests {
             make_rect(100., 0., 50., 50.),
         ]);
         let mut selection_state = SelectionState::new();
-        tool.selection_box = Some((point_px(0., 0.), point_px(0., 0.)));
+        let mouse_world = point_px(200., 200.);
 
-        let result =
-            tool.handle_selection_box_drag(&doc, point_px(150., 25.), &mut selection_state, false);
+        tool.on_mouse_down(&doc, mouse_world, &mut selection_state, false);
+
+        assert!(matches!(tool.state, FSM::Selecting(..)));
+
+        let state = match &mut tool.state {
+            FSM::Selecting(state) => state,
+            _ => unreachable!(),
+        };
+
+        state.selection_box = (point_px(0., 0.), point_px(0., 0.));
+
+        let result = state.on_mouse_move(&doc, point_px(150., 25.), &mut selection_state, false);
 
         assert!(result);
-        assert!(tool.did_drag);
-        assert!(tool.selection_box.is_some());
         assert_eq!(selection_state.selected_features.len(), 2);
     }
 
     #[test]
     fn test_handle_selection_box_drag_with_shift_adds_to_selection() {
         let mut tool = SelectTool::new();
-        let doc = doc_with_features(vec![
+        let mut doc = doc_with_features(vec![
             make_rect(0., 0., 50., 50.),
             make_rect(100., 0., 50., 50.),
         ]);
         let mut selection_state = SelectionState::new();
         selection_state.selected_features.push(doc.features[0].id);
-        tool.selection_box = Some((point_px(0., 0.), point_px(0., 0.)));
 
-        tool.handle_selection_box_drag(&doc, point_px(150., 25.), &mut selection_state, true);
+        tool.on_mouse_down(&doc, point_px(75., 25.), &mut selection_state, true);
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(150., 25.),
+            true,
+            &mut selection_state,
+            true,
+        );
 
         assert_eq!(selection_state.selected_features.len(), 2);
         assert!(
@@ -359,17 +355,22 @@ mod tests {
     }
 
     #[test]
-    fn test_on_mouse_up_after_drag_clears_flags() {
+    fn test_on_mouse_up_after_drag_returns_to_idle() {
         let mut tool = SelectTool::new();
-        tool.did_drag = true;
-        tool.did_select = true;
         let mut doc = doc_with_features(vec![make_rect(0., 0., 100., 100.)]);
         let mut selection_state = SelectionState::new();
 
+        tool.on_mouse_down(&doc, point_px(50., 50.), &mut selection_state, false);
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(60., 60.),
+            true,
+            &mut selection_state,
+            false,
+        );
         tool.on_mouse_up(&mut doc, point_px(50., 50.), &mut selection_state, false);
 
-        assert!(!tool.did_drag);
-        assert!(!tool.did_select);
+        assert!(matches!(tool.state, FSM::Idle));
     }
 
     #[test]
@@ -382,18 +383,19 @@ mod tests {
         let mut selection_state = SelectionState::new();
         selection_state.selected_features.push(doc.features[0].id);
 
-        tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, false);
+        tool.on_mouse_down(&doc, point_px(125., 25.), &mut selection_state, false);
+        tool.on_mouse_up(&mut doc, point_px(125., 25.), &mut selection_state, false);
 
         assert_eq!(selection_state.selected_features.len(), 1);
         assert!(
             selection_state
                 .selected_features
-                .contains(&doc.features[0].id)
+                .contains(&doc.features[1].id)
         );
         assert!(
             !selection_state
                 .selected_features
-                .contains(&doc.features[1].id)
+                .contains(&doc.features[0].id)
         );
     }
 
@@ -408,6 +410,7 @@ mod tests {
         selection_state.selected_features.push(doc.features[0].id);
         selection_state.selected_features.push(doc.features[1].id);
 
+        tool.on_mouse_down(&doc, point_px(25., 25.), &mut selection_state, true);
         tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, true);
 
         assert_eq!(selection_state.selected_features.len(), 1);
@@ -433,59 +436,67 @@ mod tests {
         tool.on_mouse_up(&mut doc, point_px(200., 200.), &mut selection_state, false);
 
         assert_eq!(selection_state.selected_features.len(), 1);
-        assert!(!tool.did_drag);
     }
 
     #[test]
-    fn test_on_mouse_up_after_selection_box_clears_box() {
+    fn test_on_mouse_up_after_selection_box_returns_to_idle() {
         let mut tool = SelectTool::new();
-        tool.selection_box = Some((point_px(0., 0.), point_px(100., 100.)));
         let mut doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
         let mut selection_state = SelectionState::new();
 
+        tool.on_mouse_down(&doc, point_px(100., 100.), &mut selection_state, false);
         tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, false);
 
-        assert!(tool.selection_box.is_none());
+        assert!(matches!(tool.state, FSM::Idle));
     }
 
     #[test]
-    fn test_handle_drag_features_moves_single_feature() {
+    fn test_on_mouse_move_moves_single_feature() {
         let mut tool = SelectTool::new();
         let mut doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
         let mut selection_state = SelectionState::new();
-        selection_state.selected_features.push(doc.features[0].id);
-        tool.selected_feature_move_offset = point_px(10., 10.);
 
-        tool.handle_drag_features(&mut doc, point_px(60., 60.), &mut selection_state);
+        tool.on_mouse_down(&doc, point_px(10., 10.), &mut selection_state, false);
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(60., 60.),
+            true,
+            &mut selection_state,
+            false,
+        );
 
-        assert!(tool.did_drag);
         assert_eq!(doc.features[0].origin.x, px(50.));
         assert_eq!(doc.features[0].origin.y, px(50.));
     }
 
     #[test]
-    fn test_handle_drag_features_does_nothing_when_no_selection() {
+    fn test_on_mouse_move_does_nothing_when_not_dragging() {
         let mut tool = SelectTool::new();
         let mut doc = doc_with_features(vec![make_rect(0., 0., 50., 50.)]);
         let mut selection_state = SelectionState::new();
 
-        tool.handle_drag_features(&mut doc, point_px(100., 100.), &mut selection_state);
+        tool.on_mouse_down(&doc, point_px(10., 10.), &mut selection_state, false);
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(100., 100.),
+            false,
+            &mut selection_state,
+            false,
+        );
 
-        assert!(!tool.did_drag);
+        assert_eq!(doc.features[0].origin.x, px(0.));
+        assert_eq!(doc.features[0].origin.y, px(0.));
     }
 
     #[test]
     fn test_new_creates_tool_with_default_values() {
         let tool = SelectTool::new();
 
-        assert_eq!(tool.selected_feature_move_offset, point_px(0., 0.));
-        assert!(!tool.did_drag);
-        assert!(!tool.did_select);
-        assert!(tool.selection_box.is_none());
+        assert!(matches!(tool.state, FSM::Idle));
     }
 
     #[test]
-    fn test_handle_drag_features_moves_multiple_features() {
+    fn test_on_mouse_move_moves_multiple_features() {
         let mut tool = SelectTool::new();
         let mut doc = doc_with_features(vec![
             make_rect(100., 100., 50., 50.),
@@ -494,11 +505,16 @@ mod tests {
         let mut selection_state = SelectionState::new();
         selection_state.selected_features.push(doc.features[0].id);
         selection_state.selected_features.push(doc.features[1].id);
-        tool.selected_feature_move_offset = point_px(0., 0.);
 
-        tool.handle_drag_features(&mut doc, point_px(10., 10.), &mut selection_state);
+        tool.on_mouse_down(&doc, point_px(0., 0.), &mut selection_state, false);
+        tool.on_mouse_move(
+            &mut doc,
+            point_px(10., 10.),
+            true,
+            &mut selection_state,
+            false,
+        );
 
-        assert!(tool.did_drag);
         assert_eq!(doc.features[1].origin.x, px(10.));
         assert_eq!(doc.features[1].origin.y, px(10.));
         assert_eq!(doc.features[0].origin.x, px(110.));
@@ -514,17 +530,21 @@ mod tests {
         ]);
         let mut selection_state = SelectionState::new();
         selection_state.selected_features.push(doc.features[0].id);
-        tool.did_select = true;
 
-        tool.on_mouse_up(&mut doc, point_px(25., 25.), &mut selection_state, true);
+        tool.on_mouse_down(&doc, point_px(125., 25.), &mut selection_state, true);
+        tool.on_mouse_up(&mut doc, point_px(125., 25.), &mut selection_state, true);
 
-        assert_eq!(selection_state.selected_features.len(), 1);
+        assert_eq!(selection_state.selected_features.len(), 2);
         assert!(
             selection_state
                 .selected_features
                 .contains(&doc.features[0].id)
         );
-        assert!(!tool.did_select);
+        assert!(
+            selection_state
+                .selected_features
+                .contains(&doc.features[1].id)
+        );
     }
 
     #[test]
