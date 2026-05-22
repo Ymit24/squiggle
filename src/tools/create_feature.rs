@@ -1,4 +1,4 @@
-use gpui::{Bounds, Pixels, Point, Size, Window, px};
+use gpui::{App, Bounds, Pixels, Point, Size, Window, px};
 
 use crate::{
     editor::SelectionState,
@@ -7,11 +7,13 @@ use crate::{
     feature::Feature,
 };
 
+#[derive(Clone)]
 pub struct CreateFeature {
     state: FSM,
     ghost: Feature,
 }
 
+#[derive(Clone)]
 enum FSM {
     Idle,
     Dragging {
@@ -79,13 +81,13 @@ impl CreateFeature {
 
     pub fn deactivate(&mut self, _selection_state: &mut SelectionState) {}
 
-    pub fn render(&self, window: &mut Window, camera: &Camera) {
+    pub fn render(&self, window: &mut Window, camera: &Camera, cx: &mut App) {
         match self.state {
             FSM::Idle => {}
             FSM::Dragging { .. } => {
                 let screen_bounds = camera.world_to_screen_bounds(self.ghost.bounds());
 
-                self.ghost.render(screen_bounds, window);
+                self.ghost.render(screen_bounds, window, cx);
             }
         }
     }

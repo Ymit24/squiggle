@@ -16,6 +16,7 @@ impl WorkflowApp {
         let mut initial_features = vec![
             Feature::new_rectangle(px(20.), px(20.), px(100.), px(60.)),
             Feature::new_circle(px(150.), px(20.), px(30.),px(30.)),
+            Feature::new_text(px(120.), px(30.), "now THIS is some _example_ test text!!".into())
         ];
 
         let size = 1000.;

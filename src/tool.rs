@@ -1,9 +1,10 @@
-use gpui::{Pixels, Point, Window};
+use gpui::{App, Pixels, Point, Window};
 
 use crate::{
     camera::Camera, document::Document, editor::SelectionState, feature::Feature, tools::{create_feature::CreateFeature, select::SelectTool}
 };
 
+#[derive(Clone)]
 pub enum Tool {
     Selection(SelectTool),
     CreateRect(CreateFeature),
@@ -92,11 +93,11 @@ impl Tool {
         }
     }
 
-    pub fn render(&self, window: &mut Window, camera: &Camera) {
+    pub fn render(&self, window: &mut Window, camera: &Camera, cx: &mut App) {
         match self {
             Self::Selection(tool) => tool.render(window, camera),
-            Self::CreateRect(tool) => tool.render(window, camera),
-            Self::CreateCircle(tool) => tool.render(window, camera),
+            Self::CreateRect(tool) => tool.render(window, camera, cx),
+            Self::CreateCircle(tool) => tool.render(window, camera, cx),
         }
     }
 }

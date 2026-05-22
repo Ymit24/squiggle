@@ -8,6 +8,7 @@ use crate::{
     feature_id::FeatureId,
 };
 
+#[derive(Clone)]
 pub struct SelectTool {
     selected_feature_move_offset: Point<Pixels>,
     did_drag: bool,

@@ -128,8 +128,8 @@ impl ShapeCanvas {
         cx: &mut Context<Self>,
     ) {
         self.camera.set_viewport_origin(bounds.origin);
-        let features = &self.document.read(cx).features;
-        let selected_ids = &self.selection_state.read(cx).selected_features;
+        let features = self.document.read(cx).features.clone();
+        let selected_ids = self.selection_state.read(cx).selected_features.clone();
         draw_grid_lines(&self.camera, bounds, window);
         let zoom = self.camera.zoom();
         let visible_world = Bounds::new(
@@ -138,11 +138,11 @@ impl ShapeCanvas {
         );
 
         window.paint_layer(bounds, |window| {
-            for feature in features {
+            for feature in &features {
                 let world_bounds = feature.bounds();
                 if !world_bounds.intersect(&visible_world).is_empty() {
                     let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
-                    feature.render(screen_bounds, window);
+                    feature.render(screen_bounds, window, cx);
                 }
             }
 
@@ -155,7 +155,8 @@ impl ShapeCanvas {
                 let screen_bounds = self.camera.world_to_screen_bounds(world_bounds);
                 paint_feature_selection(window, screen_bounds);
             }
-            self.tool_store.read(cx).tool.render(window, &self.camera);
+            let tool = self.tool_store.read(cx).tool.clone();
+            tool.render(window, &self.camera, cx);
         });
     }
 }

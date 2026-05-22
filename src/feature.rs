@@ -1,21 +1,24 @@
-use gpui::{Bounds, Pixels, Point, Size, Window, fill, point, size};
+use gpui::{
+    App, Bounds, FontWeight, Pixels, Point, Size, TextAlign, TextRun, Window, fill, point, px, size,
+};
 
 use crate::{
     colors,
     feature_id::{FeatureId, NO_ID},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Feature {
     pub id: FeatureId,
     pub origin: Point<Pixels>,
     pub kind: FeatureKind,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum FeatureKind {
     Rectangle { size: Size<Pixels> },
     Circle { size: Size<Pixels> },
+    Text { contents: String },
 }
 
 impl Feature {
@@ -36,11 +39,22 @@ impl Feature {
             },
         }
     }
+    
+    pub fn new_text(x: Pixels, y: Pixels, contents: String) -> Self {
+        Self {
+            id: NO_ID,
+            origin: point(x, y),
+            kind: FeatureKind::Text {
+                contents
+            },
+        }
+    }
 
     pub fn width(&self) -> Pixels {
         match self.kind {
             FeatureKind::Rectangle { size } => size.width,
             FeatureKind::Circle { size } => size.width,
+            FeatureKind::Text { .. } => px(120.),
         }
     }
 
@@ -48,6 +62,7 @@ impl Feature {
         match self.kind {
             FeatureKind::Rectangle { size } => size.height,
             FeatureKind::Circle { size } => size.height,
+            FeatureKind::Text { .. } => px(24.),
         }
     }
 
@@ -68,6 +83,7 @@ impl Feature {
             FeatureKind::Circle { ref mut size } => {
                 *size = bounds.size;
             }
+            FeatureKind::Text { .. } => {}
         };
     }
 
@@ -79,13 +95,43 @@ impl Feature {
         self.origin = origin;
     }
 
-    pub fn render(&self, screen_bounds: Bounds<Pixels>, window: &mut Window) {
-        match self.kind {
+    pub fn render(&self, screen_bounds: Bounds<Pixels>, window: &mut Window, cx: &mut App) {
+        match &self.kind {
             FeatureKind::Rectangle { .. } => {
                 window.paint_quad(fill(screen_bounds, colors::mauve()));
             }
             FeatureKind::Circle { .. } => {
                 draw_ellipse(screen_bounds.origin, screen_bounds.size, window);
+            }
+            FeatureKind::Text { contents } => {
+                let font_size = screen_bounds.size.height;
+                let text_run = TextRun {
+                    len: contents.len(),
+                    font: window.text_style().highlight(FontWeight::NORMAL).font(),
+                    color: colors::text(),
+                    background_color: None,
+                    underline: None,
+                    strikethrough: None,
+                };
+
+                if let Ok(lines) = window.text_system().shape_text(
+                    contents.clone().into(),
+                    font_size,
+                    &[text_run],
+                    Some(screen_bounds.size.width),
+                    None,
+                ) {
+                    for line in lines {
+                        let _ = line.paint(
+                            screen_bounds.origin,
+                            font_size,
+                            TextAlign::Left,
+                            Some(screen_bounds),
+                            window,
+                            cx,
+                        );
+                    }
+                }
             }
         }
     }
@@ -227,10 +273,8 @@ mod tests {
     }
 
     #[test]
-    fn test_feature_is_clone_and_copy() {
+    fn test_feature_is_clone() {
         let feature = Feature::new_circle(px(10.0), px(20.0), px(15.0), px(15.0));
-        let copied = feature;
-        assert_eq!(copied.origin, feature.origin);
         let cloned = feature.clone();
         assert_eq!(cloned.origin, feature.origin);
     }
