@@ -15,7 +15,7 @@ impl WorkflowApp {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let mut initial_features = vec![
             Feature::new_rectangle(px(20.), px(20.), px(100.), px(60.)),
-            Feature::new_circle(px(150.), px(20.), px(30.)),
+            Feature::new_circle(px(150.), px(20.), px(30.),px(30.)),
         ];
 
         let size = 1000.;
@@ -24,6 +24,7 @@ impl WorkflowApp {
                 initial_features.push(Feature::new_circle(
                     px(rand::random::<f32>() * size),
                     px(rand::random::<f32>() * size),
+                    px(30.),
                     px(30.),
                 ));
             } else {

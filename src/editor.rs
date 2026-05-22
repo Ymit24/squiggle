@@ -1,12 +1,7 @@
 use gpui::*;
 
 use crate::{
-    document::{Command, Document},
-    feature_id::FeatureId,
-    shape_canvas::ShapeCanvas,
-    toolbar::{bind_tool_keys, ActivateCreateRectTool, ActivateSelectTool, Toolbar},
-    tool::Tool,
-    tool_store::ToolStore,
+    document::{Command, Document}, feature::Feature, feature_id::FeatureId, shape_canvas::ShapeCanvas, tool::Tool, tool_store::ToolStore, toolbar::{ActivateCreateCircleTool, ActivateCreateRectTool, ActivateSelectTool, Toolbar, bind_tool_keys}
 };
 
 pub struct SelectionState {
@@ -103,7 +98,12 @@ impl Render for Editor {
             }))
             .on_action(cx.listener(|this, _: &ActivateCreateRectTool, _, cx| {
                 this.tool_store.update(cx, |tool_store, cx| {
-                    tool_store.set_tool(Tool::new_create_rect(), cx);
+                    tool_store.set_tool(Tool::new_create_rect(Feature::new_rectangle(px(0.), px(0.), px(1.), px(1.))), cx);
+                });
+            }))
+            .on_action(cx.listener(|this, _: &ActivateCreateCircleTool, _, cx| {
+                this.tool_store.update(cx, |tool_store, cx| {
+                    tool_store.set_tool(Tool::new_create_circle(Feature::new_circle(px(0.), px(0.), px(1.), px(1.))), cx);
                 });
             }))
             .on_action(cx.listener(|this, _: &DeleteSelected, _, cx| {

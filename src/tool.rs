@@ -1,15 +1,13 @@
 use gpui::{Pixels, Point, Window};
 
 use crate::{
-    editor::SelectionState,
-    camera::Camera,
-    document::Document,
-    tools::{create_rect::CreateRect, select::SelectTool},
+    camera::Camera, document::Document, editor::SelectionState, feature::Feature, tools::{create_feature::CreateFeature, select::SelectTool}
 };
 
 pub enum Tool {
     Selection(SelectTool),
-    CreateRect(CreateRect),
+    CreateRect(CreateFeature),
+    CreateCircle(CreateFeature),
 }
 
 impl Tool {
@@ -17,8 +15,12 @@ impl Tool {
         Self::Selection(SelectTool::new())
     }
 
-    pub fn new_create_rect() -> Self {
-        Self::CreateRect(CreateRect::new())
+    pub fn new_create_rect(ghost: Feature) -> Self {
+        Self::CreateRect(CreateFeature::new(ghost))
+    }
+
+    pub fn new_create_circle(ghost: Feature) -> Self {
+        Self::CreateCircle(CreateFeature::new(ghost))
     }
 
     pub fn on_mouse_down(
@@ -33,6 +35,9 @@ impl Tool {
                 tool.on_mouse_down(document, mouse_world, selection_state, shift)
             }
             Self::CreateRect(tool) => {
+                tool.on_mouse_down(document, mouse_world, selection_state, shift)
+            }
+            Self::CreateCircle(tool) => {
                 tool.on_mouse_down(document, mouse_world, selection_state, shift)
             }
         }
@@ -53,6 +58,9 @@ impl Tool {
             Self::CreateRect(tool) => {
                 tool.on_mouse_move(document, mouse_world, is_dragging, selection_state, shift)
             }
+            Self::CreateCircle(tool) => {
+                tool.on_mouse_move(document, mouse_world, is_dragging, selection_state, shift)
+            }
         }
     }
 
@@ -70,6 +78,9 @@ impl Tool {
             Self::CreateRect(tool) => {
                 tool.on_mouse_up(document, mouse_world, selection_state, shift)
             }
+            Self::CreateCircle(tool) => {
+                tool.on_mouse_up(document, mouse_world, selection_state, shift)
+            }
         }
     }
 
@@ -77,6 +88,7 @@ impl Tool {
         match self {
             Self::Selection(tool) => tool.deactivate(selection_state),
             Self::CreateRect(tool) => tool.deactivate(selection_state),
+            Self::CreateCircle(tool) => tool.deactivate(selection_state),
         }
     }
 
@@ -84,6 +96,7 @@ impl Tool {
         match self {
             Self::Selection(tool) => tool.render(window, camera),
             Self::CreateRect(tool) => tool.render(window, camera),
+            Self::CreateCircle(tool) => tool.render(window, camera),
         }
     }
 }

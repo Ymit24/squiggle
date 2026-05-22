@@ -7,21 +7,21 @@ use crate::{
     feature::Feature,
 };
 
-pub struct CreateRect {
+pub struct CreateFeature {
     state: FSM,
+    ghost: Feature,
 }
 
 enum FSM {
     Idle,
     Dragging {
         start: Point<Pixels>,
-        ghost: Feature,
     },
 }
 
-impl CreateRect {
-    pub fn new() -> Self {
-        Self { state: FSM::Idle }
+impl CreateFeature {
+    pub fn new(ghost: Feature) -> Self {
+        Self { state: FSM::Idle, ghost }
     }
 
     pub fn on_mouse_down(
@@ -49,17 +49,16 @@ impl CreateRect {
             FSM::Idle => {
                 self.state = FSM::Dragging {
                     start: mouse_world,
-                    ghost: Feature::new_rectangle(mouse_world.x, mouse_world.y, px(1.), px(1.)),
                 };
+                self.ghost.set_bounds(Bounds::new(mouse_world, Size::new(px(1.), px(1.))));   
             }
             FSM::Dragging {
                 start,
-                ref mut ghost,
             } => {
                 let min_point = start.min(&mouse_world);
                 let max_point = start.max(&mouse_world);
                 let new_bounds = Bounds::new(min_point, Size::from(max_point - min_point));
-                ghost.set_bounds(new_bounds);
+                self.ghost.set_bounds(new_bounds);
             }
         };
     }
@@ -71,8 +70,9 @@ impl CreateRect {
         _selection_state: &mut SelectionState,
         _shift: bool,
     ) {
-        if let FSM::Dragging { ghost, .. } = self.state {
-            document.execute_command(Command::AddFeature(ghost.clone()));
+        
+        if let FSM::Dragging { .. } = self.state {
+            document.execute_command(Command::AddFeature(self.ghost.clone()));
             self.state = FSM::Idle;
         }
     }
@@ -82,10 +82,10 @@ impl CreateRect {
     pub fn render(&self, window: &mut Window, camera: &Camera) {
         match self.state {
             FSM::Idle => {}
-            FSM::Dragging { ghost, .. } => {
-                let screen_bounds = camera.world_to_screen_bounds(ghost.bounds());
+            FSM::Dragging { .. } => {
+                let screen_bounds = camera.world_to_screen_bounds(self.ghost.bounds());
 
-                ghost.render(screen_bounds, window);
+                self.ghost.render(screen_bounds, window);
             }
         }
     }
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_clicking_down_then_release_without_drag_does_nothing() {
-        let mut tool = CreateRect::new();
+        let mut tool = CreateFeature::new(Feature::new_rectangle(px(0.), px(0.), px(1.), px(1.)));
         let mut doc = doc_with_features(vec![]);
         let mut selection_state = SelectionState::new();
 
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn test_clicking_down_then_moving_then_releasing_creates_rect() {
-        let mut tool = CreateRect::new();
+        let mut tool = CreateFeature::new(Feature::new_rectangle(px(0.), px(0.), px(1.), px(1.)));
         let mut doc = doc_with_features(vec![]);
         let mut selection_state = SelectionState::new();
 

@@ -1,8 +1,7 @@
-use gpui::{Bounds, Pixels, Point, Size, Window, fill, point, size};
+use gpui::{Bounds, Path, Pixels, Point, Size, Window, fill, point, size};
 
 use crate::{
     colors,
-    camera::Camera,
     feature_id::{FeatureId, NO_ID},
 };
 
@@ -16,7 +15,7 @@ pub struct Feature {
 #[derive(Clone, Copy)]
 pub enum FeatureKind {
     Rectangle { size: Size<Pixels> },
-    Circle { radius: Pixels },
+    Circle { size: Size<Pixels> },
 }
 
 impl Feature {
@@ -28,25 +27,27 @@ impl Feature {
         }
     }
 
-    pub fn new_circle(x: Pixels, y: Pixels, r: Pixels) -> Self {
+    pub fn new_circle(x: Pixels, y: Pixels, rx: Pixels, ry: Pixels) -> Self {
         Self {
             id: NO_ID,
             origin: point(x, y),
-            kind: FeatureKind::Circle { radius: r },
+            kind: FeatureKind::Circle {
+                size: Size::new(rx, ry),
+            },
         }
     }
 
     pub fn width(&self) -> Pixels {
         match self.kind {
             FeatureKind::Rectangle { size } => size.width,
-            FeatureKind::Circle { radius } => radius * 2.0,
+            FeatureKind::Circle { size } => size.width,
         }
     }
 
     pub fn height(&self) -> Pixels {
         match self.kind {
             FeatureKind::Rectangle { size } => size.height,
-            FeatureKind::Circle { radius } => radius * 2.0,
+            FeatureKind::Circle { size } => size.height,
         }
     }
 
@@ -64,8 +65,8 @@ impl Feature {
             FeatureKind::Rectangle { ref mut size } => {
                 *size = bounds.size;
             }
-            FeatureKind::Circle { ref mut radius } => {
-                *radius = bounds.size.width / 2.;
+            FeatureKind::Circle { ref mut size } => {
+                *size = bounds.size;
             }
         };
     }
@@ -84,12 +85,38 @@ impl Feature {
                 window.paint_quad(fill(screen_bounds, colors::mauve()));
             }
             FeatureKind::Circle { .. } => {
-                window.paint_quad(
-                    fill(screen_bounds, colors::red())
-                        .corner_radii(screen_bounds.size.width / 2.),
-                );
+                draw_ellipse(screen_bounds.origin, screen_bounds.size, window);
             }
         }
+    }
+}
+
+fn draw_ellipse(origin: Point<Pixels>, size: Size<Pixels>, window: &mut Window) {
+    let rx = size.width / 2.;
+    let ry = size.height / 2.;
+    let center = point(origin.x + rx, origin.y + ry);
+    let radii = point(rx, ry);
+
+    let mut builder = gpui::PathBuilder::fill();
+    builder.move_to(point(center.x + rx, center.y));
+    builder.arc_to(
+        radii,
+        gpui::px(0.),
+        false,
+        true,
+        point(center.x - rx, center.y),
+    );
+    builder.arc_to(
+        radii,
+        gpui::px(0.),
+        false,
+        true,
+        point(center.x + rx, center.y),
+    );
+    builder.close();
+
+    if let Ok(path) = builder.build() {
+        window.paint_path(path, colors::red());
     }
 }
 

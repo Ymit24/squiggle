@@ -6,12 +6,13 @@ use crate::colors;
 use crate::tool::Tool;
 use crate::tool_store::ToolStore;
 
-actions!(toolbar, [ActivateSelectTool, ActivateCreateRectTool]);
+actions!(toolbar, [ActivateSelectTool, ActivateCreateRectTool, ActivateCreateCircleTool]);
 
 pub fn bind_tool_keys<T: 'static>(cx: &mut Context<T>) {
     cx.bind_keys([
         KeyBinding::new("v", ActivateSelectTool, None),
         KeyBinding::new("r", ActivateCreateRectTool, None),
+        KeyBinding::new("c", ActivateCreateCircleTool, None),
     ]);
 }
 
@@ -65,6 +66,7 @@ impl Render for Toolbar {
         let tool_store = self.tool_store.read(cx);
         let is_select = matches!(tool_store.tool, Tool::Selection(_));
         let is_create_rect = matches!(tool_store.tool, Tool::CreateRect(_));
+        let is_create_circle = matches!(tool_store.tool, Tool::CreateCircle(_));
 
         div()
             .absolute()
@@ -100,6 +102,12 @@ impl Render for Toolbar {
                         "icons/crop_square.svg",
                         is_create_rect,
                         ActivateCreateRectTool,
+                        cx,
+                    ))
+                    .child(tool_button(
+                        "icons/circle.svg",
+                        is_create_circle,
+                        ActivateCreateCircleTool,
                         cx,
                     )),
             )
