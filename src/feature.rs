@@ -1,4 +1,4 @@
-use gpui::{Bounds, Path, Pixels, Point, Size, Window, fill, point, size};
+use gpui::{Bounds, Pixels, Point, Size, Window, fill, point, size};
 
 use crate::{
     colors,
@@ -141,12 +141,13 @@ mod tests {
 
     #[test]
     fn test_new_circle_creates_circle_feature() {
-        let feature = Feature::new_circle(px(50.0), px(50.0), px(25.0));
+        let feature = Feature::new_circle(px(50.0), px(50.0), px(50.0), px(25.0));
         assert_eq!(feature.id, NO_ID);
         assert_eq!(feature.origin, point(px(50.0), px(50.0)));
         match feature.kind {
-            FeatureKind::Circle { radius } => {
-                assert_eq!(radius, px(25.0));
+            FeatureKind::Circle { size } => {
+                assert_eq!(size.width, px(50.0));
+                assert_eq!(size.height, px(25.0));
             }
             _ => panic!("expected Circle variant"),
         }
@@ -159,9 +160,9 @@ mod tests {
     }
 
     #[test]
-    fn test_width_circle_returns_diameter() {
-        let feature = Feature::new_circle(px(0.0), px(0.0), px(25.0));
-        assert_eq!(feature.width(), px(50.0));
+    fn test_width_circle_returns_width() {
+        let feature = Feature::new_circle(px(0.0), px(0.0), px(25.0), px(50.0));
+        assert_eq!(feature.width(), px(25.0));
     }
 
     #[test]
@@ -171,8 +172,8 @@ mod tests {
     }
 
     #[test]
-    fn test_height_circle_returns_diameter() {
-        let feature = Feature::new_circle(px(0.0), px(0.0), px(25.0));
+    fn test_height_circle_returns_height() {
+        let feature = Feature::new_circle(px(0.0), px(0.0), px(25.0), px(50.0));
         assert_eq!(feature.height(), px(50.0));
     }
 
@@ -183,10 +184,10 @@ mod tests {
         assert_eq!(size.width, px(100.0));
         assert_eq!(size.height, px(50.0));
 
-        let circle = Feature::new_circle(px(0.0), px(0.0), px(25.0));
+        let circle = Feature::new_circle(px(0.0), px(0.0), px(25.0), px(25.0));
         let size = circle.size();
-        assert_eq!(size.width, px(50.0));
-        assert_eq!(size.height, px(50.0));
+        assert_eq!(size.width, px(25.0));
+        assert_eq!(size.height, px(25.0));
     }
 
     #[test]
@@ -205,10 +206,10 @@ mod tests {
         assert_eq!(center.x, px(50.0));
         assert_eq!(center.y, px(25.0));
 
-        let circle = Feature::new_circle(px(10.0), px(20.0), px(25.0));
+        let circle = Feature::new_circle(px(10.0), px(20.0), px(25.0), px(25.0));
         let center = circle.center();
-        assert_eq!(center.x, px(35.0));
-        assert_eq!(center.y, px(45.0));
+        assert_eq!(center.x, px(22.5));
+        assert_eq!(center.y, px(32.5));
     }
 
     #[test]
@@ -227,7 +228,7 @@ mod tests {
 
     #[test]
     fn test_feature_is_clone_and_copy() {
-        let feature = Feature::new_circle(px(10.0), px(20.0), px(15.0));
+        let feature = Feature::new_circle(px(10.0), px(20.0), px(15.0), px(15.0));
         let copied = feature;
         assert_eq!(copied.origin, feature.origin);
         let cloned = feature.clone();
