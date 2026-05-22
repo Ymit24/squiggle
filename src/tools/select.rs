@@ -17,8 +17,6 @@ pub struct SelectTool {
 #[derive(Clone)]
 struct SelectionFSMState {
     selection_box: (Point<Pixels>, Point<Pixels>),
-    // did_drag: bool,
-    // did_select: bool,
 }
 
 #[derive(Clone)]
@@ -90,10 +88,10 @@ impl SelectTool {
 
         match self.state {
             FSM::Moving(ref mut state) => {
-                handle_drag_features(state, document, mouse_world, selection_state);
+                state.on_mouse_move(document, mouse_world, selection_state);
             }
             FSM::Selecting(ref mut state) => {
-                handle_selection_box_drag(state, document, mouse_world, selection_state, shift);
+                state.on_mouse_move(document, mouse_world, selection_state, shift);
             }
             _ => {}
         };
@@ -172,38 +170,40 @@ impl SelectTool {
     }
 }
 
-fn handle_drag_features(
-    state: &mut MovingFSMState,
-    document: &mut Document,
-    mouse_world: Point<Pixels>,
-    selection_state: &mut SelectionState,
-) {
-    let selected_features = selection_state.selected_features.clone();
-    if selected_features.is_empty() {
-        return;
-    }
+impl MovingFSMState {
+    fn on_mouse_move(
+        &mut self,
+        document: &mut Document,
+        mouse_world: Point<Pixels>,
+        selection_state: &mut SelectionState,
+    ) {
+        let selected_features = selection_state.selected_features.clone();
+        if selected_features.is_empty() {
+            return;
+        }
 
-    state.did_move = true;
+        self.did_move = true;
 
-    let chase_feature = document
-        .feature_by_id(selected_features.last().unwrap().clone())
-        .unwrap();
+        let chase_feature = document
+            .feature_by_id(selected_features.last().unwrap().clone())
+            .unwrap();
 
-    let last_mouse_pos = state.selected_feature_move_offset.clone();
+        let last_mouse_pos = self.selected_feature_move_offset.clone();
 
-    let selected_features: Vec<(FeatureId, Point<Pixels>)> = selected_features
-        .iter()
-        .map(|id| {
-            let feature = document.feature_by_id(id.clone()).unwrap().clone();
-            (feature.id, feature.origin - chase_feature.origin)
-        })
-        .collect();
+        let selected_features: Vec<(FeatureId, Point<Pixels>)> = selected_features
+            .iter()
+            .map(|id| {
+                let feature = document.feature_by_id(id.clone()).unwrap().clone();
+                (feature.id, feature.origin - chase_feature.origin)
+            })
+            .collect();
 
-    for (id, offset) in selected_features.into_iter() {
-        document.execute_command(Command::MoveFeature(
-            id,
-            (mouse_world - last_mouse_pos) + offset,
-        ));
+        for (id, offset) in selected_features.into_iter() {
+            document.execute_command(Command::MoveFeature(
+                id,
+                (mouse_world - last_mouse_pos) + offset,
+            ));
+        }
     }
 }
 
@@ -213,39 +213,40 @@ fn selection_box_bounds(selection_box: (Point<Pixels>, Point<Pixels>)) -> Bounds
     let max_point = point1.max(&point2);
     Bounds::new(min_point, Size::from(max_point - min_point))
 }
+impl SelectionFSMState {
+    fn on_mouse_move(
+        &mut self,
+        document: &Document,
+        mouse_world: Point<Pixels>,
+        selection_state: &mut SelectionState,
+        shift: bool,
+    ) -> bool {
+        let point1 = self.selection_box.0;
+        let point2 = mouse_world;
 
-fn handle_selection_box_drag(
-    state: &mut SelectionFSMState,
-    document: &Document,
-    mouse_world: Point<Pixels>,
-    selection_state: &mut SelectionState,
-    shift: bool,
-) -> bool {
-    let point1 = state.selection_box.0;
-    let point2 = mouse_world;
+        self.selection_box = (point1, point2);
 
-    state.selection_box = (point1, point2);
+        let selection_bounds = selection_box_bounds(self.selection_box);
 
-    let selection_bounds = selection_box_bounds(state.selection_box);
+        let selectable_features: Vec<FeatureId> = document
+            .features
+            .iter()
+            .filter(|feature| feature.bounds().intersects(&selection_bounds))
+            .map(|feature| feature.id.clone())
+            .collect();
 
-    let selectable_features: Vec<FeatureId> = document
-        .features
-        .iter()
-        .filter(|feature| feature.bounds().intersects(&selection_bounds))
-        .map(|feature| feature.id.clone())
-        .collect();
-
-    if shift {
-        for feature in &selectable_features {
-            if !selection_state.selected_features.contains(feature) {
-                selection_state.selected_features.push(feature.clone());
+        if shift {
+            for feature in &selectable_features {
+                if !selection_state.selected_features.contains(feature) {
+                    selection_state.selected_features.push(feature.clone());
+                }
             }
+        } else {
+            selection_state.selected_features = selectable_features;
         }
-    } else {
-        selection_state.selected_features = selectable_features;
-    }
 
-    true
+        true
+    }
 }
 
 #[cfg(test)]
