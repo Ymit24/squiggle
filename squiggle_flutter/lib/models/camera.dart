@@ -1,23 +1,18 @@
 import 'dart:ui';
 
-/// 2D camera mapping world coordinates to screen space.
+/// 2D camera mapping world coordinates to canvas-local screen space.
+///
+/// All [screen] arguments are pixels relative to the [DocumentCanvas] render
+/// box (top-left is `(0, 0)`). Flutter layout offset is applied in paint, not
+/// here.
 class Camera {
-  Camera({
-    this.location = Offset.zero,
-    this.zoom = 1.0,
-    this.viewportOrigin = Offset.zero,
-  });
+  Camera({this.location = Offset.zero, this.zoom = 1.0});
 
   Offset location;
   double zoom;
-  Offset viewportOrigin;
-
-  void setViewportOrigin(Offset origin) {
-    viewportOrigin = origin;
-  }
 
   Offset worldToScreen(Offset world) {
-    return viewportOrigin + (world - location) / zoom;
+    return (world - location) / zoom;
   }
 
   Size worldSizeToScreenSize(Size size) {
@@ -33,7 +28,7 @@ class Camera {
   }
 
   Offset screenToWorld(Offset screen) {
-    return (screen - viewportOrigin) * zoom + location;
+    return screen * zoom + location;
   }
 
   void panByScreenDelta(Offset delta) {
@@ -41,10 +36,9 @@ class Camera {
   }
 
   void zoomToward(Offset anchor, double factor) {
-    final adjustedAnchor = anchor - viewportOrigin;
     final prevZoom = zoom;
     zoom = (zoom * factor).clamp(0.05, 10.0);
-    location += adjustedAnchor * (prevZoom - zoom);
+    location += anchor * (prevZoom - zoom);
   }
 
   Rect worldToScreenBounds(Rect worldBounds) {
@@ -62,12 +56,9 @@ class Camera {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other.runtimeType != runtimeType) return false;
-    return other is Camera &&
-        other.location == location &&
-        other.zoom == zoom &&
-        other.viewportOrigin == viewportOrigin;
+    return other is Camera && other.location == location && other.zoom == zoom;
   }
 
   @override
-  int get hashCode => Object.hash(location, zoom, viewportOrigin);
+  int get hashCode => Object.hash(location, zoom);
 }

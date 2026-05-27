@@ -1,155 +1,79 @@
 import 'dart:ui';
 
-import 'package:collection/collection.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
 
 void main() {
-  group('EditorBloc pointer selection', () {
-    late Document document;
+  group('EditorBloc', () {
+    late DocumentRepository documentRepository;
     late SelectionRepository selectionRepository;
+    late ToolRepository toolRepository;
 
     setUp(() {
-      document = Document.fromFeatures([
+      documentRepository = DocumentRepository.fromFeatures([
         Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-        Feature.newRectangle(const Offset(200, 0), const Size(100, 100)),
       ]);
       selectionRepository = SelectionRepository();
+      toolRepository = ToolRepository();
     });
 
-    EditorBloc createBloc() {
+    tearDown(() {
+      toolRepository.dispose();
+      documentRepository.dispose();
+    });
+
+    test('subscribes to document changes stream via watch handler', () async {
       final bloc = EditorBloc(
-        document: document,
+        documentRepository: documentRepository,
         selectionRepository: selectionRepository,
+        toolRepository: toolRepository,
       );
-      bloc.add(const RequestWatchSelectedFeaturesEvent());
-      return bloc;
-    }
+      bloc.add(const RequestWatchEditorStateEvent());
+      await bloc.stream.first;
 
-    Future<void> dispatch(EditorBloc bloc, PointerDownAtWorldEvent event) async {
-      bloc.add(event);
-      await bloc.stream.firstWhere(
-        (state) => const ListEquality().equals(
-          state.selectedFeatures,
-          selectionRepository.selectedFeatures,
+      var documentChanged = false;
+      final subscription = documentRepository.changesStream.listen((_) {
+        documentChanged = true;
+      });
+
+      documentRepository.executeCommand(
+        MoveFeatureCommand(
+          documentRepository.document.features.first.id,
+          const Offset(10, 10),
         ),
       );
-    }
+      await Future<void>.delayed(Duration.zero);
 
-    test('selects feature on click', () async {
-      final bloc = createBloc();
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(50, 50),
-          isShiftPressed: false,
-        ),
-      );
-
-      expect(bloc.state.selectedFeatures.length, 1);
+      expect(documentChanged, isTrue);
       expect(
-        bloc.state.selectedFeatures.single,
-        document.features.first.id,
+        documentRepository.document.features.first.origin,
+        const Offset(10, 10),
       );
+      await subscription.cancel();
       await bloc.close();
     });
 
-    test('switches selection when clicking another feature', () async {
-      final bloc = createBloc();
+    test('emits selection when repository updates', () async {
+      final bloc = EditorBloc(
+        documentRepository: documentRepository,
+        selectionRepository: selectionRepository,
+        toolRepository: toolRepository,
+      );
+      bloc.add(const RequestWatchEditorStateEvent());
+      await bloc.stream.first;
 
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(50, 50),
-          isShiftPressed: false,
-        ),
+      selectionRepository.selectFeature(
+        documentRepository.document.features.first.id,
       );
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(250, 50),
-          isShiftPressed: false,
-        ),
-      );
+      await bloc.stream.firstWhere((s) => s.selectedFeatures.isNotEmpty);
 
       expect(bloc.state.selectedFeatures.length, 1);
-      expect(
-        bloc.state.selectedFeatures.single,
-        document.features[1].id,
-      );
-      await bloc.close();
-    });
-
-    test('clears selection on empty click', () async {
-      selectionRepository.selectFeature(document.features.first.id);
-      final bloc = createBloc();
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(500, 500),
-          isShiftPressed: false,
-        ),
-      );
-
-      expect(bloc.state.selectedFeatures, isEmpty);
-      expect(selectionRepository.selectedFeatures, isEmpty);
-      await bloc.close();
-    });
-
-    test('shift-click adds and removes from selection', () async {
-      final bloc = createBloc();
-
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(50, 50),
-          isShiftPressed: false,
-        ),
-      );
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(250, 50),
-          isShiftPressed: true,
-        ),
-      );
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(50, 50),
-          isShiftPressed: true,
-        ),
-      );
-
-      expect(bloc.state.selectedFeatures.length, 1);
-      expect(
-        bloc.state.selectedFeatures.single,
-        document.features[1].id,
-      );
-      await bloc.close();
-    });
-
-    test('shift-click on empty preserves selection', () async {
-      selectionRepository.selectFeature(document.features.first.id);
-      final bloc = createBloc();
-      await dispatch(
-        bloc,
-        const PointerDownAtWorldEvent(
-          worldPosition: Offset(500, 500),
-          isShiftPressed: true,
-        ),
-      );
-
-      expect(bloc.state.selectedFeatures.length, 1);
-      expect(
-        bloc.state.selectedFeatures.single,
-        document.features.first.id,
-      );
       await bloc.close();
     });
   });

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
+import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
 
-import 'models/document.dart';
 import 'models/feature.dart';
-import 'widgets/document_viewport.dart';
 
 void main() {
   runApp(const SquiggleApp());
@@ -34,7 +34,7 @@ class SquiggleApp extends StatelessWidget {
 class SquiggleHomePage extends StatelessWidget {
   const SquiggleHomePage({super.key});
 
-  static final _document = Document.fromFeatures([
+  static final _documentRepository = DocumentRepository.fromFeatures([
     Feature.newRectangle(const Offset(64, 64), const Size(160, 96)),
     Feature.newCircle(const Offset(320, 128), const Size(120, 120)),
     Feature.newText(
@@ -54,7 +54,21 @@ class SquiggleHomePage extends StatelessWidget {
     return Scaffold(
       body: RepositoryProvider(
         create: (context) => SelectionRepository(),
-        child: Editor(document: _document),
+        child: RepositoryProvider(
+          create: (context) => ToolRepository(),
+          dispose: (repository) => repository.dispose(),
+          child: RepositoryProvider(
+            create: (context) => _documentRepository,
+            dispose: (repository) => repository.dispose(),
+            child: BlocProvider(
+              create: (context) => ToolbarBloc(
+                toolRepository: context.read<ToolRepository>(),
+                selectionRepository: context.read<SelectionRepository>(),
+              ),
+              child: Editor(documentRepository: _documentRepository),
+            ),
+          ),
+        ),
       ),
     );
   }

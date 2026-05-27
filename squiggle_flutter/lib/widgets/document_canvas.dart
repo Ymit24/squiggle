@@ -1,28 +1,33 @@
-import 'dart:ui' as ui;
+import 'dart:async';
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
-
+import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import '../models/document.dart';
-import '../models/feature.dart';
 
 /// Paints a [Document]'s features on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
   const DocumentCanvas({
     super.key,
-    required this.document,
+    required this.documentRepository,
+    required this.toolRepository,
     required this.camera,
     required this.selectedFeatures,
   });
 
-  final Document document;
+  final DocumentRepository documentRepository;
+  final ToolRepository toolRepository;
   final Camera camera;
   final List<FeatureId> selectedFeatures;
+
   @override
   RenderDocumentCanvas createRenderObject(BuildContext context) {
     return RenderDocumentCanvas(
-      document: document,
+      documentRepository: documentRepository,
+      toolRepository: toolRepository,
       camera: camera,
       selectedFeatures: selectedFeatures,
     );
@@ -34,24 +39,42 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     RenderDocumentCanvas renderObject,
   ) {
     renderObject
-      ..document = document
+      ..documentRepository = documentRepository
+      ..toolRepository = toolRepository
       ..camera = camera
-      ..selectedFeatures = selectedFeatures;
+      ..selectedFeatures = selectedFeatures
+      ..markNeedsPaint();
   }
 }
 
 class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
-    required this._document,
-    required this._camera,
-    required this._selectedFeatures,
-  });
+    required DocumentRepository documentRepository,
+    required ToolRepository toolRepository,
+    required Camera camera,
+    required List<FeatureId> selectedFeatures,
+  }) : _documentRepository = documentRepository,
+       _toolRepository = toolRepository,
+       _camera = camera,
+       _selectedFeatures = selectedFeatures;
 
-  Document _document;
-  Document get document => _document;
-  set document(Document value) {
-    if (identical(_document, value)) return;
-    _document = value;
+  DocumentRepository _documentRepository;
+  DocumentRepository get documentRepository => _documentRepository;
+  set documentRepository(DocumentRepository value) {
+    if (identical(_documentRepository, value)) return;
+    _unsubscribeFromDocumentChanges();
+    _documentRepository = value;
+    _subscribeToDocumentChanges();
+    markNeedsPaint();
+  }
+
+  ToolRepository _toolRepository;
+  ToolRepository get toolRepository => _toolRepository;
+  set toolRepository(ToolRepository value) {
+    if (identical(_toolRepository, value)) return;
+    _unsubscribeFromToolRepaints();
+    _toolRepository = value;
+    _subscribeToToolRepaints();
     markNeedsPaint();
   }
 
@@ -70,7 +93,46 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
+  StreamSubscription<void>? _documentChangesSubscription;
+  StreamSubscription<void>? _toolRepaintSubscription;
+
   static const double _baseCellSize = 128.0;
+
+  @override
+  void attach(covariant PipelineOwner owner) {
+    super.attach(owner);
+    _subscribeToDocumentChanges();
+    _subscribeToToolRepaints();
+  }
+
+  @override
+  void detach() {
+    _unsubscribeFromDocumentChanges();
+    _unsubscribeFromToolRepaints();
+    super.detach();
+  }
+
+  void _subscribeToDocumentChanges() {
+    _documentChangesSubscription ??= _documentRepository.changesStream.listen(
+      (_) => markNeedsPaint(),
+    );
+  }
+
+  void _unsubscribeFromDocumentChanges() {
+    _documentChangesSubscription?.cancel();
+    _documentChangesSubscription = null;
+  }
+
+  void _subscribeToToolRepaints() {
+    _toolRepaintSubscription ??= _toolRepository.repaintStream.listen(
+      (_) => markNeedsPaint(),
+    );
+  }
+
+  void _unsubscribeFromToolRepaints() {
+    _toolRepaintSubscription?.cancel();
+    _toolRepaintSubscription = null;
+  }
 
   @override
   void performLayout() {
@@ -84,17 +146,17 @@ class RenderDocumentCanvas extends RenderBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
-    final clip = offset & size;
-
-    _camera.setViewportOrigin(offset);
+    final document = _documentRepository.document;
 
     canvas.save();
-    canvas.clipRect(clip);
+    canvas.translate(offset.dx, offset.dy);
+    canvas.clipRect(Offset.zero & size);
 
     canvas.save();
     _applyWorldTransform(canvas);
     _drawGrid(canvas);
-    _paintFeatures(canvas);
+    _paintFeatures(canvas, document);
+    _toolRepository.activeTool.paint(canvas);
     canvas.restore();
 
     canvas.restore();
@@ -105,8 +167,6 @@ class RenderDocumentCanvas extends RenderBox {
     if (zoom <= 0) return;
 
     final location = _camera.location;
-    final origin = _camera.viewportOrigin;
-    canvas.translate(origin.dx, origin.dy);
     canvas.scale(1 / zoom, 1 / zoom);
     canvas.translate(-location.dx, -location.dy);
   }
@@ -154,7 +214,7 @@ class RenderDocumentCanvas extends RenderBox {
     }
   }
 
-  void _paintFeatures(Canvas canvas) {
+  void _paintFeatures(Canvas canvas, Document document) {
     final zoom = _camera.zoom;
     if (zoom <= 0) return;
 
@@ -165,14 +225,13 @@ class RenderDocumentCanvas extends RenderBox {
       size.height * zoom,
     );
 
-    for (final feature in _document.features) {
+    for (final feature in document.features) {
       final worldBounds = feature.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
       if (selectedFeatures.contains(feature.id)) {
         canvas.drawRect(
           worldBounds.inflate(8),
-
           Paint()
             ..color = const Color(0xFF89B4FA)
             ..style = PaintingStyle.stroke
@@ -180,37 +239,7 @@ class RenderDocumentCanvas extends RenderBox {
         );
       }
 
-      _paintFeature(canvas, feature, worldBounds);
+      feature.paint(canvas, worldBounds);
     }
-  }
-
-  void _paintFeature(Canvas canvas, Feature feature, Rect worldBounds) {
-    switch (feature.kind) {
-      case FeatureKindRectangle():
-        canvas.drawRect(worldBounds, Paint()..color = const Color(0xFFCDA6F7));
-      case FeatureKindCircle():
-        canvas.drawOval(worldBounds, Paint()..color = const Color(0xFFF38BA8));
-      case FeatureKindText(:final contents):
-        _paintText(canvas, contents, worldBounds);
-    }
-  }
-
-  void _paintText(Canvas canvas, String contents, Rect worldBounds) {
-    if (contents.isEmpty) return;
-
-    final fontSize = worldBounds.height;
-    final builder = ui.ParagraphBuilder(
-      ui.ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: fontSize,
-        textDirection: TextDirection.ltr,
-      ),
-    )..pushStyle(ui.TextStyle(color: const Color(0xFFCDD6F4)));
-    builder.addText(contents);
-
-    final paragraph = builder.build()
-      ..layout(ui.ParagraphConstraints(width: worldBounds.width));
-
-    canvas.drawParagraph(paragraph, worldBounds.topLeft);
   }
 }

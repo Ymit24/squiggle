@@ -1,4 +1,6 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
+
+import 'package:flutter/widgets.dart';
 
 import 'feature_id.dart';
 
@@ -52,6 +54,36 @@ class Feature {
 
   void moveTo(Offset newOrigin) {
     origin = newOrigin;
+  }
+
+  void paint(Canvas canvas, Rect worldBounds) {
+    switch (kind) {
+      case FeatureKindRectangle():
+        canvas.drawRect(worldBounds, Paint()..color = const Color(0xFFCDA6F7));
+      case FeatureKindCircle():
+        canvas.drawOval(worldBounds, Paint()..color = const Color(0xFFF38BA8));
+      case FeatureKindText(:final contents):
+        _paintText(canvas, contents, worldBounds);
+    }
+  }
+
+  void _paintText(Canvas canvas, String contents, Rect worldBounds) {
+    if (contents.isEmpty) return;
+
+    final fontSize = worldBounds.height;
+    final builder = ui.ParagraphBuilder(
+      ui.ParagraphStyle(
+        textAlign: TextAlign.left,
+        fontSize: fontSize,
+        textDirection: TextDirection.ltr,
+      ),
+    )..pushStyle(ui.TextStyle(color: const Color(0xFFCDD6F4)));
+    builder.addText(contents);
+
+    final paragraph = builder.build()
+      ..layout(ui.ParagraphConstraints(width: worldBounds.width));
+
+    canvas.drawParagraph(paragraph, worldBounds.topLeft);
   }
 }
 

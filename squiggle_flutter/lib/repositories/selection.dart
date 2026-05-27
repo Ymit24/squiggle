@@ -14,9 +14,8 @@ class SelectionRepository {
       _selectedFeaturesStreamController.stream;
 
   void selectFeature(FeatureId featureId) {
-    if (!selectedFeatures.contains(featureId)) {
-      selectedFeatures.add(featureId);
-    }
+    selectedFeatures.remove(featureId);
+    selectedFeatures.add(featureId);
     _update();
   }
 
@@ -27,6 +26,13 @@ class SelectionRepository {
 
   void clearSelection() {
     selectedFeatures.clear();
+    _update();
+  }
+
+  void setSelection(Iterable<FeatureId> ids) {
+    selectedFeatures
+      ..clear()
+      ..addAll(ids);
     _update();
   }
 

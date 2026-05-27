@@ -1,0 +1,176 @@
+import 'dart:ui';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
+import 'package:squiggle_flutter/tools/select_tool.dart';
+
+void main() {
+  group('SelectTool via ToolRepository', () {
+    late DocumentRepository documentRepository;
+    late SelectionRepository selectionRepository;
+    late ToolRepository toolRepository;
+
+    setUp(() {
+      documentRepository = DocumentRepository.fromFeatures([
+        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+        Feature.newRectangle(const Offset(200, 0), const Size(100, 100)),
+      ]);
+      selectionRepository = SelectionRepository();
+      toolRepository = ToolRepository();
+    });
+
+    tearDown(() {
+      toolRepository.dispose();
+      documentRepository.dispose();
+    });
+
+    void pointerDown(Offset world, {bool shift = false}) {
+      toolRepository.onPointerDown(
+        documentRepository,
+        world,
+        selectionRepository,
+        shift,
+      );
+    }
+
+    void pointerUp(Offset world, {bool shift = false}) {
+      toolRepository.onPointerUp(
+        documentRepository,
+        world,
+        selectionRepository,
+        shift,
+      );
+    }
+
+    test('selects feature on click', () {
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+
+      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(
+        selectionRepository.selectedFeatures.single,
+        documentRepository.document.features.first.id,
+      );
+    });
+
+    test('switches selection when clicking another feature', () {
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+      pointerDown(const Offset(250, 50));
+      pointerUp(const Offset(250, 50));
+
+      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(
+        selectionRepository.selectedFeatures.single,
+        documentRepository.document.features[1].id,
+      );
+    });
+
+    test('clears selection on empty click', () {
+      selectionRepository.selectFeature(
+        documentRepository.document.features.first.id,
+      );
+      pointerDown(const Offset(500, 500));
+      pointerUp(const Offset(500, 500));
+
+      expect(selectionRepository.selectedFeatures, isEmpty);
+    });
+
+    test('shift-click adds and removes from selection', () {
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+      pointerDown(const Offset(250, 50), shift: true);
+      pointerUp(const Offset(250, 50), shift: true);
+      pointerDown(const Offset(50, 50), shift: true);
+      pointerUp(const Offset(50, 50), shift: true);
+
+      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(
+        selectionRepository.selectedFeatures.single,
+        documentRepository.document.features[1].id,
+      );
+    });
+
+    test('shift-click on empty preserves selection', () {
+      selectionRepository.selectFeature(
+        documentRepository.document.features.first.id,
+      );
+      pointerDown(const Offset(500, 500), shift: true);
+      pointerUp(const Offset(500, 500), shift: true);
+
+      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(
+        selectionRepository.selectedFeatures.single,
+        documentRepository.document.features.first.id,
+      );
+    });
+
+    test('notifies repaint while marquee selecting', () async {
+      final repaints = <void>[];
+      final subscription = toolRepository.repaintStream.listen(repaints.add);
+
+      pointerDown(const Offset(500, 500));
+      toolRepository.onPointerMove(
+        documentRepository,
+        const Offset(600, 600),
+        selectionRepository,
+        false,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(repaints, isNotEmpty);
+      expect(toolRepository.activeTool, isA<SelectTool>());
+      await subscription.cancel();
+    });
+
+    test('moves group relative to clicked feature, not last selected', () {
+      documentRepository = DocumentRepository.fromFeatures([
+        Feature.newRectangle(const Offset(0, 0), const Size(50, 50)),
+        Feature.newRectangle(const Offset(100, 0), const Size(50, 50)),
+        Feature.newRectangle(const Offset(200, 0), const Size(50, 50)),
+      ]);
+      final features = documentRepository.document.features;
+      final idA = features[0].id;
+      final idB = features[1].id;
+      final idC = features[2].id;
+
+      pointerDown(const Offset(25, 25));
+      pointerUp(const Offset(25, 25));
+      pointerDown(const Offset(125, 25), shift: true);
+      pointerUp(const Offset(125, 25), shift: true);
+      pointerDown(const Offset(225, 25), shift: true);
+      pointerUp(const Offset(225, 25), shift: true);
+      expect(selectionRepository.selectedFeatures, [idA, idB, idC]);
+
+      pointerDown(const Offset(25, 25));
+      toolRepository.onPointerMove(
+        documentRepository,
+        const Offset(35, 35),
+        selectionRepository,
+        false,
+      );
+
+      expect(documentRepository.document.featureById(idA)!.origin, const Offset(10, 10));
+      expect(documentRepository.document.featureById(idB)!.origin, const Offset(110, 10));
+      expect(documentRepository.document.featureById(idC)!.origin, const Offset(210, 10));
+    });
+
+    test('emits document changes on move', () async {
+      pointerDown(const Offset(50, 50));
+      final changes = <void>[];
+      final subscription = documentRepository.changesStream.listen(changes.add);
+      toolRepository.onPointerMove(
+        documentRepository,
+        const Offset(60, 60),
+        selectionRepository,
+        false,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(changes, isNotEmpty);
+      await subscription.cancel();
+    });
+  });
+}

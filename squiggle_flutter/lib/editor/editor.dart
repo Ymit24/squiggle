@@ -3,36 +3,49 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/bloc/state.dart';
-import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
+import 'package:squiggle_flutter/widgets/toolbar.dart';
 
 class Editor extends StatelessWidget {
-  const Editor({super.key, required this.document});
+  const Editor({super.key, required this.documentRepository});
 
-  final Document document;
+  final DocumentRepository documentRepository;
 
   @override
   Widget build(BuildContext context) {
     final selectionRepository = context.read<SelectionRepository>();
+    final toolRepository = context.read<ToolRepository>();
+
     return BlocProvider(
       create: (context) => EditorBloc(
-        document: document,
+        documentRepository: documentRepository,
         selectionRepository: selectionRepository,
-      )..add(RequestWatchSelectedFeaturesEvent()),
+        toolRepository: toolRepository,
+      )..add(const RequestWatchEditorStateEvent()),
       child: BlocBuilder<EditorBloc, EditorState>(
-        builder: (context, state) => DocumentViewport(
-          document: document,
-          selectedFeatures: [...state.selectedFeatures],
-          onPointerDownAtWorld: (worldPosition, isShiftPressed) {
-            context.read<EditorBloc>().add(
-              PointerDownAtWorldEvent(
-                worldPosition: worldPosition,
-                isShiftPressed: isShiftPressed,
-              ),
-            );
-          },
-        ),
+        buildWhen: (previous, current) =>
+            previous.selectedFeatures != current.selectedFeatures,
+        builder: (context, state) {
+          return EditorShortcuts(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const EditorToolbar(),
+                Expanded(
+                  child: DocumentViewport(
+                    documentRepository: documentRepository,
+                    toolRepository: toolRepository,
+                    selectionRepository: selectionRepository,
+                    selectedFeatures: [...state.selectedFeatures],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

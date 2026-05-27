@@ -1,6 +1,6 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'state.freezed.dart';
 
@@ -11,6 +11,8 @@ abstract class EditorState with _$EditorState {
     required List<FeatureId> selectedFeatures,
   }) = _EditorState;
 
-  factory EditorState.empty(Document document) =>
-      EditorState(selectedFeatures: [], document: document);
+  factory EditorState.empty(Document document) => EditorState(
+    document: document,
+    selectedFeatures: const [],
+  );
 }

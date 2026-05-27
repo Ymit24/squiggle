@@ -1,21 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/bloc/state.dart';
-import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
 
 class EditorBloc extends Bloc<EditorEvent, EditorState> {
-  EditorBloc({required this.document, required this.selectionRepository})
-    : super(EditorState.empty(document)) {
-    on<PointerDownAtWorldEvent>(_onPointerDownAtWorld);
-    on<RequestWatchSelectedFeaturesEvent>(_onRequestWatchSelectedFeatures);
+  EditorBloc({
+    required this.documentRepository,
+    required this.selectionRepository,
+    required this.toolRepository,
+  }) : super(EditorState.empty(documentRepository.document)) {
+    on<RequestWatchEditorStateEvent>(_onRequestWatchEditorState);
   }
 
-  final Document document;
+  final DocumentRepository documentRepository;
   final SelectionRepository selectionRepository;
+  final ToolRepository toolRepository;
 
-  Future<void> _onRequestWatchSelectedFeatures(
-    RequestWatchSelectedFeaturesEvent event,
+  Future<void> _onRequestWatchEditorState(
+    RequestWatchEditorStateEvent event,
     Emitter<EditorState> emit,
   ) async {
     emit(
@@ -23,32 +27,19 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
         selectedFeatures: List.of(selectionRepository.selectedFeatures),
       ),
     );
-    return emit.forEach(
-      selectionRepository.selectedFeaturesStream,
-      onData: (selectedFeatures) =>
-          state.copyWith(selectedFeatures: List.of(selectedFeatures)),
-    );
-  }
 
-  Future<void> _onPointerDownAtWorld(
-    PointerDownAtWorldEvent event,
-    Emitter<EditorState> emit,
-  ) async {
-    final feature = document.featureAtPoint(event.worldPosition);
-
-    if (feature != null) {
-      if (event.isShiftPressed) {
-        if (selectionRepository.isFeatureSelected(feature.id)) {
-          selectionRepository.deselectFeature(feature.id);
-        } else {
-          selectionRepository.selectFeature(feature.id);
-        }
-      } else {
-        selectionRepository.clearSelection();
-        selectionRepository.selectFeature(feature.id);
-      }
-    } else if (!event.isShiftPressed) {
-      selectionRepository.clearSelection();
-    }
+    await Future.wait([
+      emit.forEach(
+        selectionRepository.selectedFeaturesStream,
+        onData: (selectedFeatures) => state.copyWith(
+          selectedFeatures: List.of(selectedFeatures),
+        ),
+      ),
+      emit.forEach(
+        documentRepository.changesStream,
+        onData: (_) =>
+            state.copyWith(document: documentRepository.document),
+      ),
+    ]);
   }
 }
