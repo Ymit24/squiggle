@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/models/feature_id.dart';
 
 import '../models/camera.dart';
 import '../models/document.dart';
@@ -12,14 +13,19 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     super.key,
     required this.document,
     required this.camera,
+    required this.selectedFeatures,
   });
 
   final Document document;
   final Camera camera;
-
+  final List<FeatureId> selectedFeatures;
   @override
   RenderDocumentCanvas createRenderObject(BuildContext context) {
-    return RenderDocumentCanvas(document: document, camera: camera);
+    return RenderDocumentCanvas(
+      document: document,
+      camera: camera,
+      selectedFeatures: selectedFeatures,
+    );
   }
 
   @override
@@ -29,12 +35,17 @@ class DocumentCanvas extends LeafRenderObjectWidget {
   ) {
     renderObject
       ..document = document
-      ..camera = camera;
+      ..camera = camera
+      ..selectedFeatures = selectedFeatures;
   }
 }
 
 class RenderDocumentCanvas extends RenderBox {
-  RenderDocumentCanvas({required this._document, required this._camera});
+  RenderDocumentCanvas({
+    required this._document,
+    required this._camera,
+    required this._selectedFeatures,
+  });
 
   Document _document;
   Document get document => _document;
@@ -48,6 +59,14 @@ class RenderDocumentCanvas extends RenderBox {
   Camera get camera => _camera;
   set camera(Camera value) {
     _camera = value;
+    markNeedsPaint();
+  }
+
+  List<FeatureId> _selectedFeatures;
+  List<FeatureId> get selectedFeatures => _selectedFeatures;
+  set selectedFeatures(List<FeatureId> value) {
+    if (identical(_selectedFeatures, value)) return;
+    _selectedFeatures = value;
     markNeedsPaint();
   }
 
@@ -149,6 +168,20 @@ class RenderDocumentCanvas extends RenderBox {
     for (final feature in _document.features) {
       final worldBounds = feature.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
+
+      print("Selected Features: $selectedFeatures");
+      print("Feature ID: ${feature.id}");
+      if (selectedFeatures.contains(feature.id)) {
+        print("Did have feature! ${feature.id}");
+        canvas.drawRect(
+          worldBounds.inflate(8),
+
+          Paint()
+            ..color = const Color(0xFF89B4FA)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2,
+        );
+      }
 
       _paintFeature(canvas, feature, worldBounds);
     }

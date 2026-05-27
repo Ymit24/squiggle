@@ -22,7 +22,7 @@ class Document {
 
   FeatureId generateId() {
     final id = nextId;
-    nextId = nextId.next();
+    nextId = FeatureId.newId(nextId.value + 1);
     return id;
   }
 
@@ -97,14 +97,14 @@ final class MoveFeatureCommand extends Command {
 }
 
 Feature _copyFeature(Feature feature) => Feature(
-      id: feature.id,
-      origin: feature.origin,
-      size: feature.size,
-      kind: _copyKind(feature.kind),
-    );
+  id: feature.id,
+  origin: feature.origin,
+  size: feature.size,
+  kind: _copyKind(feature.kind),
+);
 
 FeatureKind _copyKind(FeatureKind kind) => switch (kind) {
-      FeatureKindRectangle() => const FeatureKindRectangle(),
-      FeatureKindCircle() => const FeatureKindCircle(),
-      FeatureKindText(:final contents) => FeatureKindText(contents),
-    };
+  FeatureKindRectangle() => const FeatureKindRectangle(),
+  FeatureKindCircle() => const FeatureKindCircle(),
+  FeatureKindText(:final contents) => FeatureKindText(contents),
+};

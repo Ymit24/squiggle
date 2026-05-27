@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/editor.dart';
+import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/repositories/selection.dart';
 
 import 'models/document.dart';
 import 'models/feature.dart';
@@ -47,6 +51,11 @@ class SquiggleHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: DocumentViewport(document: _document));
+    return Scaffold(
+      body: RepositoryProvider(
+        create: (context) => SelectionRepository(),
+        child: Editor(document: _document),
+      ),
+    );
   }
 }

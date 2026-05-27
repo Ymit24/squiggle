@@ -1,23 +1,13 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'feature_id.freezed.dart';
+
 /// Identifier for a document feature.
-class FeatureId {
-  const FeatureId(this.value);
+@freezed
+abstract class FeatureId with _$FeatureId {
+  const factory FeatureId({required int value}) = _FeatureId;
 
-  final int value;
-
-  factory FeatureId.newId(int id) => FeatureId(id);
-
-  FeatureId next() => FeatureId(value + 1);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FeatureId && value == other.value;
-
-  @override
-  int get hashCode => value.hashCode;
-
-  @override
-  String toString() => 'FeatureId($value)';
+  factory FeatureId.newId(int id) => FeatureId(value: id);
 }
 
-const FeatureId noId = FeatureId(0);
+const FeatureId noId = FeatureId(value: 0);

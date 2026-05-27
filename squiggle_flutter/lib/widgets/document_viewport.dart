@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/models/feature_id.dart';
 
 import '../models/camera.dart';
 import '../models/document.dart';
@@ -9,10 +10,16 @@ import 'document_canvas.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
 class DocumentViewport extends StatefulWidget {
-  const DocumentViewport({super.key, required this.document, this.camera});
+  const DocumentViewport({
+    super.key,
+    required this.document,
+    this.camera,
+    required this.selectedFeatures,
+  });
 
   final Document document;
   final Camera? camera;
+  final List<FeatureId> selectedFeatures;
 
   @override
   State<DocumentViewport> createState() => _DocumentViewportState();
@@ -89,7 +96,11 @@ class _DocumentViewportState extends State<DocumentViewport> {
       child: Container(
         key: _viewportKey,
         color: const Color(0xFF1E1E2E),
-        child: DocumentCanvas(document: widget.document, camera: _camera),
+        child: DocumentCanvas(
+          document: widget.document,
+          camera: _camera,
+          selectedFeatures: widget.selectedFeatures,
+        ),
       ),
     );
   }

@@ -17,26 +17,25 @@ class Feature {
   FeatureKind kind;
 
   factory Feature.newRectangle(Offset origin, Size size) => Feature(
-        id: noId,
-        origin: origin,
-        size: size,
-        kind: const FeatureKindRectangle(),
-      );
+    id: noId,
+    origin: origin,
+    size: size,
+    kind: const FeatureKindRectangle(),
+  );
 
   factory Feature.newCircle(Offset origin, Size size) => Feature(
-        id: noId,
-        origin: origin,
-        size: size,
-        kind: const FeatureKindCircle(),
-      );
+    id: noId,
+    origin: origin,
+    size: size,
+    kind: const FeatureKindCircle(),
+  );
 
-  factory Feature.newText(Offset origin, Size size, String contents) =>
-      Feature(
-        id: noId,
-        origin: origin,
-        size: size,
-        kind: FeatureKindText(contents),
-      );
+  factory Feature.newText(Offset origin, Size size, String contents) => Feature(
+    id: noId,
+    origin: origin,
+    size: size,
+    kind: FeatureKindText(contents),
+  );
 
   double get width => size.width;
 
