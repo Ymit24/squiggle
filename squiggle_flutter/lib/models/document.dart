@@ -40,6 +40,16 @@ class Document {
     return null;
   }
 
+  /// Top-most feature whose bounds contain [worldPoint], if any.
+  Feature? featureAtPoint(Offset worldPoint) {
+    for (var i = features.length - 1; i >= 0; i--) {
+      if (features[i].bounds().contains(worldPoint)) {
+        return features[i];
+      }
+    }
+    return null;
+  }
+
   void executeCommand(Command command) {
     undoStack.add(command.clone());
     redoStack.clear();

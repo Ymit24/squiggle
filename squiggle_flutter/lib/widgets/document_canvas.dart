@@ -169,10 +169,7 @@ class RenderDocumentCanvas extends RenderBox {
       final worldBounds = feature.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
-      print("Selected Features: $selectedFeatures");
-      print("Feature ID: ${feature.id}");
       if (selectedFeatures.contains(feature.id)) {
-        print("Did have feature! ${feature.id}");
         canvas.drawRect(
           worldBounds.inflate(8),
 

@@ -6,11 +6,17 @@ class SelectionRepository {
   final List<FeatureId> selectedFeatures = [];
 
   void selectFeature(FeatureId featureId) {
-    selectedFeatures.add(featureId);
+    if (!selectedFeatures.contains(featureId)) {
+      selectedFeatures.add(featureId);
+    }
   }
 
   void deselectFeature(FeatureId featureId) {
     selectedFeatures.remove(featureId);
+  }
+
+  void clearSelection() {
+    selectedFeatures.clear();
   }
 
   bool isFeatureSelected(FeatureId featureId) {

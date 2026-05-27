@@ -5,29 +5,39 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 
 class EditorBloc extends Bloc<EditorEvent, EditorState> {
+  EditorBloc({required this.document, required this.selectionRepository})
+    : super(EditorState.empty(document)) {
+    on<PointerDownAtWorldEvent>(_onPointerDownAtWorld);
+  }
+
   final Document document;
   final SelectionRepository selectionRepository;
 
-  EditorBloc({required this.document, required this.selectionRepository})
-    : super(EditorState.empty(document)) {
-    on<SelectFeatureEvent>(_onSelectFeature);
-    on<DeselectFeatureEvent>(_onDeselectFeature);
-  }
-
-  void _onSelectFeature(SelectFeatureEvent event, Emitter<EditorState> emit) {
-    selectionRepository.selectFeature(event.featureId);
-    emit(
-      state.copyWith(selectedFeatures: selectionRepository.selectedFeatures),
-    );
-  }
-
-  void _onDeselectFeature(
-    DeselectFeatureEvent event,
+  Future<void> _onPointerDownAtWorld(
+    PointerDownAtWorldEvent event,
     Emitter<EditorState> emit,
-  ) {
-    selectionRepository.deselectFeature(event.featureId);
+  ) async {
+    final feature = document.featureAtPoint(event.worldPosition);
+
+    if (feature != null) {
+      if (event.isShiftPressed) {
+        if (selectionRepository.isFeatureSelected(feature.id)) {
+          selectionRepository.deselectFeature(feature.id);
+        } else {
+          selectionRepository.selectFeature(feature.id);
+        }
+      } else {
+        selectionRepository.clearSelection();
+        selectionRepository.selectFeature(feature.id);
+      }
+    } else if (!event.isShiftPressed) {
+      selectionRepository.clearSelection();
+    }
+
     emit(
-      state.copyWith(selectedFeatures: selectionRepository.selectedFeatures),
+      state.copyWith(
+        selectedFeatures: List.of(selectionRepository.selectedFeatures),
+      ),
     );
   }
 }

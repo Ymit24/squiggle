@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/bloc/state.dart';
 import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
 
@@ -20,11 +19,19 @@ class Editor extends StatelessWidget {
       create: (context) => EditorBloc(
         document: document,
         selectionRepository: selectionRepository,
-      )..add(SelectFeatureEvent(FeatureId.newId(4))),
+      ),
       child: BlocBuilder<EditorBloc, EditorState>(
         builder: (context, state) => DocumentViewport(
           document: document,
           selectedFeatures: [...state.selectedFeatures],
+          onPointerDownAtWorld: (worldPosition, isShiftPressed) {
+            context.read<EditorBloc>().add(
+              PointerDownAtWorldEvent(
+                worldPosition: worldPosition,
+                isShiftPressed: isShiftPressed,
+              ),
+            );
+          },
         ),
       ),
     );

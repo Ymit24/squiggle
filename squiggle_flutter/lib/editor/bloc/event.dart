@@ -1,17 +1,15 @@
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'dart:ui';
 
 abstract class EditorEvent {
   const EditorEvent();
 }
 
-class SelectFeatureEvent extends EditorEvent {
-  const SelectFeatureEvent(this.featureId);
+class PointerDownAtWorldEvent extends EditorEvent {
+  const PointerDownAtWorldEvent({
+    required this.worldPosition,
+    required this.isShiftPressed,
+  });
 
-  final FeatureId featureId;
-}
-
-class DeselectFeatureEvent extends EditorEvent {
-  const DeselectFeatureEvent(this.featureId);
-
-  final FeatureId featureId;
+  final Offset worldPosition;
+  final bool isShiftPressed;
 }

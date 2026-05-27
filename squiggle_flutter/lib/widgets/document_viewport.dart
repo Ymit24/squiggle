@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 
@@ -15,11 +16,14 @@ class DocumentViewport extends StatefulWidget {
     required this.document,
     this.camera,
     required this.selectedFeatures,
+    this.onPointerDownAtWorld,
   });
 
   final Document document;
   final Camera? camera;
   final List<FeatureId> selectedFeatures;
+  final void Function(Offset worldPosition, bool isShiftPressed)?
+  onPointerDownAtWorld;
 
   @override
   State<DocumentViewport> createState() => _DocumentViewportState();
@@ -59,6 +63,16 @@ class _DocumentViewportState extends State<DocumentViewport> {
   @override
   Widget build(BuildContext context) {
     return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) {
+        if (event.buttons != kPrimaryButton) return;
+        _camera.setViewportOrigin(Offset.zero);
+        final world = _camera.screenToWorld(_viewportLocal(event));
+        widget.onPointerDownAtWorld?.call(
+          world,
+          HardwareKeyboard.instance.isShiftPressed,
+        );
+      },
       onPointerHover: (event) {
         _pointerInViewport = _viewportLocal(event);
       },

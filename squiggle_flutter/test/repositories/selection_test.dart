@@ -18,6 +18,22 @@ void main() {
       expect(repository.selectedFeatures.length, 0);
     });
 
+    test('can clear selection', () {
+      final repository = SelectionRepository();
+      repository.selectFeature(FeatureId.newId(0));
+      repository.selectFeature(FeatureId.newId(1));
+      repository.clearSelection();
+      expect(repository.selectedFeatures, isEmpty);
+    });
+
+    test('does not duplicate on select', () {
+      final repository = SelectionRepository();
+      final id = FeatureId.newId(0);
+      repository.selectFeature(id);
+      repository.selectFeature(id);
+      expect(repository.selectedFeatures.length, 1);
+    });
+
     test('can check if a feature is selected', () {
       final repository = SelectionRepository();
       repository.selectFeature(FeatureId.newId(0));
