@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
@@ -134,6 +136,10 @@ class _EditorShortcutsState extends State<EditorShortcuts> {
               ActivateCreateRectToolIntent(),
           SingleActivator(LogicalKeyboardKey.keyC):
               ActivateCreateCircleToolIntent(),
+          SingleActivator(LogicalKeyboardKey.backspace):
+              DeleteSelectedFeaturesIntent(),
+          SingleActivator(LogicalKeyboardKey.delete):
+              DeleteSelectedFeaturesIntent(),
         },
         child: Actions(
           actions: {
@@ -161,6 +167,15 @@ class _EditorShortcutsState extends State<EditorShortcuts> {
                 return null;
               },
             ),
+            DeleteSelectedFeaturesIntent:
+                CallbackAction<DeleteSelectedFeaturesIntent>(
+              onInvoke: (_) {
+                context.read<EditorBloc>().add(
+                  const DeleteSelectedFeaturesEvent(),
+                );
+                return null;
+              },
+            ),
           },
           child: Focus(
             focusNode: _focusNode,
@@ -184,4 +199,8 @@ class ActivateCreateRectToolIntent extends Intent {
 
 class ActivateCreateCircleToolIntent extends Intent {
   const ActivateCreateCircleToolIntent();
+}
+
+class DeleteSelectedFeaturesIntent extends Intent {
+  const DeleteSelectedFeaturesIntent();
 }

@@ -76,5 +76,22 @@ void main() {
       expect(bloc.state.selectedFeatures.length, 1);
       await bloc.close();
     });
+
+    test('deletes selected features and clears selection', () async {
+      final featureId = documentRepository.document.features.first.id;
+      selectionRepository.selectFeature(featureId);
+
+      final bloc = EditorBloc(
+        documentRepository: documentRepository,
+        selectionRepository: selectionRepository,
+        toolRepository: toolRepository,
+      );
+      bloc.add(const DeleteSelectedFeaturesEvent());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(documentRepository.document.features, isEmpty);
+      expect(selectionRepository.selectedFeatures, isEmpty);
+      await bloc.close();
+    });
   });
 }

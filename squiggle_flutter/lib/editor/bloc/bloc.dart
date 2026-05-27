@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/bloc/state.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
@@ -12,6 +13,7 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     required this.toolRepository,
   }) : super(EditorState.empty(documentRepository.document)) {
     on<RequestWatchEditorStateEvent>(_onRequestWatchEditorState);
+    on<DeleteSelectedFeaturesEvent>(_onDeleteSelectedFeatures);
   }
 
   final DocumentRepository documentRepository;
@@ -41,5 +43,16 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
             state.copyWith(document: documentRepository.document),
       ),
     ]);
+  }
+
+  void _onDeleteSelectedFeatures(
+    DeleteSelectedFeaturesEvent event,
+    Emitter<EditorState> emit,
+  ) {
+    final ids = List.of(selectionRepository.selectedFeatures);
+    if (ids.isEmpty) return;
+
+    documentRepository.executeCommand(RemoveFeaturesCommand(ids));
+    selectionRepository.clearSelection();
   }
 }
