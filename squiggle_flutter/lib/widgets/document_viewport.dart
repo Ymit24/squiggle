@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
+import '../theme/squiggle_colors.dart';
 import 'document_canvas.dart';
 import 'toolbar.dart';
 
@@ -165,7 +166,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
       },
       child: Container(
         key: _viewportKey,
-        color: const Color(0xFF1E1E2E),
+        color: SquiggleColors.base,
         child: DocumentCanvas(
           key: _canvasKey,
           documentRepository: widget.documentRepository,

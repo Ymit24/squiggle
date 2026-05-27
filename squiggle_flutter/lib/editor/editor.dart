@@ -30,18 +30,16 @@ class Editor extends StatelessWidget {
             previous.selectedFeatures != current.selectedFeatures,
         builder: (context, state) {
           return EditorShortcuts(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                const EditorToolbar(),
-                Expanded(
-                  child: DocumentViewport(
-                    documentRepository: documentRepository,
-                    toolRepository: toolRepository,
-                    selectionRepository: selectionRepository,
-                    selectedFeatures: [...state.selectedFeatures],
-                  ),
+                DocumentViewport(
+                  documentRepository: documentRepository,
+                  toolRepository: toolRepository,
+                  selectionRepository: selectionRepository,
+                  selectedFeatures: [...state.selectedFeatures],
                 ),
+                const EditorToolbar(),
               ],
             ),
           );
