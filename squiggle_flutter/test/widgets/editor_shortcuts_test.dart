@@ -11,7 +11,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
-import 'package:squiggle_flutter/widgets/toolbar.dart';
+import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 void main() {
   testWidgets('EditorShortcuts activates tools on V, R, C keys', (tester) async {

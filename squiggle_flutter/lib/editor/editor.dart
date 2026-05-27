@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
-import 'package:squiggle_flutter/widgets/toolbar.dart';
+import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 class Editor extends StatelessWidget {
   const Editor({super.key, required this.documentRepository});
