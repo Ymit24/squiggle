@@ -1,4 +1,4 @@
-enum ActiveToolKind { select }
+enum ActiveToolKind { select, createRect, createCircle }
 
 class ToolbarState {
   const ToolbarState({required this.activeTool});

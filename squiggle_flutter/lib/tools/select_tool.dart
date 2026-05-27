@@ -17,7 +17,7 @@ class SelectTool extends Tool {
     final state = _state;
     if (state is! _Selecting) return;
 
-    final worldBounds = _selectionBoxBounds(state.start, state.end);
+    final worldBounds = Rect.fromPoints(state.start, state.end);
     canvas.drawRect(
       worldBounds,
       Paint()
@@ -131,7 +131,7 @@ class SelectTool extends Tool {
     final state = _state;
     if (state is! _Selecting) return;
 
-    final bounds = _selectionBoxBounds(state.start, state.end);
+    final bounds = Rect.fromPoints(state.start, state.end);
     final hits = document.features
         .where((f) => f.bounds().overlaps(bounds))
         .map((f) => f.id)
@@ -172,14 +172,6 @@ class SelectTool extends Tool {
         MoveFeatureCommand(entry.key, worldPosition - moveOffset + entry.value),
       );
     }
-  }
-
-  static Rect _selectionBoxBounds(Offset a, Offset b) {
-    final left = a.dx < b.dx ? a.dx : b.dx;
-    final top = a.dy < b.dy ? a.dy : b.dy;
-    final right = a.dx > b.dx ? a.dx : b.dx;
-    final bottom = a.dy > b.dy ? a.dy : b.dy;
-    return Rect.fromLTRB(left, top, right, bottom);
   }
 }
 

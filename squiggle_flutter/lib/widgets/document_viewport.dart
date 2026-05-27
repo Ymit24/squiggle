@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import 'document_canvas.dart';
+import 'toolbar.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
 class DocumentViewport extends StatefulWidget {
@@ -77,6 +78,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
     return Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
+        EditorShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
         if (event.buttons != kPrimaryButton) return;
         final world = _screenToWorld(event);
         if (world == null) return;

@@ -27,6 +27,20 @@ class EditorToolbar extends StatelessWidget {
                       const ActivateSelectToolEvent(),
                     ),
                   ),
+                  _ToolButton(
+                    label: 'Rectangle (R)',
+                    isActive: state.activeTool == ActiveToolKind.createRect,
+                    onPressed: () => context.read<ToolbarBloc>().add(
+                      const ActivateCreateRectToolEvent(),
+                    ),
+                  ),
+                  _ToolButton(
+                    label: 'Circle (C)',
+                    isActive: state.activeTool == ActiveToolKind.createCircle,
+                    onPressed: () => context.read<ToolbarBloc>().add(
+                      const ActivateCreateCircleToolEvent(),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -63,28 +77,98 @@ class _ToolButton extends StatelessWidget {
   }
 }
 
+/// Exposes the editor-wide focus node used for tool keyboard shortcuts.
+class EditorShortcutsScope extends InheritedWidget {
+  const EditorShortcutsScope({
+    required this.focusNode,
+    required super.child,
+    super.key,
+  });
+
+  final FocusNode focusNode;
+
+  static EditorShortcutsScope? maybeOf(BuildContext context) {
+    return context.getInheritedWidgetOfExactType<EditorShortcutsScope>();
+  }
+
+  void requestShortcutsFocus() {
+    focusNode.requestFocus();
+  }
+
+  @override
+  bool updateShouldNotify(EditorShortcutsScope oldWidget) {
+    return focusNode != oldWidget.focusNode;
+  }
+}
+
 /// Keyboard shortcuts for tool activation.
-class EditorShortcuts extends StatelessWidget {
+///
+/// Holds keyboard focus at this level so R/C/V work whether the user last
+/// interacted with the toolbar or the canvas.
+class EditorShortcuts extends StatefulWidget {
   const EditorShortcuts({required this.child, super.key});
 
   final Widget child;
 
   @override
+  State<EditorShortcuts> createState() => _EditorShortcutsState();
+}
+
+class _EditorShortcutsState extends State<EditorShortcuts> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Shortcuts(
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
-      },
-      child: Actions(
-        actions: {
-          ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
-            onInvoke: (_) {
-              context.read<ToolbarBloc>().add(const ActivateSelectToolEvent());
-              return null;
-            },
-          ),
+    return EditorShortcutsScope(
+      focusNode: _focusNode,
+      child: Shortcuts(
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+          SingleActivator(LogicalKeyboardKey.keyR):
+              ActivateCreateRectToolIntent(),
+          SingleActivator(LogicalKeyboardKey.keyC):
+              ActivateCreateCircleToolIntent(),
         },
-        child: child,
+        child: Actions(
+          actions: {
+            ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
+              onInvoke: (_) {
+                context.read<ToolbarBloc>().add(const ActivateSelectToolEvent());
+                return null;
+              },
+            ),
+            ActivateCreateRectToolIntent:
+                CallbackAction<ActivateCreateRectToolIntent>(
+              onInvoke: (_) {
+                context.read<ToolbarBloc>().add(
+                  const ActivateCreateRectToolEvent(),
+                );
+                return null;
+              },
+            ),
+            ActivateCreateCircleToolIntent:
+                CallbackAction<ActivateCreateCircleToolIntent>(
+              onInvoke: (_) {
+                context.read<ToolbarBloc>().add(
+                  const ActivateCreateCircleToolEvent(),
+                );
+                return null;
+              },
+            ),
+          },
+          child: Focus(
+            focusNode: _focusNode,
+            autofocus: true,
+            descendantsAreFocusable: false,
+            child: widget.child,
+          ),
+        ),
       ),
     );
   }
@@ -92,4 +176,12 @@ class EditorShortcuts extends StatelessWidget {
 
 class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();
+}
+
+class ActivateCreateRectToolIntent extends Intent {
+  const ActivateCreateRectToolIntent();
+}
+
+class ActivateCreateCircleToolIntent extends Intent {
+  const ActivateCreateCircleToolIntent();
 }

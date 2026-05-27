@@ -56,6 +56,18 @@ class Feature {
     origin = newOrigin;
   }
 
+  Feature copyWith({
+    FeatureId? id,
+    Offset? origin,
+    Size? size,
+    FeatureKind? kind,
+  }) => Feature(
+    id: id ?? this.id,
+    origin: origin ?? this.origin,
+    size: size ?? this.size,
+    kind: kind ?? this.kind,
+  );
+
   void paint(Canvas canvas, Rect worldBounds) {
     switch (kind) {
       case FeatureKindRectangle():

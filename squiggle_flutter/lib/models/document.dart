@@ -84,7 +84,7 @@ final class AddFeatureCommand extends Command {
   final Feature feature;
 
   @override
-  Command clone() => AddFeatureCommand(_copyFeature(feature));
+  Command clone() => AddFeatureCommand(feature.copyWith());
 }
 
 final class RemoveFeaturesCommand extends Command {
@@ -106,15 +106,3 @@ final class MoveFeatureCommand extends Command {
   Command clone() => MoveFeatureCommand(id, origin);
 }
 
-Feature _copyFeature(Feature feature) => Feature(
-  id: feature.id,
-  origin: feature.origin,
-  size: feature.size,
-  kind: _copyKind(feature.kind),
-);
-
-FeatureKind _copyKind(FeatureKind kind) => switch (kind) {
-  FeatureKindRectangle() => const FeatureKindRectangle(),
-  FeatureKindCircle() => const FeatureKindCircle(),
-  FeatureKindText(:final contents) => FeatureKindText(contents),
-};
