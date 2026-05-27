@@ -40,5 +40,26 @@ void main() {
       expect(repository.isFeatureSelected(FeatureId.newId(0)), true);
       expect(repository.isFeatureSelected(FeatureId.newId(1)), false);
     });
+
+    test('selected features stream emits correct values', () async {
+      final repository = SelectionRepository();
+      final id0 = FeatureId.newId(0);
+      final id1 = FeatureId.newId(1);
+
+      expectLater(
+        repository.selectedFeaturesStream,
+        emitsInOrder([
+          equals([id0]),
+          equals([id0, id1]),
+          equals([id1]),
+          isEmpty,
+        ]),
+      );
+
+      repository.selectFeature(id0);
+      repository.selectFeature(id1);
+      repository.deselectFeature(id0);
+      repository.clearSelection();
+    });
   });
 }

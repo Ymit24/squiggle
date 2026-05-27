@@ -19,7 +19,7 @@ class Editor extends StatelessWidget {
       create: (context) => EditorBloc(
         document: document,
         selectionRepository: selectionRepository,
-      ),
+      )..add(RequestWatchSelectedFeaturesEvent()),
       child: BlocBuilder<EditorBloc, EditorState>(
         builder: (context, state) => DocumentViewport(
           document: document,

@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
@@ -20,16 +22,27 @@ void main() {
       selectionRepository = SelectionRepository();
     });
 
-    Future<void> dispatch(EditorBloc bloc, PointerDownAtWorldEvent event) async {
-      bloc.add(event);
-      await bloc.stream.first;
-    }
-
-    test('selects feature on click', () async {
+    EditorBloc createBloc() {
       final bloc = EditorBloc(
         document: document,
         selectionRepository: selectionRepository,
       );
+      bloc.add(const RequestWatchSelectedFeaturesEvent());
+      return bloc;
+    }
+
+    Future<void> dispatch(EditorBloc bloc, PointerDownAtWorldEvent event) async {
+      bloc.add(event);
+      await bloc.stream.firstWhere(
+        (state) => const ListEquality().equals(
+          state.selectedFeatures,
+          selectionRepository.selectedFeatures,
+        ),
+      );
+    }
+
+    test('selects feature on click', () async {
+      final bloc = createBloc();
       await dispatch(
         bloc,
         const PointerDownAtWorldEvent(
@@ -46,12 +59,35 @@ void main() {
       await bloc.close();
     });
 
+    test('switches selection when clicking another feature', () async {
+      final bloc = createBloc();
+
+      await dispatch(
+        bloc,
+        const PointerDownAtWorldEvent(
+          worldPosition: Offset(50, 50),
+          isShiftPressed: false,
+        ),
+      );
+      await dispatch(
+        bloc,
+        const PointerDownAtWorldEvent(
+          worldPosition: Offset(250, 50),
+          isShiftPressed: false,
+        ),
+      );
+
+      expect(bloc.state.selectedFeatures.length, 1);
+      expect(
+        bloc.state.selectedFeatures.single,
+        document.features[1].id,
+      );
+      await bloc.close();
+    });
+
     test('clears selection on empty click', () async {
       selectionRepository.selectFeature(document.features.first.id);
-      final bloc = EditorBloc(
-        document: document,
-        selectionRepository: selectionRepository,
-      );
+      final bloc = createBloc();
       await dispatch(
         bloc,
         const PointerDownAtWorldEvent(
@@ -66,10 +102,7 @@ void main() {
     });
 
     test('shift-click adds and removes from selection', () async {
-      final bloc = EditorBloc(
-        document: document,
-        selectionRepository: selectionRepository,
-      );
+      final bloc = createBloc();
 
       await dispatch(
         bloc,
@@ -103,10 +136,7 @@ void main() {
 
     test('shift-click on empty preserves selection', () async {
       selectionRepository.selectFeature(document.features.first.id);
-      final bloc = EditorBloc(
-        document: document,
-        selectionRepository: selectionRepository,
-      );
+      final bloc = createBloc();
       await dispatch(
         bloc,
         const PointerDownAtWorldEvent(

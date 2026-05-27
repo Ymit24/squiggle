@@ -8,10 +8,27 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   EditorBloc({required this.document, required this.selectionRepository})
     : super(EditorState.empty(document)) {
     on<PointerDownAtWorldEvent>(_onPointerDownAtWorld);
+    on<RequestWatchSelectedFeaturesEvent>(_onRequestWatchSelectedFeatures);
   }
 
   final Document document;
   final SelectionRepository selectionRepository;
+
+  Future<void> _onRequestWatchSelectedFeatures(
+    RequestWatchSelectedFeaturesEvent event,
+    Emitter<EditorState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        selectedFeatures: List.of(selectionRepository.selectedFeatures),
+      ),
+    );
+    return emit.forEach(
+      selectionRepository.selectedFeaturesStream,
+      onData: (selectedFeatures) =>
+          state.copyWith(selectedFeatures: List.of(selectedFeatures)),
+    );
+  }
 
   Future<void> _onPointerDownAtWorld(
     PointerDownAtWorldEvent event,
@@ -33,11 +50,5 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     } else if (!event.isShiftPressed) {
       selectionRepository.clearSelection();
     }
-
-    emit(
-      state.copyWith(
-        selectedFeatures: List.of(selectionRepository.selectedFeatures),
-      ),
-    );
   }
 }
