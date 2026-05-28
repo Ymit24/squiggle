@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
-import 'toolbar_metrics.dart';
+import 'metrics.dart';
 
-class ToolbarButton extends StatefulWidget {
-  const ToolbarButton({
+class Button extends StatefulWidget {
+  const Button({
     super.key,
     required this.iconAsset,
     required this.isActive,
@@ -17,10 +17,10 @@ class ToolbarButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   @override
-  State<ToolbarButton> createState() => _ToolbarButtonState();
+  State<Button> createState() => _ButtonState();
 }
 
-class _ToolbarButtonState extends State<ToolbarButton> {
+class _ButtonState extends State<Button> {
   bool _hovering = false;
 
   @override
@@ -40,18 +40,18 @@ class _ToolbarButtonState extends State<ToolbarButton> {
         onTap: widget.onPressed,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
-          width: toolButtonSize,
-          height: toolButtonSize,
+          width: buttonSize,
+          height: buttonSize,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(toolbarButtonRadius),
+              borderRadius: BorderRadius.circular(buttonRadius),
             ),
             child: Center(
               child: SvgPicture.asset(
                 widget.iconAsset,
-                width: toolbarIconSize,
-                height: toolbarIconSize,
+                width: iconSize,
+                height: iconSize,
                 fit: BoxFit.contain,
                 colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
               ),

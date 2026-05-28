@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Divider;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar_button.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar_divider.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar_gap.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar_metrics.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/button.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/divider.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/gap.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/metrics.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 /// Floating toolbar overlay, matching rust-version layout and styling.
@@ -26,35 +26,35 @@ class EditorToolbar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: SquiggleColors.mantle,
                 border: Border.all(color: SquiggleColors.surface1),
-                borderRadius: BorderRadius.circular(toolbarOuterRadius),
+                borderRadius: BorderRadius.circular(outerRadius),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(toolbarPadding),
+                padding: const EdgeInsets.all(padding),
                 child: SizedBox(
-                  height: toolButtonSize,
+                  height: buttonSize,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ToolbarButton(
+                      Button(
                         iconAsset: 'assets/icons/arrow_selector_tool.svg',
                         isActive: state.activeTool == ActiveToolKind.select,
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateSelectToolEvent(),
                         ),
                       ),
-                      const ToolbarGap(),
-                      const ToolbarDivider(),
-                      const ToolbarGap(),
-                      ToolbarButton(
+                      const Gap(),
+                      const Divider(),
+                      const Gap(),
+                      Button(
                         iconAsset: 'assets/icons/crop_square.svg',
                         isActive: state.activeTool == ActiveToolKind.createRect,
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateCreateRectToolEvent(),
                         ),
                       ),
-                      const ToolbarGap(),
-                      ToolbarButton(
+                      const Gap(),
+                      Button(
                         iconAsset: 'assets/icons/circle.svg',
                         isActive:
                             state.activeTool == ActiveToolKind.createCircle,

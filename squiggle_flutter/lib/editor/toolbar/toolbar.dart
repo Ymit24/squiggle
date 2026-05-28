@@ -1,3 +1,3 @@
-export 'widgets/editor_shortcuts.dart';
-export 'widgets/editor_shortcuts_scope.dart';
+export 'widgets/shortcuts/shortcuts.dart';
+export 'widgets/shortcuts/scope.dart';
 export 'widgets/editor_toolbar.dart';

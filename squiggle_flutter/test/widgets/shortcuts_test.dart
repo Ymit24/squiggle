@@ -14,7 +14,7 @@ import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 void main() {
-  testWidgets('EditorShortcuts activates tools on V, R, C keys', (tester) async {
+  testWidgets('ToolShortcuts activates tools on V, R, C keys', (tester) async {
     final toolRepository = ToolRepository();
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository.fromFeatures([
@@ -40,7 +40,7 @@ void main() {
                 ),
               ),
             ],
-            child: EditorShortcuts(
+            child: ToolShortcuts(
               child: const SizedBox.expand(),
             ),
           ),
@@ -49,7 +49,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final toolbarBloc = tester.element(find.byType(EditorShortcuts)).read<ToolbarBloc>();
+    final toolbarBloc =
+        tester.element(find.byType(ToolShortcuts)).read<ToolbarBloc>();
 
     Future<void> pressKey(LogicalKeyboardKey key) async {
       await tester.sendKeyEvent(key, platform: 'macos');
@@ -75,7 +76,7 @@ void main() {
     );
   });
 
-  testWidgets('EditorShortcuts deletes selected features on backspace', (
+  testWidgets('ToolShortcuts deletes selected features on backspace', (
     tester,
   ) async {
     final toolRepository = ToolRepository();
@@ -105,7 +106,7 @@ void main() {
                 ),
               ),
             ],
-            child: EditorShortcuts(
+            child: ToolShortcuts(
               child: const SizedBox.expand(),
             ),
           ),

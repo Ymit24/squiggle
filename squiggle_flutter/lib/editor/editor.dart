@@ -29,7 +29,7 @@ class Editor extends StatelessWidget {
         buildWhen: (previous, current) =>
             previous.selectedFeatures != current.selectedFeatures,
         builder: (context, state) {
-          return EditorShortcuts(
+          return ToolShortcuts(
             child: Stack(
               fit: StackFit.expand,
               children: [

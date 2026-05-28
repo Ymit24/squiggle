@@ -5,23 +5,23 @@ import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/editor_shortcuts_intents.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/editor_shortcuts_scope.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 
 /// Keyboard shortcuts for tool activation.
 ///
 /// Holds keyboard focus at this level so R/C/V work whether the user last
 /// interacted with the toolbar or the canvas.
-class EditorShortcuts extends StatefulWidget {
-  const EditorShortcuts({required this.child, super.key});
+class ToolShortcuts extends StatefulWidget {
+  const ToolShortcuts({required this.child, super.key});
 
   final Widget child;
 
   @override
-  State<EditorShortcuts> createState() => _EditorShortcutsState();
+  State<ToolShortcuts> createState() => _ToolShortcutsState();
 }
 
-class _EditorShortcutsState extends State<EditorShortcuts> {
+class _ToolShortcutsState extends State<ToolShortcuts> {
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -32,7 +32,7 @@ class _EditorShortcutsState extends State<EditorShortcuts> {
 
   @override
   Widget build(BuildContext context) {
-    return EditorShortcutsScope(
+    return ShortcutsScope(
       focusNode: _focusNode,
       child: Shortcuts(
         shortcuts: const {

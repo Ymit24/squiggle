@@ -79,7 +79,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
     return Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
-        EditorShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+        ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
         if (event.buttons != kPrimaryButton) return;
         final world = _screenToWorld(event);
         if (world == null) return;

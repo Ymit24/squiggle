@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
 /// Exposes the editor-wide focus node used for tool keyboard shortcuts.
-class EditorShortcutsScope extends InheritedWidget {
-  const EditorShortcutsScope({
+class ShortcutsScope extends InheritedWidget {
+  const ShortcutsScope({
     required this.focusNode,
     required super.child,
     super.key,
@@ -10,8 +10,8 @@ class EditorShortcutsScope extends InheritedWidget {
 
   final FocusNode focusNode;
 
-  static EditorShortcutsScope? maybeOf(BuildContext context) {
-    return context.getInheritedWidgetOfExactType<EditorShortcutsScope>();
+  static ShortcutsScope? maybeOf(BuildContext context) {
+    return context.getInheritedWidgetOfExactType<ShortcutsScope>();
   }
 
   void requestShortcutsFocus() {
@@ -19,7 +19,7 @@ class EditorShortcutsScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(EditorShortcutsScope oldWidget) {
+  bool updateShouldNotify(ShortcutsScope oldWidget) {
     return focusNode != oldWidget.focusNode;
   }
 }

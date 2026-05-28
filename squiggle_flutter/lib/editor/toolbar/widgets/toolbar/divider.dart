@@ -1,17 +1,17 @@
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
-import 'toolbar_metrics.dart';
+import 'metrics.dart';
 
-class ToolbarDivider extends StatelessWidget {
-  const ToolbarDivider({super.key});
+class Divider extends StatelessWidget {
+  const Divider({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: toolbarDividerHeight,
-      margin: const EdgeInsets.symmetric(horizontal: toolbarGap),
+      height: dividerHeight,
+      margin: const EdgeInsets.symmetric(horizontal: gap),
       color: SquiggleColors.surface1,
     );
   }
