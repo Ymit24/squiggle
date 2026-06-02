@@ -1,19 +1,23 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
-import 'package:squiggle_flutter/tools/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool.dart'
+    show SelectTool, kSelectionHandleHitSize, selectionBoxWorldBounds;
 
 void main() {
   group('SelectTool via ToolRepository', () {
     late DocumentRepository documentRepository;
     late SelectionRepository selectionRepository;
     late ToolRepository toolRepository;
+    late Camera camera;
 
     setUp(() {
+      camera = Camera();
       documentRepository = DocumentRepository.fromFeatures([
         Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
         Feature.newRectangle(const Offset(200, 0), const Size(100, 100)),
@@ -33,6 +37,7 @@ void main() {
         world,
         selectionRepository,
         shift,
+        camera,
       );
     }
 
@@ -42,6 +47,17 @@ void main() {
         world,
         selectionRepository,
         shift,
+        camera,
+      );
+    }
+
+    void pointerMove(Offset world, {bool shift = false}) {
+      toolRepository.onPointerMove(
+        documentRepository,
+        world,
+        selectionRepository,
+        shift,
+        camera,
       );
     }
 
@@ -113,12 +129,7 @@ void main() {
       final subscription = toolRepository.repaintStream.listen(repaints.add);
 
       pointerDown(const Offset(500, 500));
-      toolRepository.onPointerMove(
-        documentRepository,
-        const Offset(600, 600),
-        selectionRepository,
-        false,
-      );
+      pointerMove(const Offset(600, 600));
       await Future<void>.delayed(Duration.zero);
 
       expect(repaints, isNotEmpty);
@@ -146,12 +157,7 @@ void main() {
       expect(selectionRepository.selectedFeatures, [idA, idB, idC]);
 
       pointerDown(const Offset(25, 25));
-      toolRepository.onPointerMove(
-        documentRepository,
-        const Offset(35, 35),
-        selectionRepository,
-        false,
-      );
+      pointerMove(const Offset(35, 35));
 
       expect(documentRepository.document.featureById(idA)!.origin, const Offset(10, 10));
       expect(documentRepository.document.featureById(idB)!.origin, const Offset(110, 10));
@@ -162,15 +168,70 @@ void main() {
       pointerDown(const Offset(50, 50));
       final changes = <void>[];
       final subscription = documentRepository.changesStream.listen(changes.add);
-      toolRepository.onPointerMove(
-        documentRepository,
-        const Offset(60, 60),
-        selectionRepository,
-        false,
-      );
+      pointerMove(const Offset(60, 60));
       await Future<void>.delayed(Duration.zero);
       expect(changes, isNotEmpty);
       await subscription.cancel();
+    });
+
+    test('resize does not snap on first move when grab is off-center on handle', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+
+      pointerDown(down);
+      pointerMove(down);
+
+      final unchanged = documentRepository.document.featureById(feature.id)!;
+      expect(unchanged.bounds(), bounds);
+    });
+
+    test('resizes single selection from bottom-right handle', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+      final grabOffset = down - bounds.bottomRight;
+      const targetCorner = Offset(150, 150);
+
+      pointerDown(down);
+      pointerMove(targetCorner + grabOffset);
+      pointerUp(targetCorner + grabOffset);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.origin, bounds.topLeft);
+      expect(resized.size.width, 150);
+      expect(resized.size.height, 150);
+    });
+
+    test('does not resize when multiple features are selected', () {
+      final features = documentRepository.document.features;
+      selectionRepository.selectFeature(features[0].id);
+      selectionRepository.selectFeature(features[1].id);
+
+      final bounds = features[0].bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+
+      pointerDown(down);
+      pointerMove(const Offset(150, 150));
+      pointerUp(const Offset(150, 150));
+
+      expect(features[0].bounds(), bounds);
     });
   });
 }

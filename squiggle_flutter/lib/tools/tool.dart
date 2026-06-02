@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 
@@ -15,6 +16,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   );
 
   void onPointerMove(
@@ -22,6 +24,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   );
 
   void onPointerUp(
@@ -29,6 +32,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   );
 
   void deactivate(SelectionRepository selection);

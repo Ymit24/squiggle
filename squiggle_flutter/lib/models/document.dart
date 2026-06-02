@@ -68,6 +68,8 @@ class Document {
         }
       case MoveFeatureCommand(:final id, :final origin):
         featureById(id)?.moveTo(origin);
+      case ResizeFeatureCommand(:final id, :final bounds):
+        featureById(id)?.setBounds(bounds);
     }
   }
 }
@@ -104,5 +106,15 @@ final class MoveFeatureCommand extends Command {
 
   @override
   Command clone() => MoveFeatureCommand(id, origin);
+}
+
+final class ResizeFeatureCommand extends Command {
+  const ResizeFeatureCommand(this.id, this.bounds);
+
+  final FeatureId id;
+  final Rect bounds;
+
+  @override
+  Command clone() => ResizeFeatureCommand(id, bounds);
 }
 

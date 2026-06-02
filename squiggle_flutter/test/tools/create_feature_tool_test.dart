@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -12,11 +13,13 @@ void main() {
     late DocumentRepository documentRepository;
     late SelectionRepository selectionRepository;
     late ToolRepository toolRepository;
+    late Camera camera;
 
     setUp(() {
       documentRepository = DocumentRepository();
       selectionRepository = SelectionRepository();
       toolRepository = ToolRepository();
+      camera = Camera();
     });
 
     tearDown(() {
@@ -30,6 +33,7 @@ void main() {
         world,
         selectionRepository,
         false,
+        camera,
       );
     }
 
@@ -39,6 +43,7 @@ void main() {
         world,
         selectionRepository,
         false,
+        camera,
       );
     }
 
@@ -48,6 +53,7 @@ void main() {
         world,
         selectionRepository,
         false,
+        camera,
       );
     }
 

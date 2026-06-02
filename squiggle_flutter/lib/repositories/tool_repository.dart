@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
@@ -29,12 +30,14 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   ) {
     _activeTool.onPointerDown(
       documentRepository,
       worldPosition,
       selection,
       isShiftPressed,
+      camera,
     );
     _notifyRepaint();
   }
@@ -44,12 +47,14 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   ) {
     _activeTool.onPointerMove(
       documentRepository,
       worldPosition,
       selection,
       isShiftPressed,
+      camera,
     );
     _notifyRepaint();
   }
@@ -59,12 +64,14 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   ) {
     _activeTool.onPointerUp(
       documentRepository,
       worldPosition,
       selection,
       isShiftPressed,
+      camera,
     );
     _notifyRepaint();
   }

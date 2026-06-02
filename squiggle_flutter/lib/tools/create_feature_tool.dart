@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
@@ -38,6 +39,7 @@ class CreateFeatureTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   ) {}
 
   @override
@@ -46,6 +48,7 @@ class CreateFeatureTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   ) {
     switch (_state) {
       case _Idle():
@@ -67,6 +70,7 @@ class CreateFeatureTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    Camera camera,
   ) {
     if (_state is _Dragging) {
       documentRepository.executeCommand(

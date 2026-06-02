@@ -239,13 +239,16 @@ class RenderDocumentCanvas extends RenderBox {
   }
 
   void _paintSelectionBox(Canvas canvas, Rect worldBounds) {
-    final kHandleSize = 12.0;
+    const handleSize = 12.0;
+    const selectionPadding = 8.0;
+    final half = handleSize / 2;
+
     canvas.save();
     canvas.translate(camera.location.dx, camera.location.dy);
     canvas.scale(camera.zoom, camera.zoom);
 
     final screenBounds = camera.worldToScreenBounds(worldBounds);
-    final inflatedBounds = screenBounds.inflate(8 / camera.zoom);
+    final inflatedBounds = screenBounds.inflate(selectionPadding / camera.zoom);
 
     canvas.drawRect(
       inflatedBounds,
@@ -254,17 +257,17 @@ class RenderDocumentCanvas extends RenderBox {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
-    for (final corner in [
-      inflatedBounds.topLeft - Offset(kHandleSize / 2, kHandleSize / 2),
-      inflatedBounds.topRight + Offset(kHandleSize / 2, -kHandleSize / 2),
-      inflatedBounds.bottomLeft + Offset(-kHandleSize / 2, kHandleSize / 2),
-      inflatedBounds.bottomRight + Offset(kHandleSize / 2, kHandleSize / 2),
+    for (final center in [
+      inflatedBounds.topLeft - Offset(half, half),
+      inflatedBounds.topRight + Offset(half, -half),
+      inflatedBounds.bottomLeft + Offset(-half, half),
+      inflatedBounds.bottomRight + Offset(half, half),
     ]) {
       final handleRRect = RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: corner,
-          width: kHandleSize,
-          height: kHandleSize,
+          center: center,
+          width: handleSize,
+          height: handleSize,
         ),
         Radius.circular(2.0),
       );

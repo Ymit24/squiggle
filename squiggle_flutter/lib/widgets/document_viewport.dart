@@ -90,6 +90,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
           world,
           widget.selectionRepository,
           _isShiftPressed,
+          _camera,
         );
         setState(() {});
       },
@@ -103,6 +104,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
           world,
           widget.selectionRepository,
           _isShiftPressed,
+          _camera,
         );
         setState(() {});
       },
@@ -116,6 +118,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
             world,
             widget.selectionRepository,
             _isShiftPressed,
+            _camera,
           );
         }
         setState(() {});
@@ -130,6 +133,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
             world,
             widget.selectionRepository,
             _isShiftPressed,
+            _camera,
           );
         }
         setState(() {});
