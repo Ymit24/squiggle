@@ -231,10 +231,13 @@ class RenderDocumentCanvas extends RenderBox {
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
       feature.paint(canvas, worldBounds);
+    }
 
-      if (selectedFeatures.contains(feature.id)) {
-        _paintSelectionBox(canvas, worldBounds);
-      }
+    for (final featureId in selectedFeatures) {
+      final feature = document.featureById(featureId)!;
+      final worldBounds = feature.bounds();
+      if (!worldBounds.overlaps(visibleWorld)) continue;
+      _paintSelectionBox(canvas, worldBounds);
     }
   }
 
@@ -264,11 +267,7 @@ class RenderDocumentCanvas extends RenderBox {
       inflatedBounds.bottomRight + Offset(half, half),
     ]) {
       final handleRRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: handleSize,
-          height: handleSize,
-        ),
+        Rect.fromCenter(center: center, width: handleSize, height: handleSize),
         Radius.circular(2.0),
       );
       canvas.drawRRect(
