@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import '../models/document.dart';
+import '../theme/squiggle_colors.dart';
 
 /// Paints a [Document]'s features on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
@@ -229,17 +230,58 @@ class RenderDocumentCanvas extends RenderBox {
       final worldBounds = feature.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
-      if (selectedFeatures.contains(feature.id)) {
-        canvas.drawRect(
-          worldBounds.inflate(8),
-          Paint()
-            ..color = const Color(0xFF89B4FA)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
-        );
-      }
-
       feature.paint(canvas, worldBounds);
+
+      if (selectedFeatures.contains(feature.id)) {
+        _paintSelectionBox(canvas, worldBounds);
+      }
     }
+  }
+
+  void _paintSelectionBox(Canvas canvas, Rect worldBounds) {
+    final kHandleSize = 12.0;
+    canvas.save();
+    canvas.translate(camera.location.dx, camera.location.dy);
+    canvas.scale(camera.zoom, camera.zoom);
+
+    final screenBounds = camera.worldToScreenBounds(worldBounds);
+    final inflatedBounds = screenBounds.inflate(8 / camera.zoom);
+
+    canvas.drawRect(
+      inflatedBounds,
+      Paint()
+        ..color = const Color(0xFF89B4FA)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    for (final corner in [
+      inflatedBounds.topLeft - Offset(kHandleSize / 2, kHandleSize / 2),
+      inflatedBounds.topRight + Offset(kHandleSize / 2, -kHandleSize / 2),
+      inflatedBounds.bottomLeft + Offset(-kHandleSize / 2, kHandleSize / 2),
+      inflatedBounds.bottomRight + Offset(kHandleSize / 2, kHandleSize / 2),
+    ]) {
+      final handleRRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: corner,
+          width: kHandleSize,
+          height: kHandleSize,
+        ),
+        Radius.circular(2.0),
+      );
+      canvas.drawRRect(
+        handleRRect,
+        Paint()
+          ..color = SquiggleColors.base
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        handleRRect,
+        Paint()
+          ..color = SquiggleColors.accent
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+    canvas.restore();
   }
 }
