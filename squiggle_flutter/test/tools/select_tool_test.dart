@@ -7,7 +7,13 @@ import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart'
-    show SelectTool, kSelectionHandleHitSize, selectionBoxWorldBounds;
+    show
+        SelectTool,
+        kSelectionBoxPadding,
+        kSelectionHandleHitSize,
+        selectionBoxWorldBounds;
+
+enum _SelectionEdge { top, right, bottom, left }
 
 void main() {
   group('SelectTool via ToolRepository', () {
@@ -59,6 +65,32 @@ void main() {
         shift,
         camera,
       );
+    }
+
+    Offset edgeHitWorldPoint(Rect featureBounds, _SelectionEdge edge) {
+      final screenBounds = camera.worldToScreenBounds(featureBounds).inflate(
+        kSelectionBoxPadding,
+      );
+      final half = kSelectionHandleHitSize / 2;
+      final screenPoint = switch (edge) {
+        _SelectionEdge.top => Offset(
+          (screenBounds.left + screenBounds.right) / 2,
+          screenBounds.top - half,
+        ),
+        _SelectionEdge.bottom => Offset(
+          (screenBounds.left + screenBounds.right) / 2,
+          screenBounds.bottom - half,
+        ),
+        _SelectionEdge.left => Offset(
+          screenBounds.left - half,
+          (screenBounds.top + screenBounds.bottom) / 2,
+        ),
+        _SelectionEdge.right => Offset(
+          screenBounds.right - half,
+          (screenBounds.top + screenBounds.bottom) / 2,
+        ),
+      };
+      return camera.screenToWorld(screenPoint);
     }
 
     test('selects feature on click', () {
@@ -213,6 +245,59 @@ void main() {
       expect(resized.origin, bounds.topLeft);
       expect(resized.size.width, 150);
       expect(resized.size.height, 150);
+    });
+
+    test('resizes single selection from top edge', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final down = edgeHitWorldPoint(bounds, _SelectionEdge.top);
+      final grabOffset = down - bounds.topLeft;
+      const targetTop = Offset(50, -50);
+
+      pointerDown(down);
+      pointerMove(targetTop + grabOffset);
+      pointerUp(targetTop + grabOffset);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.origin, const Offset(0, -50));
+      expect(resized.size.width, 100);
+      expect(resized.size.height, 150);
+    });
+
+    test('resizes single selection from right edge', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final down = edgeHitWorldPoint(bounds, _SelectionEdge.right);
+      final grabOffset = down - bounds.bottomRight;
+      const targetRight = Offset(200, 50);
+
+      pointerDown(down);
+      pointerMove(targetRight + grabOffset);
+      pointerUp(targetRight + grabOffset);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.origin, bounds.topLeft);
+      expect(resized.size.width, 200);
+      expect(resized.size.height, 100);
+    });
+
+    test('edge resize does not snap on first move when grab is off-center', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final down = edgeHitWorldPoint(bounds, _SelectionEdge.top) +
+          const Offset(10, 0);
+
+      pointerDown(down);
+      pointerMove(down);
+
+      final unchanged = documentRepository.document.featureById(feature.id)!;
+      expect(unchanged.bounds(), bounds);
     });
 
     test('does not resize when multiple features are selected', () {

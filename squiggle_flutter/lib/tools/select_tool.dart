@@ -11,7 +11,16 @@ import 'package:squiggle_flutter/utils/painting.dart';
 const kSelectionBoxPadding = 8.0;
 const kSelectionHandleHitSize = 20.0;
 
-enum SelectionResizeHandle { topLeft, topRight, bottomLeft, bottomRight }
+enum SelectionResizeHandle {
+  topLeft,
+  top,
+  topRight,
+  right,
+  bottomRight,
+  bottom,
+  bottomLeft,
+  left,
+}
 
 Rect selectionBoxWorldBounds(Rect featureBounds) {
   return featureBounds.inflate(kSelectionBoxPadding);
@@ -106,9 +115,15 @@ class SelectTool extends Tool {
           worldPosition,
           moveOffset,
         );
-      case _Resizing(:final featureId, :final anchor, :final resizeOffset):
+      case _Resizing(
+        :final featureId,
+        :final handle,
+        :final anchor,
+        :final resizeOffset,
+      ):
         _state = _Resizing(
           featureId: featureId,
+          handle: handle,
           anchor: anchor,
           resizeOffset: resizeOffset,
           didResize: true,
@@ -116,8 +131,10 @@ class SelectTool extends Tool {
         _resizeFeature(
           documentRepository,
           featureId,
+          handle,
           anchor,
-          worldPosition - resizeOffset,
+          worldPosition,
+          resizeOffset,
         );
     }
   }
@@ -178,11 +195,12 @@ class SelectTool extends Tool {
     }
 
     final bounds = selected.bounds();
-    final corner = _cornerForResizeHandle(handle, bounds);
+    final reference = _referencePointForResizeHandle(handle, bounds);
     _state = _Resizing(
       featureId: selectedId,
+      handle: handle,
       anchor: _anchorForResizeHandle(handle, bounds),
-      resizeOffset: worldPosition - corner,
+      resizeOffset: worldPosition - reference,
       didResize: false,
     );
     return true;
@@ -221,24 +239,82 @@ class SelectTool extends Tool {
         return handle;
       }
     }
+
+    if (inflated.width <= kSelectionHandleHitSize ||
+        inflated.height <= kSelectionHandleHitSize) {
+      return null;
+    }
+
+    final edgeStrips = <(SelectionResizeHandle, Rect)>[
+      (
+        SelectionResizeHandle.top,
+        Rect.fromLTWH(
+          inflated.left + half,
+          inflated.top - half,
+          inflated.width - kSelectionHandleHitSize,
+          kSelectionHandleHitSize,
+        ),
+      ),
+      (
+        SelectionResizeHandle.bottom,
+        Rect.fromLTWH(
+          inflated.left + half,
+          inflated.bottom - half,
+          inflated.width - kSelectionHandleHitSize,
+          kSelectionHandleHitSize,
+        ),
+      ),
+      (
+        SelectionResizeHandle.left,
+        Rect.fromLTWH(
+          inflated.left - half,
+          inflated.top + half,
+          kSelectionHandleHitSize,
+          inflated.height - kSelectionHandleHitSize,
+        ),
+      ),
+      (
+        SelectionResizeHandle.right,
+        Rect.fromLTWH(
+          inflated.right - half,
+          inflated.top + half,
+          kSelectionHandleHitSize,
+          inflated.height - kSelectionHandleHitSize,
+        ),
+      ),
+    ];
+
+    for (final (handle, strip) in edgeStrips) {
+      if (strip.contains(screenPoint)) {
+        return handle;
+      }
+    }
     return null;
   }
 
   Offset _anchorForResizeHandle(SelectionResizeHandle handle, Rect bounds) {
     return switch (handle) {
       SelectionResizeHandle.topLeft => bounds.bottomRight,
+      SelectionResizeHandle.top => bounds.bottomLeft,
       SelectionResizeHandle.topRight => bounds.bottomLeft,
-      SelectionResizeHandle.bottomLeft => bounds.topRight,
+      SelectionResizeHandle.right => bounds.topLeft,
       SelectionResizeHandle.bottomRight => bounds.topLeft,
+      SelectionResizeHandle.bottom => bounds.topLeft,
+      SelectionResizeHandle.bottomLeft => bounds.topRight,
+      SelectionResizeHandle.left => bounds.topRight,
     };
   }
 
-  Offset _cornerForResizeHandle(SelectionResizeHandle handle, Rect bounds) {
+  Offset _referencePointForResizeHandle(SelectionResizeHandle handle, Rect bounds) {
     return switch (handle) {
       SelectionResizeHandle.topLeft => bounds.topLeft,
+      SelectionResizeHandle.top => bounds.topLeft,
       SelectionResizeHandle.topRight => bounds.topRight,
-      SelectionResizeHandle.bottomLeft => bounds.bottomLeft,
+      SelectionResizeHandle.right => bounds.bottomRight,
       SelectionResizeHandle.bottomRight => bounds.bottomRight,
+      SelectionResizeHandle.bottom => bounds.bottomRight,
+      SelectionResizeHandle.bottomLeft => bounds.bottomLeft,
+      SelectionResizeHandle.left => bounds.topLeft,
     };
   }
 
@@ -296,14 +372,46 @@ class SelectTool extends Tool {
   void _resizeFeature(
     DocumentRepository documentRepository,
     FeatureId featureId,
+    SelectionResizeHandle handle,
     Offset anchor,
-    Offset draggedCorner,
+    Offset pointerWorld,
+    Offset resizeOffset,
   ) {
-    documentRepository.executeCommand(
-      ResizeFeatureCommand(
-        featureId,
-        Rect.fromPoints(anchor, draggedCorner),
+    final dragged = pointerWorld - resizeOffset;
+    final bounds = documentRepository.document.featureById(featureId)!.bounds();
+    final newBounds = switch (handle) {
+      SelectionResizeHandle.topLeft ||
+      SelectionResizeHandle.topRight ||
+      SelectionResizeHandle.bottomLeft ||
+      SelectionResizeHandle.bottomRight => Rect.fromPoints(anchor, dragged),
+      SelectionResizeHandle.top => Rect.fromLTRB(
+        bounds.left,
+        dragged.dy,
+        bounds.right,
+        bounds.bottom,
       ),
+      SelectionResizeHandle.bottom => Rect.fromLTRB(
+        bounds.left,
+        bounds.top,
+        bounds.right,
+        dragged.dy,
+      ),
+      SelectionResizeHandle.left => Rect.fromLTRB(
+        dragged.dx,
+        bounds.top,
+        bounds.right,
+        bounds.bottom,
+      ),
+      SelectionResizeHandle.right => Rect.fromLTRB(
+        bounds.left,
+        bounds.top,
+        dragged.dx,
+        bounds.bottom,
+      ),
+    };
+
+    documentRepository.executeCommand(
+      ResizeFeatureCommand(featureId, newBounds),
     );
   }
 }
@@ -338,12 +446,14 @@ final class _Moving extends _SelectState {
 final class _Resizing extends _SelectState {
   const _Resizing({
     required this.featureId,
+    required this.handle,
     required this.anchor,
     required this.resizeOffset,
     required this.didResize,
   });
 
   final FeatureId featureId;
+  final SelectionResizeHandle handle;
   final Offset anchor;
   final Offset resizeOffset;
   final bool didResize;
