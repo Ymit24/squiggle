@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateFeatureTool extends Tool {
@@ -23,6 +24,15 @@ class CreateFeatureTool extends Tool {
 
   Feature _ghost;
   _CreateState _state;
+
+  @override
+  EditorCursor resolveCursor(
+    DocumentRepository documentRepository,
+    Offset worldPosition,
+    SelectionRepository selection,
+    Camera camera,
+  ) =>
+      EditorCursor.crosshair;
 
   @override
   void paint(Canvas canvas) {

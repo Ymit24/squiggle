@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/utils/painting.dart';
 
@@ -44,6 +45,46 @@ class SelectTool extends Tool {
         ..style = PaintingStyle.fill,
     );
     paintDashedRect(canvas, worldBounds);
+  }
+
+  @override
+  EditorCursor resolveCursor(
+    DocumentRepository documentRepository,
+    Offset worldPosition,
+    SelectionRepository selection,
+    Camera camera,
+  ) {
+    switch (_state) {
+      case _Moving():
+        return EditorCursor.grabbing;
+      case _Resizing(:final handle):
+        return _cursorForResizeHandle(handle);
+      case _Idle():
+      case _Selecting():
+        break;
+    }
+
+    final document = documentRepository.document;
+    if (selection.selectedFeatures.length == 1) {
+      final selected = document.featureById(selection.selectedFeatures.single)!;
+      final bounds = selected.bounds();
+      final handle = _hitTestResizeHandle(
+        worldPoint: worldPosition,
+        featureBounds: bounds,
+        camera: camera,
+      );
+      if (handle != null) {
+        return _cursorForResizeHandle(handle);
+      }
+      if (selectionBoxWorldBounds(bounds).contains(worldPosition)) {
+        return EditorCursor.grab;
+      }
+    }
+
+    if (document.featureAtPoint(worldPosition) != null) {
+      return EditorCursor.grab;
+    }
+    return EditorCursor.basic;
   }
 
   @override
@@ -149,10 +190,7 @@ class SelectTool extends Tool {
   ) {
     final document = documentRepository.document;
     switch (_state) {
-      case _Moving(
-        :final isFirstTimeSelect,
-        :final didMove,
-      ):
+      case _Moving(:final isFirstTimeSelect, :final didMove):
         final hovered = document.featureAtPoint(worldPosition);
         if (hovered != null && !didMove) {
           if (isShiftPressed) {
@@ -204,6 +242,19 @@ class SelectTool extends Tool {
       didResize: false,
     );
     return true;
+  }
+
+  EditorCursor _cursorForResizeHandle(SelectionResizeHandle handle) {
+    return switch (handle) {
+      SelectionResizeHandle.topLeft => EditorCursor.resizeUpLeft,
+      SelectionResizeHandle.top => EditorCursor.resizeUp,
+      SelectionResizeHandle.topRight => EditorCursor.resizeUpRight,
+      SelectionResizeHandle.right => EditorCursor.resizeRight,
+      SelectionResizeHandle.bottomRight => EditorCursor.resizeDownRight,
+      SelectionResizeHandle.bottom => EditorCursor.resizeDown,
+      SelectionResizeHandle.bottomLeft => EditorCursor.resizeDownLeft,
+      SelectionResizeHandle.left => EditorCursor.resizeLeft,
+    };
   }
 
   SelectionResizeHandle? _hitTestResizeHandle({
@@ -305,7 +356,10 @@ class SelectTool extends Tool {
     };
   }
 
-  Offset _referencePointForResizeHandle(SelectionResizeHandle handle, Rect bounds) {
+  Offset _referencePointForResizeHandle(
+    SelectionResizeHandle handle,
+    Rect bounds,
+  ) {
     return switch (handle) {
       SelectionResizeHandle.topLeft => bounds.topLeft,
       SelectionResizeHandle.top => bounds.topLeft,

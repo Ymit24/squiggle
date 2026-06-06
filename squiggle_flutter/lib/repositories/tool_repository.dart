@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
@@ -57,6 +58,20 @@ class ToolRepository {
       camera,
     );
     _notifyRepaint();
+  }
+
+  EditorCursor resolveCursor(
+    DocumentRepository documentRepository,
+    Offset worldPosition,
+    SelectionRepository selection,
+    Camera camera,
+  ) {
+    return _activeTool.resolveCursor(
+      documentRepository,
+      worldPosition,
+      selection,
+      camera,
+    );
   }
 
   void onPointerUp(

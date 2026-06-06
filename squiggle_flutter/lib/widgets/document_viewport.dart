@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import '../theme/squiggle_colors.dart';
 import 'document_canvas.dart';
+import 'viewport_tool_cursor.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
@@ -19,14 +20,12 @@ class DocumentViewport extends StatefulWidget {
     required this.documentRepository,
     required this.selectionRepository,
     required this.toolRepository,
-    this.camera,
     required this.selectedFeatures,
   });
 
   final DocumentRepository documentRepository;
   final SelectionRepository selectionRepository;
   final ToolRepository toolRepository;
-  final Camera? camera;
   final List<FeatureId> selectedFeatures;
 
   @override
@@ -46,15 +45,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
   @override
   void initState() {
     super.initState();
-    _camera = widget.camera ?? Camera();
-  }
-
-  @override
-  void didUpdateWidget(DocumentViewport oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.camera != null && widget.camera != oldWidget.camera) {
-      _camera = widget.camera!;
-    }
+    _camera = Camera();
   }
 
   Offset? _canvasLocal(PointerEvent event) {
@@ -171,12 +162,19 @@ class _DocumentViewportState extends State<DocumentViewport> {
       child: Container(
         key: _viewportKey,
         color: SquiggleColors.base,
-        child: DocumentCanvas(
-          key: _canvasKey,
+        child: ViewportToolCursor(
           documentRepository: widget.documentRepository,
+          selectionRepository: widget.selectionRepository,
           toolRepository: widget.toolRepository,
           camera: _camera,
-          selectedFeatures: widget.selectedFeatures,
+          canvasKey: _canvasKey,
+          child: DocumentCanvas(
+            key: _canvasKey,
+            documentRepository: widget.documentRepository,
+            toolRepository: widget.toolRepository,
+            camera: _camera,
+            selectedFeatures: widget.selectedFeatures,
+          ),
         ),
       ),
     );

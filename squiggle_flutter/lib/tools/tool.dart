@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 /// Active editor tool: pointer handling and ephemeral overlay painting.
 abstract class Tool {
@@ -36,4 +37,12 @@ abstract class Tool {
   );
 
   void deactivate(SelectionRepository selection);
+
+  EditorCursor resolveCursor(
+    DocumentRepository documentRepository,
+    Offset worldPosition,
+    SelectionRepository selection,
+    Camera camera,
+  ) =>
+      EditorCursor.basic;
 }
