@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/physics.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
@@ -32,7 +34,11 @@ class DocumentViewport extends StatefulWidget {
   State<DocumentViewport> createState() => _DocumentViewportState();
 }
 
-class _DocumentViewportState extends State<DocumentViewport> {
+class _DocumentViewportState extends State<DocumentViewport>
+    with SingleTickerProviderStateMixin {
+  static const _flingFriction = 0.135;
+  static const _pinchScaleThreshold = 0.02;
+
   final GlobalKey _canvasKey = GlobalKey();
   final GlobalKey _viewportKey = GlobalKey();
 
@@ -41,11 +47,67 @@ class _DocumentViewportState extends State<DocumentViewport> {
   Offset _initialLocation = Offset.zero;
   Offset? _pointerInCanvas;
   bool _isPrimaryDragging = false;
+  bool _panZoomHadSignificantPinch = false;
+
+  VelocityTracker _panVelocityTracker =
+      VelocityTracker.withKind(PointerDeviceKind.trackpad);
+  late final Ticker _flingTicker;
+  FrictionSimulation? _flingSimX;
+  FrictionSimulation? _flingSimY;
+  double _flingSimXPos = 0;
+  double _flingSimYPos = 0;
 
   @override
   void initState() {
     super.initState();
     _camera = Camera();
+    _flingTicker = createTicker(_onFlingTick);
+  }
+
+  @override
+  void dispose() {
+    _flingTicker.dispose();
+    super.dispose();
+  }
+
+  void _stopFling() {
+    _flingTicker.stop();
+    _flingSimX = null;
+    _flingSimY = null;
+  }
+
+  void _startFling(Offset velocity) {
+    _stopFling();
+    _flingSimX = FrictionSimulation(_flingFriction, 0, velocity.dx);
+    _flingSimY = FrictionSimulation(_flingFriction, 0, velocity.dy);
+    _flingSimXPos = 0;
+    _flingSimYPos = 0;
+    _flingTicker.start();
+  }
+
+  void _onFlingTick(Duration elapsed) {
+    final simX = _flingSimX;
+    final simY = _flingSimY;
+    if (simX == null || simY == null) return;
+
+    final t = elapsed.inMicroseconds / 1e6;
+    if (simX.isDone(t) && simY.isDone(t)) {
+      _stopFling();
+      return;
+    }
+
+    final newX = simX.x(t);
+    final newY = simY.x(t);
+    final dx = newX - _flingSimXPos;
+    final dy = newY - _flingSimYPos;
+    _flingSimXPos = newX;
+    _flingSimYPos = newY;
+
+    if (dx == 0 && dy == 0) return;
+
+    setState(() {
+      _camera.panByScreenDelta(Offset(dx, dy));
+    });
   }
 
   Offset? _canvasLocal(PointerEvent event) {
@@ -71,6 +133,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
         ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+        _stopFling();
         if (event.buttons != kPrimaryButton) return;
         final world = _screenToWorld(event);
         if (world == null) return;
@@ -130,12 +193,23 @@ class _DocumentViewportState extends State<DocumentViewport> {
         setState(() {});
       },
       onPointerPanZoomStart: (event) {
+        _stopFling();
+        _panVelocityTracker =
+            VelocityTracker.withKind(PointerDeviceKind.trackpad);
+        _panZoomHadSignificantPinch = false;
         _initialZoom = _camera.zoom;
         _initialLocation = _camera.location;
         _pointerInCanvas = _canvasLocal(event);
       },
+      onPointerPanZoomEnd: (event) {
+        if (_panZoomHadSignificantPinch) return;
+        final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
+        if (velocity.distance < kMinFlingVelocity) return;
+        _startFling(velocity);
+      },
       onPointerSignal: (event) {
         if (event is! PointerScrollEvent) return;
+        _stopFling();
         final focal = _canvasLocal(event);
         if (focal == null) return;
         setState(() {
@@ -144,6 +218,12 @@ class _DocumentViewportState extends State<DocumentViewport> {
         });
       },
       onPointerPanZoomUpdate: (event) {
+        if (!event.synthesized) {
+          _panVelocityTracker.addPosition(event.timeStamp, event.pan);
+        }
+        if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
+          _panZoomHadSignificantPinch = true;
+        }
         setState(() {
           final focal = _pointerInCanvas ?? _canvasLocal(event);
           if (focal == null) return;
