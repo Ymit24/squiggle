@@ -65,6 +65,31 @@ class SquiggleHomePage extends StatelessWidget {
         strokeColor: Color(0x00000000),
       ),
     ),
+    Feature(
+      origin: const Offset(600, 200),
+      size: const Size(300, 80),
+      kind: const FeatureKindPolyline(
+        [Offset.zero, Offset(300, 80)],
+        strokeColor: Color(0xFFFFFFFF),
+        fillColor: Color(0xFF89B4FA),
+      ),
+    ),
+    Feature(
+      origin: const Offset(600, 400),
+      size: const Size(250, 120),
+      kind: const FeatureKindPolyline(
+        [
+          Offset.zero,
+          Offset(80, 40),
+          Offset(160, 0),
+          Offset(200, 80),
+          Offset(250, 40),
+          Offset(250, 120),
+        ],
+        strokeColor: Color(0xFFFFFFFF),
+        fillColor: Color(0xFFF38BA8),
+      ),
+    ),
     ]),
   );
 

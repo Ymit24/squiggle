@@ -46,7 +46,7 @@ class Document {
   /// Top-most feature whose bounds contain [worldPoint], if any.
   Feature? featureAtPoint(Offset worldPoint) {
     for (var i = features.length - 1; i >= 0; i--) {
-      if (features[i].bounds().contains(worldPoint)) {
+      if (features[i].hitTest(worldPoint)) {
         return features[i];
       }
     }

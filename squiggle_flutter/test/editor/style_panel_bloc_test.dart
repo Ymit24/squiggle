@@ -118,8 +118,7 @@ void main() {
       }
       final showingState = await bloc.stream.firstWhere(
         (state) =>
-            state is StylePanelShowingState &&
-            (state as StylePanelShowingState).strokeMixed,
+            state is StylePanelShowingState && state.strokeMixed,
       ) as StylePanelShowingState;
 
       expect(showingState.activeStrokePresetIndex, isNull);
@@ -274,8 +273,7 @@ void main() {
       );
       final showingState = await bloc.stream.firstWhere(
         (state) =>
-            state is StylePanelShowingState &&
-            (state as StylePanelShowingState).showFontSize,
+            state is StylePanelShowingState && state.showFontSize,
       ) as StylePanelShowingState;
 
       expect(showingState.showFontSize, isTrue);
@@ -293,8 +291,7 @@ void main() {
       selectionRepository.selectFeature(text.id);
       await bloc.stream.firstWhere(
         (state) =>
-            state is StylePanelShowingState &&
-            (state as StylePanelShowingState).showFontSize,
+            state is StylePanelShowingState && state.showFontSize,
       );
 
       bloc.add(const SetFontSizeEvent(FontSizePreset.large));

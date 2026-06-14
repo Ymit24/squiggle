@@ -25,12 +25,18 @@ class Feature {
 
   double get height => size.height;
 
-  Rect bounds() => Rect.fromLTWH(origin.dx, origin.dy, size.width, size.height);
+  Rect bounds() => kind.boundsFor(this);
 
-  void setBounds(Rect bounds) {
+  void setBounds(Rect bounds) => kind.applyBounds(this, bounds);
+
+  void setBoundsDirect(Rect bounds) {
     origin = bounds.topLeft;
     size = bounds.size;
   }
+
+  bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
+
+  bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
 
   Offset center() => bounds().center;
 

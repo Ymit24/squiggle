@@ -323,5 +323,46 @@ void main() {
 
       expect(features[0].bounds(), bounds);
     });
+
+    test('selects and resizes polyline by segment click and corner handle', () {
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(100, 100),
+            kind: const FeatureKindPolyline(
+              [Offset.zero, Offset(100, 100)],
+              strokeColor: Color(0xFFFFFFFF),
+              fillColor: Color(0xFF89B4FA),
+            ),
+          ),
+        ]),
+      );
+      final feature = documentRepository.document.features.first;
+      final endBefore = feature.origin + (feature.kind as FeatureKindPolyline).localPoints.last;
+
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+      expect(selectionRepository.selectedFeatures.single, feature.id);
+
+      final bounds = feature.bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+      final grabOffset = down - bounds.bottomRight;
+      const targetCorner = Offset(142, 142);
+
+      pointerDown(down);
+      pointerMove(targetCorner + grabOffset);
+      pointerUp(targetCorner + grabOffset);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      final endAfter = resized.origin + (resized.kind as FeatureKindPolyline).localPoints.last;
+      expect(resized.size.width, 150);
+      expect(resized.size.height, 150);
+      expect(endAfter, isNot(endBefore));
+    });
   });
 }

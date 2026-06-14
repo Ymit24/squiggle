@@ -382,7 +382,7 @@ class SelectTool extends Tool {
 
     final bounds = Rect.fromPoints(state.start, state.end);
     final hits = document.features
-        .where((f) => f.bounds().overlaps(bounds))
+        .where((f) => f.intersectsRect(bounds))
         .map((f) => f.id)
         .toList();
 
