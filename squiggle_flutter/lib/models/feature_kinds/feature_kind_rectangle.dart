@@ -1,13 +1,22 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindRectangle extends FeatureKind {
-  const FeatureKindRectangle();
+  const FeatureKindRectangle({
+    super.strokeColor,
+    super.fillColor,
+    super.strokeWidth,
+  });
 
   @override
   void paint(Feature feature, Canvas canvas) {
+    final bounds = feature.bounds();
+    canvas.drawRect(bounds, Paint()..color = fillColor);
     canvas.drawRect(
-      feature.bounds(),
-      Paint()..color = const Color(0xFFCDA6F7),
+      bounds,
+      Paint()
+        ..color = strokeColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth,
     );
   }
 }

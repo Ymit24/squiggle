@@ -1,7 +1,13 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindText extends FeatureKind {
-  const FeatureKindText(this.contents, {this.fontSize = 24});
+  const FeatureKindText(
+    this.contents, {
+    this.fontSize = 24,
+    super.strokeColor,
+    super.fillColor,
+    super.strokeWidth,
+  });
 
   final String contents;
   final double fontSize;
@@ -11,18 +17,32 @@ final class FeatureKindText extends FeatureKind {
     if (contents.isEmpty) return;
 
     final worldBounds = feature.bounds();
-    final builder = ui.ParagraphBuilder(
-      ui.ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: fontSize,
-        textDirection: TextDirection.ltr,
-      ),
-    )..pushStyle(ui.TextStyle(color: const Color(0xFFCDD6F4)));
-    builder.addText(contents);
+    final paragraphStyle = ui.ParagraphStyle(
+      textAlign: TextAlign.left,
+      fontSize: fontSize,
+      textDirection: TextDirection.ltr,
+    );
+    final constraints = ui.ParagraphConstraints(width: worldBounds.width);
+    final position = worldBounds.topLeft;
 
-    final paragraph = builder.build()
-      ..layout(ui.ParagraphConstraints(width: worldBounds.width));
+    final strokeBuilder = ui.ParagraphBuilder(paragraphStyle)
+      ..pushStyle(
+        ui.TextStyle(
+          foreground: Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..color = strokeColor,
+          fontSize: fontSize,
+        ),
+      )
+      ..addText(contents);
+    final strokeParagraph = strokeBuilder.build()..layout(constraints);
+    canvas.drawParagraph(strokeParagraph, position);
 
-    canvas.drawParagraph(paragraph, worldBounds.topLeft);
+    final fillBuilder = ui.ParagraphBuilder(paragraphStyle)
+      ..pushStyle(ui.TextStyle(color: fillColor, fontSize: fontSize))
+      ..addText(contents);
+    final fillParagraph = fillBuilder.build()..layout(constraints);
+    canvas.drawParagraph(fillParagraph, position);
   }
 }
