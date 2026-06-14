@@ -1,19 +1,9 @@
 import 'dart:async';
 
 import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/models/feature.dart';
 
 class DocumentRepository {
-  DocumentRepository({Document? document})
-    : document = document ?? Document();
-
-  factory DocumentRepository.fromFeatures(List<Feature> features) {
-    final repository = DocumentRepository();
-    for (final feature in features) {
-      repository.executeCommand(AddFeatureCommand(feature));
-    }
-    return repository;
-  }
+  DocumentRepository({required this.document});
 
   final Document document;
 

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -24,10 +25,12 @@ void main() {
 
     setUp(() {
       camera = Camera();
-      documentRepository = DocumentRepository.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-        Feature.newRectangle(const Offset(200, 0), const Size(100, 100)),
-      ]);
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+          Feature.newRectangle(const Offset(200, 0), const Size(100, 100)),
+        ]),
+      );
       selectionRepository = SelectionRepository();
       toolRepository = ToolRepository();
     });
@@ -170,11 +173,13 @@ void main() {
     });
 
     test('moves group relative to clicked feature, not last selected', () {
-      documentRepository = DocumentRepository.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(50, 50)),
-        Feature.newRectangle(const Offset(100, 0), const Size(50, 50)),
-        Feature.newRectangle(const Offset(200, 0), const Size(50, 50)),
-      ]);
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature.newRectangle(const Offset(0, 0), const Size(50, 50)),
+          Feature.newRectangle(const Offset(100, 0), const Size(50, 50)),
+          Feature.newRectangle(const Offset(200, 0), const Size(50, 50)),
+        ]),
+      );
       final features = documentRepository.document.features;
       final idA = features[0].id;
       final idB = features[1].id;

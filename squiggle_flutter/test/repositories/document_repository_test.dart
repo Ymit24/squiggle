@@ -8,9 +8,11 @@ import 'package:squiggle_flutter/repositories/document_repository.dart';
 void main() {
   group('DocumentRepository', () {
     test('changesStream emits when executeCommand runs', () async {
-      final repository = DocumentRepository.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
-      ]);
+      final repository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
+        ]),
+      );
       final emissions = <void>[];
       final subscription = repository.changesStream.listen(emissions.add);
 

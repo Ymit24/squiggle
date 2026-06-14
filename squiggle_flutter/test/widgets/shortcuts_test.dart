@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -17,9 +18,11 @@ void main() {
   testWidgets('ToolShortcuts activates tools on V, R, C keys', (tester) async {
     final toolRepository = ToolRepository();
     final selectionRepository = SelectionRepository();
-    final documentRepository = DocumentRepository.fromFeatures([
-      Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-    ]);
+    final documentRepository = DocumentRepository(
+      document: Document.fromFeatures([
+        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+      ]),
+    );
 
     await tester.pumpWidget(
       MaterialApp(
@@ -81,9 +84,11 @@ void main() {
   ) async {
     final toolRepository = ToolRepository();
     final selectionRepository = SelectionRepository();
-    final documentRepository = DocumentRepository.fromFeatures([
-      Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-    ]);
+    final documentRepository = DocumentRepository(
+      document: Document.fromFeatures([
+        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+      ]),
+    );
     final featureId = documentRepository.document.features.first.id;
     selectionRepository.selectFeature(featureId);
 

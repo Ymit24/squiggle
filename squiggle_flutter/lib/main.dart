@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
@@ -34,7 +35,8 @@ class SquiggleApp extends StatelessWidget {
 class SquiggleHomePage extends StatelessWidget {
   const SquiggleHomePage({super.key});
 
-  static final _documentRepository = DocumentRepository.fromFeatures([
+  static final _documentRepository = DocumentRepository(
+    document: Document.fromFeatures([
     Feature.newRectangle(const Offset(64, 64), const Size(160, 96)),
     Feature.newCircle(const Offset(320, 128), const Size(120, 120)),
     Feature.newText(
@@ -47,7 +49,8 @@ class SquiggleHomePage extends StatelessWidget {
       const Size(300, 48),
       'Hello world! This is some real text... What is something else to try?',
     ),
-  ]);
+    ]),
+  );
 
   @override
   Widget build(BuildContext context) {

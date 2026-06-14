@@ -16,9 +16,11 @@ void main() {
     late ToolRepository toolRepository;
 
     setUp(() {
-      documentRepository = DocumentRepository.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-      ]);
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+        ]),
+      );
       selectionRepository = SelectionRepository();
       toolRepository = ToolRepository();
     });

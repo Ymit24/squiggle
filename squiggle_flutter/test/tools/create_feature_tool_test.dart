@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -16,7 +17,7 @@ void main() {
     late Camera camera;
 
     setUp(() {
-      documentRepository = DocumentRepository();
+      documentRepository = DocumentRepository(document: Document());
       selectionRepository = SelectionRepository();
       toolRepository = ToolRepository();
       camera = Camera();
