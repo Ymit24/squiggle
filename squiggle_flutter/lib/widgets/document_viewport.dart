@@ -5,7 +5,6 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
@@ -22,13 +21,11 @@ class DocumentViewport extends StatefulWidget {
     required this.documentRepository,
     required this.selectionRepository,
     required this.toolRepository,
-    required this.selectedFeatures,
   });
 
   final DocumentRepository documentRepository;
   final SelectionRepository selectionRepository;
   final ToolRepository toolRepository;
-  final List<FeatureId> selectedFeatures;
 
   @override
   State<DocumentViewport> createState() => _DocumentViewportState();
@@ -265,8 +262,8 @@ class _DocumentViewportState extends State<DocumentViewport>
             key: _canvasKey,
             documentRepository: widget.documentRepository,
             toolRepository: widget.toolRepository,
+            selectionRepository: widget.selectionRepository,
             camera: _camera,
-            selectedFeatures: widget.selectedFeatures,
           ),
         ),
       ),

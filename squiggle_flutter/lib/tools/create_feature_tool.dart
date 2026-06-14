@@ -41,7 +41,12 @@ class CreateFeatureTool extends Tool {
       EditorCursor.crosshair;
 
   @override
-  void paint(Canvas canvas) {
+  void paint(
+    Canvas canvas,
+    Camera camera,
+    DocumentRepository documentRepository,
+    SelectionRepository selection,
+  ) {
     if (_state is! _Dragging) return;
     _ghost.paint(canvas);
   }

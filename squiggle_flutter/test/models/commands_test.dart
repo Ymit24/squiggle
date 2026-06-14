@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 
 void main() {
@@ -166,6 +167,69 @@ void main() {
       final textKind = doc.features.last.kind as FeatureKindText;
       expect(textKind.fontSize, FontSizePreset.small.size);
       expect(textKind.contents, 'hello');
+    });
+  });
+
+  group('MovePolylinePointCommand', () {
+    test('apply moves middle vertex; undo restores geometry', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 100),
+          kind: const FeatureKindPolyline(
+            [Offset.zero, Offset(100, 0), Offset(100, 100)],
+          ),
+        ),
+      ]);
+      final id = doc.features.first.id;
+      final command = MovePolylinePointCommand(id, 1, const Offset(50, 25));
+
+      command.apply(doc);
+      final points = worldPoints(
+        doc.features.first.origin,
+        (doc.features.first.kind as FeatureKindPolyline).localPoints,
+      );
+      expect(points[1], const Offset(50, 25));
+
+      command.undo(doc);
+      final restored = worldPoints(
+        doc.features.first.origin,
+        (doc.features.first.kind as FeatureKindPolyline).localPoints,
+      );
+      expect(restored[1], const Offset(100, 0));
+    });
+
+    test('apply moves index-0 vertex and re-origins polyline', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 100),
+          kind: const FeatureKindPolyline(
+            [Offset.zero, Offset(100, 0)],
+          ),
+        ),
+      ]);
+      final id = doc.features.first.id;
+      const newStart = Offset(10, 10);
+      final command = MovePolylinePointCommand(id, 0, newStart);
+
+      command.apply(doc);
+      final feature = doc.features.first;
+      expect(feature.origin, newStart);
+      final points = worldPoints(
+        feature.origin,
+        (feature.kind as FeatureKindPolyline).localPoints,
+      );
+      expect(points, [newStart, const Offset(100, 0)]);
+
+      command.undo(doc);
+      final undone = doc.features.first;
+      expect(undone.origin, Offset.zero);
+      final restored = worldPoints(
+        undone.origin,
+        (undone.kind as FeatureKindPolyline).localPoints,
+      );
+      expect(restored, [Offset.zero, const Offset(100, 0)]);
     });
   });
 }

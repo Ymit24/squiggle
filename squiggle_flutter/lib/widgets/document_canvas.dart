@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import '../models/document.dart';
-import '../theme/squiggle_colors.dart';
 
 /// Paints a [Document]'s features on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
@@ -15,22 +14,22 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     super.key,
     required this.documentRepository,
     required this.toolRepository,
+    required this.selectionRepository,
     required this.camera,
-    required this.selectedFeatures,
   });
 
   final DocumentRepository documentRepository;
   final ToolRepository toolRepository;
+  final SelectionRepository selectionRepository;
   final Camera camera;
-  final List<FeatureId> selectedFeatures;
 
   @override
   RenderDocumentCanvas createRenderObject(BuildContext context) {
     return RenderDocumentCanvas(
       documentRepository: documentRepository,
       toolRepository: toolRepository,
+      selectionRepository: selectionRepository,
       camera: camera,
-      selectedFeatures: selectedFeatures,
     );
   }
 
@@ -42,8 +41,8 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     renderObject
       ..documentRepository = documentRepository
       ..toolRepository = toolRepository
+      ..selectionRepository = selectionRepository
       ..camera = camera
-      ..selectedFeatures = selectedFeatures
       ..markNeedsPaint();
   }
 }
@@ -52,8 +51,8 @@ class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
     required this._documentRepository,
     required this._toolRepository,
+    required this._selectionRepository,
     required this._camera,
-    required this._selectedFeatures,
   });
 
   DocumentRepository _documentRepository;
@@ -76,6 +75,16 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
+  SelectionRepository _selectionRepository;
+  SelectionRepository get selectionRepository => _selectionRepository;
+  set selectionRepository(SelectionRepository value) {
+    if (identical(_selectionRepository, value)) return;
+    _unsubscribeFromSelectionChanges();
+    _selectionRepository = value;
+    _subscribeToSelectionChanges();
+    markNeedsPaint();
+  }
+
   Camera _camera;
   Camera get camera => _camera;
   set camera(Camera value) {
@@ -83,16 +92,9 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
-  List<FeatureId> _selectedFeatures;
-  List<FeatureId> get selectedFeatures => _selectedFeatures;
-  set selectedFeatures(List<FeatureId> value) {
-    if (identical(_selectedFeatures, value)) return;
-    _selectedFeatures = value;
-    markNeedsPaint();
-  }
-
   StreamSubscription<void>? _documentChangesSubscription;
   StreamSubscription<void>? _toolRepaintSubscription;
+  StreamSubscription<List<dynamic>>? _selectionChangesSubscription;
 
   static const double _baseCellSize = 128.0;
 
@@ -101,12 +103,14 @@ class RenderDocumentCanvas extends RenderBox {
     super.attach(owner);
     _subscribeToDocumentChanges();
     _subscribeToToolRepaints();
+    _subscribeToSelectionChanges();
   }
 
   @override
   void detach() {
     _unsubscribeFromDocumentChanges();
     _unsubscribeFromToolRepaints();
+    _unsubscribeFromSelectionChanges();
     super.detach();
   }
 
@@ -132,6 +136,18 @@ class RenderDocumentCanvas extends RenderBox {
     _toolRepaintSubscription = null;
   }
 
+  void _subscribeToSelectionChanges() {
+    _selectionChangesSubscription ??=
+        _selectionRepository.selectedFeaturesStream.listen(
+      (_) => markNeedsPaint(),
+    );
+  }
+
+  void _unsubscribeFromSelectionChanges() {
+    _selectionChangesSubscription?.cancel();
+    _selectionChangesSubscription = null;
+  }
+
   @override
   void performLayout() {
     size = constraints.biggest.isFinite
@@ -154,7 +170,12 @@ class RenderDocumentCanvas extends RenderBox {
     _applyWorldTransform(canvas);
     _drawGrid(canvas);
     _paintFeatures(canvas, document);
-    _toolRepository.activeTool.paint(canvas);
+    _toolRepository.activeTool.paint(
+      canvas,
+      _camera,
+      _documentRepository,
+      _selectionRepository,
+    );
     canvas.restore();
 
     canvas.restore();
@@ -229,58 +250,5 @@ class RenderDocumentCanvas extends RenderBox {
 
       feature.paint(canvas);
     }
-
-    for (final featureId in selectedFeatures) {
-      final feature = document.featureById(featureId)!;
-      final worldBounds = feature.bounds();
-      if (!worldBounds.overlaps(visibleWorld)) continue;
-      _paintSelectionBox(canvas, worldBounds);
-    }
-  }
-
-  void _paintSelectionBox(Canvas canvas, Rect worldBounds) {
-    const handleSize = 12.0;
-    const selectionPadding = 8.0;
-    final half = handleSize / 2;
-
-    canvas.save();
-    canvas.translate(camera.location.dx, camera.location.dy);
-    canvas.scale(camera.zoom, camera.zoom);
-
-    final screenBounds = camera.worldToScreenBounds(worldBounds);
-    final inflatedBounds = screenBounds.inflate(selectionPadding / camera.zoom);
-
-    canvas.drawRect(
-      inflatedBounds,
-      Paint()
-        ..color = const Color(0xFF89B4FA)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-    for (final center in [
-      inflatedBounds.topLeft - Offset(half, half),
-      inflatedBounds.topRight + Offset(half, -half),
-      inflatedBounds.bottomLeft + Offset(-half, half),
-      inflatedBounds.bottomRight + Offset(half, half),
-    ]) {
-      final handleRRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: center, width: handleSize, height: handleSize),
-        Radius.circular(2.0),
-      );
-      canvas.drawRRect(
-        handleRRect,
-        Paint()
-          ..color = SquiggleColors.base
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawRRect(
-        handleRRect,
-        Paint()
-          ..color = SquiggleColors.accent
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-    }
-    canvas.restore();
   }
 }

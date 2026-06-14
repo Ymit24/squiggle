@@ -10,8 +10,16 @@ import 'package:squiggle_flutter/tools/editor_cursor.dart';
 abstract class Tool {
   const Tool();
 
-  /// Paints tool-specific overlays in world space (after the world transform).
-  void paint(Canvas canvas);
+  /// Paints tool-specific overlays after the world transform is applied.
+  ///
+  /// Most overlays are world-space; selection and edit handles use [camera] for
+  /// screen-constant sizing.
+  void paint(
+    Canvas canvas,
+    Camera camera,
+    DocumentRepository documentRepository,
+    SelectionRepository selection,
+  );
 
   void onPointerDown(
     DocumentRepository documentRepository,

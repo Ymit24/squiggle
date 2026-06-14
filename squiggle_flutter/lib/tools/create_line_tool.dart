@@ -41,7 +41,12 @@ class CreateLineTool extends Tool {
       EditorCursor.crosshair;
 
   @override
-  void paint(Canvas canvas) {
+  void paint(
+    Canvas canvas,
+    Camera camera,
+    DocumentRepository documentRepository,
+    SelectionRepository selection,
+  ) {
     final worldPoints = _worldPointsForPaint();
     if (worldPoints == null) {
       return;

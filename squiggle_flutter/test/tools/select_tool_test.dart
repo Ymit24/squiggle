@@ -1,9 +1,11 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
@@ -67,6 +69,45 @@ void main() {
         selectionRepository,
         shift,
         camera,
+      );
+    }
+
+    void doubleClick(Offset world, {bool shift = false}) {
+      pointerDown(world, shift: shift);
+      pointerUp(world, shift: shift);
+      pointerDown(world, shift: shift);
+      pointerUp(world, shift: shift);
+    }
+
+    bool keyDown(LogicalKeyboardKey key) {
+      return toolRepository.onKeyEvent(
+        documentRepository,
+        KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.enter,
+          logicalKey: key,
+          timeStamp: Duration.zero,
+        ),
+      );
+    }
+
+    List<Offset> polylineWorldPoints(Feature feature) {
+      final kind = feature.kind as FeatureKindPolyline;
+      return worldPoints(feature.origin, kind.localPoints);
+    }
+
+    DocumentRepository polylineDocument() {
+      return DocumentRepository(
+        document: Document.fromFeatures([
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(100, 100),
+            kind: const FeatureKindPolyline(
+              [Offset.zero, Offset(100, 100)],
+              strokeColor: Color(0xFFFFFFFF),
+              fillColor: Color(0xFF89B4FA),
+            ),
+          ),
+        ]),
       );
     }
 
@@ -363,6 +404,74 @@ void main() {
       expect(resized.size.width, 150);
       expect(resized.size.height, 150);
       expect(endAfter, isNot(endBefore));
+    });
+
+    test('double-click polyline enters edit mode and drags vertex', () {
+      documentRepository = polylineDocument();
+      final feature = documentRepository.document.features.first;
+
+      doubleClick(const Offset(50, 50));
+      expect(selectionRepository.selectedFeatures.single, feature.id);
+
+      final endBefore = polylineWorldPoints(feature).last;
+      pointerDown(const Offset(100, 100));
+      pointerMove(const Offset(150, 100));
+      pointerUp(const Offset(150, 100));
+
+      final moved = documentRepository.document.featureById(feature.id)!;
+      expect(polylineWorldPoints(moved).last, const Offset(150, 100));
+      expect(polylineWorldPoints(moved).last, isNot(endBefore));
+    });
+
+    test('escape exits edit mode and preserves selection', () {
+      documentRepository = polylineDocument();
+      final feature = documentRepository.document.features.first;
+
+      doubleClick(const Offset(50, 50));
+      expect(keyDown(LogicalKeyboardKey.escape), isTrue);
+      expect(selectionRepository.selectedFeatures.single, feature.id);
+    });
+
+    test('empty click exits edit mode and clears selection', () {
+      documentRepository = polylineDocument();
+      final feature = documentRepository.document.features.first;
+
+      doubleClick(const Offset(50, 50));
+      pointerDown(const Offset(500, 500));
+      pointerUp(const Offset(500, 500));
+
+      expect(selectionRepository.selectedFeatures, isEmpty);
+    });
+
+    test('undo restores vertex geometry after edit drag', () {
+      documentRepository = polylineDocument();
+      final feature = documentRepository.document.features.first;
+
+      doubleClick(const Offset(50, 50));
+      pointerDown(const Offset(100, 100));
+      pointerMove(const Offset(150, 100));
+      pointerUp(const Offset(150, 100));
+
+      final afterDrag = polylineWorldPoints(
+        documentRepository.document.featureById(feature.id)!,
+      );
+      expect(afterDrag.last, const Offset(150, 100));
+
+      documentRepository.document.undo();
+      final restored = documentRepository.document.featureById(feature.id)!;
+      expect(polylineWorldPoints(restored).last, const Offset(100, 100));
+    });
+
+    test('double-click non-polyline enters edit mode without vertex side effects', () {
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+
+      final feature = documentRepository.document.features.first;
+      expect(selectionRepository.selectedFeatures.single, feature.id);
+      expect(keyDown(LogicalKeyboardKey.escape), isTrue);
+      expect(selectionRepository.selectedFeatures.single, feature.id);
     });
   });
 }

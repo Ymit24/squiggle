@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
-import 'package:squiggle_flutter/editor/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
@@ -33,26 +32,19 @@ class Editor extends StatelessWidget {
           selectionRepository: selectionRepository,
           toolRepository: toolRepository,
         )..add(const RequestWatchEditorStateEvent()),
-        child: BlocBuilder<EditorBloc, EditorState>(
-          buildWhen: (previous, current) =>
-              previous.selectedFeatures != current.selectedFeatures,
-          builder: (context, state) {
-            return ToolShortcuts(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  DocumentViewport(
-                    documentRepository: documentRepository,
-                    toolRepository: toolRepository,
-                    selectionRepository: selectionRepository,
-                    selectedFeatures: [...state.selectedFeatures],
-                  ),
-                  const EditorToolbar(),
-                  const StylePanel(),
-                ],
+        child: ToolShortcuts(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              DocumentViewport(
+                documentRepository: documentRepository,
+                toolRepository: toolRepository,
+                selectionRepository: selectionRepository,
               ),
-            );
-          },
+              const EditorToolbar(),
+              const StylePanel(),
+            ],
+          ),
         ),
       ),
     );
