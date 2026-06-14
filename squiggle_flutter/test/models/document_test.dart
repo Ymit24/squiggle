@@ -26,4 +26,33 @@ void main() {
       expect(doc.featureAtPoint(const Offset(200, 200)), isNull);
     });
   });
+
+  group('Document undo/redo', () {
+    test('redo reapplies undone command', () {
+      final doc = Document.fromFeatures([
+        Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
+      ]);
+      final id = doc.features.first.id;
+
+      doc.executeCommand(MoveFeatureCommand(id, const Offset(5, 5)));
+      doc.undo();
+      doc.redo();
+
+      expect(doc.features.first.origin, const Offset(5, 5));
+    });
+
+    test('new command clears redo stack', () {
+      final doc = Document.fromFeatures([
+        Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
+      ]);
+      final id = doc.features.first.id;
+
+      doc.executeCommand(MoveFeatureCommand(id, const Offset(5, 5)));
+      doc.undo();
+      doc.executeCommand(MoveFeatureCommand(id, const Offset(10, 10)));
+
+      doc.redo();
+      expect(doc.features.first.origin, const Offset(10, 10));
+    });
+  });
 }

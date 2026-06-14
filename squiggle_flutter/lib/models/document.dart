@@ -1,7 +1,10 @@
 import 'dart:ui';
 
+import 'commands/command.dart';
 import 'feature.dart';
 import 'feature_id.dart';
+
+export 'commands/command.dart';
 
 /// Editable collection of features with undo/redo command recording.
 class Document {
@@ -51,70 +54,24 @@ class Document {
   }
 
   void executeCommand(Command command) {
+    command.apply(this);
     undoStack.add(command.clone());
     redoStack.clear();
-    switch (command) {
-      case AddFeatureCommand(:final feature):
-        if (feature.id == noId) {
-          feature.id = generateId();
-        }
-        features.add(feature);
-      case RemoveFeaturesCommand(:final ids):
-        for (final id in ids) {
-          final index = featureIndexById(id);
-          if (index != null) {
-            features.removeAt(index);
-          }
-        }
-      case MoveFeatureCommand(:final id, :final origin):
-        featureById(id)?.moveTo(origin);
-      case ResizeFeatureCommand(:final id, :final bounds):
-        featureById(id)?.setBounds(bounds);
-    }
+  }
+
+  void undo() {
+    if (undoStack.isEmpty) return;
+
+    final command = undoStack.removeLast();
+    command.undo(this);
+    redoStack.add(command);
+  }
+
+  void redo() {
+    if (redoStack.isEmpty) return;
+
+    final command = redoStack.removeLast();
+    command.apply(this);
+    undoStack.add(command);
   }
 }
-
-sealed class Command {
-  const Command();
-
-  Command clone();
-}
-
-final class AddFeatureCommand extends Command {
-  const AddFeatureCommand(this.feature);
-
-  final Feature feature;
-
-  @override
-  Command clone() => AddFeatureCommand(feature.copyWith());
-}
-
-final class RemoveFeaturesCommand extends Command {
-  const RemoveFeaturesCommand(this.ids);
-
-  final List<FeatureId> ids;
-
-  @override
-  Command clone() => RemoveFeaturesCommand(List.of(ids));
-}
-
-final class MoveFeatureCommand extends Command {
-  const MoveFeatureCommand(this.id, this.origin);
-
-  final FeatureId id;
-  final Offset origin;
-
-  @override
-  Command clone() => MoveFeatureCommand(id, origin);
-}
-
-final class ResizeFeatureCommand extends Command {
-  const ResizeFeatureCommand(this.id, this.bounds);
-
-  final FeatureId id;
-  final Rect bounds;
-
-  @override
-  Command clone() => ResizeFeatureCommand(id, bounds);
-}
-
