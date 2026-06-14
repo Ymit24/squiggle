@@ -7,6 +7,8 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
+import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/tool_repository.dart';
 
 /// Keyboard shortcuts for tool activation.
 ///
@@ -41,6 +43,8 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
               ActivateCreateRectToolIntent(),
           SingleActivator(LogicalKeyboardKey.keyC):
               ActivateCreateCircleToolIntent(),
+          SingleActivator(LogicalKeyboardKey.keyL):
+              ActivateCreateLineToolIntent(),
           SingleActivator(LogicalKeyboardKey.backspace):
               DeleteSelectedFeaturesIntent(),
           SingleActivator(LogicalKeyboardKey.delete):
@@ -74,6 +78,15 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                     return null;
                   },
                 ),
+            ActivateCreateLineToolIntent:
+                CallbackAction<ActivateCreateLineToolIntent>(
+                  onInvoke: (_) {
+                    context.read<ToolbarBloc>().add(
+                      const ActivateCreateLineToolEvent(),
+                    );
+                    return null;
+                  },
+                ),
             DeleteSelectedFeaturesIntent:
                 CallbackAction<DeleteSelectedFeaturesIntent>(
                   onInvoke: (_) {
@@ -88,6 +101,16 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             focusNode: _focusNode,
             autofocus: true,
             descendantsAreFocusable: false,
+            onKeyEvent: (node, event) {
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              if (context.read<ToolRepository>().onKeyEvent(
+                    context.read<DocumentRepository>(),
+                    event,
+                  )) {
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
             child: widget.child,
           ),
         ),

@@ -10,6 +10,16 @@ List<Offset> worldPoints(Offset origin, List<Offset> localPoints) {
   return [for (final local in localPoints) origin + local];
 }
 
+List<Offset> localPointsFromWorld(List<Offset> worldPoints, Offset reference) {
+  if (worldPoints.isEmpty) {
+    return const [];
+  }
+  return [
+    Offset.zero,
+    for (final point in worldPoints.skip(1)) point - reference,
+  ];
+}
+
 Rect envelopeOfPoints(List<Offset> worldPoints, {required double strokePadding}) {
   if (worldPoints.isEmpty) {
     return Rect.fromLTWH(0, 0, kMinEnvelopeDimension, kMinEnvelopeDimension);

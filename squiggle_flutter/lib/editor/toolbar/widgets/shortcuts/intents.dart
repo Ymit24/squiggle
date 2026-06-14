@@ -12,6 +12,10 @@ class ActivateCreateCircleToolIntent extends Intent {
   const ActivateCreateCircleToolIntent();
 }
 
+class ActivateCreateLineToolIntent extends Intent {
+  const ActivateCreateLineToolIntent();
+}
+
 class DeleteSelectedFeaturesIntent extends Intent {
   const DeleteSelectedFeaturesIntent();
 }

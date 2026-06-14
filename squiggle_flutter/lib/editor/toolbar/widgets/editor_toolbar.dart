@@ -62,6 +62,14 @@ class EditorToolbar extends StatelessWidget {
                           const ActivateCreateCircleToolEvent(),
                         ),
                       ),
+                      const Gap(),
+                      Button(
+                        iconAsset: 'assets/icons/line.svg',
+                        isActive: state.activeTool == ActiveToolKind.createLine,
+                        onPressed: () => context.read<ToolbarBloc>().add(
+                          const ActivateCreateLineToolEvent(),
+                        ),
+                      ),
                     ],
                   ),
                 ),

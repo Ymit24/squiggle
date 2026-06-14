@@ -162,6 +162,19 @@ class _DocumentViewportState extends State<DocumentViewport>
         );
         setState(() {});
       },
+      onPointerHover: (event) {
+        _pointerInCanvas = _canvasLocal(event);
+        final world = _screenToWorld(event);
+        if (world == null) return;
+        widget.toolRepository.onPointerHover(
+          widget.documentRepository,
+          world,
+          widget.selectionRepository,
+          _isShiftPressed,
+          _camera,
+        );
+        setState(() {});
+      },
       onPointerUp: (event) {
         if (!_isPrimaryDragging) return;
         _isPrimaryDragging = false;

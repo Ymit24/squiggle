@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -89,6 +89,34 @@ class ToolRepository {
       camera,
     );
     _notifyRepaint();
+  }
+
+  void onPointerHover(
+    DocumentRepository documentRepository,
+    Offset worldPosition,
+    SelectionRepository selection,
+    bool isShiftPressed,
+    Camera camera,
+  ) {
+    _activeTool.onPointerHover(
+      documentRepository,
+      worldPosition,
+      selection,
+      isShiftPressed,
+      camera,
+    );
+    _notifyRepaint();
+  }
+
+  bool onKeyEvent(
+    DocumentRepository documentRepository,
+    KeyDownEvent event,
+  ) {
+    final handled = _activeTool.onKeyEvent(documentRepository, event);
+    if (handled) {
+      _notifyRepaint();
+    }
+    return handled;
   }
 
   void _notifyRepaint() {

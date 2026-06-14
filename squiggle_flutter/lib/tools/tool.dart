@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -37,6 +38,20 @@ abstract class Tool {
   );
 
   void deactivate(SelectionRepository selection);
+
+  void onPointerHover(
+    DocumentRepository documentRepository,
+    Offset worldPosition,
+    SelectionRepository selection,
+    bool isShiftPressed,
+    Camera camera,
+  ) {}
+
+  bool onKeyEvent(
+    DocumentRepository documentRepository,
+    KeyDownEvent event,
+  ) =>
+      false;
 
   EditorCursor resolveCursor(
     DocumentRepository documentRepository,

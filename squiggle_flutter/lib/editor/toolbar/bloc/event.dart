@@ -13,3 +13,7 @@ class ActivateCreateRectToolEvent extends ToolbarEvent {
 class ActivateCreateCircleToolEvent extends ToolbarEvent {
   const ActivateCreateCircleToolEvent();
 }
+
+class ActivateCreateLineToolEvent extends ToolbarEvent {
+  const ActivateCreateLineToolEvent();
+}
