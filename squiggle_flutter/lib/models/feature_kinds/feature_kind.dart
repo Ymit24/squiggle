@@ -12,14 +12,14 @@ sealed class FeatureKind {
   const FeatureKind({
     this.strokeColor = const Color(0xFFFFFFFF),
     this.fillColor = const Color(0xFF000000),
-    this.strokeWidth = 2.0,
+    this.strokeWidth = defaultStrokeWidth,
   });
 
   final Color strokeColor;
   final Color fillColor;
   final double strokeWidth;
 
-  bool get hasVisibleStroke => strokeWidth > 0;
+  bool get hasVisibleStroke => strokeColor.a > 0;
 
   bool get hasVisibleFill => fillColor.a > 0;
 
@@ -27,6 +27,7 @@ sealed class FeatureKind {
     Color? strokeColor,
     Color? fillColor,
     double? strokeWidth,
+    double? fontSize,
   }) {
     return switch (this) {
       FeatureKindRectangle() => FeatureKindRectangle(
@@ -39,13 +40,14 @@ sealed class FeatureKind {
         fillColor: fillColor ?? this.fillColor,
         strokeWidth: strokeWidth ?? this.strokeWidth,
       ),
-      FeatureKindText(:final contents, :final fontSize) => FeatureKindText(
-        contents,
-        fontSize: fontSize,
-        strokeColor: strokeColor ?? this.strokeColor,
-        fillColor: fillColor ?? this.fillColor,
-        strokeWidth: strokeWidth ?? this.strokeWidth,
-      ),
+      FeatureKindText(:final contents, fontSize: final currentFontSize) =>
+        FeatureKindText(
+          contents,
+          fontSize: fontSize ?? currentFontSize,
+          strokeColor: strokeColor ?? this.strokeColor,
+          fillColor: fillColor ?? this.fillColor,
+          strokeWidth: strokeWidth ?? this.strokeWidth,
+        ),
     };
   }
 

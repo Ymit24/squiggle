@@ -75,4 +75,97 @@ void main() {
       expect(doc.features.first.bounds(), const Rect.fromLTWH(0, 0, 10, 10));
     });
   });
+
+  group('UpdateFeaturesStyleCommand', () {
+    test('apply updates style; undo restores previous kind', () {
+      final doc = docWithRectangle();
+      final id = doc.features.first.id;
+      const newStroke = Color(0xFFF38BA8);
+      final command = UpdateFeaturesStyleCommand(
+        ids: [id],
+        strokeColor: newStroke,
+      );
+
+      command.apply(doc);
+      expect(doc.features.first.kind.strokeColor, newStroke);
+
+      command.undo(doc);
+      expect(doc.features.first.kind.strokeColor, const Color(0xFFFFFFFF));
+    });
+
+    test('apply updates multiple features in one step', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(20, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindCircle(),
+        ),
+      ]);
+      final ids = doc.features.map((feature) => feature.id).toList();
+      const newFill = Color(0xFF89B4FA);
+      final command = UpdateFeaturesStyleCommand(
+        ids: ids,
+        fillColor: newFill,
+      );
+
+      command.apply(doc);
+      expect(doc.features.every((feature) => feature.kind.fillColor == newFill), isTrue);
+
+      command.undo(doc);
+      expect(doc.features.every((feature) => feature.kind.fillColor == const Color(0xFF000000)), isTrue);
+    });
+
+    test('preserves text contents when updating style', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 24),
+          kind: const FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
+        ),
+      ]);
+      final id = doc.features.first.id;
+      final command = UpdateFeaturesStyleCommand(
+        ids: [id],
+        strokeWidth: 4,
+      );
+
+      command.apply(doc);
+      final kind = doc.features.first.kind;
+      expect(kind, isA<FeatureKindText>());
+      expect((kind as FeatureKindText).contents, 'hello');
+      expect(kind.strokeWidth, 4);
+    });
+
+    test('apply updates font size on text features only in mixed selection', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(20, 0),
+          size: const Size(100, 24),
+          kind: const FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
+        ),
+      ]);
+      final ids = doc.features.map((feature) => feature.id).toList();
+      final command = UpdateFeaturesStyleCommand(
+        ids: ids,
+        fontSize: FontSizePreset.small.size,
+      );
+
+      command.apply(doc);
+
+      expect(doc.features.first.kind, isA<FeatureKindRectangle>());
+      final textKind = doc.features.last.kind as FeatureKindText;
+      expect(textKind.fontSize, FontSizePreset.small.size);
+      expect(textKind.contents, 'hello');
+    });
+  });
 }

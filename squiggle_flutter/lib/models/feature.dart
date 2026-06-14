@@ -4,6 +4,8 @@ import 'feature_id.dart';
 import 'feature_kinds/feature_kind.dart';
 
 export 'feature_kinds/feature_kind.dart';
+export 'font_size_preset.dart';
+export 'stroke_width_preset.dart';
 
 /// A drawable shape or label in world space.
 class Feature {

@@ -3,7 +3,7 @@ part of 'feature_kind.dart';
 final class FeatureKindText extends FeatureKind {
   const FeatureKindText(
     this.contents, {
-    this.fontSize = 24,
+    this.fontSize = defaultFontSize,
     super.strokeColor,
     super.fillColor,
     super.strokeWidth,

@@ -8,6 +8,9 @@ import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/style_panel/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/style_panel.dart';
 
 class Editor extends StatelessWidget {
   const Editor({super.key, required this.documentRepository});
@@ -20,30 +23,37 @@ class Editor extends StatelessWidget {
     final toolRepository = context.read<ToolRepository>();
 
     return BlocProvider(
-      create: (context) => EditorBloc(
+      create: (context) => StylePanelBloc(
         documentRepository: documentRepository,
         selectionRepository: selectionRepository,
-        toolRepository: toolRepository,
-      )..add(const RequestWatchEditorStateEvent()),
-      child: BlocBuilder<EditorBloc, EditorState>(
-        buildWhen: (previous, current) =>
-            previous.selectedFeatures != current.selectedFeatures,
-        builder: (context, state) {
-          return ToolShortcuts(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                DocumentViewport(
-                  documentRepository: documentRepository,
-                  toolRepository: toolRepository,
-                  selectionRepository: selectionRepository,
-                  selectedFeatures: [...state.selectedFeatures],
-                ),
-                const EditorToolbar(),
-              ],
-            ),
-          );
-        },
+      )..add(const RequestWatchStylePanelStateEvent()),
+      child: BlocProvider(
+        create: (context) => EditorBloc(
+          documentRepository: documentRepository,
+          selectionRepository: selectionRepository,
+          toolRepository: toolRepository,
+        )..add(const RequestWatchEditorStateEvent()),
+        child: BlocBuilder<EditorBloc, EditorState>(
+          buildWhen: (previous, current) =>
+              previous.selectedFeatures != current.selectedFeatures,
+          builder: (context, state) {
+            return ToolShortcuts(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  DocumentViewport(
+                    documentRepository: documentRepository,
+                    toolRepository: toolRepository,
+                    selectionRepository: selectionRepository,
+                    selectedFeatures: [...state.selectedFeatures],
+                  ),
+                  const EditorToolbar(),
+                  const StylePanel(),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

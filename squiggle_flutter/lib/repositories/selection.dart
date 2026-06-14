@@ -8,7 +8,7 @@ class SelectionRepository {
   final List<FeatureId> selectedFeatures = [];
 
   final StreamController<List<FeatureId>> _selectedFeaturesStreamController =
-      StreamController<List<FeatureId>>();
+      StreamController<List<FeatureId>>.broadcast();
 
   Stream<List<FeatureId>> get selectedFeaturesStream =>
       _selectedFeaturesStreamController.stream;
