@@ -10,9 +10,7 @@ import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateFeatureTool extends Tool {
-  CreateFeatureTool({required Feature ghost})
-    : _ghost = ghost,
-      _state = const _Idle();
+  CreateFeatureTool({required this._ghost}) : _state = const _Idle();
 
   factory CreateFeatureTool.rect() => CreateFeatureTool(
     ghost: Feature(

@@ -50,14 +50,11 @@ class DocumentCanvas extends LeafRenderObjectWidget {
 
 class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
-    required DocumentRepository documentRepository,
-    required ToolRepository toolRepository,
-    required Camera camera,
-    required List<FeatureId> selectedFeatures,
-  }) : _documentRepository = documentRepository,
-       _toolRepository = toolRepository,
-       _camera = camera,
-       _selectedFeatures = selectedFeatures;
+    required this._documentRepository,
+    required this._toolRepository,
+    required this._camera,
+    required this._selectedFeatures,
+  });
 
   DocumentRepository _documentRepository;
   DocumentRepository get documentRepository => _documentRepository;
