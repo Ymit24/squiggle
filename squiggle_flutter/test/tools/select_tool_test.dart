@@ -27,8 +27,8 @@ void main() {
       camera = Camera();
       documentRepository = DocumentRepository(
         document: Document.fromFeatures([
-          Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-          Feature.newRectangle(const Offset(200, 0), const Size(100, 100)),
+          Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+          Feature(origin: const Offset(200, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
         ]),
       );
       selectionRepository = SelectionRepository();
@@ -175,9 +175,9 @@ void main() {
     test('moves group relative to clicked feature, not last selected', () {
       documentRepository = DocumentRepository(
         document: Document.fromFeatures([
-          Feature.newRectangle(const Offset(0, 0), const Size(50, 50)),
-          Feature.newRectangle(const Offset(100, 0), const Size(50, 50)),
-          Feature.newRectangle(const Offset(200, 0), const Size(50, 50)),
+          Feature(origin: const Offset(0, 0), size: const Size(50, 50), kind: const FeatureKindRectangle()),
+          Feature(origin: const Offset(100, 0), size: const Size(50, 50), kind: const FeatureKindRectangle()),
+          Feature(origin: const Offset(200, 0), size: const Size(50, 50), kind: const FeatureKindRectangle()),
         ]),
       );
       final features = documentRepository.document.features;

@@ -18,7 +18,7 @@ void main() {
     setUp(() {
       documentRepository = DocumentRepository(
         document: Document.fromFeatures([
-          Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+          Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
         ]),
       );
       selectionRepository = SelectionRepository();

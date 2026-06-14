@@ -20,7 +20,7 @@ void main() {
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository(
       document: Document.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+        Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
       ]),
     );
 
@@ -86,7 +86,7 @@ void main() {
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository(
       document: Document.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
+        Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
       ]),
     );
     final featureId = documentRepository.document.features.first.id;

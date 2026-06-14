@@ -15,11 +15,19 @@ class CreateFeatureTool extends Tool {
       _state = const _Idle();
 
   factory CreateFeatureTool.rect() => CreateFeatureTool(
-    ghost: Feature.newRectangle(Offset.zero, const Size(1, 1)),
+    ghost: Feature(
+      origin: Offset.zero,
+      size: const Size(1, 1),
+      kind: const FeatureKindRectangle(),
+    ),
   );
 
   factory CreateFeatureTool.circle() => CreateFeatureTool(
-    ghost: Feature.newCircle(Offset.zero, const Size(1, 1)),
+    ghost: Feature(
+      origin: Offset.zero,
+      size: const Size(1, 1),
+      kind: const FeatureKindCircle(),
+    ),
   );
 
   Feature _ghost;
@@ -37,7 +45,7 @@ class CreateFeatureTool extends Tool {
   @override
   void paint(Canvas canvas) {
     if (_state is! _Dragging) return;
-    _ghost.paint(canvas, _ghost.bounds());
+    _ghost.paint(canvas);
   }
 
   @override

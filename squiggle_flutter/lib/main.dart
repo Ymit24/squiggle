@@ -37,17 +37,29 @@ class SquiggleHomePage extends StatelessWidget {
 
   static final _documentRepository = DocumentRepository(
     document: Document.fromFeatures([
-    Feature.newRectangle(const Offset(64, 64), const Size(160, 96)),
-    Feature.newCircle(const Offset(320, 128), const Size(120, 120)),
-    Feature.newText(
-      const Offset(64, 256),
-      const Size(500, 48),
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ac facilisis nunc. Proin maximus orci in leo luctus, sed cursus ante efficitur. Integer porttitor augue purus. In ac diam at purus condimentum posuere at a purus. Maecenas feugiat, mauris eu sagittis imperdiet, turpis enim cursus neque, eu pharetra elit sem sit amet massa. Phasellus luctus maximus lectus at tincidunt. Nullam in bibendum justo. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; ',
+    Feature(
+      origin: const Offset(64, 64),
+      size: const Size(160, 96),
+      kind: const FeatureKindRectangle(),
     ),
-    Feature.newText(
-      const Offset(500, 50),
-      const Size(300, 48),
-      'Hello world! This is some real text... What is something else to try?',
+    Feature(
+      origin: const Offset(320, 128),
+      size: const Size(120, 120),
+      kind: const FeatureKindCircle(),
+    ),
+    Feature(
+      origin: const Offset(64, 256),
+      size: const Size(500, 48),
+      kind: const FeatureKindText(
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ac facilisis nunc. Proin maximus orci in leo luctus, sed cursus ante efficitur. Integer porttitor augue purus. In ac diam at purus condimentum posuere at a purus. Maecenas feugiat, mauris eu sagittis imperdiet, turpis enim cursus neque, eu pharetra elit sem sit amet massa. Phasellus luctus maximus lectus at tincidunt. Nullam in bibendum justo. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; ',
+      ),
+    ),
+    Feature(
+      origin: const Offset(500, 50),
+      size: const Size(300, 48),
+      kind: const FeatureKindText(
+        'Hello world! This is some real text... What is something else to try?',
+      ),
     ),
     ]),
   );

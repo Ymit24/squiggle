@@ -230,7 +230,7 @@ class RenderDocumentCanvas extends RenderBox {
       final worldBounds = feature.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
-      feature.paint(canvas, worldBounds);
+      feature.paint(canvas);
     }
 
     for (final featureId in selectedFeatures) {

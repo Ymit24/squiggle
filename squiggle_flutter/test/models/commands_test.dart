@@ -9,12 +9,18 @@ void main() {
   Document docWithRectangle({
     Offset origin = Offset.zero,
     Size size = const Size(10, 10),
-  }) => Document.fromFeatures([Feature.newRectangle(origin, size)]);
+  }) => Document.fromFeatures([
+    Feature(origin: origin, size: size, kind: const FeatureKindRectangle()),
+  ]);
 
   group('AddFeatureCommand', () {
     test('apply assigns id and adds feature; undo removes it', () {
       final doc = Document();
-      final feature = Feature.newRectangle(const Offset(1, 2), const Size(3, 4));
+      final feature = Feature(
+        origin: const Offset(1, 2),
+        size: const Size(3, 4),
+        kind: const FeatureKindRectangle(),
+      );
       final command = AddFeatureCommand(feature);
 
       command.apply(doc);

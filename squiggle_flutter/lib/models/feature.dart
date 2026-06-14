@@ -1,13 +1,14 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/widgets.dart';
 
 import 'feature_id.dart';
+import 'feature_kinds/feature_kind.dart';
+
+export 'feature_kinds/feature_kind.dart';
 
 /// A drawable shape or label in world space.
 class Feature {
   Feature({
-    required this.id,
+    this.id = noId,
     required this.origin,
     required this.size,
     required this.kind,
@@ -17,27 +18,6 @@ class Feature {
   Offset origin;
   Size size;
   FeatureKind kind;
-
-  factory Feature.newRectangle(Offset origin, Size size) => Feature(
-    id: noId,
-    origin: origin,
-    size: size,
-    kind: const FeatureKindRectangle(),
-  );
-
-  factory Feature.newCircle(Offset origin, Size size) => Feature(
-    id: noId,
-    origin: origin,
-    size: size,
-    kind: const FeatureKindCircle(),
-  );
-
-  factory Feature.newText(Offset origin, Size size, String contents) => Feature(
-    id: noId,
-    origin: origin,
-    size: size,
-    kind: FeatureKindText(contents),
-  );
 
   double get width => size.width;
 
@@ -68,51 +48,5 @@ class Feature {
     kind: kind ?? this.kind,
   );
 
-  void paint(Canvas canvas, Rect worldBounds) {
-    switch (kind) {
-      case FeatureKindRectangle():
-        canvas.drawRect(worldBounds, Paint()..color = const Color(0xFFCDA6F7));
-      case FeatureKindCircle():
-        canvas.drawOval(worldBounds, Paint()..color = const Color(0xFFF38BA8));
-      case FeatureKindText(:final contents):
-        _paintText(canvas, contents, worldBounds);
-    }
-  }
-
-  void _paintText(Canvas canvas, String contents, Rect worldBounds) {
-    if (contents.isEmpty) return;
-
-    final fontSize = worldBounds.height;
-    final builder = ui.ParagraphBuilder(
-      ui.ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: fontSize,
-        textDirection: TextDirection.ltr,
-      ),
-    )..pushStyle(ui.TextStyle(color: const Color(0xFFCDD6F4)));
-    builder.addText(contents);
-
-    final paragraph = builder.build()
-      ..layout(ui.ParagraphConstraints(width: worldBounds.width));
-
-    canvas.drawParagraph(paragraph, worldBounds.topLeft);
-  }
-}
-
-sealed class FeatureKind {
-  const FeatureKind();
-}
-
-final class FeatureKindRectangle extends FeatureKind {
-  const FeatureKindRectangle();
-}
-
-final class FeatureKindCircle extends FeatureKind {
-  const FeatureKindCircle();
-}
-
-final class FeatureKindText extends FeatureKind {
-  const FeatureKindText(this.contents);
-
-  final String contents;
+  void paint(Canvas canvas) => kind.paint(this, canvas);
 }

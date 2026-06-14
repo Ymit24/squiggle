@@ -8,8 +8,8 @@ void main() {
   group('Document.featureAtPoint', () {
     test('returns top-most feature at point', () {
       final doc = Document.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(100, 100)),
-        Feature.newRectangle(const Offset(50, 50), const Size(100, 100)),
+        Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+        Feature(origin: const Offset(50, 50), size: const Size(100, 100), kind: const FeatureKindRectangle()),
       ]);
 
       final hit = doc.featureAtPoint(const Offset(75, 75));
@@ -20,7 +20,7 @@ void main() {
 
     test('returns null when no feature contains point', () {
       final doc = Document.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(50, 50)),
+        Feature(origin: const Offset(0, 0), size: const Size(50, 50), kind: const FeatureKindRectangle()),
       ]);
 
       expect(doc.featureAtPoint(const Offset(200, 200)), isNull);
@@ -30,7 +30,7 @@ void main() {
   group('Document undo/redo', () {
     test('redo reapplies undone command', () {
       final doc = Document.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
+        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
       ]);
       final id = doc.features.first.id;
 
@@ -43,7 +43,7 @@ void main() {
 
     test('new command clears redo stack', () {
       final doc = Document.fromFeatures([
-        Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
+        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
       ]);
       final id = doc.features.first.id;
 

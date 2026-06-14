@@ -10,7 +10,7 @@ void main() {
     test('changesStream emits when executeCommand runs', () async {
       final repository = DocumentRepository(
         document: Document.fromFeatures([
-          Feature.newRectangle(const Offset(0, 0), const Size(10, 10)),
+          Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
         ]),
       );
       final emissions = <void>[];
