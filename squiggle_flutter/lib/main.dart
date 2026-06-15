@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 
 import 'models/feature.dart';
@@ -93,23 +94,29 @@ class SquiggleHomePage extends StatelessWidget {
     ]),
   );
 
+  static final _textEditRepository = TextEditRepository();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: RepositoryProvider(
         create: (context) => SelectionRepository(),
         child: RepositoryProvider(
-          create: (context) => ToolRepository(),
+          create: (context) => _textEditRepository,
           dispose: (repository) => repository.dispose(),
           child: RepositoryProvider(
-            create: (context) => _documentRepository,
+            create: (context) => ToolRepository(),
             dispose: (repository) => repository.dispose(),
-            child: BlocProvider(
-              create: (context) => ToolbarBloc(
-                toolRepository: context.read<ToolRepository>(),
-                selectionRepository: context.read<SelectionRepository>(),
+            child: RepositoryProvider(
+              create: (context) => _documentRepository,
+              dispose: (repository) => repository.dispose(),
+              child: BlocProvider(
+                create: (context) => ToolbarBloc(
+                  toolRepository: context.read<ToolRepository>(),
+                  selectionRepository: context.read<SelectionRepository>(),
+                ),
+                child: Editor(documentRepository: _documentRepository),
               ),
-              child: Editor(documentRepository: _documentRepository),
             ),
           ),
         ),

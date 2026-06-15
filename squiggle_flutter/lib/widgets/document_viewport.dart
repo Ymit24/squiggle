@@ -5,8 +5,12 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import '../theme/squiggle_colors.dart';
@@ -21,11 +25,13 @@ class DocumentViewport extends StatefulWidget {
     required this.documentRepository,
     required this.selectionRepository,
     required this.toolRepository,
+    required this.textEditRepository,
   });
 
   final DocumentRepository documentRepository;
   final SelectionRepository selectionRepository;
   final ToolRepository toolRepository;
+  final TextEditRepository textEditRepository;
 
   @override
   State<DocumentViewport> createState() => _DocumentViewportState();
@@ -124,11 +130,17 @@ class _DocumentViewportState extends State<DocumentViewport>
 
   bool get _isShiftPressed => HardwareKeyboard.instance.isShiftPressed;
 
-  @override
-  Widget build(BuildContext context) {
+  void _resetPointerState() {
+    _isPrimaryDragging = false;
+    _pointerInCanvas = null;
+    _stopFling();
+  }
+
+  Widget _buildCanvasLayer({required bool canvasInteractionsEnabled}) {
     return Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
+        if (!canvasInteractionsEnabled) return;
         ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
         _stopFling();
         if (event.buttons != kPrimaryButton) return;
@@ -146,6 +158,7 @@ class _DocumentViewportState extends State<DocumentViewport>
         setState(() {});
       },
       onPointerMove: (event) {
+        if (!canvasInteractionsEnabled) return;
         _pointerInCanvas = _canvasLocal(event);
         if (!_isPrimaryDragging) return;
         final world = _screenToWorld(event);
@@ -160,6 +173,7 @@ class _DocumentViewportState extends State<DocumentViewport>
         setState(() {});
       },
       onPointerHover: (event) {
+        if (!canvasInteractionsEnabled) return;
         _pointerInCanvas = _canvasLocal(event);
         final world = _screenToWorld(event);
         if (world == null) return;
@@ -173,6 +187,7 @@ class _DocumentViewportState extends State<DocumentViewport>
         setState(() {});
       },
       onPointerUp: (event) {
+        if (!canvasInteractionsEnabled) return;
         if (!_isPrimaryDragging) return;
         _isPrimaryDragging = false;
         final world = _screenToWorld(event);
@@ -183,11 +198,13 @@ class _DocumentViewportState extends State<DocumentViewport>
             widget.selectionRepository,
             _isShiftPressed,
             _camera,
+            widget.textEditRepository,
           );
         }
         setState(() {});
       },
       onPointerCancel: (event) {
+        if (!canvasInteractionsEnabled) return;
         if (!_isPrimaryDragging) return;
         _isPrimaryDragging = false;
         final world = _screenToWorld(event);
@@ -198,11 +215,13 @@ class _DocumentViewportState extends State<DocumentViewport>
             widget.selectionRepository,
             _isShiftPressed,
             _camera,
+            widget.textEditRepository,
           );
         }
         setState(() {});
       },
       onPointerPanZoomStart: (event) {
+        if (!canvasInteractionsEnabled) return;
         _stopFling();
         _panVelocityTracker =
             VelocityTracker.withKind(PointerDeviceKind.trackpad);
@@ -212,12 +231,14 @@ class _DocumentViewportState extends State<DocumentViewport>
         _pointerInCanvas = _canvasLocal(event);
       },
       onPointerPanZoomEnd: (event) {
+        if (!canvasInteractionsEnabled) return;
         if (_panZoomHadSignificantPinch) return;
         final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
         if (velocity.distance < kMinFlingVelocity) return;
         _startFling(velocity);
       },
       onPointerSignal: (event) {
+        if (!canvasInteractionsEnabled) return;
         if (event is! PointerScrollEvent) return;
         _stopFling();
         final focal = _canvasLocal(event);
@@ -228,6 +249,7 @@ class _DocumentViewportState extends State<DocumentViewport>
         });
       },
       onPointerPanZoomUpdate: (event) {
+        if (!canvasInteractionsEnabled) return;
         if (!event.synthesized) {
           _panVelocityTracker.addPosition(event.timeStamp, event.pan);
         }
@@ -266,6 +288,22 @@ class _DocumentViewportState extends State<DocumentViewport>
             camera: _camera,
           ),
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<TextEditBloc, TextEditState>(
+      listenWhen: (previous, current) =>
+          current is TextEditOpen && previous is! TextEditOpen,
+      listener: (context, state) => _resetPointerState(),
+      child: BlocBuilder<TextEditBloc, TextEditState>(
+        builder: (context, textEditState) {
+          return _buildCanvasLayer(
+            canvasInteractionsEnabled: textEditState is! TextEditOpen,
+          );
+        },
       ),
     );
   }

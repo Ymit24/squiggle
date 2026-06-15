@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
@@ -92,6 +93,7 @@ class CreateFeatureTool extends Tool {
     SelectionRepository selection,
     bool isShiftPressed,
     Camera camera,
+    TextEditRepository textEditRepository,
   ) {
     if (_state is _Dragging) {
       documentRepository.executeCommand(

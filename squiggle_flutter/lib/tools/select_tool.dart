@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
@@ -312,6 +313,7 @@ class SelectTool extends Tool {
     SelectionRepository selection,
     bool isShiftPressed,
     Camera camera,
+    TextEditRepository textEditRepository,
   ) {
     final document = documentRepository.document;
     switch (_state) {
@@ -328,6 +330,22 @@ class SelectTool extends Tool {
             if (!isShiftPressed) {
               selection.clearSelection();
               selection.selectFeature(hovered.id);
+            }
+            if (hovered.kind is FeatureKindText) {
+              final textKind = hovered.kind as FeatureKindText;
+              textEditRepository.beginEdit(
+                TextEditSession(
+                  featureId: hovered.id,
+                  initialContents: textKind.contents,
+                  canvasLocalBounds: camera.worldToScreenBounds(
+                    hovered.bounds(),
+                  ),
+                ),
+              );
+              _state = const _Idle();
+              _lastTapFeatureId = null;
+              _lastTapTime = null;
+              return;
             }
             _state = _Editing(featureId: hovered.id);
             _lastTapFeatureId = null;

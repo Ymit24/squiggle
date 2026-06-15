@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/models/commands/command.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -230,6 +231,57 @@ void main() {
         (undone.kind as FeatureKindPolyline).localPoints,
       );
       expect(restored, [Offset.zero, const Offset(100, 0)]);
+    });
+  });
+
+  group('UpdateTextContentsCommand', () {
+    Document docWithText({
+      String contents = 'hello',
+      Size size = const Size(200, 48),
+    }) =>
+        Document.fromFeatures([
+          Feature(
+            origin: Offset.zero,
+            size: size,
+            kind: FeatureKindText(
+              contents,
+              fillColor: const Color(0xFFFFFFFF),
+            ),
+          ),
+        ]);
+
+    test('apply updates contents; undo restores contents and size', () {
+      final doc = docWithText();
+      final id = doc.features.first.id;
+      final previousSize = doc.features.first.size;
+      final command = UpdateTextContentsCommand(id, 'goodbye');
+
+      command.apply(doc);
+      final feature = doc.features.first;
+      expect((feature.kind as FeatureKindText).contents, 'goodbye');
+      expect(feature.size.width, previousSize.width);
+      expect(feature.size.height, greaterThanOrEqualTo(defaultFontSize));
+
+      command.undo(doc);
+      final restored = doc.features.first;
+      expect((restored.kind as FeatureKindText).contents, 'hello');
+      expect(restored.size, previousSize);
+    });
+
+    test('apply grows height for multiline contents while preserving width', () {
+      final doc = docWithText(contents: 'short');
+      final id = doc.features.first.id;
+      final width = doc.features.first.size.width;
+      final shortHeight = doc.features.first.size.height;
+      final multiline =
+          'Line one\nLine two\nLine three\nLine four';
+      final command = UpdateTextContentsCommand(id, multiline);
+
+      command.apply(doc);
+      final feature = doc.features.first;
+      expect((feature.kind as FeatureKindText).contents, multiline);
+      expect(feature.size.width, width);
+      expect(feature.size.height, greaterThan(shortHeight));
     });
   });
 }

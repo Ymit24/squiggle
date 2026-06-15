@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
@@ -80,6 +81,7 @@ class ToolRepository {
     SelectionRepository selection,
     bool isShiftPressed,
     Camera camera,
+    TextEditRepository textEditRepository,
   ) {
     _activeTool.onPointerUp(
       documentRepository,
@@ -87,6 +89,7 @@ class ToolRepository {
       selection,
       isShiftPressed,
       camera,
+      textEditRepository,
     );
     _notifyRepaint();
   }

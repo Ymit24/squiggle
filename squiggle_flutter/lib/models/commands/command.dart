@@ -11,6 +11,7 @@ part 'move_polyline_point_command.dart';
 part 'remove_features_command.dart';
 part 'resize_feature_command.dart';
 part 'update_features_style_command.dart';
+part 'update_text_contents_command.dart';
 
 /// A reversible edit to a [Document].
 ///

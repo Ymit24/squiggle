@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
@@ -15,17 +16,20 @@ void main() {
     late DocumentRepository documentRepository;
     late SelectionRepository selectionRepository;
     late ToolRepository toolRepository;
+    late TextEditRepository textEditRepository;
     late Camera camera;
 
     setUp(() {
       documentRepository = DocumentRepository(document: Document());
       selectionRepository = SelectionRepository();
       toolRepository = ToolRepository();
+      textEditRepository = TextEditRepository();
       camera = Camera();
     });
 
     tearDown(() {
       toolRepository.dispose();
+      textEditRepository.dispose();
       documentRepository.dispose();
     });
 
@@ -60,6 +64,7 @@ void main() {
         selectionRepository,
         false,
         camera,
+        textEditRepository,
       );
     }
 

@@ -10,14 +10,28 @@ import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 
+const _toolShortcuts = {
+  SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
+  SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
+};
+
 /// Keyboard shortcuts for tool activation.
 ///
 /// Holds keyboard focus at this level so R/C/V work whether the user last
 /// interacted with the toolbar or the canvas.
 class ToolShortcuts extends StatefulWidget {
-  const ToolShortcuts({required this.child, super.key});
+  const ToolShortcuts({
+    required this.child,
+    this.textEditOpen = false,
+    super.key,
+  });
 
   final Widget child;
+  final bool textEditOpen;
 
   @override
   State<ToolShortcuts> createState() => _ToolShortcutsState();
@@ -34,22 +48,11 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
 
   @override
   Widget build(BuildContext context) {
+    final textEditOpen = widget.textEditOpen;
     return ShortcutsScope(
       focusNode: _focusNode,
       child: Shortcuts(
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
-          SingleActivator(LogicalKeyboardKey.keyR):
-              ActivateCreateRectToolIntent(),
-          SingleActivator(LogicalKeyboardKey.keyC):
-              ActivateCreateCircleToolIntent(),
-          SingleActivator(LogicalKeyboardKey.keyL):
-              ActivateCreateLineToolIntent(),
-          SingleActivator(LogicalKeyboardKey.backspace):
-              DeleteSelectedFeaturesIntent(),
-          SingleActivator(LogicalKeyboardKey.delete):
-              DeleteSelectedFeaturesIntent(),
-        },
+        shortcuts: textEditOpen ? const {} : _toolShortcuts,
         child: Actions(
           actions: {
             ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
@@ -99,9 +102,10 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
           },
           child: Focus(
             focusNode: _focusNode,
-            autofocus: true,
-            descendantsAreFocusable: false,
+            autofocus: !textEditOpen,
+            descendantsAreFocusable: textEditOpen,
             onKeyEvent: (node, event) {
+              if (textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
               if (context.read<ToolRepository>().onKeyEvent(
                     context.read<DocumentRepository>(),

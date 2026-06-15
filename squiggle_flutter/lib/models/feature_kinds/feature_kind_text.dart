@@ -12,6 +12,24 @@ final class FeatureKindText extends FeatureKind {
   final String contents;
   final double fontSize;
 
+  Size measureContents({required double width, required double fontSize}) {
+    if (contents.isEmpty) {
+      return Size(width, fontSize);
+    }
+
+    final paragraphStyle = ui.ParagraphStyle(
+      textAlign: TextAlign.left,
+      fontSize: fontSize,
+      textDirection: TextDirection.ltr,
+    );
+    final builder = ui.ParagraphBuilder(paragraphStyle)
+      ..pushStyle(ui.TextStyle(fontSize: fontSize))
+      ..addText(contents);
+    final paragraph = builder.build()
+      ..layout(ui.ParagraphConstraints(width: width));
+    return Size(width, paragraph.height.clamp(fontSize, double.infinity));
+  }
+
   @override
   void paint(Feature feature, Canvas canvas) {
     if (contents.isEmpty) return;

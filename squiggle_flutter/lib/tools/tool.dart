@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 /// Active editor tool: pointer handling and ephemeral overlay painting.
@@ -43,6 +44,7 @@ abstract class Tool {
     SelectionRepository selection,
     bool isShiftPressed,
     Camera camera,
+    TextEditRepository textEditRepository,
   );
 
   void deactivate(SelectionRepository selection);

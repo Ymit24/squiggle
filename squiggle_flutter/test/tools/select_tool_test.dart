@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
+import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart'
     show
@@ -23,10 +24,12 @@ void main() {
     late DocumentRepository documentRepository;
     late SelectionRepository selectionRepository;
     late ToolRepository toolRepository;
+    late TextEditRepository textEditRepository;
     late Camera camera;
 
     setUp(() {
       camera = Camera();
+      textEditRepository = TextEditRepository();
       documentRepository = DocumentRepository(
         document: Document.fromFeatures([
           Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
@@ -39,6 +42,7 @@ void main() {
 
     tearDown(() {
       toolRepository.dispose();
+      textEditRepository.dispose();
       documentRepository.dispose();
     });
 
@@ -59,6 +63,7 @@ void main() {
         selectionRepository,
         shift,
         camera,
+        textEditRepository,
       );
     }
 
@@ -472,6 +477,57 @@ void main() {
       expect(selectionRepository.selectedFeatures.single, feature.id);
       expect(keyDown(LogicalKeyboardKey.escape), isTrue);
       expect(selectionRepository.selectedFeatures.single, feature.id);
+    });
+
+    test('double-click text opens edit session without entering edit mode', () async {
+      textEditRepository = TextEditRepository();
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(200, 48),
+            kind: const FeatureKindText(
+              'hello world',
+              fillColor: Color(0xFFFFFFFF),
+            ),
+          ),
+        ]),
+      );
+      final feature = documentRepository.document.features.first;
+      final sessions = <TextEditSession>[];
+      final subscription = textEditRepository.editSessionStream.listen(
+        sessions.add,
+      );
+
+      doubleClick(const Offset(50, 24));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(selectionRepository.selectedFeatures.single, feature.id);
+      expect(sessions, hasLength(1));
+      expect(sessions.first.featureId, feature.id);
+      expect(sessions.first.initialContents, 'hello world');
+      expect(
+        sessions.first.canvasLocalBounds,
+        camera.worldToScreenBounds(feature.bounds()),
+      );
+      expect(keyDown(LogicalKeyboardKey.escape), isFalse);
+
+      await subscription.cancel();
+    });
+
+    test('double-click polyline does not open text edit session', () async {
+      textEditRepository = TextEditRepository();
+      documentRepository = polylineDocument();
+      final sessions = <TextEditSession>[];
+      final subscription = textEditRepository.editSessionStream.listen(
+        sessions.add,
+      );
+
+      doubleClick(const Offset(50, 50));
+
+      expect(sessions, isEmpty);
+
+      await subscription.cancel();
     });
   });
 }
