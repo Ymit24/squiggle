@@ -6,7 +6,6 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_panel.dart';
 
-const _panelMinWidth = 120.0;
 const _panelMaxWidth = 400.0;
 const _panelMaxHeight = 200.0;
 const _panelOffsetBelow = 4.0;
@@ -62,7 +61,8 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
   @override
   Widget build(BuildContext context) {
     final bounds = widget.state.canvasLocalBounds;
-    final panelWidth = bounds.width.clamp(_panelMinWidth, _panelMaxWidth);
+    final panelWidth =
+        bounds.width.clamp(textEditPanelMinWidth, _panelMaxWidth);
     final left = bounds.left.clamp(0.0, widget.viewportSize.width - panelWidth);
     var top = bounds.top + _panelOffsetBelow;
     final panelHeight = _panelHeight;

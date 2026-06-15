@@ -13,7 +13,7 @@ import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 void main() {
-  testWidgets('ToolShortcuts activates tools on V, R, C, L keys', (tester) async {
+  testWidgets('ToolShortcuts activates tools on V, R, C, L, T keys', (tester) async {
     final toolRepository = ToolRepository();
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository(
@@ -84,6 +84,12 @@ void main() {
       ActiveToolKind.createLine,
     );
 
+    await pressKey(LogicalKeyboardKey.keyT);
+    expect(
+      toolbarBloc.state.activeTool,
+      ActiveToolKind.createText,
+    );
+
     await pressKey(LogicalKeyboardKey.keyV);
     expect(
       toolbarBloc.state.activeTool,
@@ -145,5 +151,78 @@ void main() {
 
     expect(documentRepository.document.features, isEmpty);
     expect(selectionRepository.selectedFeatures, isEmpty);
+  });
+
+  testWidgets('ToolShortcuts restores focus after text edit closes', (
+    tester,
+  ) async {
+    final toolRepository = ToolRepository();
+    final selectionRepository = SelectionRepository();
+    final documentRepository = DocumentRepository(
+      document: Document.fromFeatures([
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
+      ]),
+    );
+    final textFocusNode = FocusNode();
+
+    Future<void> pumpShortcuts({required bool textEditOpen}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MultiRepositoryProvider(
+              providers: [
+                RepositoryProvider<ToolRepository>.value(value: toolRepository),
+                RepositoryProvider<DocumentRepository>.value(
+                  value: documentRepository,
+                ),
+              ],
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider(
+                    create: (_) => ToolbarBloc(
+                      toolRepository: toolRepository,
+                      selectionRepository: selectionRepository,
+                    ),
+                  ),
+                  BlocProvider(
+                    create: (_) => EditorBloc(
+                      documentRepository: documentRepository,
+                      selectionRepository: selectionRepository,
+                      toolRepository: toolRepository,
+                    ),
+                  ),
+                ],
+                child: ToolShortcuts(
+                  textEditOpen: textEditOpen,
+                  child: textEditOpen
+                      ? TextField(focusNode: textFocusNode)
+                      : const SizedBox.expand(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await pumpShortcuts(textEditOpen: true);
+    textFocusNode.requestFocus();
+    await tester.pumpAndSettle();
+    expect(textFocusNode.hasFocus, isTrue);
+
+    await pumpShortcuts(textEditOpen: false);
+    expect(textFocusNode.hasFocus, isFalse);
+
+    final toolbarBloc =
+        tester.element(find.byType(ToolShortcuts)).read<ToolbarBloc>();
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyV, platform: 'macos');
+    await tester.pump();
+
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
   });
 }

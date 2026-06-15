@@ -10,14 +10,32 @@ final class TextEditClosed extends TextEditState {
   const TextEditClosed();
 }
 
-final class TextEditOpen extends TextEditState {
+sealed class TextEditOpen extends TextEditState {
   const TextEditOpen({
-    required this.featureId,
     required this.initialContents,
     required this.canvasLocalBounds,
   });
 
-  final FeatureId featureId;
   final String initialContents;
   final Rect canvasLocalBounds;
+}
+
+final class EditTextEditOpen extends TextEditOpen {
+  const EditTextEditOpen({
+    required this.featureId,
+    required super.initialContents,
+    required super.canvasLocalBounds,
+  });
+
+  final FeatureId featureId;
+}
+
+final class CreateTextEditOpen extends TextEditOpen {
+  const CreateTextEditOpen({
+    required this.worldOrigin,
+    required super.initialContents,
+    required super.canvasLocalBounds,
+  });
+
+  final Offset worldOrigin;
 }

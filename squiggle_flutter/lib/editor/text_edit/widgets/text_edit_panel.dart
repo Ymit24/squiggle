@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+
+class _AcceptTextIntent extends Intent {
+  const _AcceptTextIntent();
+}
 
 const _panelPadding = 12.0;
 const _buttonSpacing = 8.0;
 const _fieldMinLines = 3;
 const _fieldMaxLines = 5;
+
+/// Minimum width needed for the Cancel/Accept button row, excluding panel padding.
+const textEditPanelButtonRowMinWidth = 154.0;
+
+/// Minimum width for the positioned edit panel, including padding.
+const textEditPanelMinWidth =
+    _panelPadding * 2 + textEditPanelButtonRowMinWidth;
 
 class TextEditPanel extends StatefulWidget {
   const TextEditPanel({
@@ -41,6 +53,8 @@ class _TextEditPanelState extends State<TextEditPanel> {
     super.dispose();
   }
 
+  void _accept() => widget.onAccept(_controller.text);
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -60,48 +74,77 @@ class _TextEditPanelState extends State<TextEditPanel> {
             children: [
               ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: widget.maxHeight),
-                child: TextField(
-                  focusNode: widget.textFocusNode,
-                  controller: _controller,
-                  autofocus: true,
-                  minLines: _fieldMinLines,
-                  maxLines: _fieldMaxLines,
-                  style: const TextStyle(
-                    color: SquiggleColors.text,
-                    fontSize: 14,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    filled: true,
-                    fillColor: SquiggleColors.surface0,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: SquiggleColors.surface1),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: SquiggleColors.surface1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: SquiggleColors.accent),
+                child: Shortcuts(
+                  shortcuts: const {
+                    SingleActivator(
+                      LogicalKeyboardKey.enter,
+                      meta: true,
+                    ): _AcceptTextIntent(),
+                    SingleActivator(
+                      LogicalKeyboardKey.enter,
+                      control: true,
+                    ): _AcceptTextIntent(),
+                  },
+                  child: Actions(
+                    actions: {
+                      _AcceptTextIntent: CallbackAction<_AcceptTextIntent>(
+                        onInvoke: (_) {
+                          _accept();
+                          return null;
+                        },
+                      ),
+                    },
+                    child: TextField(
+                      focusNode: widget.textFocusNode,
+                      controller: _controller,
+                      autofocus: true,
+                      minLines: _fieldMinLines,
+                      maxLines: _fieldMaxLines,
+                      style: const TextStyle(
+                        color: SquiggleColors.text,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: true,
+                        fillColor: SquiggleColors.surface0,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: const BorderSide(
+                            color: SquiggleColors.surface1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: const BorderSide(
+                            color: SquiggleColors.surface1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: const BorderSide(
+                            color: SquiggleColors.accent,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: _buttonSpacing),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: _buttonSpacing,
+                runSpacing: _buttonSpacing,
                 children: [
                   _PanelButton(
                     label: 'Cancel',
                     onPressed: widget.onCancel,
                   ),
-                  const SizedBox(width: _buttonSpacing),
                   _PanelButton(
                     label: 'Accept',
                     isPrimary: true,
-                    onPressed: () => widget.onAccept(_controller.text),
+                    onPressed: _accept,
                   ),
                 ],
               ),

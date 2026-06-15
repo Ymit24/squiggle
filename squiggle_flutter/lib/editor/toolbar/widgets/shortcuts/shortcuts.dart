@@ -15,6 +15,7 @@ const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyT): ActivateCreateTextToolIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
 };
@@ -39,6 +40,17 @@ class ToolShortcuts extends StatefulWidget {
 
 class _ToolShortcutsState extends State<ToolShortcuts> {
   final FocusNode _focusNode = FocusNode();
+
+  @override
+  void didUpdateWidget(ToolShortcuts oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.textEditOpen && !widget.textEditOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _focusNode.requestFocus();
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -86,6 +98,15 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                   onInvoke: (_) {
                     context.read<ToolbarBloc>().add(
                       const ActivateCreateLineToolEvent(),
+                    );
+                    return null;
+                  },
+                ),
+            ActivateCreateTextToolIntent:
+                CallbackAction<ActivateCreateTextToolIntent>(
+                  onInvoke: (_) {
+                    context.read<ToolbarBloc>().add(
+                      const ActivateCreateTextToolEvent(),
                     );
                     return null;
                   },

@@ -3,16 +3,34 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/models/feature_id.dart';
 
-class TextEditSession {
+sealed class TextEditSession {
   const TextEditSession({
-    required this.featureId,
     required this.initialContents,
     required this.canvasLocalBounds,
   });
 
-  final FeatureId featureId;
   final String initialContents;
   final Rect canvasLocalBounds;
+}
+
+final class EditTextEditSession extends TextEditSession {
+  const EditTextEditSession({
+    required this.featureId,
+    required super.initialContents,
+    required super.canvasLocalBounds,
+  });
+
+  final FeatureId featureId;
+}
+
+final class CreateTextEditSession extends TextEditSession {
+  const CreateTextEditSession({
+    required this.worldOrigin,
+    required super.initialContents,
+    required super.canvasLocalBounds,
+  });
+
+  final Offset worldOrigin;
 }
 
 class TextEditRepository {

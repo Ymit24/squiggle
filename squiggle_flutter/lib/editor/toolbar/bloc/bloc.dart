@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
@@ -16,6 +17,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     on<ActivateCreateRectToolEvent>(_onActivateCreateRectTool);
     on<ActivateCreateCircleToolEvent>(_onActivateCreateCircleTool);
     on<ActivateCreateLineToolEvent>(_onActivateCreateLineTool);
+    on<ActivateCreateTextToolEvent>(_onActivateCreateTextTool);
   }
 
   final ToolRepository _toolRepository;
@@ -51,5 +53,13 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
   ) {
     _toolRepository.setTool(CreateLineTool(), _selectionRepository);
     emit(const ToolbarState(activeTool: ActiveToolKind.createLine));
+  }
+
+  void _onActivateCreateTextTool(
+    ActivateCreateTextToolEvent event,
+    Emitter<ToolbarState> emit,
+  ) {
+    _toolRepository.setTool(CreateTextTool(), _selectionRepository);
+    emit(const ToolbarState(activeTool: ActiveToolKind.createText));
   }
 }

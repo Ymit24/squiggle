@@ -17,3 +17,7 @@ class ActivateCreateCircleToolEvent extends ToolbarEvent {
 class ActivateCreateLineToolEvent extends ToolbarEvent {
   const ActivateCreateLineToolEvent();
 }
+
+class ActivateCreateTextToolEvent extends ToolbarEvent {
+  const ActivateCreateTextToolEvent();
+}

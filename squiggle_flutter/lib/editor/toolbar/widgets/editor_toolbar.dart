@@ -70,6 +70,14 @@ class EditorToolbar extends StatelessWidget {
                           const ActivateCreateLineToolEvent(),
                         ),
                       ),
+                      const Gap(),
+                      Button(
+                        label: 'A',
+                        isActive: state.activeTool == ActiveToolKind.createText,
+                        onPressed: () => context.read<ToolbarBloc>().add(
+                          const ActivateCreateTextToolEvent(),
+                        ),
+                      ),
                     ],
                   ),
                 ),

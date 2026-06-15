@@ -504,7 +504,8 @@ void main() {
 
       expect(selectionRepository.selectedFeatures.single, feature.id);
       expect(sessions, hasLength(1));
-      expect(sessions.first.featureId, feature.id);
+      expect(sessions.first, isA<EditTextEditSession>());
+      expect((sessions.first as EditTextEditSession).featureId, feature.id);
       expect(sessions.first.initialContents, 'hello world');
       expect(
         sessions.first.canvasLocalBounds,

@@ -7,12 +7,14 @@ import 'metrics.dart';
 class Button extends StatefulWidget {
   const Button({
     super.key,
-    required this.iconAsset,
+    this.iconAsset,
+    this.label,
     required this.isActive,
     required this.onPressed,
-  });
+  }) : assert(iconAsset != null || label != null);
 
-  final String iconAsset;
+  final String? iconAsset;
+  final String? label;
   final bool isActive;
   final VoidCallback onPressed;
 
@@ -28,7 +30,7 @@ class _ButtonState extends State<Button> {
     final backgroundColor = widget.isActive
         ? SquiggleColors.surface1
         : (_hovering ? SquiggleColors.surface0 : null);
-    final iconColor = widget.isActive
+    final foregroundColor = widget.isActive
         ? SquiggleColors.text
         : SquiggleColors.subtext0;
 
@@ -48,13 +50,25 @@ class _ButtonState extends State<Button> {
               borderRadius: BorderRadius.circular(buttonRadius),
             ),
             child: Center(
-              child: SvgPicture.asset(
-                widget.iconAsset,
-                width: iconSize,
-                height: iconSize,
-                fit: BoxFit.contain,
-                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-              ),
+              child: widget.iconAsset != null
+                  ? SvgPicture.asset(
+                      widget.iconAsset!,
+                      width: iconSize,
+                      height: iconSize,
+                      fit: BoxFit.contain,
+                      colorFilter: ColorFilter.mode(
+                        foregroundColor,
+                        BlendMode.srcIn,
+                      ),
+                    )
+                  : Text(
+                      widget.label!,
+                      style: TextStyle(
+                        color: foregroundColor,
+                        fontSize: iconSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
         ),

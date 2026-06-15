@@ -16,6 +16,10 @@ class ActivateCreateLineToolIntent extends Intent {
   const ActivateCreateLineToolIntent();
 }
 
+class ActivateCreateTextToolIntent extends Intent {
+  const ActivateCreateTextToolIntent();
+}
+
 class DeleteSelectedFeaturesIntent extends Intent {
   const DeleteSelectedFeaturesIntent();
 }

@@ -334,7 +334,7 @@ class SelectTool extends Tool {
             if (hovered.kind is FeatureKindText) {
               final textKind = hovered.kind as FeatureKindText;
               textEditRepository.beginEdit(
-                TextEditSession(
+                EditTextEditSession(
                   featureId: hovered.id,
                   initialContents: textKind.contents,
                   canvasLocalBounds: camera.worldToScreenBounds(
