@@ -8,7 +8,7 @@ export 'commands/command.dart';
 
 /// Editable collection of features with undo/redo command recording.
 class Document {
-  Document() : nextId = FeatureId.newId(1);
+  Document({FeatureId? nextId}) : nextId = nextId ?? FeatureId.newId(1);
 
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
