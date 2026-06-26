@@ -25,6 +25,8 @@ final class UpdateTextContentsCommand extends Command {
     feature.kind = FeatureKindText(
       contents,
       fontSize: textKind.fontSize,
+      horizontalAlignment: textKind.horizontalAlignment,
+      verticalAlignment: textKind.verticalAlignment,
       strokeColor: textKind.strokeColor,
       fillColor: textKind.fillColor,
       strokeWidth: textKind.strokeWidth,

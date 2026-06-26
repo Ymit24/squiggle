@@ -7,6 +7,8 @@ final class FeatureKindText extends FeatureKind {
   const FeatureKindText(
     this.contents, {
     this.fontSize = defaultFontSize,
+    this.horizontalAlignment = TextHorizontalAlignment.left,
+    this.verticalAlignment = TextVerticalAlignment.top,
     super.strokeColor,
     super.fillColor,
     super.strokeWidth,
@@ -14,6 +16,14 @@ final class FeatureKindText extends FeatureKind {
 
   final String contents;
   final double fontSize;
+  final TextHorizontalAlignment horizontalAlignment;
+  final TextVerticalAlignment verticalAlignment;
+
+  ui.ParagraphStyle _paragraphStyle(double fontSize) => ui.ParagraphStyle(
+    textAlign: horizontalAlignment.textAlign,
+    fontSize: fontSize,
+    textDirection: TextDirection.ltr,
+  );
 
   Size measureContents({required double width, required double fontSize}) {
     final clampedWidth = width < kMinEnvelopeDimension
@@ -23,12 +33,7 @@ final class FeatureKindText extends FeatureKind {
       return Size(clampedWidth, fontSize);
     }
 
-    final paragraphStyle = ui.ParagraphStyle(
-      textAlign: TextAlign.left,
-      fontSize: fontSize,
-      textDirection: TextDirection.ltr,
-    );
-    final builder = ui.ParagraphBuilder(paragraphStyle)
+    final builder = ui.ParagraphBuilder(_paragraphStyle(fontSize))
       ..pushStyle(ui.TextStyle(fontSize: fontSize))
       ..addText(contents);
     final paragraph = builder.build()
@@ -103,6 +108,8 @@ final class FeatureKindText extends FeatureKind {
         width: clampedWidth,
         height: clampedHeight,
       ),
+      horizontalAlignment: horizontalAlignment,
+      verticalAlignment: verticalAlignment,
       strokeColor: strokeColor,
       fillColor: fillColor,
       strokeWidth: strokeWidth,
@@ -121,6 +128,8 @@ final class FeatureKindText extends FeatureKind {
     feature.kind = FeatureKindText(
       contents,
       fontSize: fontSize,
+      horizontalAlignment: horizontalAlignment,
+      verticalAlignment: verticalAlignment,
       strokeColor: strokeColor,
       fillColor: fillColor,
       strokeWidth: strokeWidth,
@@ -140,37 +149,49 @@ final class FeatureKindText extends FeatureKind {
     feature.kind = fittedToBounds(width: clampedWidth, height: clampedHeight);
   }
 
+  ui.Paragraph _layoutParagraph({
+    required ui.ParagraphStyle paragraphStyle,
+    required ui.TextStyle textStyle,
+    required double width,
+  }) {
+    final builder = ui.ParagraphBuilder(paragraphStyle)
+      ..pushStyle(textStyle)
+      ..addText(contents);
+    return builder.build()..layout(ui.ParagraphConstraints(width: width));
+  }
+
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     if (contents.isEmpty) return;
 
     final worldBounds = feature.bounds();
-    final paragraphStyle = ui.ParagraphStyle(
-      textAlign: TextAlign.left,
-      fontSize: fontSize,
-      textDirection: TextDirection.ltr,
-    );
+    final paragraphStyle = _paragraphStyle(fontSize);
     final constraints = ui.ParagraphConstraints(width: worldBounds.width);
-    final position = worldBounds.topLeft;
 
-    final strokeBuilder = ui.ParagraphBuilder(paragraphStyle)
-      ..pushStyle(
-        ui.TextStyle(
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = strokeWidth
-            ..color = strokeColor,
-          fontSize: fontSize,
-        ),
-      )
-      ..addText(contents);
-    final strokeParagraph = strokeBuilder.build()..layout(constraints);
+    final strokeParagraph = _layoutParagraph(
+      paragraphStyle: paragraphStyle,
+      textStyle: ui.TextStyle(
+        foreground: Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..color = strokeColor,
+        fontSize: fontSize,
+      ),
+      width: worldBounds.width,
+    );
+    final fillParagraph = _layoutParagraph(
+      paragraphStyle: paragraphStyle,
+      textStyle: ui.TextStyle(color: fillColor, fontSize: fontSize),
+      width: worldBounds.width,
+    );
+
+    final position = textOriginInBounds(
+      bounds: worldBounds,
+      textHeight: fillParagraph.height,
+      verticalAlignment: verticalAlignment,
+    );
+
     canvas.drawParagraph(strokeParagraph, position);
-
-    final fillBuilder = ui.ParagraphBuilder(paragraphStyle)
-      ..pushStyle(ui.TextStyle(color: fillColor, fontSize: fontSize))
-      ..addText(contents);
-    final fillParagraph = fillBuilder.build()..layout(constraints);
     canvas.drawParagraph(fillParagraph, position);
   }
 }

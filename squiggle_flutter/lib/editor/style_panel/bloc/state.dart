@@ -28,6 +28,10 @@ final class StylePanelShowingState extends StylePanelState {
     required this.showFontSize,
     required this.fontSizeMixed,
     required this.activeFontSize,
+    required this.horizontalAlignmentMixed,
+    required this.activeHorizontalAlignment,
+    required this.verticalAlignmentMixed,
+    required this.activeVerticalAlignment,
   });
 
   final List<FeatureId> selectedFeatureIds;
@@ -44,4 +48,8 @@ final class StylePanelShowingState extends StylePanelState {
   final bool showFontSize;
   final bool fontSizeMixed;
   final FontSizePreset? activeFontSize;
+  final bool horizontalAlignmentMixed;
+  final TextHorizontalAlignment? activeHorizontalAlignment;
+  final bool verticalAlignmentMixed;
+  final TextVerticalAlignment? activeVerticalAlignment;
 }

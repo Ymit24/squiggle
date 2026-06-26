@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import '../feature.dart';
 import '../feature_geometry.dart';
+import '../text_alignment.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
@@ -34,6 +35,8 @@ sealed class FeatureKind {
     Color? fillColor,
     double? strokeWidth,
     double? fontSize,
+    TextHorizontalAlignment? horizontalAlignment,
+    TextVerticalAlignment? verticalAlignment,
   }) {
     return switch (this) {
       FeatureKindRectangle() => FeatureKindRectangle(
@@ -46,10 +49,18 @@ sealed class FeatureKind {
         fillColor: fillColor ?? this.fillColor,
         strokeWidth: strokeWidth ?? this.strokeWidth,
       ),
-      FeatureKindText(:final contents, fontSize: final currentFontSize) =>
+      FeatureKindText(
+        :final contents,
+        fontSize: final currentFontSize,
+        horizontalAlignment: final currentHorizontalAlignment,
+        verticalAlignment: final currentVerticalAlignment,
+      ) =>
         FeatureKindText(
           contents,
           fontSize: fontSize ?? currentFontSize,
+          horizontalAlignment:
+              horizontalAlignment ?? currentHorizontalAlignment,
+          verticalAlignment: verticalAlignment ?? currentVerticalAlignment,
           strokeColor: strokeColor ?? this.strokeColor,
           fillColor: fillColor ?? this.fillColor,
           strokeWidth: strokeWidth ?? this.strokeWidth,

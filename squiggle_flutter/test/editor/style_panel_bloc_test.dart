@@ -303,5 +303,64 @@ void main() {
       await bloc.close();
     });
 
+    test('reports default text alignment for text selection', () async {
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+
+      selectionRepository.selectFeature(
+        documentRepository.document.features.last.id,
+      );
+      final showingState = await bloc.stream.firstWhere(
+        (state) => state is StylePanelShowingState,
+      ) as StylePanelShowingState;
+
+      expect(showingState.activeHorizontalAlignment,
+          TextHorizontalAlignment.left);
+      expect(showingState.activeVerticalAlignment, TextVerticalAlignment.top);
+      expect(showingState.horizontalAlignmentMixed, isFalse);
+      expect(showingState.verticalAlignmentMixed, isFalse);
+      await bloc.close();
+    });
+
+    test('SetTextHorizontalAlignmentEvent updates selected text features',
+        () async {
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+
+      final text = documentRepository.document.features.last;
+      selectionRepository.selectFeature(text.id);
+      await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
+
+      bloc.add(
+        const SetTextHorizontalAlignmentEvent(TextHorizontalAlignment.center),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final textKind = text.kind as FeatureKindText;
+      expect(textKind.horizontalAlignment, TextHorizontalAlignment.center);
+      await bloc.close();
+    });
+
+    test('SetTextVerticalAlignmentEvent updates selected text features',
+        () async {
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+
+      final text = documentRepository.document.features.last;
+      selectionRepository.selectFeature(text.id);
+      await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
+
+      bloc.add(
+        const SetTextVerticalAlignmentEvent(TextVerticalAlignment.bottom),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final textKind = text.kind as FeatureKindText;
+      expect(textKind.verticalAlignment, TextVerticalAlignment.bottom);
+      await bloc.close();
+    });
   });
 }

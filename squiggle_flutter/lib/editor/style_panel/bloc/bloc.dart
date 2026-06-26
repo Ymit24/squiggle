@@ -21,6 +21,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     on<ClearFillEvent>(_onClearFill);
     on<SetStrokeWidthEvent>(_onSetStrokeWidth);
     on<SetFontSizeEvent>(_onSetFontSize);
+    on<SetTextHorizontalAlignmentEvent>(_onSetTextHorizontalAlignment);
+    on<SetTextVerticalAlignmentEvent>(_onSetTextVerticalAlignment);
   }
 
   final DocumentRepository documentRepository;
@@ -102,6 +104,26 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       }
     }
 
+    var horizontalAlignmentMixed = false;
+    TextHorizontalAlignment? activeHorizontalAlignment;
+    var verticalAlignmentMixed = false;
+    TextVerticalAlignment? activeVerticalAlignment;
+    if (showFontSize) {
+      final horizontalStates =
+          textKinds.map((kind) => kind.horizontalAlignment).toSet();
+      horizontalAlignmentMixed = horizontalStates.length > 1;
+      if (!horizontalAlignmentMixed) {
+        activeHorizontalAlignment = textKinds.first.horizontalAlignment;
+      }
+
+      final verticalStates =
+          textKinds.map((kind) => kind.verticalAlignment).toSet();
+      verticalAlignmentMixed = verticalStates.length > 1;
+      if (!verticalAlignmentMixed) {
+        activeVerticalAlignment = textKinds.first.verticalAlignment;
+      }
+    }
+
     return StylePanelShowingState(
       selectedFeatureIds: selectedFeatureIds,
       activeStrokePresetIndex: activeStrokePresetIndex,
@@ -117,6 +139,10 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       showFontSize: showFontSize,
       fontSizeMixed: fontSizeMixed,
       activeFontSize: activeFontSize,
+      horizontalAlignmentMixed: horizontalAlignmentMixed,
+      activeHorizontalAlignment: activeHorizontalAlignment,
+      verticalAlignmentMixed: verticalAlignmentMixed,
+      activeVerticalAlignment: activeVerticalAlignment,
     );
   }
 
@@ -151,6 +177,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     Color? fillColor,
     double? strokeWidth,
     double? fontSize,
+    TextHorizontalAlignment? horizontalAlignment,
+    TextVerticalAlignment? verticalAlignment,
   }) {
     final ids = _selectedIdsOrEmpty();
     if (ids.isEmpty) return;
@@ -162,6 +190,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
         fillColor: fillColor,
         strokeWidth: strokeWidth,
         fontSize: fontSize,
+        horizontalAlignment: horizontalAlignment,
+        verticalAlignment: verticalAlignment,
       ),
     );
   }
@@ -224,5 +254,23 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     if (state is! StylePanelShowingState) return;
 
     _applyStyleUpdate(fontSize: event.preset.size);
+  }
+
+  void _onSetTextHorizontalAlignment(
+    SetTextHorizontalAlignmentEvent event,
+    Emitter<StylePanelState> emit,
+  ) {
+    if (state is! StylePanelShowingState) return;
+
+    _applyStyleUpdate(horizontalAlignment: event.alignment);
+  }
+
+  void _onSetTextVerticalAlignment(
+    SetTextVerticalAlignmentEvent event,
+    Emitter<StylePanelState> emit,
+  ) {
+    if (state is! StylePanelShowingState) return;
+
+    _applyStyleUpdate(verticalAlignment: event.alignment);
   }
 }

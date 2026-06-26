@@ -236,6 +236,37 @@ void main() {
       command.undo(doc);
       expect(doc.features.first.size, previousSize);
     });
+
+    test('apply text alignment change; undo restores previous kind', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 48),
+          kind: const FeatureKindText(
+            'hello',
+            fillColor: Color(0xFFFFFFFF),
+            horizontalAlignment: TextHorizontalAlignment.left,
+            verticalAlignment: TextVerticalAlignment.top,
+          ),
+        ),
+      ]);
+      final id = doc.features.first.id;
+      final command = UpdateFeaturesStyleCommand(
+        ids: [id],
+        horizontalAlignment: TextHorizontalAlignment.right,
+        verticalAlignment: TextVerticalAlignment.center,
+      );
+
+      command.apply(doc);
+      final textKind = doc.features.first.kind as FeatureKindText;
+      expect(textKind.horizontalAlignment, TextHorizontalAlignment.right);
+      expect(textKind.verticalAlignment, TextVerticalAlignment.center);
+
+      command.undo(doc);
+      final restored = doc.features.first.kind as FeatureKindText;
+      expect(restored.horizontalAlignment, TextHorizontalAlignment.left);
+      expect(restored.verticalAlignment, TextVerticalAlignment.top);
+    });
   });
 
   group('MovePolylinePointCommand', () {

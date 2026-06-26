@@ -11,6 +11,8 @@ final class UpdateFeaturesStyleCommand extends Command {
     this.fillColor,
     this.strokeWidth,
     this.fontSize,
+    this.horizontalAlignment,
+    this.verticalAlignment,
   });
 
   final List<FeatureId> ids;
@@ -18,6 +20,8 @@ final class UpdateFeaturesStyleCommand extends Command {
   final Color? fillColor;
   final double? strokeWidth;
   final double? fontSize;
+  final TextHorizontalAlignment? horizontalAlignment;
+  final TextVerticalAlignment? verticalAlignment;
   Map<FeatureId, FeatureKind>? _previousKinds;
   Map<FeatureId, Size>? _previousSizes;
 
@@ -41,6 +45,8 @@ final class UpdateFeaturesStyleCommand extends Command {
           fillColor: fillColor,
           strokeWidth: strokeWidth,
           fontSize: fontSize,
+          horizontalAlignment: horizontalAlignment,
+          verticalAlignment: verticalAlignment,
         ),
         _ => feature.kind.copyWithStyle(
           strokeColor: strokeColor,
@@ -84,6 +90,8 @@ final class UpdateFeaturesStyleCommand extends Command {
     fillColor: fillColor,
     strokeWidth: strokeWidth,
     fontSize: fontSize,
+    horizontalAlignment: horizontalAlignment,
+    verticalAlignment: verticalAlignment,
   ).._previousKinds = _previousKinds == null
       ? null
       : Map.of(_previousKinds!)

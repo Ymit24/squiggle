@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class StylePanelContent extends StatelessWidget {
@@ -69,6 +70,24 @@ class StylePanelContent extends StatelessWidget {
                 isMixed: state.fontSizeMixed,
                 onPresetSelected: (preset) =>
                     bloc.add(SetFontSizeEvent(preset)),
+              ),
+              SizedBox(height: spacing.panelSectionSpacing),
+              SectionLabel('Align horizontal'),
+              TextHorizontalAlignmentSelector(
+                activeAlignment: state.activeHorizontalAlignment,
+                isMixed: state.horizontalAlignmentMixed,
+                onAlignmentSelected: (alignment) => bloc.add(
+                  SetTextHorizontalAlignmentEvent(alignment),
+                ),
+              ),
+              SizedBox(height: spacing.panelSectionSpacing),
+              SectionLabel('Align vertical'),
+              TextVerticalAlignmentSelector(
+                activeAlignment: state.activeVerticalAlignment,
+                isMixed: state.verticalAlignmentMixed,
+                onAlignmentSelected: (alignment) => bloc.add(
+                  SetTextVerticalAlignmentEvent(alignment),
+                ),
               ),
             ],
           ],
