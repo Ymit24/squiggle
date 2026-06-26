@@ -224,6 +224,12 @@ class SelectTool extends Tool {
         pointerDownWorld: worldPosition,
         isFirstTimeSelect: didSelect,
         didMove: false,
+        hasDuplicated: false,
+        draggedFeatureId: feature.id,
+        originsAtDragStart: _captureOrigins(
+          document,
+          selection.selectedFeatures,
+        ),
         resumeEditing: resumeEditing,
       );
     } else {
@@ -288,13 +294,34 @@ class SelectTool extends Tool {
         :final moveOffset,
         :final pointerDownWorld,
         :final isFirstTimeSelect,
+        :final didMove,
+        :final hasDuplicated,
+        :final draggedFeatureId,
+        :final originsAtDragStart,
         :final resumeEditing,
       ):
+        var effectiveMoveOffset = moveOffset;
+        var effectiveHasDuplicated = hasDuplicated;
+        if (isAltPressed && !hasDuplicated) {
+          effectiveMoveOffset = _tryAltDuplicate(
+            documentRepository,
+            selection,
+            worldPosition,
+            draggedFeatureId,
+            originsAtDragStart,
+            moveOffset,
+            didMove,
+          );
+          effectiveHasDuplicated = true;
+        }
         _state = _Moving(
-          moveOffset: moveOffset,
+          moveOffset: effectiveMoveOffset,
           pointerDownWorld: pointerDownWorld,
           isFirstTimeSelect: isFirstTimeSelect,
           didMove: true,
+          hasDuplicated: effectiveHasDuplicated,
+          draggedFeatureId: draggedFeatureId,
+          originsAtDragStart: originsAtDragStart,
           resumeEditing: resumeEditing,
         );
         final moveTarget = isShiftPressed
@@ -304,7 +331,7 @@ class SelectTool extends Tool {
           documentRepository,
           selection,
           moveTarget,
-          moveOffset,
+          effectiveMoveOffset,
         );
       case _Resizing(
         :final featureId,
@@ -738,6 +765,51 @@ class SelectTool extends Tool {
     }
   }
 
+  Map<FeatureId, Offset> _captureOrigins(
+    Document document,
+    List<FeatureId> ids,
+  ) {
+    return {
+      for (final id in ids)
+        if (document.featureById(id) case final feature?) id: feature.origin,
+    };
+  }
+
+  /// Duplicates the dragged selection for alt-drag, leaving originals at drag
+  /// start. Returns the [moveOffset] for the clone under the cursor.
+  Offset _tryAltDuplicate(
+    DocumentRepository documentRepository,
+    SelectionRepository selection,
+    Offset worldPosition,
+    FeatureId draggedFeatureId,
+    Map<FeatureId, Offset> originsAtDragStart,
+    Offset moveOffset,
+    bool draggedBeforeDuplicate,
+  ) {
+    final document = documentRepository.document;
+    final idsToDuplicate = selection.selectedFeatures.contains(draggedFeatureId)
+        ? List<FeatureId>.of(selection.selectedFeatures)
+        : [draggedFeatureId];
+
+    final command = DuplicateFeaturesCommand(
+      sourceIds: idsToDuplicate,
+      originsAtDragStart: originsAtDragStart,
+    );
+    documentRepository.executeCommand(command);
+
+    final createdIds = command.createdIds;
+    selection.setSelection(createdIds);
+
+    final draggedIndex = idsToDuplicate.indexOf(draggedFeatureId);
+    final draggedClone = document.featureById(createdIds[draggedIndex])!;
+    selection.selectFeature(draggedClone.id);
+
+    if (draggedBeforeDuplicate) {
+      return worldPosition - draggedClone.origin;
+    }
+    return moveOffset;
+  }
+
   void _moveSelectedFeatures(
     DocumentRepository documentRepository,
     SelectionRepository selection,
@@ -995,6 +1067,9 @@ final class _Moving extends _SelectState {
     required this.pointerDownWorld,
     required this.isFirstTimeSelect,
     required this.didMove,
+    required this.hasDuplicated,
+    required this.draggedFeatureId,
+    required this.originsAtDragStart,
     this.resumeEditing,
   });
 
@@ -1002,6 +1077,9 @@ final class _Moving extends _SelectState {
   final Offset pointerDownWorld;
   final bool isFirstTimeSelect;
   final bool didMove;
+  final bool hasDuplicated;
+  final FeatureId draggedFeatureId;
+  final Map<FeatureId, Offset> originsAtDragStart;
   final FeatureId? resumeEditing;
 }
 

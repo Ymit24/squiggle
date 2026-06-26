@@ -412,4 +412,48 @@ void main() {
       expect(textKind.fontSize, lessThan(initialFontSize));
     });
   });
+
+  group('DuplicateFeaturesCommand', () {
+    test('clones features and restores originals; undo removes clones', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: const Offset(10, 20),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(120, 20),
+          size: const Size(50, 50),
+          kind: const FeatureKindCircle(),
+        ),
+      ]);
+      final firstId = doc.features[0].id;
+      final secondId = doc.features[1].id;
+      doc.features[0].moveTo(const Offset(30, 40));
+      doc.features[1].moveTo(const Offset(140, 40));
+
+      final command = DuplicateFeaturesCommand(
+        sourceIds: [firstId, secondId],
+        originsAtDragStart: {
+          firstId: const Offset(10, 20),
+          secondId: const Offset(120, 20),
+        },
+      );
+
+      command.apply(doc);
+      expect(doc.features, hasLength(4));
+      expect(doc.featureById(firstId)!.origin, const Offset(10, 20));
+      expect(doc.featureById(secondId)!.origin, const Offset(120, 20));
+      expect(command.createdIds, hasLength(2));
+      expect(
+        command.createdIds.map((id) => doc.featureById(id)!.origin),
+        [const Offset(30, 40), const Offset(140, 40)],
+      );
+
+      command.undo(doc);
+      expect(doc.features, hasLength(2));
+      expect(doc.featureById(firstId)!.origin, const Offset(30, 40));
+      expect(doc.featureById(secondId)!.origin, const Offset(140, 40));
+    });
+  });
 }

@@ -7,6 +7,7 @@ import '../feature_id.dart';
 
 part 'add_feature_command.dart';
 part 'add_features_command.dart';
+part 'duplicate_features_command.dart';
 part 'move_feature_command.dart';
 part 'move_polyline_point_command.dart';
 part 'remove_features_command.dart';

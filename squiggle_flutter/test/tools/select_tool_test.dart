@@ -398,6 +398,75 @@ void main() {
       expect(moved.origin.dx, closeTo(30, 0.001));
     });
 
+    test('alt-drag duplicates feature and leaves original in place', () {
+      final original = documentRepository.document.features.first;
+      final originalId = original.id;
+
+      pointerDown(const Offset(50, 50), alt: true);
+      pointerMove(const Offset(70, 80), alt: true);
+      pointerUp(const Offset(70, 80), alt: true);
+
+      expect(documentRepository.document.features, hasLength(3));
+      final unchanged = documentRepository.document.featureById(originalId)!;
+      expect(unchanged.origin, Offset.zero);
+
+      expect(selectionRepository.selectedFeatures, hasLength(1));
+      final duplicate = documentRepository.document.featureById(
+        selectionRepository.selectedFeatures.single,
+      )!;
+      expect(duplicate.id, isNot(originalId));
+      expect(duplicate.origin, const Offset(20, 30));
+    });
+
+    test('alt-drag duplicates all selected features', () {
+      final features = documentRepository.document.features;
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+      pointerDown(const Offset(250, 50), shift: true);
+      pointerUp(const Offset(250, 50), shift: true);
+
+      pointerDown(const Offset(50, 50), alt: true);
+      pointerMove(const Offset(60, 60), alt: true);
+      pointerUp(const Offset(60, 60), alt: true);
+
+      expect(documentRepository.document.features, hasLength(4));
+      expect(features[0].origin, Offset.zero);
+      expect(features[1].origin, const Offset(200, 0));
+
+      expect(selectionRepository.selectedFeatures, hasLength(2));
+      final selectedOrigins = selectionRepository.selectedFeatures
+          .map((id) => documentRepository.document.featureById(id)!.origin)
+          .toSet();
+      expect(selectedOrigins, {
+        const Offset(10, 10),
+        const Offset(210, 10),
+      });
+    });
+
+    test('pressing alt mid-drag duplicates at current position', () {
+      final original = documentRepository.document.features.first;
+      final originalId = original.id;
+
+      pointerDown(const Offset(50, 50));
+      pointerMove(const Offset(70, 60));
+      pointerMove(const Offset(70, 60), alt: true);
+      pointerMove(const Offset(90, 80), alt: true);
+      pointerUp(const Offset(90, 80), alt: true);
+
+      expect(documentRepository.document.featureById(originalId)!.origin, Offset.zero);
+      final duplicate = documentRepository.document.featureById(
+        selectionRepository.selectedFeatures.single,
+      )!;
+      expect(duplicate.origin, const Offset(40, 30));
+    });
+
+    test('alt-click without drag does not duplicate', () {
+      pointerDown(const Offset(50, 50), alt: true);
+      pointerUp(const Offset(50, 50), alt: true);
+
+      expect(documentRepository.document.features, hasLength(2));
+    });
+
     test('shift-resize from bottom edge locks aspect ratio', () {
       final feature = documentRepository.document.features.first;
       selectionRepository.selectFeature(feature.id);
