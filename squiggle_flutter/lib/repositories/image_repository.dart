@@ -77,6 +77,15 @@ class ImageRepository {
     return importPngBytes(bytes);
   }
 
+  Future<Uint8List?> readPngBytes(String imageId) async {
+    await initialize();
+    final file = fileFor(imageId);
+    if (!await file.exists()) {
+      return null;
+    }
+    return file.readAsBytes();
+  }
+
   Future<ImportedImage?> importPngBytes(Uint8List bytes) async {
     await initialize();
 

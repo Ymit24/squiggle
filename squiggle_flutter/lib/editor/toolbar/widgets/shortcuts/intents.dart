@@ -27,3 +27,7 @@ class DeleteSelectedFeaturesIntent extends Intent {
 class PasteImageIntent extends Intent {
   const PasteImageIntent();
 }
+
+class CopySelectedFeaturesIntent extends Intent {
+  const CopySelectedFeaturesIntent();
+}
