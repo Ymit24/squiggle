@@ -4,6 +4,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 
 void main() {
+  group('centerRectFromPoints', () {
+    test('expands symmetrically from center', () {
+      expect(
+        centerRectFromPoints(const Offset(50, 50), const Offset(100, 80)),
+        const Rect.fromLTWH(0, 20, 100, 60),
+      );
+    });
+
+    test('works when dragging to upper-left quadrant', () {
+      expect(
+        centerRectFromPoints(const Offset(50, 50), const Offset(20, 30)),
+        const Rect.fromLTWH(20, 30, 60, 40),
+      );
+    });
+  });
+
+  group('squareCenterRectFromPoints', () {
+    test('uses larger axis for side length', () {
+      expect(
+        squareCenterRectFromPoints(const Offset(50, 50), const Offset(100, 80)),
+        const Rect.fromLTWH(0, 0, 100, 100),
+      );
+    });
+  });
+
   group('squareRectFromPoints', () {
     test('uses larger axis for side length', () {
       expect(

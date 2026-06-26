@@ -80,18 +80,23 @@ class CreateFeatureTool extends Tool {
     switch (_state) {
       case _Idle():
         _state = _Dragging(start: worldPosition);
-        _ghost.setBounds(Rect.fromLTWH(
-          worldPosition.dx,
-          worldPosition.dy,
-          1,
-          1,
-        ));
-      case _Dragging(:final start):
         _ghost.setBounds(
-          isShiftPressed
-              ? squareRectFromPoints(start, worldPosition)
-              : Rect.fromPoints(start, worldPosition),
+          isAltPressed
+              ? Rect.fromCenter(center: worldPosition, width: 1, height: 1)
+              : Rect.fromLTWH(
+                  worldPosition.dx,
+                  worldPosition.dy,
+                  1,
+                  1,
+                ),
         );
+      case _Dragging(:final start):
+        _ghost.setBounds(_boundsFromDrag(
+          start,
+          worldPosition,
+          isShiftPressed: isShiftPressed,
+          isAltPressed: isAltPressed,
+        ));
     }
   }
 
@@ -111,6 +116,24 @@ class CreateFeatureTool extends Tool {
       );
       _state = const _Idle();
     }
+  }
+
+  Rect _boundsFromDrag(
+    Offset start,
+    Offset end, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    if (isAltPressed && isShiftPressed) {
+      return squareCenterRectFromPoints(start, end);
+    }
+    if (isAltPressed) {
+      return centerRectFromPoints(start, end);
+    }
+    if (isShiftPressed) {
+      return squareRectFromPoints(start, end);
+    }
+    return Rect.fromPoints(start, end);
   }
 }
 

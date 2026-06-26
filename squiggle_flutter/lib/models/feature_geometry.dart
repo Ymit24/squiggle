@@ -122,6 +122,26 @@ bool onSegment(Offset segmentStart, Offset segmentEnd, Offset point) {
               : segmentEnd.dy);
 }
 
+/// Builds a rect that expands symmetrically from [center] to [point].
+Rect centerRectFromPoints(Offset center, Offset point) {
+  return Rect.fromCenter(
+    center: center,
+    width: (point.dx - center.dx).abs() * 2,
+    height: (point.dy - center.dy).abs() * 2,
+  );
+}
+
+/// Builds a square rect that expands symmetrically from [center] to [point].
+Rect squareCenterRectFromPoints(Offset center, Offset point) {
+  return symmetricRectWithAspectRatio(
+    center,
+    point,
+    1.0,
+    resizeHorizontal: true,
+    resizeVertical: true,
+  );
+}
+
 /// Builds a square rect from two opposite corners.
 Rect squareRectFromPoints(Offset start, Offset end) {
   final dx = end.dx - start.dx;

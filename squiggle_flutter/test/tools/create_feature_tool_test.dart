@@ -43,24 +43,24 @@ void main() {
       );
     }
 
-    void pointerMove(Offset world, {bool shift = false}) {
+    void pointerMove(Offset world, {bool shift = false, bool alt = false}) {
       toolRepository.onPointerMove(
         documentRepository,
         world,
         selectionRepository,
         shift,
-        false,
+        alt,
         camera,
       );
     }
 
-    void pointerUp(Offset world, {bool shift = false}) {
+    void pointerUp(Offset world, {bool shift = false, bool alt = false}) {
       toolRepository.onPointerUp(
         documentRepository,
         world,
         selectionRepository,
         shift,
-        false,
+        alt,
         camera,
         textEditRepository,
       );
@@ -128,6 +128,33 @@ void main() {
       final features = documentRepository.document.features;
       expect(features.first.bounds().width, features.first.bounds().height);
       expect(features.first.bounds().width, closeTo(140, 0.001));
+    });
+
+    test('alt-drag creates rectangle from center', () {
+      toolRepository.setTool(CreateFeatureTool.rect(), selectionRepository);
+
+      pointerDown(const Offset(50, 50));
+      pointerMove(const Offset(50, 50));
+      pointerMove(const Offset(100, 80), alt: true);
+      pointerUp(const Offset(100, 80), alt: true);
+
+      expect(
+        documentRepository.document.features.first.bounds(),
+        const Rect.fromLTWH(0, 20, 100, 60),
+      );
+    });
+
+    test('alt-shift-drag creates square from center', () {
+      toolRepository.setTool(CreateFeatureTool.circle(), selectionRepository);
+
+      pointerDown(const Offset(50, 50));
+      pointerMove(const Offset(50, 50));
+      pointerMove(const Offset(100, 80), shift: true, alt: true);
+      pointerUp(const Offset(100, 80), shift: true, alt: true);
+
+      final bounds = documentRepository.document.features.first.bounds();
+      expect(bounds.width, bounds.height);
+      expect(bounds, const Rect.fromLTWH(0, 0, 100, 100));
     });
   });
 }
