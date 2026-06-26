@@ -54,8 +54,11 @@ final class DuplicateFeaturesCommand extends Command {
       }
     }
 
-    for (final entry in _originsBeforeRestore?.entries ?? const []) {
-      document.featureById(entry.key)?.moveTo(entry.value);
+    final originsBeforeRestore = _originsBeforeRestore;
+    if (originsBeforeRestore != null) {
+      for (final entry in originsBeforeRestore.entries) {
+        document.featureById(entry.key)?.moveTo(entry.value);
+      }
     }
   }
 

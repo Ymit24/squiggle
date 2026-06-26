@@ -7,7 +7,6 @@ import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import '../feature.dart';
 import '../feature_geometry.dart';
-import '../text_alignment.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';

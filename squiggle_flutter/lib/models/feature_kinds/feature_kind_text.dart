@@ -166,7 +166,6 @@ final class FeatureKindText extends FeatureKind {
 
     final worldBounds = feature.bounds();
     final paragraphStyle = _paragraphStyle(fontSize);
-    final constraints = ui.ParagraphConstraints(width: worldBounds.width);
 
     final strokeParagraph = _layoutParagraph(
       paragraphStyle: paragraphStyle,

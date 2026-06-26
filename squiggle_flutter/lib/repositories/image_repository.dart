@@ -22,7 +22,7 @@ class ImportedImage {
 /// Stores pasted images on disk and lazily decodes them for canvas rendering.
 class ImageRepository {
   ImageRepository({Directory? imagesDirectory})
-    : _imagesDirectory = imagesDirectory;
+      : _imagesDirectory = imagesDirectory; // ignore: prefer_initializing_formals
 
   Directory? _imagesDirectory;
   final Map<String, ui.Image> _cache = {};

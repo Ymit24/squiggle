@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/services/paste_text.dart';

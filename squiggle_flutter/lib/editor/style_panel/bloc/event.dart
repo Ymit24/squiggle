@@ -1,4 +1,3 @@
-import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_layout.dart';
 
