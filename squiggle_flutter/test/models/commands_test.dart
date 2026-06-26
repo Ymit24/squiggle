@@ -76,6 +76,39 @@ void main() {
       command.undo(doc);
       expect(doc.features.first.bounds(), const Rect.fromLTWH(0, 0, 10, 10));
     });
+
+    test('apply scales font size to fill resized bounds', () {
+      const contents = 'Hello';
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 48),
+          kind: const FeatureKindText(
+            contents,
+            fillColor: Color(0xFFFFFFFF),
+          ),
+        ),
+      ]);
+      final id = doc.features.first.id;
+      final initialFontSize =
+          (doc.features.first.kind as FeatureKindText).fontSize;
+      const newBounds = Rect.fromLTWH(0, 0, 100, 200);
+      final command = ResizeFeatureCommand(id, newBounds);
+
+      command.apply(doc);
+
+      final feature = doc.features.first;
+      final textKind = feature.kind as FeatureKindText;
+      expect(feature.bounds(), newBounds);
+      expect(textKind.fontSize, greaterThan(initialFontSize));
+      expect(
+        textKind.measureContents(
+          width: 100,
+          fontSize: textKind.fontSize,
+        ).height,
+        lessThanOrEqualTo(200),
+      );
+    });
   });
 
   group('UpdateFeaturesStyleCommand', () {
@@ -165,9 +198,43 @@ void main() {
       command.apply(doc);
 
       expect(doc.features.first.kind, isA<FeatureKindRectangle>());
-      final textKind = doc.features.last.kind as FeatureKindText;
+      final textFeature = doc.features.last;
+      final textKind = textFeature.kind as FeatureKindText;
       expect(textKind.fontSize, FontSizePreset.small.size);
       expect(textKind.contents, 'hello');
+      expect(
+        textFeature.size.height,
+        textKind.measureContents(
+          width: textFeature.size.width,
+          fontSize: FontSizePreset.small.size,
+        ).height,
+      );
+    });
+
+    test('apply font size change on text; undo restores size', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 48),
+          kind: const FeatureKindText(
+            'hello\nworld',
+            fillColor: Color(0xFFFFFFFF),
+          ),
+        ),
+      ]);
+      final id = doc.features.first.id;
+      final previousSize = doc.features.first.size;
+      final command = UpdateFeaturesStyleCommand(
+        ids: [id],
+        fontSize: FontSizePreset.large.size,
+      );
+
+      command.apply(doc);
+      final resized = doc.features.first;
+      expect(resized.size.height, isNot(previousSize.height));
+
+      command.undo(doc);
+      expect(doc.features.first.size, previousSize);
     });
   });
 
@@ -259,29 +326,33 @@ void main() {
       command.apply(doc);
       final feature = doc.features.first;
       expect((feature.kind as FeatureKindText).contents, 'goodbye');
-      expect(feature.size.width, previousSize.width);
-      expect(feature.size.height, greaterThanOrEqualTo(defaultFontSize));
+      expect(feature.size, previousSize);
 
       command.undo(doc);
       final restored = doc.features.first;
       expect((restored.kind as FeatureKindText).contents, 'hello');
       expect(restored.size, previousSize);
+      expect((restored.kind as FeatureKindText).fontSize, defaultFontSize);
     });
 
-    test('apply grows height for multiline contents while preserving width', () {
-      final doc = docWithText(contents: 'short');
+    test('apply refits font size for multiline contents while preserving bounds', () {
+      final doc = docWithText(contents: 'short', size: const Size(200, 120));
       final id = doc.features.first.id;
       final width = doc.features.first.size.width;
-      final shortHeight = doc.features.first.size.height;
+      final height = doc.features.first.size.height;
+      final initialFontSize =
+          (doc.features.first.kind as FeatureKindText).fontSize;
       final multiline =
           'Line one\nLine two\nLine three\nLine four';
       final command = UpdateTextContentsCommand(id, multiline);
 
       command.apply(doc);
       final feature = doc.features.first;
-      expect((feature.kind as FeatureKindText).contents, multiline);
+      final textKind = feature.kind as FeatureKindText;
+      expect(textKind.contents, multiline);
       expect(feature.size.width, width);
-      expect(feature.size.height, greaterThan(shortHeight));
+      expect(feature.size.height, height);
+      expect(textKind.fontSize, lessThan(initialFontSize));
     });
   });
 }

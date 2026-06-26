@@ -479,6 +479,87 @@ void main() {
       expect(selectionRepository.selectedFeatures.single, feature.id);
     });
 
+    test('corner resize scales text font size to fill new bounds', () {
+      const contents = 'Line one\nLine two\nLine three';
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(200, 80),
+            kind: const FeatureKindText(
+              contents,
+              fillColor: Color(0xFFFFFFFF),
+            ),
+          ),
+        ]),
+      );
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+      final initialFontSize =
+          (feature.kind as FeatureKindText).fontSize;
+
+      final bounds = feature.bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+      final grabOffset = down - bounds.bottomRight;
+      const targetCorner = Offset(300, 300);
+
+      pointerDown(down);
+      pointerMove(targetCorner + grabOffset);
+      pointerUp(targetCorner + grabOffset);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      final textKind = resized.kind as FeatureKindText;
+      expect(resized.origin, bounds.topLeft);
+      expect(resized.size.width, 300);
+      expect(resized.size.height, 300);
+      expect(textKind.fontSize, greaterThan(initialFontSize));
+      expect(
+        textKind.measureContents(
+          width: 300,
+          fontSize: textKind.fontSize,
+        ).height,
+        lessThanOrEqualTo(300),
+      );
+    });
+
+    test('vertical resize scales text font size to fill taller box', () {
+      documentRepository = DocumentRepository(
+        document: Document.fromFeatures([
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(200, 48),
+            kind: const FeatureKindText(
+              'hello world',
+              fillColor: Color(0xFFFFFFFF),
+            ),
+          ),
+        ]),
+      );
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+      final initialFontSize =
+          (feature.kind as FeatureKindText).fontSize;
+
+      final bounds = feature.bounds();
+      final down = edgeHitWorldPoint(bounds, _SelectionEdge.bottom);
+      final grabOffset = down - bounds.bottomRight;
+      const targetBottom = Offset(200, 200);
+
+      pointerDown(down);
+      pointerMove(targetBottom + grabOffset);
+      pointerUp(targetBottom + grabOffset);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      final textKind = resized.kind as FeatureKindText;
+      expect(resized.size.width, 200);
+      expect(resized.size.height, 200);
+      expect(textKind.fontSize, greaterThan(initialFontSize));
+    });
+
     test('double-click text opens edit session without entering edit mode', () async {
       textEditRepository = TextEditRepository();
       documentRepository = DocumentRepository(

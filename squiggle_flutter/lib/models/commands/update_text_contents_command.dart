@@ -1,13 +1,13 @@
 part of 'command.dart';
 
-/// Replaces text contents on a [FeatureKindText] feature, re-measuring height
-/// while preserving width. Captures previous contents and size for undo.
+/// Replaces text contents on a [FeatureKindText] feature, refitting font size
+/// to the existing bounds. Captures previous kind and size for undo.
 final class UpdateTextContentsCommand extends Command {
   UpdateTextContentsCommand(this.featureId, this.contents);
 
   final FeatureId featureId;
   final String contents;
-  String? _previousContents;
+  FeatureKindText? _previousKind;
   Size? _previousSize;
 
   @override
@@ -18,50 +18,34 @@ final class UpdateTextContentsCommand extends Command {
     final textKind = feature.kind;
     if (textKind is! FeatureKindText) return;
 
-    _previousContents ??= textKind.contents;
+    _previousKind ??= textKind;
     _previousSize ??= feature.size;
 
-    final width = feature.size.width;
-    final newKind = FeatureKindText(
+    final bounds = feature.bounds();
+    feature.kind = FeatureKindText(
       contents,
       fontSize: textKind.fontSize,
       strokeColor: textKind.strokeColor,
       fillColor: textKind.fillColor,
       strokeWidth: textKind.strokeWidth,
-    );
-    final measured = newKind.measureContents(
-      width: width,
-      fontSize: textKind.fontSize,
-    );
-
-    feature.kind = newKind;
-    feature.size = measured;
+    ).fittedToBounds(width: bounds.width, height: bounds.height);
   }
 
   @override
   void undo(Document document) {
-    final previousContents = _previousContents;
+    final previousKind = _previousKind;
     final previousSize = _previousSize;
-    if (previousContents == null || previousSize == null) return;
+    if (previousKind == null || previousSize == null) return;
 
     final feature = document.featureById(featureId);
     if (feature == null) return;
 
-    final textKind = feature.kind;
-    if (textKind is! FeatureKindText) return;
-
-    feature.kind = FeatureKindText(
-      previousContents,
-      fontSize: textKind.fontSize,
-      strokeColor: textKind.strokeColor,
-      fillColor: textKind.fillColor,
-      strokeWidth: textKind.strokeWidth,
-    );
+    feature.kind = previousKind;
     feature.size = previousSize;
   }
 
   @override
   Command clone() => UpdateTextContentsCommand(featureId, contents)
-    .._previousContents = _previousContents
+    .._previousKind = _previousKind
     .._previousSize = _previousSize;
 }

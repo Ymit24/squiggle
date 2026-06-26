@@ -19,15 +19,22 @@ final class UpdateFeaturesStyleCommand extends Command {
   final double? strokeWidth;
   final double? fontSize;
   Map<FeatureId, FeatureKind>? _previousKinds;
+  Map<FeatureId, Size>? _previousSizes;
 
   @override
   void apply(Document document) {
     _previousKinds ??= {};
+    if (fontSize != null) {
+      _previousSizes ??= {};
+    }
     for (final id in ids) {
       final feature = document.featureById(id);
       if (feature == null) continue;
 
       _previousKinds!.putIfAbsent(id, () => feature.kind);
+      if (fontSize != null && feature.kind is FeatureKindText) {
+        _previousSizes!.putIfAbsent(id, () => feature.size);
+      }
       feature.kind = switch (feature.kind) {
         FeatureKindText() => feature.kind.copyWithStyle(
           strokeColor: strokeColor,
@@ -41,6 +48,15 @@ final class UpdateFeaturesStyleCommand extends Command {
           strokeWidth: strokeWidth,
         ),
       };
+      if (fontSize != null && feature.kind is FeatureKindText) {
+        final textKind = feature.kind as FeatureKindText;
+        textKind.applySizeFromFontSize(
+          feature,
+          width: feature.size.width,
+          origin: feature.origin,
+          fontSize: textKind.fontSize,
+        );
+      }
     }
   }
 
@@ -51,6 +67,13 @@ final class UpdateFeaturesStyleCommand extends Command {
 
     for (final entry in previousKinds.entries) {
       document.featureById(entry.key)?.kind = entry.value;
+    }
+
+    final previousSizes = _previousSizes;
+    if (previousSizes != null) {
+      for (final entry in previousSizes.entries) {
+        document.featureById(entry.key)?.size = entry.value;
+      }
     }
   }
 
@@ -63,5 +86,6 @@ final class UpdateFeaturesStyleCommand extends Command {
     fontSize: fontSize,
   ).._previousKinds = _previousKinds == null
       ? null
-      : Map.of(_previousKinds!);
+      : Map.of(_previousKinds!)
+    .._previousSizes = _previousSizes == null ? null : Map.of(_previousSizes!);
 }
