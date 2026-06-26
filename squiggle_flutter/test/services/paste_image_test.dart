@@ -18,7 +18,9 @@ void main() {
       );
 
       expect(feature.kind, isA<FeatureKindImage>());
-      expect((feature.kind as FeatureKindImage).imageId, 'img_test.png');
+      final imageKind = feature.kind as FeatureKindImage;
+      expect(imageKind.imageId, 'img_test.png');
+      expect(imageKind.hasVisibleStroke, isFalse);
       expect(feature.size, const Size(1024, 512));
       expect(feature.origin, const Offset(500 - 512, 400 - 256));
       expect(feature.bounds().center, const Offset(500, 400));

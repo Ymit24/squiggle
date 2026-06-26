@@ -72,7 +72,7 @@ class Editor extends StatelessWidget {
                           viewportRepository: viewportRepository,
                         ),
                         const EditorToolbar(),
-                        const StylePanel(),
+                        StylePanel(viewportHeight: viewportSize.height),
                         if (textEditOpen)
                           TextEditOverlay(
                             state: textEditState,

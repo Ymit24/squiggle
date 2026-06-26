@@ -3,7 +3,7 @@ part of 'feature_kind.dart';
 final class FeatureKindImage extends FeatureKind {
   const FeatureKindImage(
     this.imageId, {
-    super.strokeColor,
+    super.strokeColor = transparentStrokeColor,
     super.fillColor = const Color(0x00000000),
     super.strokeWidth,
   });

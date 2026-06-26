@@ -4,6 +4,12 @@ import 'package:squiggle_flutter/models/feature.dart';
 
 void main() {
   group('FeatureKindImage', () {
+    test('has no visible stroke by default', () {
+      const kind = FeatureKindImage('img_test.png');
+
+      expect(kind.hasVisibleStroke, isFalse);
+    });
+
     test('has no visible fill', () {
       const kind = FeatureKindImage(
         'img_test.png',

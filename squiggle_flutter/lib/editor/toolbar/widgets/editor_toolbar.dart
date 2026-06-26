@@ -35,28 +35,6 @@ class EditorToolbar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Button(
-                        icon: Icons.undo,
-                        isActive: false,
-                        onPressed: state.canUndo
-                            ? () => context.read<ToolbarBloc>().add(
-                                const UndoDocumentEvent(),
-                              )
-                            : null,
-                      ),
-                      const Gap(),
-                      Button(
-                        icon: Icons.redo,
-                        isActive: false,
-                        onPressed: state.canRedo
-                            ? () => context.read<ToolbarBloc>().add(
-                                const RedoDocumentEvent(),
-                              )
-                            : null,
-                      ),
-                      const Gap(),
-                      const Divider(),
-                      const Gap(),
-                      Button(
                         iconAsset: 'assets/icons/arrow_selector_tool.svg',
                         hotkey: '1',
                         isActive: state.activeTool == ActiveToolKind.select,
@@ -102,6 +80,28 @@ class EditorToolbar extends StatelessWidget {
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateCreateTextToolEvent(),
                         ),
+                      ),
+                      const Gap(),
+                      const Divider(),
+                      const Gap(),
+                      Button(
+                        icon: Icons.undo,
+                        isActive: false,
+                        onPressed: state.canUndo
+                            ? () => context.read<ToolbarBloc>().add(
+                                const UndoDocumentEvent(),
+                              )
+                            : null,
+                      ),
+                      const Gap(),
+                      Button(
+                        icon: Icons.redo,
+                        isActive: false,
+                        onPressed: state.canRedo
+                            ? () => context.read<ToolbarBloc>().add(
+                                const RedoDocumentEvent(),
+                              )
+                            : null,
                       ),
                     ],
                   ),
