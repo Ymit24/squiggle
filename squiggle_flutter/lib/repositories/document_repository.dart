@@ -37,6 +37,16 @@ class DocumentRepository {
     _changesController.add(null);
   }
 
+  void replaceDocument(Document document) {
+    this.document.features
+      ..clear()
+      ..addAll(document.features);
+    this.document.nextId = document.nextId;
+    this.document.undoStack.clear();
+    this.document.redoStack.clear();
+    _changesController.add(null);
+  }
+
   void dispose() {
     _changesController.close();
   }

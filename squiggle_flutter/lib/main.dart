@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:squiggle_flutter/editor/editor.dart';
+import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -19,16 +20,22 @@ void main() async {
   await imageRepository.initialize();
 
   final documentStorage = DocumentStorage(imageRepository: imageRepository);
-  await documentStorage.initialize();
-  final document = await documentStorage.load() ?? Document();
-  final documentRepository = DocumentRepository(document: document);
-  documentStorage.attachAutosave(documentRepository);
+  final documentRepository = DocumentRepository(document: Document());
+  final selectionRepository = SelectionRepository();
+  final documentLibraryRepository = DocumentLibraryRepository(
+    documentStorage: documentStorage,
+    documentRepository: documentRepository,
+    selectionRepository: selectionRepository,
+  );
+  await documentLibraryRepository.initialize();
 
   runApp(
     SquiggleApp(
       imageRepository: imageRepository,
       documentRepository: documentRepository,
       documentStorage: documentStorage,
+      documentLibraryRepository: documentLibraryRepository,
+      selectionRepository: selectionRepository,
     ),
   );
 }
@@ -39,11 +46,15 @@ class SquiggleApp extends StatelessWidget {
     required this.imageRepository,
     required this.documentRepository,
     required this.documentStorage,
+    required this.documentLibraryRepository,
+    required this.selectionRepository,
   });
 
   final ImageRepository imageRepository;
   final DocumentRepository documentRepository;
   final DocumentStorage documentStorage;
+  final DocumentLibraryRepository documentLibraryRepository;
+  final SelectionRepository selectionRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +65,8 @@ class SquiggleApp extends StatelessWidget {
         imageRepository: imageRepository,
         documentRepository: documentRepository,
         documentStorage: documentStorage,
+        documentLibraryRepository: documentLibraryRepository,
+        selectionRepository: selectionRepository,
       ),
     );
   }
@@ -65,11 +78,15 @@ class SquiggleHomePage extends StatelessWidget {
     required ImageRepository imageRepository,
     required this.documentRepository,
     required this.documentStorage,
+    required this.documentLibraryRepository,
+    required this.selectionRepository,
   }) : _imageRepository = imageRepository;
 
   final ImageRepository _imageRepository;
   final DocumentRepository documentRepository;
   final DocumentStorage documentStorage;
+  final DocumentLibraryRepository documentLibraryRepository;
+  final SelectionRepository selectionRepository;
   final _viewportRepository = ViewportRepository();
   final _textEditRepository = TextEditRepository();
 
@@ -77,7 +94,7 @@ class SquiggleHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: RepositoryProvider(
-        create: (context) => SelectionRepository(),
+        create: (context) => selectionRepository,
         child: RepositoryProvider(
           create: (context) => _textEditRepository,
           dispose: (repository) => repository.dispose(),
@@ -94,16 +111,19 @@ class SquiggleHomePage extends StatelessWidget {
                   dispose: (repository) => repository.dispose(),
                   child: RepositoryProvider(
                     create: (context) => documentStorage,
-                    dispose: (repository) => repository.dispose(),
-                    child: BlocProvider(
-                      create: (context) => ToolbarBloc(
-                        toolRepository: context.read<ToolRepository>(),
-                        selectionRepository:
-                            context.read<SelectionRepository>(),
-                        documentRepository:
-                            context.read<DocumentRepository>(),
-                      )..add(const RequestWatchToolbarStateEvent()),
-                      child: Editor(documentRepository: documentRepository),
+                    child: RepositoryProvider(
+                      create: (context) => documentLibraryRepository,
+                      dispose: (repository) => repository.dispose(),
+                      child: BlocProvider(
+                        create: (context) => ToolbarBloc(
+                          toolRepository: context.read<ToolRepository>(),
+                          selectionRepository:
+                              context.read<SelectionRepository>(),
+                          documentRepository:
+                              context.read<DocumentRepository>(),
+                        )..add(const RequestWatchToolbarStateEvent()),
+                        child: AppShell(documentRepository: documentRepository),
+                      ),
                     ),
                   ),
                 ),

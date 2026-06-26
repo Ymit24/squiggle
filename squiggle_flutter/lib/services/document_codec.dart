@@ -14,10 +14,21 @@ enum FeaturePersistenceMode {
   document,
 }
 
+class DecodedDocument {
+  const DecodedDocument({
+    required this.document,
+    required this.name,
+  });
+
+  final Document document;
+  final String name;
+}
+
 Future<String> encodeDocument(
   Document document,
-  ImageRepository imageRepository,
-) async {
+  ImageRepository imageRepository, {
+  required String name,
+}) async {
   final encoded = <Map<String, dynamic>>[];
   for (final feature in document.features) {
     encoded.add(
@@ -31,12 +42,17 @@ Future<String> encodeDocument(
 
   return jsonEncode({
     'version': documentFormatVersion,
+    'name': name,
     'nextId': document.nextId.value,
     'features': encoded,
   });
 }
 
 Document? decodeDocument(String json) {
+  return decodeDocumentWithName(json)?.document;
+}
+
+DecodedDocument? decodeDocumentWithName(String json) {
   try {
     final map = jsonDecode(json) as Map<String, dynamic>;
     if (map['version'] != documentFormatVersion) {
@@ -67,7 +83,11 @@ Document? decodeDocument(String json) {
 
     final document = Document(nextId: FeatureId.newId(nextIdValue));
     document.features.addAll(features);
-    return document;
+    final name = map['name'] as String?;
+    return DecodedDocument(
+      document: document,
+      name: name == null || name.isEmpty ? 'Untitled' : name,
+    );
   } on Object {
     return null;
   }

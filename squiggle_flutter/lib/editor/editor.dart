@@ -7,8 +7,10 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/repositories/viewport_repository.dart';
+import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/style_panel.dart';
@@ -19,9 +21,14 @@ import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 
 class Editor extends StatelessWidget {
-  const Editor({super.key, required this.documentRepository});
+  const Editor({
+    super.key,
+    required this.documentRepository,
+    required this.onBackToLibrary,
+  });
 
   final DocumentRepository documentRepository;
+  final VoidCallback onBackToLibrary;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +79,11 @@ class Editor extends StatelessWidget {
                           viewportRepository: viewportRepository,
                         ),
                         const EditorToolbar(),
+                        Positioned(
+                          top: context.squiggleTheme.spacing.overlayTop,
+                          right: context.squiggleTheme.spacing.overlaySide,
+                          child: EditorBackButton(onPressed: onBackToLibrary),
+                        ),
                         StylePanel(viewportHeight: viewportSize.height),
                         if (textEditOpen)
                           TextEditOverlay(
