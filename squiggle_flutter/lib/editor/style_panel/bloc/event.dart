@@ -1,5 +1,6 @@
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_layout.dart';
 
 abstract class StylePanelEvent {
   const StylePanelEvent();
@@ -51,4 +52,16 @@ class SetTextVerticalAlignmentEvent extends StylePanelEvent {
   const SetTextVerticalAlignmentEvent(this.alignment);
 
   final TextVerticalAlignment alignment;
+}
+
+class AlignFeaturesEvent extends StylePanelEvent {
+  const AlignFeaturesEvent(this.alignment);
+
+  final FeatureAlignment alignment;
+}
+
+class DistributeFeaturesEvent extends StylePanelEvent {
+  const DistributeFeaturesEvent(this.distribution);
+
+  final FeatureDistribution distribution;
 }

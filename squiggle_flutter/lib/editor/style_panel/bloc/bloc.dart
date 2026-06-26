@@ -23,6 +23,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     on<SetFontSizeEvent>(_onSetFontSize);
     on<SetTextHorizontalAlignmentEvent>(_onSetTextHorizontalAlignment);
     on<SetTextVerticalAlignmentEvent>(_onSetTextVerticalAlignment);
+    on<AlignFeaturesEvent>(_onAlignFeatures);
+    on<DistributeFeaturesEvent>(_onDistributeFeatures);
   }
 
   final DocumentRepository documentRepository;
@@ -272,5 +274,32 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     if (state is! StylePanelShowingState) return;
 
     _applyStyleUpdate(verticalAlignment: event.alignment);
+  }
+
+  void _onAlignFeatures(
+    AlignFeaturesEvent event,
+    Emitter<StylePanelState> emit,
+  ) {
+    final ids = _selectedIdsOrEmpty();
+    if (ids.length < 2) return;
+
+    documentRepository.executeCommand(
+      LayoutFeaturesCommand.align(ids: ids, alignment: event.alignment),
+    );
+  }
+
+  void _onDistributeFeatures(
+    DistributeFeaturesEvent event,
+    Emitter<StylePanelState> emit,
+  ) {
+    final ids = _selectedIdsOrEmpty();
+    if (ids.length < 3) return;
+
+    documentRepository.executeCommand(
+      LayoutFeaturesCommand.distribute(
+        ids: ids,
+        distribution: event.distribution,
+      ),
+    );
   }
 }

@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_layout.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 
@@ -360,6 +361,49 @@ void main() {
 
       final textKind = text.kind as FeatureKindText;
       expect(textKind.verticalAlignment, TextVerticalAlignment.bottom);
+      await bloc.close();
+    });
+
+    test('AlignFeaturesEvent aligns selected features', () async {
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+
+      final first = documentRepository.document.features[0];
+      final second = documentRepository.document.features[1];
+      selectionRepository.selectFeature(first.id);
+      selectionRepository.selectFeature(second.id);
+      await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
+
+      bloc.add(const AlignFeaturesEvent(FeatureAlignment.left));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(first.origin, const Offset(0, 0));
+      expect(second.origin, const Offset(0, 0));
+      await bloc.close();
+    });
+
+    test('DistributeFeaturesEvent distributes selected features', () async {
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+
+      final first = documentRepository.document.features[0];
+      final second = documentRepository.document.features[1];
+      documentRepository.executeCommand(
+        MoveFeatureCommand(second.id, const Offset(40, 0)),
+      );
+      selectionRepository.selectFeature(first.id);
+      selectionRepository.selectFeature(second.id);
+      selectionRepository.selectFeature(
+        documentRepository.document.features[2].id,
+      );
+      await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
+
+      bloc.add(const DistributeFeaturesEvent(FeatureDistribution.horizontal));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(second.origin, const Offset(120, 0));
       await bloc.close();
     });
   });

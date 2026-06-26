@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/feature_layout.dart';
 
 void main() {
   Document docWithRectangle({
@@ -355,6 +356,69 @@ void main() {
         (undone.kind as FeatureKindPolyline).localPoints,
       );
       expect(restored, [Offset.zero, const Offset(100, 0)]);
+    });
+  });
+
+  group('LayoutFeaturesCommand', () {
+    test('align left moves features; undo restores origins', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(30, 5),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+      ]);
+      final ids = doc.features.map((feature) => feature.id).toList();
+      final command = LayoutFeaturesCommand.align(
+        ids: ids,
+        alignment: FeatureAlignment.left,
+      );
+
+      command.apply(doc);
+      expect(doc.features[0].origin, const Offset(0, 0));
+      expect(doc.features[1].origin, const Offset(0, 5));
+
+      command.undo(doc);
+      expect(doc.features[0].origin, const Offset(0, 0));
+      expect(doc.features[1].origin, const Offset(30, 5));
+    });
+
+    test('distribute horizontally moves middle feature; undo restores', () {
+      final doc = Document.fromFeatures([
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(30, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(100, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+      ]);
+      final ids = doc.features.map((feature) => feature.id).toList();
+      final command = LayoutFeaturesCommand.distribute(
+        ids: ids,
+        distribution: FeatureDistribution.horizontal,
+      );
+
+      command.apply(doc);
+      expect(doc.features[0].origin, const Offset(0, 0));
+      expect(doc.features[1].origin, const Offset(50, 0));
+      expect(doc.features[2].origin, const Offset(100, 0));
+
+      command.undo(doc);
+      expect(doc.features[1].origin, const Offset(30, 0));
     });
   });
 

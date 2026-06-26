@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/feature_layout_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
@@ -62,6 +63,22 @@ class StylePanelContent extends StatelessWidget {
               onPresetSelected: (preset) =>
                   bloc.add(SetStrokeWidthEvent(preset)),
             ),
+            if (state.selectedFeatureIds.length >= 2) ...[
+              SizedBox(height: spacing.panelSectionSpacing),
+              SectionLabel('Align'),
+              FeatureAlignSelector(
+                onAlign: (alignment) =>
+                    bloc.add(AlignFeaturesEvent(alignment)),
+              ),
+            ],
+            if (state.selectedFeatureIds.length >= 3) ...[
+              SizedBox(height: spacing.panelSectionSpacing),
+              SectionLabel('Distribute'),
+              FeatureDistributeSelector(
+                onDistribute: (distribution) =>
+                    bloc.add(DistributeFeaturesEvent(distribution)),
+              ),
+            ],
             if (state.showFontSize) ...[
               SizedBox(height: spacing.panelSectionSpacing),
               SectionLabel('Font size'),
