@@ -6,17 +6,19 @@ class Button extends StatefulWidget {
   const Button({
     super.key,
     this.iconAsset,
+    this.icon,
     this.label,
     this.hotkey,
     required this.isActive,
     required this.onPressed,
-  }) : assert(iconAsset != null || label != null);
+  }) : assert(iconAsset != null || icon != null || label != null);
 
   final String? iconAsset;
+  final IconData? icon;
   final String? label;
   final String? hotkey;
   final bool isActive;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   State<Button> createState() => _ButtonState();
@@ -30,12 +32,17 @@ class _ButtonState extends State<Button> {
     final theme = context.squiggleTheme;
     final spacing = theme.spacing;
     final colors = theme.colors;
-    final foregroundColor = widget.isActive ? colors.text : colors.subtext0;
+    final isEnabled = widget.onPressed != null;
+    final foregroundColor = !isEnabled
+        ? colors.surface1
+        : widget.isActive
+        ? colors.text
+        : colors.subtext0;
 
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
+      onEnter: (_) => setState(() => _hovering = isEnabled),
       onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
+      cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
         onTap: widget.onPressed,
         behavior: HitTestBehavior.opaque,
@@ -62,6 +69,12 @@ class _ButtonState extends State<Button> {
                             BlendMode.srcIn,
                           ),
                         )
+                      : widget.icon != null
+                      ? Icon(
+                          widget.icon,
+                          size: spacing.toolbarIconSize,
+                          color: foregroundColor,
+                        )
                       : Text(
                           widget.label!,
                           style: theme.typography.buttonLabel(
@@ -73,10 +86,7 @@ class _ButtonState extends State<Button> {
                   Positioned(
                     right: 3,
                     bottom: 2,
-                    child: Text(
-                      widget.hotkey!,
-                      style: theme.typography.hotkey,
-                    ),
+                    child: Text(widget.hotkey!, style: theme.typography.hotkey),
                   ),
               ],
             ),

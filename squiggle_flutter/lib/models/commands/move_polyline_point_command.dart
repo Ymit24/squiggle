@@ -2,7 +2,18 @@ part of 'command.dart';
 
 /// Moves one vertex of a polyline feature, capturing previous geometry for undo.
 final class MovePolylinePointCommand extends Command {
-  MovePolylinePointCommand(this.id, this.pointIndex, this.worldPosition);
+  MovePolylinePointCommand(
+    this.id,
+    this.pointIndex,
+    this.worldPosition, {
+    Offset? previousOrigin,
+    List<Offset>? previousLocalPoints,
+  }) : // Keep the public named argument readable while storing private state.
+       // ignore: prefer_initializing_formals
+       _previousOrigin = previousOrigin,
+       _previousLocalPoints = previousLocalPoints == null
+           ? null
+           : List.of(previousLocalPoints);
 
   final FeatureId id;
   final int pointIndex;

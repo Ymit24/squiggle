@@ -31,3 +31,11 @@ class PasteImageIntent extends Intent {
 class CopySelectedFeaturesIntent extends Intent {
   const CopySelectedFeaturesIntent();
 }
+
+class UndoDocumentIntent extends Intent {
+  const UndoDocumentIntent();
+}
+
+class RedoDocumentIntent extends Intent {
+  const RedoDocumentIntent();
+}

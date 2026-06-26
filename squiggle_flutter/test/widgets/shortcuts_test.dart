@@ -20,7 +20,11 @@ void main() {
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository(
       document: Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
       ]),
     );
 
@@ -40,6 +44,7 @@ void main() {
                   create: (_) => ToolbarBloc(
                     toolRepository: toolRepository,
                     selectionRepository: selectionRepository,
+                    documentRepository: documentRepository,
                   ),
                 ),
                 BlocProvider(
@@ -50,9 +55,7 @@ void main() {
                   ),
                 ),
               ],
-              child: ToolShortcuts(
-                child: const SizedBox.expand(),
-              ),
+              child: ToolShortcuts(child: const SizedBox.expand()),
             ),
           ),
         ),
@@ -60,8 +63,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final toolbarBloc =
-        tester.element(find.byType(ToolShortcuts)).read<ToolbarBloc>();
+    final toolbarBloc = tester
+        .element(find.byType(ToolShortcuts))
+        .read<ToolbarBloc>();
 
     Future<void> pressKey(LogicalKeyboardKey key) async {
       await tester.sendKeyEvent(key, platform: 'macos');
@@ -69,64 +73,34 @@ void main() {
     }
 
     await pressKey(LogicalKeyboardKey.keyR);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createRect,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createRect);
 
     await pressKey(LogicalKeyboardKey.keyC);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createCircle,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createCircle);
 
     await pressKey(LogicalKeyboardKey.keyL);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createLine,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createLine);
 
     await pressKey(LogicalKeyboardKey.keyT);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createText,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createText);
 
     await pressKey(LogicalKeyboardKey.keyV);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.select,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
 
     await pressKey(LogicalKeyboardKey.digit1);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.select,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
 
     await pressKey(LogicalKeyboardKey.digit2);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createRect,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createRect);
 
     await pressKey(LogicalKeyboardKey.digit3);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createCircle,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createCircle);
 
     await pressKey(LogicalKeyboardKey.digit4);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createLine,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createLine);
 
     await pressKey(LogicalKeyboardKey.digit5);
-    expect(
-      toolbarBloc.state.activeTool,
-      ActiveToolKind.createText,
-    );
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createText);
   });
 
   testWidgets('ToolShortcuts deletes selected features on backspace', (
@@ -136,7 +110,11 @@ void main() {
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository(
       document: Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
       ]),
     );
     final featureId = documentRepository.document.features.first.id;
@@ -158,6 +136,7 @@ void main() {
                   create: (_) => ToolbarBloc(
                     toolRepository: toolRepository,
                     selectionRepository: selectionRepository,
+                    documentRepository: documentRepository,
                   ),
                 ),
                 BlocProvider(
@@ -168,9 +147,7 @@ void main() {
                   ),
                 ),
               ],
-              child: ToolShortcuts(
-                child: const SizedBox.expand(),
-              ),
+              child: ToolShortcuts(child: const SizedBox.expand()),
             ),
           ),
         ),
@@ -183,6 +160,73 @@ void main() {
 
     expect(documentRepository.document.features, isEmpty);
     expect(selectionRepository.selectedFeatures, isEmpty);
+  });
+
+  testWidgets('ToolShortcuts undoes and redoes document commands', (
+    tester,
+  ) async {
+    final toolRepository = ToolRepository();
+    final selectionRepository = SelectionRepository();
+    final documentRepository = DocumentRepository(document: Document());
+
+    documentRepository.executeCommand(
+      AddFeatureCommand(
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MultiRepositoryProvider(
+            providers: [
+              RepositoryProvider<ToolRepository>.value(value: toolRepository),
+              RepositoryProvider<DocumentRepository>.value(
+                value: documentRepository,
+              ),
+            ],
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (_) => ToolbarBloc(
+                    toolRepository: toolRepository,
+                    selectionRepository: selectionRepository,
+                    documentRepository: documentRepository,
+                  ),
+                ),
+                BlocProvider(
+                  create: (_) => EditorBloc(
+                    documentRepository: documentRepository,
+                    selectionRepository: selectionRepository,
+                    toolRepository: toolRepository,
+                  ),
+                ),
+              ],
+              child: ToolShortcuts(child: const SizedBox.expand()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyZ, platform: 'macos');
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
+    await tester.pump();
+    expect(documentRepository.document.features, isEmpty);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shift, platform: 'macos');
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyZ, platform: 'macos');
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shift, platform: 'macos');
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
+    await tester.pump();
+    expect(documentRepository.document.features, hasLength(1));
   });
 
   testWidgets('ToolShortcuts restores focus after text edit closes', (
@@ -218,6 +262,7 @@ void main() {
                     create: (_) => ToolbarBloc(
                       toolRepository: toolRepository,
                       selectionRepository: selectionRepository,
+                      documentRepository: documentRepository,
                     ),
                   ),
                   BlocProvider(
@@ -250,8 +295,9 @@ void main() {
     await pumpShortcuts(textEditOpen: false);
     expect(textFocusNode.hasFocus, isFalse);
 
-    final toolbarBloc =
-        tester.element(find.byType(ToolShortcuts)).read<ToolbarBloc>();
+    final toolbarBloc = tester
+        .element(find.byType(ToolShortcuts))
+        .read<ToolbarBloc>();
     await tester.sendKeyEvent(LogicalKeyboardKey.keyV, platform: 'macos');
     await tester.pump();
 

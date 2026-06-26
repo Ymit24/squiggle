@@ -155,10 +155,7 @@ class SelectTool extends Tool {
   }
 
   @override
-  bool onKeyEvent(
-    DocumentRepository documentRepository,
-    KeyDownEvent event,
-  ) {
+  bool onKeyEvent(DocumentRepository documentRepository, KeyDownEvent event) {
     if (_state is! _Editing) {
       return false;
     }
@@ -183,12 +180,7 @@ class SelectTool extends Tool {
     final editingFeatureId = _editingFeatureId;
 
     if (editingFeatureId != null &&
-        _tryBeginEditPoint(
-          document,
-          worldPosition,
-          editingFeatureId,
-          camera,
-        )) {
+        _tryBeginEditPoint(document, worldPosition, editingFeatureId, camera)) {
       return;
     }
 
@@ -219,7 +211,9 @@ class SelectTool extends Tool {
           editingFeatureId != null && feature.id == editingFeatureId
           ? editingFeatureId
           : null;
+      final initialOrigins = _selectedFeatureOrigins(document, selection);
       _state = _Moving(
+        initialOrigins: initialOrigins,
         moveOffset: worldPosition - feature.origin,
         pointerDownWorld: worldPosition,
         isFirstTimeSelect: didSelect,
@@ -264,6 +258,8 @@ class SelectTool extends Tool {
         :final featureId,
         :final pointIndex,
         :final dragOffset,
+        :final initialOrigin,
+        :final initialLocalPoints,
       ):
         final feature = document.featureById(featureId)!;
         final kind = feature.kind as FeatureKindPolyline;
@@ -281,16 +277,13 @@ class SelectTool extends Tool {
           featureId: featureId,
           pointIndex: pointIndex,
           dragOffset: dragOffset,
+          initialOrigin: initialOrigin,
+          initialLocalPoints: initialLocalPoints,
           didMove: true,
         );
-        documentRepository.executeCommand(
-          MovePolylinePointCommand(
-            featureId,
-            pointIndex,
-            target,
-          ),
-        );
+        _movePolylinePoint(documentRepository, featureId, pointIndex, target);
       case _Moving(
+        :final initialOrigins,
         :final moveOffset,
         :final pointerDownWorld,
         :final isFirstTimeSelect,
@@ -315,6 +308,9 @@ class SelectTool extends Tool {
           effectiveHasDuplicated = true;
         }
         _state = _Moving(
+          initialOrigins: effectiveHasDuplicated
+              ? _selectedFeatureOrigins(document, selection)
+              : initialOrigins,
           moveOffset: effectiveMoveOffset,
           pointerDownWorld: pointerDownWorld,
           isFirstTimeSelect: isFirstTimeSelect,
@@ -376,10 +372,33 @@ class SelectTool extends Tool {
   ) {
     final document = documentRepository.document;
     switch (_state) {
-      case _EditingPoint(:final featureId):
+      case _EditingPoint(
+        :final featureId,
+        :final pointIndex,
+        :final initialOrigin,
+        :final initialLocalPoints,
+        :final didMove,
+      ):
+        if (didMove) {
+          _commitPolylinePointMove(
+            documentRepository,
+            featureId,
+            pointIndex,
+            initialOrigin,
+            initialLocalPoints,
+          );
+        }
         _state = _Editing(featureId: featureId);
         return;
-      case _Moving(:final isFirstTimeSelect, :final didMove, :final resumeEditing):
+      case _Moving(
+        :final initialOrigins,
+        :final isFirstTimeSelect,
+        :final didMove,
+        :final resumeEditing,
+      ):
+        if (didMove) {
+          _commitMove(documentRepository, initialOrigins);
+        }
         final hovered = document.featureAtPoint(worldPosition);
         if (hovered != null && !didMove) {
           final now = DateTime.now();
@@ -427,7 +446,15 @@ class SelectTool extends Tool {
           _state = _Editing(featureId: resumeEditing);
           return;
         }
-      case _Resizing(:final resumeEditing):
+      case _Resizing(
+        :final featureId,
+        :final initialBounds,
+        :final didResize,
+        :final resumeEditing,
+      ):
+        if (didResize) {
+          _commitResize(documentRepository, featureId, initialBounds);
+        }
         if (resumeEditing != null) {
           _state = _Editing(featureId: resumeEditing);
           return;
@@ -468,6 +495,8 @@ class SelectTool extends Tool {
       featureId: editingFeatureId,
       pointIndex: pointIndex,
       dragOffset: worldPosition - points[pointIndex],
+      initialOrigin: feature.origin,
+      initialLocalPoints: List.of(kind.localPoints),
       didMove: false,
     );
     return true;
@@ -832,10 +861,40 @@ class SelectTool extends Tool {
     }
 
     for (final entry in offsets.entries) {
-      documentRepository.executeCommand(
-        MoveFeatureCommand(entry.key, worldPosition - moveOffset + entry.value),
-      );
+      document
+          .featureById(entry.key)
+          ?.moveTo(worldPosition - moveOffset + entry.value);
     }
+    documentRepository.notifyChanged();
+  }
+
+  Map<FeatureId, Offset> _selectedFeatureOrigins(
+    Document document,
+    SelectionRepository selection,
+  ) {
+    return {
+      for (final id in selection.selectedFeatures)
+        if (document.featureById(id) case final feature?) id: feature.origin,
+    };
+  }
+
+  void _commitMove(
+    DocumentRepository documentRepository,
+    Map<FeatureId, Offset> initialOrigins,
+  ) {
+    final document = documentRepository.document;
+    final finalOrigins = <FeatureId, Offset>{};
+    for (final id in initialOrigins.keys) {
+      final feature = document.featureById(id);
+      if (feature != null && feature.origin != initialOrigins[id]) {
+        finalOrigins[id] = feature.origin;
+      }
+    }
+    if (finalOrigins.isEmpty) return;
+
+    documentRepository.executeCommand(
+      MoveFeaturesCommand(finalOrigins, previousOrigins: initialOrigins),
+    );
   }
 
   void _resizeFeature(
@@ -868,8 +927,84 @@ class SelectTool extends Tool {
             aspectRatio: aspectRatio,
           );
 
+    documentRepository.document.featureById(featureId)?.setBounds(newBounds);
+    documentRepository.notifyChanged();
+  }
+
+  void _commitResize(
+    DocumentRepository documentRepository,
+    FeatureId featureId,
+    Rect initialBounds,
+  ) {
+    final feature = documentRepository.document.featureById(featureId);
+    if (feature == null) return;
+
+    final finalBounds = feature.bounds();
+    if (finalBounds == initialBounds) return;
+
     documentRepository.executeCommand(
-      ResizeFeatureCommand(featureId, newBounds),
+      ResizeFeatureCommand(
+        featureId,
+        finalBounds,
+        previousBounds: initialBounds,
+      ),
+    );
+  }
+
+  void _movePolylinePoint(
+    DocumentRepository documentRepository,
+    FeatureId featureId,
+    int pointIndex,
+    Offset worldPosition,
+  ) {
+    final feature = documentRepository.document.featureById(featureId);
+    if (feature == null) return;
+
+    final kind = feature.kind;
+    if (kind is! FeatureKindPolyline) return;
+
+    final points = worldPoints(feature.origin, kind.localPoints);
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+
+    points[pointIndex] = worldPosition;
+    final newOrigin = points.first;
+    final newLocal = localPointsFromWorld(points, newOrigin);
+    feature.moveTo(newOrigin);
+    feature.kind = kind.copyWith(localPoints: newLocal);
+    feature.size = feature.bounds().size;
+    documentRepository.notifyChanged();
+  }
+
+  void _commitPolylinePointMove(
+    DocumentRepository documentRepository,
+    FeatureId featureId,
+    int pointIndex,
+    Offset initialOrigin,
+    List<Offset> initialLocalPoints,
+  ) {
+    final feature = documentRepository.document.featureById(featureId);
+    if (feature == null) return;
+
+    final kind = feature.kind;
+    if (kind is! FeatureKindPolyline) return;
+
+    final finalPoints = worldPoints(feature.origin, kind.localPoints);
+    if (pointIndex < 0 || pointIndex >= finalPoints.length) return;
+
+    final initialWorldPoints = worldPoints(initialOrigin, initialLocalPoints);
+    if (pointIndex >= initialWorldPoints.length ||
+        finalPoints[pointIndex] == initialWorldPoints[pointIndex]) {
+      return;
+    }
+
+    documentRepository.executeCommand(
+      MovePolylinePointCommand(
+        featureId,
+        pointIndex,
+        finalPoints[pointIndex],
+        previousOrigin: initialOrigin,
+        previousLocalPoints: initialLocalPoints,
+      ),
     );
   }
 
@@ -886,8 +1021,11 @@ class SelectTool extends Tool {
         SelectionResizeHandle.topLeft ||
         SelectionResizeHandle.topRight ||
         SelectionResizeHandle.bottomLeft ||
-        SelectionResizeHandle.bottomRight =>
-          rectFromAnchorWithAspectRatio(anchor, dragged, aspectRatio),
+        SelectionResizeHandle.bottomRight => rectFromAnchorWithAspectRatio(
+          anchor,
+          dragged,
+          aspectRatio,
+        ),
         SelectionResizeHandle.top => edgeResizeWithAspectRatio(
           bounds,
           dragged,
@@ -972,32 +1110,29 @@ class SelectTool extends Tool {
         SelectionResizeHandle.topLeft ||
         SelectionResizeHandle.topRight ||
         SelectionResizeHandle.bottomLeft ||
-        SelectionResizeHandle.bottomRight =>
-          symmetricRectWithAspectRatio(
-            center,
-            dragged,
-            aspectRatio,
-            resizeHorizontal: true,
-            resizeVertical: true,
-          ),
+        SelectionResizeHandle.bottomRight => symmetricRectWithAspectRatio(
+          center,
+          dragged,
+          aspectRatio,
+          resizeHorizontal: true,
+          resizeVertical: true,
+        ),
         SelectionResizeHandle.top ||
-        SelectionResizeHandle.bottom =>
-          symmetricRectWithAspectRatio(
-            center,
-            dragged,
-            aspectRatio,
-            resizeHorizontal: false,
-            resizeVertical: true,
-          ),
+        SelectionResizeHandle.bottom => symmetricRectWithAspectRatio(
+          center,
+          dragged,
+          aspectRatio,
+          resizeHorizontal: false,
+          resizeVertical: true,
+        ),
         SelectionResizeHandle.left ||
-        SelectionResizeHandle.right =>
-          symmetricRectWithAspectRatio(
-            center,
-            dragged,
-            aspectRatio,
-            resizeHorizontal: true,
-            resizeVertical: false,
-          ),
+        SelectionResizeHandle.right => symmetricRectWithAspectRatio(
+          center,
+          dragged,
+          aspectRatio,
+          resizeHorizontal: true,
+          resizeVertical: false,
+        ),
       };
     }
 
@@ -1052,17 +1187,22 @@ final class _EditingPoint extends _SelectState {
     required this.featureId,
     required this.pointIndex,
     required this.dragOffset,
+    required this.initialOrigin,
+    required this.initialLocalPoints,
     required this.didMove,
   });
 
   final FeatureId featureId;
   final int pointIndex;
   final Offset dragOffset;
+  final Offset initialOrigin;
+  final List<Offset> initialLocalPoints;
   final bool didMove;
 }
 
 final class _Moving extends _SelectState {
   const _Moving({
+    required this.initialOrigins,
     required this.moveOffset,
     required this.pointerDownWorld,
     required this.isFirstTimeSelect,
@@ -1073,6 +1213,7 @@ final class _Moving extends _SelectState {
     this.resumeEditing,
   });
 
+  final Map<FeatureId, Offset> initialOrigins;
   final Offset moveOffset;
   final Offset pointerDownWorld;
   final bool isFirstTimeSelect;

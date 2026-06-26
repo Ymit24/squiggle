@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -127,7 +128,8 @@ class SquiggleHomePage extends StatelessWidget {
                     create: (context) => ToolbarBloc(
                       toolRepository: context.read<ToolRepository>(),
                       selectionRepository: context.read<SelectionRepository>(),
-                    ),
+                      documentRepository: context.read<DocumentRepository>(),
+                    )..add(const RequestWatchToolbarStateEvent()),
                     child: Editor(documentRepository: _documentRepository),
                   ),
                 ),

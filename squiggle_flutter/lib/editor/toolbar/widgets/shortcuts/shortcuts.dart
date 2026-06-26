@@ -33,6 +33,14 @@ const _toolShortcuts = {
       CopySelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, control: true):
       CopySelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyZ, meta: true): UndoDocumentIntent(),
+  SingleActivator(LogicalKeyboardKey.keyZ, control: true): UndoDocumentIntent(),
+  SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true):
+      RedoDocumentIntent(),
+  SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true):
+      RedoDocumentIntent(),
+  SingleActivator(LogicalKeyboardKey.keyY, meta: true): RedoDocumentIntent(),
+  SingleActivator(LogicalKeyboardKey.keyY, control: true): RedoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, meta: true): PasteImageIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, control: true): PasteImageIntent(),
 };
@@ -160,6 +168,18 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 return null;
               },
             ),
+            UndoDocumentIntent: CallbackAction<UndoDocumentIntent>(
+              onInvoke: (_) {
+                context.read<ToolbarBloc>().add(const UndoDocumentEvent());
+                return null;
+              },
+            ),
+            RedoDocumentIntent: CallbackAction<RedoDocumentIntent>(
+              onInvoke: (_) {
+                context.read<ToolbarBloc>().add(const RedoDocumentEvent());
+                return null;
+              },
+            ),
           },
           child: Focus(
             focusNode: _focusNode,
@@ -169,9 +189,9 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
               if (textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
               if (context.read<ToolRepository>().onKeyEvent(
-                    context.read<DocumentRepository>(),
-                    event,
-                  )) {
+                context.read<DocumentRepository>(),
+                event,
+              )) {
                 return KeyEventResult.handled;
               }
               return KeyEventResult.ignored;

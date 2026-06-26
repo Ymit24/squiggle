@@ -21,3 +21,15 @@ class ActivateCreateLineToolEvent extends ToolbarEvent {
 class ActivateCreateTextToolEvent extends ToolbarEvent {
   const ActivateCreateTextToolEvent();
 }
+
+class RequestWatchToolbarStateEvent extends ToolbarEvent {
+  const RequestWatchToolbarStateEvent();
+}
+
+class UndoDocumentEvent extends ToolbarEvent {
+  const UndoDocumentEvent();
+}
+
+class RedoDocumentEvent extends ToolbarEvent {
+  const RedoDocumentEvent();
+}

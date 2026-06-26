@@ -13,7 +13,12 @@ class Document {
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
     for (final feature in features) {
-      doc.executeCommand(AddFeatureCommand(feature));
+      if (feature.id == noId) {
+        feature.id = doc.generateId();
+      } else if (feature.id.value >= doc.nextId.value) {
+        doc.nextId = FeatureId.newId(feature.id.value + 1);
+      }
+      doc.features.add(feature);
     }
     return doc;
   }
@@ -58,6 +63,10 @@ class Document {
     undoStack.add(command.clone());
     redoStack.clear();
   }
+
+  bool get canUndo => undoStack.isNotEmpty;
+
+  bool get canRedo => redoStack.isNotEmpty;
 
   void undo() {
     if (undoStack.isEmpty) return;

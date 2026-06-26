@@ -12,8 +12,28 @@ class DocumentRepository {
 
   Stream<void> get changesStream => _changesController.stream;
 
+  bool get canUndo => document.canUndo;
+
+  bool get canRedo => document.canRedo;
+
   void executeCommand(Command command) {
     document.executeCommand(command);
+    _changesController.add(null);
+  }
+
+  void notifyChanged() {
+    _changesController.add(null);
+  }
+
+  void undo() {
+    if (!canUndo) return;
+    document.undo();
+    _changesController.add(null);
+  }
+
+  void redo() {
+    if (!canRedo) return;
+    document.redo();
     _changesController.add(null);
   }
 
