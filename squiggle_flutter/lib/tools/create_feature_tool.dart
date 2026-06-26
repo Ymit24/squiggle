@@ -61,6 +61,7 @@ class CreateFeatureTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {}
 
@@ -70,6 +71,7 @@ class CreateFeatureTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     switch (_state) {
@@ -92,6 +94,7 @@ class CreateFeatureTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
     TextEditRepository textEditRepository,
   ) {

@@ -46,33 +46,36 @@ void main() {
       documentRepository.dispose();
     });
 
-    void pointerDown(Offset world, {bool shift = false}) {
+    void pointerDown(Offset world, {bool shift = false, bool alt = false}) {
       toolRepository.onPointerDown(
         documentRepository,
         world,
         selectionRepository,
         shift,
+        alt,
         camera,
       );
     }
 
-    void pointerUp(Offset world, {bool shift = false}) {
+    void pointerUp(Offset world, {bool shift = false, bool alt = false}) {
       toolRepository.onPointerUp(
         documentRepository,
         world,
         selectionRepository,
         shift,
+        alt,
         camera,
         textEditRepository,
       );
     }
 
-    void pointerMove(Offset world, {bool shift = false}) {
+    void pointerMove(Offset world, {bool shift = false, bool alt = false}) {
       toolRepository.onPointerMove(
         documentRepository,
         world,
         selectionRepository,
         shift,
+        alt,
         camera,
       );
     }
@@ -334,6 +337,50 @@ void main() {
       expect(resized.origin, bounds.topLeft);
       expect(resized.size.width, 200);
       expect(resized.size.height, 100);
+    });
+
+    test('alt-resize from bottom-right handle resizes symmetrically from center', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final center = bounds.center;
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+      final grabOffset = down - bounds.bottomRight;
+      const targetCorner = Offset(150, 150);
+
+      pointerDown(down, alt: true);
+      pointerMove(targetCorner + grabOffset, alt: true);
+      pointerUp(targetCorner + grabOffset, alt: true);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.bounds().center, center);
+      expect(resized.size.width, 200);
+      expect(resized.size.height, 200);
+    });
+
+    test('alt-resize from top edge expands symmetrically around center', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final center = bounds.center;
+      final down = edgeHitWorldPoint(bounds, _SelectionEdge.top);
+      final grabOffset = down - bounds.topLeft;
+      const targetTop = Offset(50, -50);
+
+      pointerDown(down, alt: true);
+      pointerMove(targetTop + grabOffset, alt: true);
+      pointerUp(targetTop + grabOffset, alt: true);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.bounds().center, center);
+      expect(resized.size.width, 100);
+      expect(resized.size.height, 200);
     });
 
     test('edge resize does not snap on first move when grab is off-center', () {

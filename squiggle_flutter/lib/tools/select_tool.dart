@@ -174,6 +174,7 @@ class SelectTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     final document = documentRepository.document;
@@ -239,6 +240,7 @@ class SelectTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     final document = documentRepository.document;
@@ -284,6 +286,7 @@ class SelectTool extends Tool {
         :final featureId,
         :final handle,
         :final anchor,
+        :final initialBounds,
         :final resizeOffset,
         :final resumeEditing,
       ):
@@ -291,6 +294,7 @@ class SelectTool extends Tool {
           featureId: featureId,
           handle: handle,
           anchor: anchor,
+          initialBounds: initialBounds,
           resizeOffset: resizeOffset,
           didResize: true,
           resumeEditing: resumeEditing,
@@ -300,8 +304,10 @@ class SelectTool extends Tool {
           featureId,
           handle,
           anchor,
+          initialBounds,
           worldPosition,
           resizeOffset,
+          isAltPressed,
         );
     }
   }
@@ -312,6 +318,7 @@ class SelectTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
     TextEditRepository textEditRepository,
   ) {
@@ -467,6 +474,7 @@ class SelectTool extends Tool {
       featureId: selectedId,
       handle: handle,
       anchor: _anchorForResizeHandle(handle, bounds),
+      initialBounds: bounds,
       resizeOffset: worldPosition - reference,
       didResize: false,
       resumeEditing: resumeEditing,
@@ -738,12 +746,29 @@ class SelectTool extends Tool {
     FeatureId featureId,
     SelectionResizeHandle handle,
     Offset anchor,
+    Rect initialBounds,
     Offset pointerWorld,
     Offset resizeOffset,
+    bool symmetric,
   ) {
     final dragged = pointerWorld - resizeOffset;
     final bounds = documentRepository.document.featureById(featureId)!.bounds();
-    final newBounds = switch (handle) {
+    final newBounds = symmetric
+        ? _symmetricBoundsForResize(handle, initialBounds, dragged)
+        : _asymmetricBoundsForResize(handle, anchor, bounds, dragged);
+
+    documentRepository.executeCommand(
+      ResizeFeatureCommand(featureId, newBounds),
+    );
+  }
+
+  Rect _asymmetricBoundsForResize(
+    SelectionResizeHandle handle,
+    Offset anchor,
+    Rect bounds,
+    Offset dragged,
+  ) {
+    return switch (handle) {
       SelectionResizeHandle.topLeft ||
       SelectionResizeHandle.topRight ||
       SelectionResizeHandle.bottomLeft ||
@@ -773,10 +798,36 @@ class SelectTool extends Tool {
         bounds.bottom,
       ),
     };
+  }
 
-    documentRepository.executeCommand(
-      ResizeFeatureCommand(featureId, newBounds),
-    );
+  Rect _symmetricBoundsForResize(
+    SelectionResizeHandle handle,
+    Rect initialBounds,
+    Offset dragged,
+  ) {
+    final center = initialBounds.center;
+    return switch (handle) {
+      SelectionResizeHandle.topLeft ||
+      SelectionResizeHandle.topRight ||
+      SelectionResizeHandle.bottomLeft ||
+      SelectionResizeHandle.bottomRight => Rect.fromCenter(
+        center: center,
+        width: (dragged.dx - center.dx).abs() * 2,
+        height: (dragged.dy - center.dy).abs() * 2,
+      ),
+      SelectionResizeHandle.top ||
+      SelectionResizeHandle.bottom => Rect.fromCenter(
+        center: center,
+        width: initialBounds.width,
+        height: (dragged.dy - center.dy).abs() * 2,
+      ),
+      SelectionResizeHandle.left ||
+      SelectionResizeHandle.right => Rect.fromCenter(
+        center: center,
+        width: (dragged.dx - center.dx).abs() * 2,
+        height: initialBounds.height,
+      ),
+    };
   }
 }
 
@@ -834,6 +885,7 @@ final class _Resizing extends _SelectState {
     required this.featureId,
     required this.handle,
     required this.anchor,
+    required this.initialBounds,
     required this.resizeOffset,
     required this.didResize,
     this.resumeEditing,
@@ -842,6 +894,7 @@ final class _Resizing extends _SelectState {
   final FeatureId featureId;
   final SelectionResizeHandle handle;
   final Offset anchor;
+  final Rect initialBounds;
   final Offset resizeOffset;
   final bool didResize;
   final FeatureId? resumeEditing;

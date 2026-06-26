@@ -130,6 +130,8 @@ class _DocumentViewportState extends State<DocumentViewport>
 
   bool get _isShiftPressed => HardwareKeyboard.instance.isShiftPressed;
 
+  bool get _isAltPressed => HardwareKeyboard.instance.isAltPressed;
+
   void _resetPointerState() {
     _isPrimaryDragging = false;
     _pointerInCanvas = null;
@@ -153,6 +155,7 @@ class _DocumentViewportState extends State<DocumentViewport>
           world,
           widget.selectionRepository,
           _isShiftPressed,
+          _isAltPressed,
           _camera,
         );
         setState(() {});
@@ -168,6 +171,7 @@ class _DocumentViewportState extends State<DocumentViewport>
           world,
           widget.selectionRepository,
           _isShiftPressed,
+          _isAltPressed,
           _camera,
         );
         setState(() {});
@@ -182,6 +186,7 @@ class _DocumentViewportState extends State<DocumentViewport>
           world,
           widget.selectionRepository,
           _isShiftPressed,
+          _isAltPressed,
           _camera,
         );
         setState(() {});
@@ -197,6 +202,7 @@ class _DocumentViewportState extends State<DocumentViewport>
             world,
             widget.selectionRepository,
             _isShiftPressed,
+            _isAltPressed,
             _camera,
             widget.textEditRepository,
           );
@@ -214,6 +220,7 @@ class _DocumentViewportState extends State<DocumentViewport>
             world,
             widget.selectionRepository,
             _isShiftPressed,
+            _isAltPressed,
             _camera,
             widget.textEditRepository,
           );

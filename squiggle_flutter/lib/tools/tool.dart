@@ -27,6 +27,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   );
 
@@ -35,6 +36,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   );
 
@@ -43,6 +45,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
     TextEditRepository textEditRepository,
   );
@@ -54,6 +57,7 @@ abstract class Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {}
 

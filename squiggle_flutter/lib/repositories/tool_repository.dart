@@ -32,6 +32,7 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     _activeTool.onPointerDown(
@@ -39,6 +40,7 @@ class ToolRepository {
       worldPosition,
       selection,
       isShiftPressed,
+      isAltPressed,
       camera,
     );
     _notifyRepaint();
@@ -49,6 +51,7 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     _activeTool.onPointerMove(
@@ -56,6 +59,7 @@ class ToolRepository {
       worldPosition,
       selection,
       isShiftPressed,
+      isAltPressed,
       camera,
     );
     _notifyRepaint();
@@ -80,6 +84,7 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
     TextEditRepository textEditRepository,
   ) {
@@ -88,6 +93,7 @@ class ToolRepository {
       worldPosition,
       selection,
       isShiftPressed,
+      isAltPressed,
       camera,
       textEditRepository,
     );
@@ -99,6 +105,7 @@ class ToolRepository {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     _activeTool.onPointerHover(
@@ -106,6 +113,7 @@ class ToolRepository {
       worldPosition,
       selection,
       isShiftPressed,
+      isAltPressed,
       camera,
     );
     _notifyRepaint();

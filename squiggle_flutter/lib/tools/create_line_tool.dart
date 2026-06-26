@@ -78,6 +78,7 @@ class CreateLineTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     final placedPoints = switch (_state) {
@@ -97,6 +98,7 @@ class CreateLineTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     switch (_state) {
@@ -143,6 +145,7 @@ class CreateLineTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
     TextEditRepository textEditRepository,
   ) {
@@ -173,6 +176,7 @@ class CreateLineTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {
     if (_state case _Placing(:final points)) {

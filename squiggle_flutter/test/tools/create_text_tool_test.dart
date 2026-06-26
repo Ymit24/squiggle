@@ -67,6 +67,7 @@ void main() {
         click,
         selectionRepository,
         false,
+        false,
         camera,
         textEditRepository,
       );
@@ -92,6 +93,7 @@ void main() {
         documentRepository,
         const Offset(50, 75),
         selectionRepository,
+        false,
         false,
         camera,
         textEditRepository,

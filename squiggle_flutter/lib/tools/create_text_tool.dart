@@ -35,6 +35,7 @@ class CreateTextTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {}
 
@@ -44,6 +45,7 @@ class CreateTextTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
   ) {}
 
@@ -53,6 +55,7 @@ class CreateTextTool extends Tool {
     Offset worldPosition,
     SelectionRepository selection,
     bool isShiftPressed,
+    bool isAltPressed,
     Camera camera,
     TextEditRepository textEditRepository,
   ) {

@@ -38,6 +38,7 @@ void main() {
         world,
         selectionRepository,
         false,
+        false,
         camera,
       );
     }
@@ -48,6 +49,7 @@ void main() {
         world,
         selectionRepository,
         false,
+        false,
         camera,
       );
     }
@@ -57,6 +59,7 @@ void main() {
         documentRepository,
         world,
         selectionRepository,
+        false,
         false,
         camera,
         textEditRepository,
