@@ -1,3 +1,4 @@
+import 'dart:math' show atan2, cos, max, pi, sin;
 import 'dart:ui';
 
 /// Extra world-space tolerance when hit-testing polyline segments.
@@ -119,4 +120,155 @@ bool onSegment(Offset segmentStart, Offset segmentEnd, Offset point) {
       point.dy >= (segmentStart.dy < segmentEnd.dy
               ? segmentStart.dy
               : segmentEnd.dy);
+}
+
+/// Builds a square rect from two opposite corners.
+Rect squareRectFromPoints(Offset start, Offset end) {
+  final dx = end.dx - start.dx;
+  final dy = end.dy - start.dy;
+  final side = max(dx.abs(), dy.abs());
+  final signX = dx == 0 ? 1.0 : dx.sign;
+  final signY = dy == 0 ? 1.0 : dy.sign;
+  return Rect.fromPoints(
+    start,
+    Offset(start.dx + side * signX, start.dy + side * signY),
+  );
+}
+
+/// Snaps [point] to the nearest 45° ray from [origin], preserving distance.
+Offset snapPointTo45DegreeAngle(Offset origin, Offset point) {
+  final dx = point.dx - origin.dx;
+  final dy = point.dy - origin.dy;
+  final distance = Offset(dx, dy).distance;
+  if (distance == 0) {
+    return point;
+  }
+
+  const snapIncrement = pi / 4;
+  final angle = atan2(dy, dx);
+  final snappedAngle = (angle / snapIncrement).round() * snapIncrement;
+  return Offset(
+    origin.dx + cos(snappedAngle) * distance,
+    origin.dy + sin(snappedAngle) * distance,
+  );
+}
+
+/// Locks movement to horizontal or vertical axis relative to [dragStart].
+Offset constrainMoveToAxis(Offset dragStart, Offset current) {
+  final dx = current.dx - dragStart.dx;
+  final dy = current.dy - dragStart.dy;
+  if (dx.abs() >= dy.abs()) {
+    return Offset(current.dx, dragStart.dy);
+  }
+  return Offset(dragStart.dx, current.dy);
+}
+
+/// Corner resize with a fixed [anchor] and locked width/height ratio.
+Rect rectFromAnchorWithAspectRatio(
+  Offset anchor,
+  Offset dragged,
+  double aspectRatio,
+) {
+  if (aspectRatio <= 0) {
+    return Rect.fromPoints(anchor, dragged);
+  }
+
+  var dx = dragged.dx - anchor.dx;
+  var dy = dragged.dy - anchor.dy;
+  if (dx == 0 && dy == 0) {
+    return Rect.fromPoints(anchor, dragged);
+  }
+
+  final absDx = dx.abs();
+  final absDy = dy.abs();
+  final effectiveRatio = absDy == 0 ? double.infinity : absDx / absDy;
+
+  late double width;
+  late double height;
+  if (effectiveRatio > aspectRatio) {
+    width = absDx;
+    height = width / aspectRatio;
+  } else {
+    height = absDy;
+    width = height * aspectRatio;
+  }
+
+  final signX = dx == 0 ? 1.0 : dx.sign;
+  final signY = dy == 0 ? 1.0 : dy.sign;
+  return Rect.fromPoints(
+    anchor,
+    Offset(anchor.dx + width * signX, anchor.dy + height * signY),
+  );
+}
+
+/// Edge resize with aspect ratio locked; the opposite edge stays fixed.
+Rect edgeResizeWithAspectRatio(
+  Rect bounds,
+  Offset dragged, {
+  required bool resizeTop,
+  required bool resizeBottom,
+  required bool resizeLeft,
+  required bool resizeRight,
+  required double aspectRatio,
+}) {
+  if (aspectRatio <= 0) {
+    return bounds;
+  }
+
+  if (resizeTop || resizeBottom) {
+    final fixedY = resizeTop ? bounds.bottom : bounds.top;
+    final newHeight = (dragged.dy - fixedY).abs();
+    final newWidth = newHeight * aspectRatio;
+    final centerX = bounds.center.dx;
+    final top = resizeTop ? fixedY - newHeight : fixedY;
+    return Rect.fromLTWH(centerX - newWidth / 2, top, newWidth, newHeight);
+  }
+
+  final fixedX = resizeLeft ? bounds.right : bounds.left;
+  final newWidth = (dragged.dx - fixedX).abs();
+  final newHeight = newWidth / aspectRatio;
+  final centerY = bounds.center.dy;
+  final left = resizeLeft ? fixedX - newWidth : fixedX;
+  return Rect.fromLTWH(left, centerY - newHeight / 2, newWidth, newHeight);
+}
+
+/// Symmetric resize from [center] with aspect ratio locked.
+Rect symmetricRectWithAspectRatio(
+  Offset center,
+  Offset dragged,
+  double aspectRatio, {
+  required bool resizeHorizontal,
+  required bool resizeVertical,
+}) {
+  if (aspectRatio <= 0) {
+    return Rect.fromCenter(center: center, width: 0, height: 0);
+  }
+
+  if (resizeHorizontal && resizeVertical) {
+    final halfWidth = (dragged.dx - center.dx).abs();
+    final halfHeight = (dragged.dy - center.dy).abs();
+    final effectiveRatio =
+        halfHeight == 0 ? double.infinity : halfWidth / halfHeight;
+
+    late double width;
+    late double height;
+    if (effectiveRatio > aspectRatio) {
+      width = halfWidth * 2;
+      height = width / aspectRatio;
+    } else {
+      height = halfHeight * 2;
+      width = height * aspectRatio;
+    }
+    return Rect.fromCenter(center: center, width: width, height: height);
+  }
+
+  if (resizeVertical) {
+    final height = (dragged.dy - center.dy).abs() * 2;
+    final width = height * aspectRatio;
+    return Rect.fromCenter(center: center, width: width, height: height);
+  }
+
+  final width = (dragged.dx - center.dx).abs() * 2;
+  final height = width / aspectRatio;
+  return Rect.fromCenter(center: center, width: width, height: height);
 }

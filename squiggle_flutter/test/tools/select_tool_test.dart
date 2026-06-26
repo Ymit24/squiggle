@@ -363,6 +363,61 @@ void main() {
       expect(resized.size.height, 200);
     });
 
+    test('shift-resize from bottom-right handle locks aspect ratio', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+      final grabOffset = down - bounds.bottomRight;
+      const targetCorner = Offset(200, 100);
+
+      pointerDown(down);
+      pointerMove(targetCorner + grabOffset, shift: true);
+      pointerUp(targetCorner + grabOffset, shift: true);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.origin, bounds.topLeft);
+      expect(resized.size.width / resized.size.height, closeTo(1.0, 0.001));
+      expect(resized.size.width, closeTo(200, 0.001));
+      expect(resized.size.height, closeTo(200, 0.001));
+    });
+
+    test('shift-move constrains to dominant axis', () {
+      pointerDown(const Offset(50, 50));
+      pointerMove(const Offset(80, 55), shift: true);
+
+      final moved = documentRepository.document.featureById(
+        documentRepository.document.features.first.id,
+      )!;
+      expect(moved.origin.dy, closeTo(0, 0.001));
+      expect(moved.origin.dx, closeTo(30, 0.001));
+    });
+
+    test('shift-resize from bottom edge locks aspect ratio', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final down = edgeHitWorldPoint(bounds, _SelectionEdge.bottom);
+      final grabOffset = down - bounds.bottomRight;
+      const targetBottom = Offset(50, 200);
+
+      pointerDown(down);
+      pointerMove(targetBottom + grabOffset, shift: true);
+      pointerUp(targetBottom + grabOffset, shift: true);
+
+      final resized = documentRepository.document.featureById(feature.id)!;
+      expect(resized.origin.dy, closeTo(0, 0.001));
+      expect(resized.size.width / resized.size.height, closeTo(1.0, 0.001));
+      expect(resized.size.width, closeTo(200, 0.001));
+      expect(resized.size.height, closeTo(200, 0.001));
+    });
+
     test('alt-resize from top edge expands symmetrically around center', () {
       final feature = documentRepository.document.features.first;
       selectionRepository.selectFeature(feature.id);

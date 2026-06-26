@@ -221,6 +221,7 @@ class SelectTool extends Tool {
           : null;
       _state = _Moving(
         moveOffset: worldPosition - feature.origin,
+        pointerDownWorld: worldPosition,
         isFirstTimeSelect: didSelect,
         didMove: false,
         resumeEditing: resumeEditing,
@@ -258,6 +259,18 @@ class SelectTool extends Tool {
         :final pointIndex,
         :final dragOffset,
       ):
+        final feature = document.featureById(featureId)!;
+        final kind = feature.kind as FeatureKindPolyline;
+        final points = worldPoints(feature.origin, kind.localPoints);
+        var target = worldPosition - dragOffset;
+        if (isShiftPressed) {
+          final origin = pointIndex > 0
+              ? points[pointIndex - 1]
+              : points.length > 1
+              ? points[1]
+              : target;
+          target = snapPointTo45DegreeAngle(origin, target);
+        }
         _state = _EditingPoint(
           featureId: featureId,
           pointIndex: pointIndex,
@@ -268,20 +281,29 @@ class SelectTool extends Tool {
           MovePolylinePointCommand(
             featureId,
             pointIndex,
-            worldPosition - dragOffset,
+            target,
           ),
         );
-      case _Moving(:final moveOffset, :final isFirstTimeSelect, :final resumeEditing):
+      case _Moving(
+        :final moveOffset,
+        :final pointerDownWorld,
+        :final isFirstTimeSelect,
+        :final resumeEditing,
+      ):
         _state = _Moving(
           moveOffset: moveOffset,
+          pointerDownWorld: pointerDownWorld,
           isFirstTimeSelect: isFirstTimeSelect,
           didMove: true,
           resumeEditing: resumeEditing,
         );
+        final moveTarget = isShiftPressed
+            ? constrainMoveToAxis(pointerDownWorld, worldPosition)
+            : worldPosition;
         _moveSelectedFeatures(
           documentRepository,
           selection,
-          worldPosition,
+          moveTarget,
           moveOffset,
         );
       case _Resizing(
@@ -310,6 +332,7 @@ class SelectTool extends Tool {
           worldPosition,
           resizeOffset,
           isAltPressed,
+          isShiftPressed,
         );
     }
   }
@@ -752,12 +775,26 @@ class SelectTool extends Tool {
     Offset pointerWorld,
     Offset resizeOffset,
     bool symmetric,
+    bool lockAspectRatio,
   ) {
     final dragged = pointerWorld - resizeOffset;
-    final bounds = documentRepository.document.featureById(featureId)!.bounds();
+    final aspectRatio = initialBounds.width / initialBounds.height;
     final newBounds = symmetric
-        ? _symmetricBoundsForResize(handle, initialBounds, dragged)
-        : _asymmetricBoundsForResize(handle, anchor, bounds, dragged);
+        ? _symmetricBoundsForResize(
+            handle,
+            initialBounds,
+            dragged,
+            lockAspectRatio: lockAspectRatio,
+            aspectRatio: aspectRatio,
+          )
+        : _asymmetricBoundsForResize(
+            handle,
+            anchor,
+            initialBounds,
+            dragged,
+            lockAspectRatio: lockAspectRatio,
+            aspectRatio: aspectRatio,
+          );
 
     documentRepository.executeCommand(
       ResizeFeatureCommand(featureId, newBounds),
@@ -768,8 +805,56 @@ class SelectTool extends Tool {
     SelectionResizeHandle handle,
     Offset anchor,
     Rect bounds,
-    Offset dragged,
-  ) {
+    Offset dragged, {
+    required bool lockAspectRatio,
+    required double aspectRatio,
+  }) {
+    if (lockAspectRatio) {
+      return switch (handle) {
+        SelectionResizeHandle.topLeft ||
+        SelectionResizeHandle.topRight ||
+        SelectionResizeHandle.bottomLeft ||
+        SelectionResizeHandle.bottomRight =>
+          rectFromAnchorWithAspectRatio(anchor, dragged, aspectRatio),
+        SelectionResizeHandle.top => edgeResizeWithAspectRatio(
+          bounds,
+          dragged,
+          resizeTop: true,
+          resizeBottom: false,
+          resizeLeft: false,
+          resizeRight: false,
+          aspectRatio: aspectRatio,
+        ),
+        SelectionResizeHandle.bottom => edgeResizeWithAspectRatio(
+          bounds,
+          dragged,
+          resizeTop: false,
+          resizeBottom: true,
+          resizeLeft: false,
+          resizeRight: false,
+          aspectRatio: aspectRatio,
+        ),
+        SelectionResizeHandle.left => edgeResizeWithAspectRatio(
+          bounds,
+          dragged,
+          resizeTop: false,
+          resizeBottom: false,
+          resizeLeft: true,
+          resizeRight: false,
+          aspectRatio: aspectRatio,
+        ),
+        SelectionResizeHandle.right => edgeResizeWithAspectRatio(
+          bounds,
+          dragged,
+          resizeTop: false,
+          resizeBottom: false,
+          resizeLeft: false,
+          resizeRight: true,
+          aspectRatio: aspectRatio,
+        ),
+      };
+    }
+
     return switch (handle) {
       SelectionResizeHandle.topLeft ||
       SelectionResizeHandle.topRight ||
@@ -805,9 +890,45 @@ class SelectTool extends Tool {
   Rect _symmetricBoundsForResize(
     SelectionResizeHandle handle,
     Rect initialBounds,
-    Offset dragged,
-  ) {
+    Offset dragged, {
+    required bool lockAspectRatio,
+    required double aspectRatio,
+  }) {
     final center = initialBounds.center;
+    if (lockAspectRatio) {
+      return switch (handle) {
+        SelectionResizeHandle.topLeft ||
+        SelectionResizeHandle.topRight ||
+        SelectionResizeHandle.bottomLeft ||
+        SelectionResizeHandle.bottomRight =>
+          symmetricRectWithAspectRatio(
+            center,
+            dragged,
+            aspectRatio,
+            resizeHorizontal: true,
+            resizeVertical: true,
+          ),
+        SelectionResizeHandle.top ||
+        SelectionResizeHandle.bottom =>
+          symmetricRectWithAspectRatio(
+            center,
+            dragged,
+            aspectRatio,
+            resizeHorizontal: false,
+            resizeVertical: true,
+          ),
+        SelectionResizeHandle.left ||
+        SelectionResizeHandle.right =>
+          symmetricRectWithAspectRatio(
+            center,
+            dragged,
+            aspectRatio,
+            resizeHorizontal: true,
+            resizeVertical: false,
+          ),
+      };
+    }
+
     return switch (handle) {
       SelectionResizeHandle.topLeft ||
       SelectionResizeHandle.topRight ||
@@ -871,12 +992,14 @@ final class _EditingPoint extends _SelectState {
 final class _Moving extends _SelectState {
   const _Moving({
     required this.moveOffset,
+    required this.pointerDownWorld,
     required this.isFirstTimeSelect,
     required this.didMove,
     this.resumeEditing,
   });
 
   final Offset moveOffset;
+  final Offset pointerDownWorld;
   final bool isFirstTimeSelect;
   final bool didMove;
   final FeatureId? resumeEditing;

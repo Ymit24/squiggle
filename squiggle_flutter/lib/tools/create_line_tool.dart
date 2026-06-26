@@ -111,10 +111,16 @@ class CreateLineTool extends Tool {
         :final didDrag,
       ):
         if (placedPoints.isNotEmpty) {
+          final origin = placedPoints.last;
+          final preview = _constrainedPoint(
+            origin,
+            worldPosition,
+            isShiftPressed: isShiftPressed,
+          );
           _state = _PendingPointer(
             start: start,
             placedPoints: placedPoints,
-            previewTip: worldPosition,
+            previewTip: preview,
             didDrag: didDrag,
           );
         }
@@ -126,17 +132,33 @@ class CreateLineTool extends Tool {
           return;
         }
         if (placedPoints.isEmpty) {
-          _state = _Dragging(start: start, end: worldPosition);
+          final end = _constrainedPoint(
+            start,
+            worldPosition,
+            isShiftPressed: isShiftPressed,
+          );
+          _state = _Dragging(start: start, end: end);
         } else {
+          final origin = placedPoints.last;
+          final preview = _constrainedPoint(
+            origin,
+            worldPosition,
+            isShiftPressed: isShiftPressed,
+          );
           _state = _PendingPointer(
             start: start,
             placedPoints: placedPoints,
-            previewTip: worldPosition,
+            previewTip: preview,
             didDrag: true,
           );
         }
       case _Dragging(:final start):
-        _state = _Dragging(start: start, end: worldPosition);
+        final end = _constrainedPoint(
+          start,
+          worldPosition,
+          isShiftPressed: isShiftPressed,
+        );
+        _state = _Dragging(start: start, end: end);
       case _Idle() || _Placing():
         break;
     }
@@ -153,19 +175,37 @@ class CreateLineTool extends Tool {
     TextEditRepository textEditRepository,
   ) {
     switch (_state) {
-      case _Dragging(:final start, :final end):
-        _commit(documentRepository, [start, end]);
+      case _Dragging(:final start):
+        final snappedEnd = _constrainedPoint(
+          start,
+          worldPosition,
+          isShiftPressed: isShiftPressed,
+        );
+        _commit(documentRepository, [start, snappedEnd]);
         _state = const _Idle();
       case _PendingPointer(:final start, :final placedPoints, :final didDrag):
         if (didDrag) {
+          final origin = placedPoints.isNotEmpty ? placedPoints.last : start;
+          final point = _constrainedPoint(
+            origin,
+            worldPosition,
+            isShiftPressed: isShiftPressed,
+          );
           _state = _Placing(
-            points: [...placedPoints, worldPosition],
+            points: [...placedPoints, point],
             previewTip: worldPosition,
           );
           return;
         }
+        final point = placedPoints.isEmpty
+            ? start
+            : _constrainedPoint(
+                placedPoints.last,
+                start,
+                isShiftPressed: isShiftPressed,
+              );
         _state = _Placing(
-          points: [...placedPoints, start],
+          points: [...placedPoints, point],
           previewTip: worldPosition,
         );
       case _Idle() || _Placing():
@@ -183,7 +223,13 @@ class CreateLineTool extends Tool {
     Camera camera,
   ) {
     if (_state case _Placing(:final points)) {
-      _state = _Placing(points: points, previewTip: worldPosition);
+      final origin = points.last;
+      final preview = _constrainedPoint(
+        origin,
+        worldPosition,
+        isShiftPressed: isShiftPressed,
+      );
+      _state = _Placing(points: points, previewTip: preview);
     }
   }
 
@@ -225,6 +271,14 @@ class CreateLineTool extends Tool {
     documentRepository.executeCommand(
       AddFeatureCommand(_ghost.copyWith(id: noId)),
     );
+  }
+
+  Offset _constrainedPoint(
+    Offset origin,
+    Offset point, {
+    required bool isShiftPressed,
+  }) {
+    return isShiftPressed ? snapPointTo45DegreeAngle(origin, point) : point;
   }
 
   void _syncGhost(List<Offset> worldPoints) {

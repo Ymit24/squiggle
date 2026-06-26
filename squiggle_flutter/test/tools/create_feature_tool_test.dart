@@ -43,23 +43,23 @@ void main() {
       );
     }
 
-    void pointerMove(Offset world) {
+    void pointerMove(Offset world, {bool shift = false}) {
       toolRepository.onPointerMove(
         documentRepository,
         world,
         selectionRepository,
-        false,
+        shift,
         false,
         camera,
       );
     }
 
-    void pointerUp(Offset world) {
+    void pointerUp(Offset world, {bool shift = false}) {
       toolRepository.onPointerUp(
         documentRepository,
         world,
         selectionRepository,
-        false,
+        shift,
         false,
         camera,
         textEditRepository,
@@ -101,6 +101,33 @@ void main() {
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindCircle>());
       expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
+    });
+
+    test('shift-drag creates square rectangle from non-square drag', () {
+      toolRepository.setTool(CreateFeatureTool.rect(), selectionRepository);
+
+      pointerDown(const Offset(0, 0));
+      pointerMove(const Offset(0, 0));
+      pointerMove(const Offset(100, 50), shift: true);
+      pointerUp(const Offset(100, 50), shift: true);
+
+      final features = documentRepository.document.features;
+      expect(features, hasLength(1));
+      expect(features.first.bounds().width, features.first.bounds().height);
+      expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
+    });
+
+    test('shift-drag creates square circle bounds from non-square drag', () {
+      toolRepository.setTool(CreateFeatureTool.circle(), selectionRepository);
+
+      pointerDown(const Offset(0, 0));
+      pointerMove(const Offset(0, 0));
+      pointerMove(const Offset(80, 140), shift: true);
+      pointerUp(const Offset(80, 140), shift: true);
+
+      final features = documentRepository.document.features;
+      expect(features.first.bounds().width, features.first.bounds().height);
+      expect(features.first.bounds().width, closeTo(140, 0.001));
     });
   });
 }

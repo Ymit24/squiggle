@@ -37,46 +37,46 @@ void main() {
       toolRepository.setTool(CreateLineTool(), selectionRepository);
     }
 
-    void pointerDown(Offset world) {
+    void pointerDown(Offset world, {bool shift = false}) {
       toolRepository.onPointerDown(
         documentRepository,
         world,
         selectionRepository,
-        false,
+        shift,
         false,
         camera,
       );
     }
 
-    void pointerMove(Offset world) {
+    void pointerMove(Offset world, {bool shift = false}) {
       toolRepository.onPointerMove(
         documentRepository,
         world,
         selectionRepository,
-        false,
+        shift,
         false,
         camera,
       );
     }
 
-    void pointerUp(Offset world) {
+    void pointerUp(Offset world, {bool shift = false}) {
       toolRepository.onPointerUp(
         documentRepository,
         world,
         selectionRepository,
-        false,
+        shift,
         false,
         camera,
         textEditRepository,
       );
     }
 
-    void pointerHover(Offset world) {
+    void pointerHover(Offset world, {bool shift = false}) {
       toolRepository.onPointerHover(
         documentRepository,
         world,
         selectionRepository,
-        false,
+        shift,
         false,
         camera,
       );
@@ -237,6 +237,32 @@ void main() {
       pointerUp(const Offset(0, 0));
 
       expect(() => pointerHover(const Offset(200, 200)), returnsNormally);
+    });
+
+    test('shift-drag snaps line to 45 degree angle', () {
+      activateLineTool();
+
+      pointerDown(const Offset(0, 0));
+      pointerMove(const Offset(100, 95), shift: true);
+      pointerUp(const Offset(100, 95), shift: true);
+
+      final points = worldPointsFor(documentRepository.document.features.first);
+      expect(points.first, const Offset(0, 0));
+      expect(points.last.dx, closeTo(points.last.dy, 0.001));
+    });
+
+    test('shift-click snaps second point to 45 degrees', () {
+      activateLineTool();
+
+      pointerDown(const Offset(0, 0));
+      pointerUp(const Offset(0, 0));
+      pointerDown(const Offset(100, 95), shift: true);
+      pointerUp(const Offset(100, 95), shift: true);
+
+      expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
+
+      final points = worldPointsFor(documentRepository.document.features.first);
+      expect(points.last.dx, closeTo(points.last.dy, 0.001));
     });
   });
 

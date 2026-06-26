@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
@@ -86,7 +87,11 @@ class CreateFeatureTool extends Tool {
           1,
         ));
       case _Dragging(:final start):
-        _ghost.setBounds(Rect.fromPoints(start, worldPosition));
+        _ghost.setBounds(
+          isShiftPressed
+              ? squareRectFromPoints(start, worldPosition)
+              : Rect.fromPoints(start, worldPosition),
+        );
     }
   }
 
