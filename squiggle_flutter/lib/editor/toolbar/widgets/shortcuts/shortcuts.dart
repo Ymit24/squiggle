@@ -14,6 +14,7 @@ import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/services/feature_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_image.dart';
+import 'package:squiggle_flutter/services/paste_text.dart';
 
 const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
@@ -194,6 +195,14 @@ Future<void> _pasteFromClipboard(BuildContext context) async {
     imageRepository: imageRepository,
   );
   if (pastedFeatures) {
+    return;
+  }
+
+  final pastedText = await pasteTextFromClipboard(
+    documentRepository: documentRepository,
+    viewportRepository: viewportRepository,
+  );
+  if (pastedText) {
     return;
   }
 

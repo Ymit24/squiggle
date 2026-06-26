@@ -289,6 +289,11 @@ Size _decodeSize(Map<String, dynamic> json) => Size(
   (json['height'] as num).toDouble(),
 );
 
+Future<String?> readClipboardPlainText() => _readPlainText();
+
+bool isSquiggleFeaturesClipboardText(String text) =>
+    text.startsWith(_clipboardPrefix);
+
 Future<void> _writePlainText(String text) async {
   final clipboard = SystemClipboard.instance;
   if (clipboard == null) {
