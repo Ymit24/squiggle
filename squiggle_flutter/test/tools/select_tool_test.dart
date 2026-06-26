@@ -368,6 +368,33 @@ void main() {
       expect(resized.size.height, 150);
     });
 
+    test('commits one undo state for a resize drag', () {
+      final feature = documentRepository.document.features.first;
+      selectionRepository.selectFeature(feature.id);
+
+      final bounds = feature.bounds();
+      final inflated = selectionBoxWorldBounds(bounds);
+      final handleWorld = camera.screenLengthToWorldLength(
+        kSelectionHandleHitSize / 2,
+      );
+      final down = inflated.bottomRight + Offset(handleWorld, handleWorld);
+      final grabOffset = down - bounds.bottomRight;
+
+      pointerDown(down);
+      pointerMove(const Offset(120, 120) + grabOffset);
+      pointerMove(const Offset(140, 140) + grabOffset);
+      pointerMove(const Offset(160, 160) + grabOffset);
+
+      expect(feature.size, const Size(160, 160));
+      expect(documentRepository.document.undoStack, isEmpty);
+
+      pointerUp(const Offset(160, 160) + grabOffset);
+
+      expect(documentRepository.document.undoStack, hasLength(1));
+      documentRepository.undo();
+      expect(feature.bounds(), bounds);
+    });
+
     test('resizes single selection from top edge', () {
       final feature = documentRepository.document.features.first;
       selectionRepository.selectFeature(feature.id);
@@ -699,12 +726,15 @@ void main() {
       doubleClick(const Offset(50, 50));
       pointerDown(const Offset(100, 100));
       pointerMove(const Offset(150, 100));
-      pointerUp(const Offset(150, 100));
+      pointerMove(const Offset(175, 125));
+      expect(documentRepository.document.undoStack, isEmpty);
+      pointerUp(const Offset(175, 125));
 
       final afterDrag = polylineWorldPoints(
         documentRepository.document.featureById(feature.id)!,
       );
-      expect(afterDrag.last, const Offset(150, 100));
+      expect(afterDrag.last, const Offset(175, 125));
+      expect(documentRepository.document.undoStack, hasLength(1));
 
       documentRepository.document.undo();
       final restored = documentRepository.document.featureById(feature.id)!;

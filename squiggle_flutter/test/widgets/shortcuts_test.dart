@@ -229,6 +229,70 @@ void main() {
     expect(documentRepository.document.features, hasLength(1));
   });
 
+  testWidgets('ToolShortcuts preserves selection when undoing a move', (
+    tester,
+  ) async {
+    final toolRepository = ToolRepository();
+    final selectionRepository = SelectionRepository();
+    final documentRepository = DocumentRepository(
+      document: Document.fromFeatures([
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
+      ]),
+    );
+    final feature = documentRepository.document.features.first;
+    selectionRepository.selectFeature(feature.id);
+    documentRepository.executeCommand(
+      MoveFeatureCommand(feature.id, const Offset(40, 40)),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MultiRepositoryProvider(
+            providers: [
+              RepositoryProvider<ToolRepository>.value(value: toolRepository),
+              RepositoryProvider<DocumentRepository>.value(
+                value: documentRepository,
+              ),
+            ],
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (_) => ToolbarBloc(
+                    toolRepository: toolRepository,
+                    selectionRepository: selectionRepository,
+                    documentRepository: documentRepository,
+                  ),
+                ),
+                BlocProvider(
+                  create: (_) => EditorBloc(
+                    documentRepository: documentRepository,
+                    selectionRepository: selectionRepository,
+                    toolRepository: toolRepository,
+                  ),
+                ),
+              ],
+              child: ToolShortcuts(child: const SizedBox.expand()),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyZ, platform: 'macos');
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
+    await tester.pump();
+
+    expect(feature.origin, Offset.zero);
+    expect(selectionRepository.selectedFeatures, [feature.id]);
+  });
+
   testWidgets('ToolShortcuts restores focus after text edit closes', (
     tester,
   ) async {

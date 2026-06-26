@@ -90,12 +90,10 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
 
   void _onUndoDocument(UndoDocumentEvent event, Emitter<ToolbarState> emit) {
     _documentRepository.undo();
-    _selectionRepository.clearSelection();
   }
 
   void _onRedoDocument(RedoDocumentEvent event, Emitter<ToolbarState> emit) {
     _documentRepository.redo();
-    _selectionRepository.clearSelection();
   }
 
   ToolbarState _stateWithHistory(ToolbarState state) {
