@@ -38,6 +38,7 @@ class EditorToolbar extends StatelessWidget {
                     children: [
                       Button(
                         iconAsset: 'assets/icons/arrow_selector_tool.svg',
+                        hotkey: '1',
                         isActive: state.activeTool == ActiveToolKind.select,
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateSelectToolEvent(),
@@ -48,6 +49,7 @@ class EditorToolbar extends StatelessWidget {
                       const Gap(),
                       Button(
                         iconAsset: 'assets/icons/crop_square.svg',
+                        hotkey: '2',
                         isActive: state.activeTool == ActiveToolKind.createRect,
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateCreateRectToolEvent(),
@@ -56,6 +58,7 @@ class EditorToolbar extends StatelessWidget {
                       const Gap(),
                       Button(
                         iconAsset: 'assets/icons/circle.svg',
+                        hotkey: '3',
                         isActive:
                             state.activeTool == ActiveToolKind.createCircle,
                         onPressed: () => context.read<ToolbarBloc>().add(
@@ -65,6 +68,7 @@ class EditorToolbar extends StatelessWidget {
                       const Gap(),
                       Button(
                         iconAsset: 'assets/icons/line.svg',
+                        hotkey: '4',
                         isActive: state.activeTool == ActiveToolKind.createLine,
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateCreateLineToolEvent(),
@@ -73,6 +77,7 @@ class EditorToolbar extends StatelessWidget {
                       const Gap(),
                       Button(
                         label: 'A',
+                        hotkey: '5',
                         isActive: state.activeTool == ActiveToolKind.createText,
                         onPressed: () => context.read<ToolbarBloc>().add(
                           const ActivateCreateTextToolEvent(),

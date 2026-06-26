@@ -13,7 +13,9 @@ import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 void main() {
-  testWidgets('ToolShortcuts activates tools on V, R, C, L, T keys', (tester) async {
+  testWidgets('ToolShortcuts activates tools on V, R, C, L, T and 1-5 keys', (
+    tester,
+  ) async {
     final toolRepository = ToolRepository();
     final selectionRepository = SelectionRepository();
     final documentRepository = DocumentRepository(
@@ -94,6 +96,36 @@ void main() {
     expect(
       toolbarBloc.state.activeTool,
       ActiveToolKind.select,
+    );
+
+    await pressKey(LogicalKeyboardKey.digit1);
+    expect(
+      toolbarBloc.state.activeTool,
+      ActiveToolKind.select,
+    );
+
+    await pressKey(LogicalKeyboardKey.digit2);
+    expect(
+      toolbarBloc.state.activeTool,
+      ActiveToolKind.createRect,
+    );
+
+    await pressKey(LogicalKeyboardKey.digit3);
+    expect(
+      toolbarBloc.state.activeTool,
+      ActiveToolKind.createCircle,
+    );
+
+    await pressKey(LogicalKeyboardKey.digit4);
+    expect(
+      toolbarBloc.state.activeTool,
+      ActiveToolKind.createLine,
+    );
+
+    await pressKey(LogicalKeyboardKey.digit5);
+    expect(
+      toolbarBloc.state.activeTool,
+      ActiveToolKind.createText,
     );
   });
 

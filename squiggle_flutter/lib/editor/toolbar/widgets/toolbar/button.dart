@@ -9,12 +9,14 @@ class Button extends StatefulWidget {
     super.key,
     this.iconAsset,
     this.label,
+    this.hotkey,
     required this.isActive,
     required this.onPressed,
   }) : assert(iconAsset != null || label != null);
 
   final String? iconAsset;
   final String? label;
+  final String? hotkey;
   final bool isActive;
   final VoidCallback onPressed;
 
@@ -49,26 +51,45 @@ class _ButtonState extends State<Button> {
               color: backgroundColor,
               borderRadius: BorderRadius.circular(buttonRadius),
             ),
-            child: Center(
-              child: widget.iconAsset != null
-                  ? SvgPicture.asset(
-                      widget.iconAsset!,
-                      width: iconSize,
-                      height: iconSize,
-                      fit: BoxFit.contain,
-                      colorFilter: ColorFilter.mode(
-                        foregroundColor,
-                        BlendMode.srcIn,
-                      ),
-                    )
-                  : Text(
-                      widget.label!,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Center(
+                  child: widget.iconAsset != null
+                      ? SvgPicture.asset(
+                          widget.iconAsset!,
+                          width: iconSize,
+                          height: iconSize,
+                          fit: BoxFit.contain,
+                          colorFilter: ColorFilter.mode(
+                            foregroundColor,
+                            BlendMode.srcIn,
+                          ),
+                        )
+                      : Text(
+                          widget.label!,
+                          style: TextStyle(
+                            color: foregroundColor,
+                            fontSize: iconSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                if (widget.hotkey != null)
+                  Positioned(
+                    right: 3,
+                    bottom: 2,
+                    child: Text(
+                      widget.hotkey!,
                       style: TextStyle(
-                        color: foregroundColor,
-                        fontSize: iconSize,
-                        fontWeight: FontWeight.w600,
+                        color: SquiggleColors.subtext0,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        height: 1,
                       ),
                     ),
+                  ),
+              ],
             ),
           ),
         ),

@@ -16,6 +16,11 @@ const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyT): ActivateCreateTextToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit1): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit2): ActivateCreateRectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit3): ActivateCreateCircleToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit4): ActivateCreateLineToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit5): ActivateCreateTextToolIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
 };
