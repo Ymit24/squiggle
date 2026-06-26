@@ -117,7 +117,7 @@ final class FeatureKindPolyline extends FeatureKind {
   }
 
   @override
-  void paint(Feature feature, Canvas canvas) {
+  void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     if (localPoints.length < 2) {
       return;
     }

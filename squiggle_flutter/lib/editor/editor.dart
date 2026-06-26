@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
+import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/bloc.dart';
@@ -26,6 +28,8 @@ class Editor extends StatelessWidget {
     final selectionRepository = context.read<SelectionRepository>();
     final toolRepository = context.read<ToolRepository>();
     final textEditRepository = context.read<TextEditRepository>();
+    final imageRepository = context.read<ImageRepository>();
+    final viewportRepository = context.read<ViewportRepository>();
 
     return BlocProvider(
       create: (context) => StylePanelBloc(
@@ -64,6 +68,8 @@ class Editor extends StatelessWidget {
                           toolRepository: toolRepository,
                           selectionRepository: selectionRepository,
                           textEditRepository: textEditRepository,
+                          imageRepository: imageRepository,
+                          viewportRepository: viewportRepository,
                         ),
                         const EditorToolbar(),
                         const StylePanel(),

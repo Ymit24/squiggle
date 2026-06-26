@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 import '../feature.dart';
 import '../feature_geometry.dart';
@@ -9,6 +10,7 @@ part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
 part 'feature_kind_text.dart';
 part 'feature_kind_polyline.dart';
+part 'feature_kind_image.dart';
 
 sealed class FeatureKind {
   const FeatureKind({
@@ -56,6 +58,11 @@ sealed class FeatureKind {
         fillColor: fillColor ?? this.fillColor,
         strokeWidth: strokeWidth ?? this.strokeWidth,
       ),
+      FeatureKindImage(:final imageId) => FeatureKindImage(
+        imageId,
+        strokeColor: strokeColor ?? this.strokeColor,
+        strokeWidth: strokeWidth ?? this.strokeWidth,
+      ),
     };
   }
 
@@ -70,5 +77,5 @@ sealed class FeatureKind {
 
   void applyBounds(Feature feature, Rect bounds) => feature.setBoundsDirect(bounds);
 
-  void paint(Feature feature, Canvas canvas);
+  void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }

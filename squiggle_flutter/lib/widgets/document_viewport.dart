@@ -9,9 +9,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
+import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import '../models/camera.dart';
 import '../theme/squiggle_colors.dart';
 import 'document_canvas.dart';
@@ -26,12 +28,16 @@ class DocumentViewport extends StatefulWidget {
     required this.selectionRepository,
     required this.toolRepository,
     required this.textEditRepository,
+    required this.imageRepository,
+    required this.viewportRepository,
   });
 
   final DocumentRepository documentRepository;
   final SelectionRepository selectionRepository;
   final ToolRepository toolRepository;
   final TextEditRepository textEditRepository;
+  final ImageRepository imageRepository;
+  final ViewportRepository viewportRepository;
 
   @override
   State<DocumentViewport> createState() => _DocumentViewportState();
@@ -292,6 +298,7 @@ class _DocumentViewportState extends State<DocumentViewport>
             documentRepository: widget.documentRepository,
             toolRepository: widget.toolRepository,
             selectionRepository: widget.selectionRepository,
+            imageRepository: widget.imageRepository,
             camera: _camera,
           ),
         ),
@@ -307,8 +314,19 @@ class _DocumentViewportState extends State<DocumentViewport>
       listener: (context, state) => _resetPointerState(),
       child: BlocBuilder<TextEditBloc, TextEditState>(
         builder: (context, textEditState) {
-          return _buildCanvasLayer(
-            canvasInteractionsEnabled: textEditState is! TextEditOpen,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              widget.viewportRepository
+                ..camera = _camera
+                ..viewportSize = Size(
+                  constraints.maxWidth,
+                  constraints.maxHeight,
+                );
+
+              return _buildCanvasLayer(
+                canvasInteractionsEnabled: textEditState is! TextEditOpen,
+              );
+            },
           );
         },
       ),

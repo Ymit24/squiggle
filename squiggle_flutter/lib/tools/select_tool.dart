@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
@@ -53,6 +54,7 @@ class SelectTool extends Tool {
     Camera camera,
     DocumentRepository documentRepository,
     SelectionRepository selection,
+    ImageRepository imageRepository,
   ) {
     final document = documentRepository.document;
 

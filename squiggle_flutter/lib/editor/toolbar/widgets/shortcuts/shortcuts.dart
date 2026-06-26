@@ -8,7 +8,10 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
+import 'package:squiggle_flutter/repositories/viewport_repository.dart';
+import 'package:squiggle_flutter/services/paste_image.dart';
 
 const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
@@ -23,6 +26,8 @@ const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.digit5): ActivateCreateTextToolIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyV, meta: true): PasteImageIntent(),
+  SingleActivator(LogicalKeyboardKey.keyV, control: true): PasteImageIntent(),
 };
 
 /// Keyboard shortcuts for tool activation.
@@ -125,6 +130,19 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                     return null;
                   },
                 ),
+            PasteImageIntent: CallbackAction<PasteImageIntent>(
+              onInvoke: (_) {
+                if (textEditOpen) {
+                  return null;
+                }
+                pasteImageFromClipboard(
+                  imageRepository: context.read<ImageRepository>(),
+                  documentRepository: context.read<DocumentRepository>(),
+                  viewportRepository: context.read<ViewportRepository>(),
+                );
+                return null;
+              },
+            ),
           },
           child: Focus(
             focusNode: _focusNode,

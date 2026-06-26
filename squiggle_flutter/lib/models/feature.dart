@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 import 'feature_id.dart';
 import 'feature_kinds/feature_kind.dart';
@@ -56,5 +57,6 @@ class Feature {
     kind: kind ?? this.kind,
   );
 
-  void paint(Canvas canvas) => kind.paint(this, canvas);
+  void paint(Canvas canvas, ImageRepository imageRepository) =>
+      kind.paint(this, canvas, imageRepository);
 }

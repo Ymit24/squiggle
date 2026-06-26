@@ -141,7 +141,7 @@ final class FeatureKindText extends FeatureKind {
   }
 
   @override
-  void paint(Feature feature, Canvas canvas) {
+  void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     if (contents.isEmpty) return;
 
     final worldBounds = feature.bounds();

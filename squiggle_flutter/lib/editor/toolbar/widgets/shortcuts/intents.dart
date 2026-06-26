@@ -23,3 +23,7 @@ class ActivateCreateTextToolIntent extends Intent {
 class DeleteSelectedFeaturesIntent extends Intent {
   const DeleteSelectedFeaturesIntent();
 }
+
+class PasteImageIntent extends Intent {
+  const PasteImageIntent();
+}

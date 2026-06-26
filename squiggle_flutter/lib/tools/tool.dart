@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -20,6 +21,7 @@ abstract class Tool {
     Camera camera,
     DocumentRepository documentRepository,
     SelectionRepository selection,
+    ImageRepository imageRepository,
   );
 
   void onPointerDown(

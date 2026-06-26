@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
@@ -15,12 +16,14 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     required this.documentRepository,
     required this.toolRepository,
     required this.selectionRepository,
+    required this.imageRepository,
     required this.camera,
   });
 
   final DocumentRepository documentRepository;
   final ToolRepository toolRepository;
   final SelectionRepository selectionRepository;
+  final ImageRepository imageRepository;
   final Camera camera;
 
   @override
@@ -29,6 +32,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
       documentRepository: documentRepository,
       toolRepository: toolRepository,
       selectionRepository: selectionRepository,
+      imageRepository: imageRepository,
       camera: camera,
     );
   }
@@ -42,6 +46,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
       ..documentRepository = documentRepository
       ..toolRepository = toolRepository
       ..selectionRepository = selectionRepository
+      ..imageRepository = imageRepository
       ..camera = camera
       ..markNeedsPaint();
   }
@@ -52,6 +57,7 @@ class RenderDocumentCanvas extends RenderBox {
     required this._documentRepository,
     required this._toolRepository,
     required this._selectionRepository,
+    required this._imageRepository,
     required this._camera,
   });
 
@@ -85,6 +91,16 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
+  ImageRepository _imageRepository;
+  ImageRepository get imageRepository => _imageRepository;
+  set imageRepository(ImageRepository value) {
+    if (identical(_imageRepository, value)) return;
+    _unsubscribeFromImageRepaints();
+    _imageRepository = value;
+    _subscribeToImageRepaints();
+    markNeedsPaint();
+  }
+
   Camera _camera;
   Camera get camera => _camera;
   set camera(Camera value) {
@@ -95,6 +111,7 @@ class RenderDocumentCanvas extends RenderBox {
   StreamSubscription<void>? _documentChangesSubscription;
   StreamSubscription<void>? _toolRepaintSubscription;
   StreamSubscription<List<dynamic>>? _selectionChangesSubscription;
+  StreamSubscription<void>? _imageRepaintSubscription;
 
   static const double _baseCellSize = 128.0;
 
@@ -104,6 +121,7 @@ class RenderDocumentCanvas extends RenderBox {
     _subscribeToDocumentChanges();
     _subscribeToToolRepaints();
     _subscribeToSelectionChanges();
+    _subscribeToImageRepaints();
   }
 
   @override
@@ -111,6 +129,7 @@ class RenderDocumentCanvas extends RenderBox {
     _unsubscribeFromDocumentChanges();
     _unsubscribeFromToolRepaints();
     _unsubscribeFromSelectionChanges();
+    _unsubscribeFromImageRepaints();
     super.detach();
   }
 
@@ -148,6 +167,17 @@ class RenderDocumentCanvas extends RenderBox {
     _selectionChangesSubscription = null;
   }
 
+  void _subscribeToImageRepaints() {
+    _imageRepaintSubscription ??= _imageRepository.repaintStream.listen(
+      (_) => markNeedsPaint(),
+    );
+  }
+
+  void _unsubscribeFromImageRepaints() {
+    _imageRepaintSubscription?.cancel();
+    _imageRepaintSubscription = null;
+  }
+
   @override
   void performLayout() {
     size = constraints.biggest.isFinite
@@ -175,6 +205,7 @@ class RenderDocumentCanvas extends RenderBox {
       _camera,
       _documentRepository,
       _selectionRepository,
+      _imageRepository,
     );
     canvas.restore();
 
@@ -248,7 +279,7 @@ class RenderDocumentCanvas extends RenderBox {
       final worldBounds = feature.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
-      feature.paint(canvas);
+      feature.paint(canvas, _imageRepository);
     }
   }
 }

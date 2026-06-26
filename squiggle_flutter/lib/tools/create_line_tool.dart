@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -47,13 +48,14 @@ class CreateLineTool extends Tool {
     Camera camera,
     DocumentRepository documentRepository,
     SelectionRepository selection,
+    ImageRepository imageRepository,
   ) {
     final worldPoints = _worldPointsForPaint();
     if (worldPoints == null) {
       return;
     }
     _syncGhost(worldPoints);
-    _ghost.paint(canvas);
+    _ghost.paint(canvas, imageRepository);
   }
 
   List<Offset>? _worldPointsForPaint() {

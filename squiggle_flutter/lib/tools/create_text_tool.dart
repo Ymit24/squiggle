@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -24,6 +25,7 @@ class CreateTextTool extends Tool {
     Camera camera,
     DocumentRepository documentRepository,
     SelectionRepository selection,
+    ImageRepository imageRepository,
   ) {}
 
   @override

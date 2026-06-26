@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -47,9 +48,10 @@ class CreateFeatureTool extends Tool {
     Camera camera,
     DocumentRepository documentRepository,
     SelectionRepository selection,
+    ImageRepository imageRepository,
   ) {
     if (_state is! _Dragging) return;
-    _ghost.paint(canvas);
+    _ghost.paint(canvas, imageRepository);
   }
 
   @override
