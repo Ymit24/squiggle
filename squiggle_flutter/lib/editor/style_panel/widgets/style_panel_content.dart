@@ -5,12 +5,10 @@ import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/metrics.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class StylePanelContent extends StatelessWidget {
   const StylePanelContent({super.key, required this.state});
@@ -19,16 +17,14 @@ class StylePanelContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
     final bloc = context.read<StylePanelBloc>();
 
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: SquiggleColors.mantle,
-        border: Border.all(color: SquiggleColors.surface1),
-        borderRadius: BorderRadius.circular(outerRadius),
-      ),
+      decoration: theme.decorations.floatingPanel(),
       child: Padding(
-        padding: const EdgeInsets.all(panelPadding),
+        padding: EdgeInsets.all(spacing.panelPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -45,7 +41,7 @@ class StylePanelContent extends StatelessWidget {
                   bloc.add(SetStrokePresetEvent(index)),
               onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
             ),
-            const SizedBox(height: sectionSpacing),
+            SizedBox(height: spacing.panelSectionSpacing),
             SectionLabel('Fill'),
             ColorRow(
               presets: stylePresets.map((preset) => preset.fillColor).toList(),
@@ -57,7 +53,7 @@ class StylePanelContent extends StatelessWidget {
               onPresetSelected: (index) => bloc.add(SetFillPresetEvent(index)),
               onNoneSelected: () => bloc.add(const ClearFillEvent()),
             ),
-            const SizedBox(height: sectionSpacing),
+            SizedBox(height: spacing.panelSectionSpacing),
             SectionLabel('Width'),
             StrokeWidthSelector(
               activePreset: state.activeStrokeWidth,
@@ -66,7 +62,7 @@ class StylePanelContent extends StatelessWidget {
                   bloc.add(SetStrokeWidthEvent(preset)),
             ),
             if (state.showFontSize) ...[
-              const SizedBox(height: sectionSpacing),
+              SizedBox(height: spacing.panelSectionSpacing),
               SectionLabel('Font size'),
               FontSizeSelector(
                 activePreset: state.activeFontSize,

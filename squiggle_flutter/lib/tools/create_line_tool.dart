@@ -11,6 +11,7 @@ import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
@@ -25,7 +26,7 @@ class CreateLineTool extends Tool {
       size: Size.zero,
       kind: const FeatureKindPolyline(
         [],
-        fillColor: Color(0xFF89B4FA),
+        fillColor: SquiggleColors.accent,
       ),
     );
   }

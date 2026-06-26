@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
-
-import 'metrics.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class Button extends StatefulWidget {
   const Button({
@@ -29,12 +27,10 @@ class _ButtonState extends State<Button> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.isActive
-        ? SquiggleColors.surface1
-        : (_hovering ? SquiggleColors.surface0 : null);
-    final foregroundColor = widget.isActive
-        ? SquiggleColors.text
-        : SquiggleColors.subtext0;
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
+    final colors = theme.colors;
+    final foregroundColor = widget.isActive ? colors.text : colors.subtext0;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
@@ -44,12 +40,12 @@ class _ButtonState extends State<Button> {
         onTap: widget.onPressed,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
-          width: buttonSize,
-          height: buttonSize,
+          width: spacing.toolbarButtonSize,
+          height: spacing.toolbarButtonSize,
           child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(buttonRadius),
+            decoration: theme.decorations.toolbarButton(
+              isActive: widget.isActive,
+              isHovering: _hovering,
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -58,8 +54,8 @@ class _ButtonState extends State<Button> {
                   child: widget.iconAsset != null
                       ? SvgPicture.asset(
                           widget.iconAsset!,
-                          width: iconSize,
-                          height: iconSize,
+                          width: spacing.toolbarIconSize,
+                          height: spacing.toolbarIconSize,
                           fit: BoxFit.contain,
                           colorFilter: ColorFilter.mode(
                             foregroundColor,
@@ -68,10 +64,8 @@ class _ButtonState extends State<Button> {
                         )
                       : Text(
                           widget.label!,
-                          style: TextStyle(
-                            color: foregroundColor,
-                            fontSize: iconSize,
-                            fontWeight: FontWeight.w600,
+                          style: theme.typography.buttonLabel(
+                            isActive: widget.isActive,
                           ),
                         ),
                 ),
@@ -81,12 +75,7 @@ class _ButtonState extends State<Button> {
                     bottom: 2,
                     child: Text(
                       widget.hotkey!,
-                      style: TextStyle(
-                        color: SquiggleColors.subtext0,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        height: 1,
-                      ),
+                      style: theme.typography.hotkey,
                     ),
                   ),
               ],

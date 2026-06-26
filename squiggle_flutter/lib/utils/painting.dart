@@ -1,10 +1,11 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 void paintDashedRect(Canvas canvas, Rect bounds) {
   const dashLength = 8.0;
   const gapLength = 4.0;
   final paint = Paint()
-    ..color = const Color(0xFF89B4FA)
+    ..color = SquiggleColors.accent
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.5;
 

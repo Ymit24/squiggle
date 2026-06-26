@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/theme/document_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import '../feature.dart';
 import '../feature_geometry.dart';
@@ -14,8 +16,8 @@ part 'feature_kind_image.dart';
 
 sealed class FeatureKind {
   const FeatureKind({
-    this.strokeColor = const Color(0xFFFFFFFF),
-    this.fillColor = const Color(0xFF000000),
+    this.strokeColor = defaultFeatureStrokeColor,
+    this.fillColor = defaultFeatureFillColor,
     this.strokeWidth = defaultStrokeWidth,
   });
 

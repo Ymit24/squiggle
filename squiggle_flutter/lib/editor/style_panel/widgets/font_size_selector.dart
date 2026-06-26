@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_swatch.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 /// Preview label size in the font-size picker (not the canvas font size).
 double _previewFontSize(FontSizePreset preset) => switch (preset) {
@@ -26,28 +26,25 @@ class FontSizeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
     final presets = FontSizePreset.values;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: swatchGap,
+      spacing: theme.spacing.swatchGap,
       children: [
         for (final preset in presets)
           StyleColorSwatch(
-            color: SquiggleColors.base,
+            color: theme.colors.base,
             isActive: !isMixed && activePreset == preset,
             enabled: enabled,
             onPressed: () => onPresetSelected(preset),
             overlay: Center(
               child: Text(
                 'aA',
-                style: TextStyle(
-                  color: !isMixed && activePreset == preset
-                      ? SquiggleColors.text
-                      : SquiggleColors.subtext0,
+                style: theme.typography.swatchOverlayLabel(
+                  isActive: !isMixed && activePreset == preset,
                   fontSize: _previewFontSize(preset),
-                  fontWeight: FontWeight.w600,
-                  height: 1,
                 ),
               ),
             ),

@@ -6,8 +6,7 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/button.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/divider.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/gap.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/metrics.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 /// Floating toolbar overlay, matching rust-version layout and styling.
 class EditorToolbar extends StatelessWidget {
@@ -15,23 +14,22 @@ class EditorToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
+
     return Positioned(
-      top: 20,
+      top: spacing.overlayTop,
       left: 0,
       right: 0,
       child: Center(
         child: BlocBuilder<ToolbarBloc, ToolbarState>(
           builder: (context, state) {
             return DecoratedBox(
-              decoration: BoxDecoration(
-                color: SquiggleColors.mantle,
-                border: Border.all(color: SquiggleColors.surface1),
-                borderRadius: BorderRadius.circular(outerRadius),
-              ),
+              decoration: theme.decorations.floatingPanel(),
               child: Padding(
-                padding: const EdgeInsets.all(padding),
+                padding: EdgeInsets.all(spacing.toolbarPadding),
                 child: SizedBox(
-                  height: buttonSize,
+                  height: spacing.toolbarButtonSize,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,

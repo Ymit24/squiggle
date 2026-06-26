@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
-/// Catppuccin Mocha palette (matches rust-version `colors.rs`).
+import 'squiggle_color_scheme.dart';
+
+/// Convenience accessors for Squiggle UI colors outside of [BuildContext].
+///
+/// Prefer [SquiggleTheme] via `context.squiggleTheme` in widgets.
 abstract final class SquiggleColors {
-  static const base = Color(0xFF1E1E2E);
-  static const mantle = Color(0xFF181825);
-  static const surface0 = Color(0xFF313244);
-  static const surface1 = Color(0xFF45475A);
-  static const subtext0 = Color(0xFFA6ADC8);
-  static const text = Color(0xFFCDD6F4);
-  static const accent = Color(0xFF89B4FA);
+  static const base = squiggleBaseColor;
+  static const mantle = squiggleMantleColor;
+  static const surface0 = squiggleSurface0Color;
+  static const surface1 = squiggleSurface1Color;
+  static const subtext0 = squiggleSubtext0Color;
+  static const text = squiggleTextColor;
+  static const accent = squiggleAccentColor;
+  static const scrim = squiggleScrimColor;
+  static const selectionFill = squiggleSelectionFillColor;
 }

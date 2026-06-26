@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class _AcceptTextIntent extends Intent {
   const _AcceptTextIntent();
 }
 
-const _panelPadding = 12.0;
-const _buttonSpacing = 8.0;
 const _fieldMinLines = 3;
 const _fieldMaxLines = 5;
 
@@ -16,7 +15,7 @@ const textEditPanelButtonRowMinWidth = 154.0;
 
 /// Minimum width for the positioned edit panel, including padding.
 const textEditPanelMinWidth =
-    _panelPadding * 2 + textEditPanelButtonRowMinWidth;
+    kTextEditPanelPadding * 2 + textEditPanelButtonRowMinWidth;
 
 class TextEditPanel extends StatefulWidget {
   const TextEditPanel({
@@ -57,17 +56,18 @@ class _TextEditPanelState extends State<TextEditPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
+    final colors = theme.colors;
+
     return Material(
-      color: SquiggleColors.mantle,
+      color: colors.mantle,
       elevation: 4,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(theme.radii.textEditPanel),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border.all(color: SquiggleColors.surface1),
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: theme.decorations.textEditPanel(),
         child: Padding(
-          padding: const EdgeInsets.all(_panelPadding),
+          padding: EdgeInsets.all(spacing.textEditPanelPadding),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -100,42 +100,17 @@ class _TextEditPanelState extends State<TextEditPanel> {
                       autofocus: true,
                       minLines: _fieldMinLines,
                       maxLines: _fieldMaxLines,
-                      style: const TextStyle(
-                        color: SquiggleColors.text,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        filled: true,
-                        fillColor: SquiggleColors.surface0,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(
-                            color: SquiggleColors.surface1,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(
-                            color: SquiggleColors.surface1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(
-                            color: SquiggleColors.accent,
-                          ),
-                        ),
-                      ),
+                      style: theme.typography.inputText,
+                      decoration: theme.decorations.textField(),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: _buttonSpacing),
+              SizedBox(height: spacing.textEditButtonSpacing),
               Wrap(
                 alignment: WrapAlignment.end,
-                spacing: _buttonSpacing,
-                runSpacing: _buttonSpacing,
+                spacing: spacing.textEditButtonSpacing,
+                runSpacing: spacing.textEditButtonSpacing,
                 children: [
                   _PanelButton(
                     label: 'Cancel',
@@ -176,12 +151,8 @@ class _PanelButtonState extends State<_PanelButton> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.isPrimary
-        ? SquiggleColors.accent.withValues(alpha: _hovering ? 0.85 : 1)
-        : (_hovering ? SquiggleColors.surface0 : SquiggleColors.surface1);
-    final textColor = widget.isPrimary
-        ? SquiggleColors.base
-        : SquiggleColors.text;
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
@@ -191,18 +162,19 @@ class _PanelButtonState extends State<_PanelButton> {
         onTap: widget.onPressed,
         behavior: HitTestBehavior.opaque,
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(6),
+          decoration: theme.decorations.panelButton(
+            isPrimary: widget.isPrimary,
+            isHovering: _hovering,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: spacing.textEditButtonHorizontalPadding,
+              vertical: spacing.textEditButtonVerticalPadding,
+            ),
             child: Text(
               widget.label,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 13,
-                fontWeight: widget.isPrimary ? FontWeight.w600 : FontWeight.normal,
+              style: theme.typography.panelButtonLabel(
+                isPrimary: widget.isPrimary,
               ),
             ),
           ),

@@ -82,7 +82,7 @@ class SelectTool extends Tool {
       canvas.drawRect(
         worldBounds,
         Paint()
-          ..color = const Color(0xFF89B4FA).withValues(alpha: 0.06)
+          ..color = SquiggleColors.selectionFill
           ..style = PaintingStyle.fill,
       );
       paintDashedRect(canvas, worldBounds);

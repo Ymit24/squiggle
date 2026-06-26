@@ -1,11 +1,10 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/theme/document_colors.dart';
 
-const defaultNewTextWidth = 200.0;
-const defaultNewTextFillColor = Color(0xFFFFFFFF);
-const defaultNewTextStrokeColor = Color(0x00000000);
+export 'package:squiggle_flutter/theme/document_colors.dart'
+    show defaultNewTextWidth;
 
 Rect newTextBoundsAt(Offset origin) {
   const kind = FeatureKindText(

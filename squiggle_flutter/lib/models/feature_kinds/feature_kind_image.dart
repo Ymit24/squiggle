@@ -41,7 +41,7 @@ final class FeatureKindImage extends FeatureKind {
       imageRepository.requestImage(imageId);
       canvas.drawRect(
         bounds,
-        Paint()..color = const Color(0xFF45475A),
+        Paint()..color = SquiggleColors.surface1,
       );
     }
 

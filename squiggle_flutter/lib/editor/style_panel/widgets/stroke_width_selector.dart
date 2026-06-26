@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_swatch.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/models/stroke_width_preset.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 /// Icon bar height in the width picker (not the canvas stroke width).
 double _previewBarHeight(StrokeWidthPreset preset) => switch (preset) {
@@ -26,15 +26,16 @@ class StrokeWidthSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
     final presets = StrokeWidthPreset.values;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: swatchGap,
+      spacing: theme.spacing.swatchGap,
       children: [
         for (final preset in presets)
           StyleColorSwatch(
-            color: SquiggleColors.base,
+            color: theme.colors.base,
             isActive: !isMixed && activePreset == preset,
             enabled: enabled,
             onPressed: () => onPresetSelected(preset),
@@ -42,8 +43,8 @@ class StrokeWidthSelector extends StatelessWidget {
               painter: _StrokeWidthPreviewPainter(
                 barHeight: _previewBarHeight(preset),
                 color: !isMixed && activePreset == preset
-                    ? SquiggleColors.text
-                    : SquiggleColors.subtext0,
+                    ? theme.colors.text
+                    : theme.colors.subtext0,
               ),
             ),
           ),

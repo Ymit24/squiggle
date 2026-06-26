@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.label, {super.key});
@@ -9,16 +8,13 @@ class SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: labelSpacing),
+      padding: EdgeInsets.only(bottom: theme.spacing.panelLabelSpacing),
       child: Text(
         label,
-        style: const TextStyle(
-          color: SquiggleColors.subtext0,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.2,
-        ),
+        style: theme.typography.sectionLabel,
       ),
     );
   }

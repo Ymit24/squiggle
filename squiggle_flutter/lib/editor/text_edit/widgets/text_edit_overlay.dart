@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_panel.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 const _panelMaxWidth = 400.0;
 const _panelMaxHeight = 200.0;
@@ -60,6 +61,7 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
     final bounds = widget.state.canvasLocalBounds;
     final panelWidth =
         bounds.width.clamp(textEditPanelMinWidth, _panelMaxWidth);
@@ -96,7 +98,7 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
                   behavior: HitTestBehavior.opaque,
                   onTap: _cancel,
                   child: ColoredBox(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: theme.colors.scrim,
                   ),
                 ),
                 Positioned(

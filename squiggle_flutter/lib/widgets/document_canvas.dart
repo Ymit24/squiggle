@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import '../models/camera.dart';
 import '../models/document.dart';
+import '../theme/squiggle_colors.dart';
 
 /// Paints a [Document]'s features on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
@@ -237,7 +238,7 @@ class RenderDocumentCanvas extends RenderBox {
     );
 
     final paint = Paint()
-      ..color = const Color(0xFF45475A)
+      ..color = SquiggleColors.surface1
       ..style = PaintingStyle.fill;
 
     final lineWidth = zoom;
