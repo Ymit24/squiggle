@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/repositories/viewport_repository.dart';
+import 'package:squiggle_flutter/services/feature_clipboard.dart';
 
 /// Creates an image feature from a pasted clipboard image at the viewport center.
 Future<void> pasteImageFromClipboard({
@@ -21,13 +22,10 @@ Future<void> pasteImageFromClipboard({
     return;
   }
 
-  final size = clampImageWorldSize(imported.intrinsicSize);
-  final origin = center - Offset(size.width / 2, size.height / 2);
-  final feature = Feature(
-    origin: origin,
-    size: size,
-    kind: FeatureKindImage(imported.imageId),
-  );
+  final feature = repositionFeaturesToCenter(
+    [createImageFeatureAtCenter(imported: imported, center: center)],
+    center,
+  ).first;
 
   documentRepository.executeCommand(AddFeatureCommand(feature));
 }

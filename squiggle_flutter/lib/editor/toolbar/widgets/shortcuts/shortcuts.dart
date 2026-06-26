@@ -9,9 +9,12 @@ import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/repositories/selection.dart';
 import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/repositories/viewport_repository.dart';
+import 'package:squiggle_flutter/services/feature_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_image.dart';
+import 'package:squiggle_flutter/services/paste_text.dart';
 
 const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
@@ -26,6 +29,10 @@ const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.digit5): ActivateCreateTextToolIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyC, meta: true):
+      CopySelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyC, control: true):
+      CopySelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, meta: true): PasteImageIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, control: true): PasteImageIntent(),
 };
@@ -130,16 +137,26 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                     return null;
                   },
                 ),
+            CopySelectedFeaturesIntent:
+                CallbackAction<CopySelectedFeaturesIntent>(
+                  onInvoke: (_) {
+                    if (textEditOpen) {
+                      return null;
+                    }
+                    copySelectedFeaturesToClipboard(
+                      documentRepository: context.read<DocumentRepository>(),
+                      selectionRepository: context.read<SelectionRepository>(),
+                      imageRepository: context.read<ImageRepository>(),
+                    );
+                    return null;
+                  },
+                ),
             PasteImageIntent: CallbackAction<PasteImageIntent>(
               onInvoke: (_) {
                 if (textEditOpen) {
                   return null;
                 }
-                pasteImageFromClipboard(
-                  imageRepository: context.read<ImageRepository>(),
-                  documentRepository: context.read<DocumentRepository>(),
-                  viewportRepository: context.read<ViewportRepository>(),
-                );
+                _pasteFromClipboard(context);
                 return null;
               },
             ),
@@ -165,4 +182,33 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
       ),
     );
   }
+}
+
+Future<void> _pasteFromClipboard(BuildContext context) async {
+  final documentRepository = context.read<DocumentRepository>();
+  final viewportRepository = context.read<ViewportRepository>();
+  final imageRepository = context.read<ImageRepository>();
+
+  final pastedFeatures = await pasteFeaturesFromClipboard(
+    documentRepository: documentRepository,
+    viewportRepository: viewportRepository,
+    imageRepository: imageRepository,
+  );
+  if (pastedFeatures) {
+    return;
+  }
+
+  final pastedText = await pasteTextFromClipboard(
+    documentRepository: documentRepository,
+    viewportRepository: viewportRepository,
+  );
+  if (pastedText) {
+    return;
+  }
+
+  await pasteImageFromClipboard(
+    imageRepository: imageRepository,
+    documentRepository: documentRepository,
+    viewportRepository: viewportRepository,
+  );
 }

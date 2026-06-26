@@ -34,6 +34,32 @@ void main() {
     });
   });
 
+  group('AddFeaturesCommand', () {
+    test('apply adds all features; undo removes them', () {
+      final doc = Document();
+      final features = [
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(20, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindCircle(),
+        ),
+      ];
+      final command = AddFeaturesCommand(features);
+
+      command.apply(doc);
+      expect(doc.features, hasLength(2));
+      expect(doc.features.every((feature) => feature.id != noId), isTrue);
+
+      command.undo(doc);
+      expect(doc.features, isEmpty);
+    });
+  });
+
   group('MoveFeatureCommand', () {
     test('apply moves feature; undo restores origin', () {
       final doc = docWithRectangle();
