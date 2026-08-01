@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
@@ -16,6 +17,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
        super(const ToolbarState(activeTool: ActiveToolKind.select)) {
     on<RequestWatchToolbarStateEvent>(_onRequestWatchToolbarState);
     on<ActivateSelectToolEvent>(_onActivateSelectTool);
+    on<ActivatePanToolEvent>(_onActivatePanTool);
     on<ActivateCreateRectToolEvent>(_onActivateCreateRectTool);
     on<ActivateCreateCircleToolEvent>(_onActivateCreateCircleTool);
     on<ActivateCreateLineToolEvent>(_onActivateCreateLineTool);
@@ -44,6 +46,14 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
   ) {
     _context.setTool(SelectTool());
     emit(state.copyWith(activeTool: ActiveToolKind.select));
+  }
+
+  void _onActivatePanTool(
+    ActivatePanToolEvent event,
+    Emitter<ToolbarState> emit,
+  ) {
+    _context.setTool(PanTool());
+    emit(state.copyWith(activeTool: ActiveToolKind.pan));
   }
 
   void _onActivateCreateRectTool(

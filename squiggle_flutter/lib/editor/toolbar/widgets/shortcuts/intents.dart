@@ -4,6 +4,10 @@ class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();
 }
 
+class ActivatePanToolIntent extends Intent {
+  const ActivatePanToolIntent();
+}
+
 class ActivateCreateRectToolIntent extends Intent {
   const ActivateCreateRectToolIntent();
 }

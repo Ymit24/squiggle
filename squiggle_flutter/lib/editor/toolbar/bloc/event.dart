@@ -6,6 +6,10 @@ class ActivateSelectToolEvent extends ToolbarEvent {
   const ActivateSelectToolEvent();
 }
 
+class ActivatePanToolEvent extends ToolbarEvent {
+  const ActivatePanToolEvent();
+}
+
 class ActivateCreateRectToolEvent extends ToolbarEvent {
   const ActivateCreateRectToolEvent();
 }

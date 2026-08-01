@@ -15,15 +15,17 @@ import 'package:squiggle_flutter/services/paste_text.dart';
 
 const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyH): ActivatePanToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyT): ActivateCreateTextToolIntent(),
   SingleActivator(LogicalKeyboardKey.digit1): ActivateSelectToolIntent(),
-  SingleActivator(LogicalKeyboardKey.digit2): ActivateCreateRectToolIntent(),
-  SingleActivator(LogicalKeyboardKey.digit3): ActivateCreateCircleToolIntent(),
-  SingleActivator(LogicalKeyboardKey.digit4): ActivateCreateLineToolIntent(),
-  SingleActivator(LogicalKeyboardKey.digit5): ActivateCreateTextToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit2): ActivatePanToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit3): ActivateCreateRectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit4): ActivateCreateCircleToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit5): ActivateCreateLineToolIntent(),
+  SingleActivator(LogicalKeyboardKey.digit6): ActivateCreateTextToolIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, meta: true):
@@ -94,6 +96,12 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 context.read<ToolbarBloc>().add(
                   const ActivateSelectToolEvent(),
                 );
+                return null;
+              },
+            ),
+            ActivatePanToolIntent: CallbackAction<ActivatePanToolIntent>(
+              onInvoke: (_) {
+                context.read<ToolbarBloc>().add(const ActivatePanToolEvent());
                 return null;
               },
             ),

@@ -18,7 +18,7 @@ void main() {
     Provider.debugCheckInvalidValueType = null;
   });
 
-  testWidgets('ToolShortcuts activates tools on V, R, C, L, T and 1-5 keys', (
+  testWidgets('ToolShortcuts activates tools on V, H, R, C, L, T and 1-6 keys', (
     tester,
   ) async {
     final context = EditorContext(
@@ -73,6 +73,9 @@ void main() {
     await pressKey(LogicalKeyboardKey.keyT);
     expect(toolbarBloc.state.activeTool, ActiveToolKind.createText);
 
+    await pressKey(LogicalKeyboardKey.keyH);
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.pan);
+
     await pressKey(LogicalKeyboardKey.keyV);
     expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
 
@@ -80,15 +83,18 @@ void main() {
     expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
 
     await pressKey(LogicalKeyboardKey.digit2);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createRect);
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.pan);
 
     await pressKey(LogicalKeyboardKey.digit3);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createCircle);
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createRect);
 
     await pressKey(LogicalKeyboardKey.digit4);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createLine);
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createCircle);
 
     await pressKey(LogicalKeyboardKey.digit5);
+    expect(toolbarBloc.state.activeTool, ActiveToolKind.createLine);
+
+    await pressKey(LogicalKeyboardKey.digit6);
     expect(toolbarBloc.state.activeTool, ActiveToolKind.createText);
   });
 
