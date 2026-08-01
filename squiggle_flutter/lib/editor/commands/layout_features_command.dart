@@ -1,4 +1,10 @@
-part of 'command.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/feature_layout.dart';
+
+import 'command.dart';
 
 /// Aligns or distributes features in one undo step.
 final class LayoutFeaturesCommand extends Command {
@@ -18,7 +24,7 @@ final class LayoutFeaturesCommand extends Command {
   Map<FeatureId, Offset>? _previousOrigins;
 
   @override
-  void apply(Document document) {
+  void redo(Document document) {
     final offsets = switch ((alignment, distribution)) {
       (final alignment?, null) =>
         computeAlignmentOffsets(document, ids, alignment),
@@ -29,12 +35,16 @@ final class LayoutFeaturesCommand extends Command {
     if (offsets.isEmpty) return;
 
     _previousOrigins ??= {};
+    final targets = <FeatureId, Offset>{};
     for (final entry in offsets.entries) {
       final feature = document.featureById(entry.key);
       if (feature == null) continue;
 
       _previousOrigins!.putIfAbsent(entry.key, () => feature.origin);
-      feature.moveTo(feature.origin + entry.value);
+      targets[entry.key] = feature.origin + entry.value;
+    }
+    if (targets.isNotEmpty) {
+      document.moveFeatures(targets);
     }
   }
 
@@ -43,27 +53,6 @@ final class LayoutFeaturesCommand extends Command {
     final previousOrigins = _previousOrigins;
     if (previousOrigins == null) return;
 
-    for (final entry in previousOrigins.entries) {
-      document.featureById(entry.key)?.moveTo(entry.value);
-    }
-  }
-
-  @override
-  Command clone() {
-    if (alignment != null) {
-      return LayoutFeaturesCommand.align(
-        ids: List.of(ids),
-        alignment: alignment!,
-      ).._previousOrigins = _previousOrigins == null
-          ? null
-          : Map.of(_previousOrigins!);
-    }
-
-    return LayoutFeaturesCommand.distribute(
-      ids: List.of(ids),
-      distribution: distribution!,
-    ).._previousOrigins = _previousOrigins == null
-        ? null
-        : Map.of(_previousOrigins!);
+    document.moveFeatures(previousOrigins);
   }
 }

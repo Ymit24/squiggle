@@ -1,15 +1,13 @@
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/models/commands/command.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/services/feature_clipboard.dart';
 
 /// Creates a text feature from clipboard plain text at the viewport center.
 Future<bool> pasteTextFromClipboard({
-  required DocumentRepository documentRepository,
-  required ViewportRepository viewportRepository,
+  required EditorContext context,
 }) async {
   final text = await readClipboardPlainText();
   if (text == null ||
@@ -18,13 +16,13 @@ Future<bool> pasteTextFromClipboard({
     return false;
   }
 
-  final center = viewportRepository.worldCenterAtViewportCenter();
+  final center = context.worldCenterAtViewportCenter();
   if (center == null) {
     return false;
   }
 
   final feature = createTextFeatureAtCenter(contents: text, center: center);
-  documentRepository.executeCommand(AddFeatureCommand(feature));
+  context.execute(AddFeatureCommand(feature));
   return true;
 }
 

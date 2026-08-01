@@ -1,65 +1,72 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
+import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
 
 void main() {
-  group('SelectionRepository', () {
+  group('SelectionModel', () {
     test('can select features', () {
-      final repository = SelectionRepository();
-      repository.selectFeature(FeatureId.newId(0));
-      expect(repository.selectedFeatures.length, 1);
-      expect(repository.selectedFeatures[0], FeatureId.newId(0));
+      final selection = SelectionModel();
+      selection.selectFeature(FeatureId.newId(0));
+      expect(selection.selectedFeatures.length, 1);
+      expect(selection.selectedFeatures[0], FeatureId.newId(0));
     });
 
     test('can deselect features', () {
-      final repository = SelectionRepository();
-      repository.selectFeature(FeatureId.newId(0));
-      repository.deselectFeature(FeatureId.newId(0));
-      expect(repository.selectedFeatures.length, 0);
+      final selection = SelectionModel();
+      selection.selectFeature(FeatureId.newId(0));
+      selection.deselectFeature(FeatureId.newId(0));
+      expect(selection.selectedFeatures.length, 0);
     });
 
     test('can clear selection', () {
-      final repository = SelectionRepository();
-      repository.selectFeature(FeatureId.newId(0));
-      repository.selectFeature(FeatureId.newId(1));
-      repository.clearSelection();
-      expect(repository.selectedFeatures, isEmpty);
+      final selection = SelectionModel();
+      selection.selectFeature(FeatureId.newId(0));
+      selection.selectFeature(FeatureId.newId(1));
+      selection.clearSelection();
+      expect(selection.selectedFeatures, isEmpty);
     });
 
     test('does not duplicate on select', () {
-      final repository = SelectionRepository();
+      final selection = SelectionModel();
       final id = FeatureId.newId(0);
-      repository.selectFeature(id);
-      repository.selectFeature(id);
-      expect(repository.selectedFeatures.length, 1);
+      selection.selectFeature(id);
+      selection.selectFeature(id);
+      expect(selection.selectedFeatures.length, 1);
     });
 
     test('can check if a feature is selected', () {
-      final repository = SelectionRepository();
-      repository.selectFeature(FeatureId.newId(0));
-      expect(repository.isFeatureSelected(FeatureId.newId(0)), true);
-      expect(repository.isFeatureSelected(FeatureId.newId(1)), false);
+      final selection = SelectionModel();
+      selection.selectFeature(FeatureId.newId(0));
+      expect(selection.isFeatureSelected(FeatureId.newId(0)), true);
+      expect(selection.isFeatureSelected(FeatureId.newId(1)), false);
     });
 
-    test('selected features stream emits correct values', () async {
-      final repository = SelectionRepository();
+    test('emits on each mutation', () async {
+      final selection = SelectionModel();
       final id0 = FeatureId.newId(0);
       final id1 = FeatureId.newId(1);
+      final events = <List<FeatureId>>[];
+      final subscription = notifierChangesStream(selection).listen((_) {
+        events.add(selection.selectedFeatures);
+      });
 
-      expectLater(
-        repository.selectedFeaturesStream,
-        emitsInOrder([
-          equals([id0]),
-          equals([id0, id1]),
-          equals([id1]),
-          isEmpty,
-        ]),
-      );
+      selection.selectFeature(id0);
+      await Future<void>.delayed(Duration.zero);
+      selection.selectFeature(id1);
+      await Future<void>.delayed(Duration.zero);
+      selection.deselectFeature(id0);
+      await Future<void>.delayed(Duration.zero);
+      selection.clearSelection();
+      await Future<void>.delayed(Duration.zero);
 
-      repository.selectFeature(id0);
-      repository.selectFeature(id1);
-      repository.deselectFeature(id0);
-      repository.clearSelection();
+      expect(events, [
+        [id0],
+        [id0, id1],
+        [id1],
+        <FeatureId>[],
+      ]);
+      await subscription.cancel();
     });
   });
 }

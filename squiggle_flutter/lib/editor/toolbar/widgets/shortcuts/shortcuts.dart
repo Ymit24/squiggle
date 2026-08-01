@@ -3,15 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
-import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/services/feature_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_image.dart';
 import 'package:squiggle_flutter/services/paste_text.dart';
@@ -152,8 +149,7 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                       return null;
                     }
                     copySelectedFeaturesToClipboard(
-                      documentRepository: context.read<DocumentRepository>(),
-                      selectionRepository: context.read<SelectionRepository>(),
+                      context: context.read<EditorContext>(),
                       imageRepository: context.read<ImageRepository>(),
                     );
                     return null;
@@ -188,10 +184,8 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             onKeyEvent: (node, event) {
               if (textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
-              if (context.read<ToolRepository>().onKeyEvent(
-                context.read<DocumentRepository>(),
-                event,
-              )) {
+              final context_ = context.read<EditorContext>();
+              if (context_.tool.onKeyEvent(context_, event)) {
                 return KeyEventResult.handled;
               }
               return KeyEventResult.ignored;
@@ -205,13 +199,11 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
 }
 
 Future<void> _pasteFromClipboard(BuildContext context) async {
-  final documentRepository = context.read<DocumentRepository>();
-  final viewportRepository = context.read<ViewportRepository>();
+  final editorContext = context.read<EditorContext>();
   final imageRepository = context.read<ImageRepository>();
 
   final pastedFeatures = await pasteFeaturesFromClipboard(
-    documentRepository: documentRepository,
-    viewportRepository: viewportRepository,
+    context: editorContext,
     imageRepository: imageRepository,
   );
   if (pastedFeatures) {
@@ -219,8 +211,7 @@ Future<void> _pasteFromClipboard(BuildContext context) async {
   }
 
   final pastedText = await pasteTextFromClipboard(
-    documentRepository: documentRepository,
-    viewportRepository: viewportRepository,
+    context: editorContext,
   );
   if (pastedText) {
     return;
@@ -228,7 +219,6 @@ Future<void> _pasteFromClipboard(BuildContext context) async {
 
   await pasteImageFromClipboard(
     imageRepository: imageRepository,
-    documentRepository: documentRepository,
-    viewportRepository: viewportRepository,
+    context: editorContext,
   );
 }

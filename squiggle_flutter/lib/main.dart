@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
-import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 void main() async {
@@ -20,22 +16,19 @@ void main() async {
   await imageRepository.initialize();
 
   final documentStorage = DocumentStorage(imageRepository: imageRepository);
-  final documentRepository = DocumentRepository(document: Document());
-  final selectionRepository = SelectionRepository();
+  final context = EditorContext(document: Document());
   final documentLibraryRepository = DocumentLibraryRepository(
     documentStorage: documentStorage,
-    documentRepository: documentRepository,
-    selectionRepository: selectionRepository,
+    context: context,
   );
   await documentLibraryRepository.initialize();
 
   runApp(
     SquiggleApp(
       imageRepository: imageRepository,
-      documentRepository: documentRepository,
+      context: context,
       documentStorage: documentStorage,
       documentLibraryRepository: documentLibraryRepository,
-      selectionRepository: selectionRepository,
     ),
   );
 }
@@ -44,17 +37,15 @@ class SquiggleApp extends StatelessWidget {
   const SquiggleApp({
     super.key,
     required this.imageRepository,
-    required this.documentRepository,
+    required this.context,
     required this.documentStorage,
     required this.documentLibraryRepository,
-    required this.selectionRepository,
   });
 
   final ImageRepository imageRepository;
-  final DocumentRepository documentRepository;
+  final EditorContext context;
   final DocumentStorage documentStorage;
   final DocumentLibraryRepository documentLibraryRepository;
-  final SelectionRepository selectionRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -63,70 +54,46 @@ class SquiggleApp extends StatelessWidget {
       theme: SquiggleThemeData.dark(),
       home: SquiggleHomePage(
         imageRepository: imageRepository,
-        documentRepository: documentRepository,
+        context: this.context,
         documentStorage: documentStorage,
         documentLibraryRepository: documentLibraryRepository,
-        selectionRepository: selectionRepository,
       ),
     );
   }
 }
 
 class SquiggleHomePage extends StatelessWidget {
-  SquiggleHomePage({
+  const SquiggleHomePage({
     super.key,
-    required ImageRepository imageRepository,
-    required this.documentRepository,
+    required this.imageRepository,
+    required this.context,
     required this.documentStorage,
     required this.documentLibraryRepository,
-    required this.selectionRepository,
-  }) : _imageRepository = imageRepository;
+  });
 
-  final ImageRepository _imageRepository;
-  final DocumentRepository documentRepository;
+  final ImageRepository imageRepository;
+  final EditorContext context;
   final DocumentStorage documentStorage;
   final DocumentLibraryRepository documentLibraryRepository;
-  final SelectionRepository selectionRepository;
-  final _viewportRepository = ViewportRepository();
-  final _textEditRepository = TextEditRepository();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: RepositoryProvider(
-        create: (context) => selectionRepository,
+        create: (context) => this.context,
         child: RepositoryProvider(
-          create: (context) => _textEditRepository,
+          create: (context) => imageRepository,
           dispose: (repository) => repository.dispose(),
           child: RepositoryProvider(
-            create: (context) => ToolRepository(),
-            dispose: (repository) => repository.dispose(),
+            create: (context) => documentStorage,
             child: RepositoryProvider(
-              create: (context) => _imageRepository,
+              create: (context) => documentLibraryRepository,
               dispose: (repository) => repository.dispose(),
-              child: RepositoryProvider(
-                create: (context) => _viewportRepository,
-                child: RepositoryProvider(
-                  create: (context) => documentRepository,
-                  dispose: (repository) => repository.dispose(),
-                  child: RepositoryProvider(
-                    create: (context) => documentStorage,
-                    child: RepositoryProvider(
-                      create: (context) => documentLibraryRepository,
-                      dispose: (repository) => repository.dispose(),
-                      child: BlocProvider(
-                        create: (context) => ToolbarBloc(
-                          toolRepository: context.read<ToolRepository>(),
-                          selectionRepository:
-                              context.read<SelectionRepository>(),
-                          documentRepository:
-                              context.read<DocumentRepository>(),
-                        )..add(const RequestWatchToolbarStateEvent()),
-                        child: AppShell(documentRepository: documentRepository),
-                      ),
-                    ),
-                  ),
-                ),
+              child: BlocProvider(
+                create: (context) => ToolbarBloc(
+                  context: this.context,
+                )..add(const RequestWatchToolbarStateEvent()),
+                child: AppShell(context: this.context),
               ),
             ),
           ),

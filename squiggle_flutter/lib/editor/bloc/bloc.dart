@@ -1,24 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
+import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
 import 'package:squiggle_flutter/editor/bloc/state.dart';
-import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 
 class EditorBloc extends Bloc<EditorEvent, EditorState> {
-  EditorBloc({
-    required this.documentRepository,
-    required this.selectionRepository,
-    required this.toolRepository,
-  }) : super(EditorState.empty(documentRepository.document)) {
+  EditorBloc({required this.context})
+    : super(EditorState.empty(context.document)) {
     on<RequestWatchEditorStateEvent>(_onRequestWatchEditorState);
     on<DeleteSelectedFeaturesEvent>(_onDeleteSelectedFeatures);
   }
 
-  final DocumentRepository documentRepository;
-  final SelectionRepository selectionRepository;
-  final ToolRepository toolRepository;
+  final EditorContext context;
 
   Future<void> _onRequestWatchEditorState(
     RequestWatchEditorStateEvent event,
@@ -26,21 +19,20 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   ) async {
     emit(
       state.copyWith(
-        selectedFeatures: List.of(selectionRepository.selectedFeatures),
+        selectedFeatures: List.of(context.selection.selectedFeatures),
       ),
     );
 
     await Future.wait([
       emit.forEach(
-        selectionRepository.selectedFeaturesStream,
-        onData: (selectedFeatures) => state.copyWith(
-          selectedFeatures: List.of(selectedFeatures),
+        notifierChangesStream(context.selection),
+        onData: (_) => state.copyWith(
+          selectedFeatures: List.of(context.selection.selectedFeatures),
         ),
       ),
       emit.forEach(
-        documentRepository.changesStream,
-        onData: (_) =>
-            state.copyWith(document: documentRepository.document),
+        notifierChangesStream(context.document),
+        onData: (_) => state.copyWith(document: context.document),
       ),
     ]);
   }
@@ -49,10 +41,6 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     DeleteSelectedFeaturesEvent event,
     Emitter<EditorState> emit,
   ) {
-    final ids = List.of(selectionRepository.selectedFeatures);
-    if (ids.isEmpty) return;
-
-    documentRepository.executeCommand(RemoveFeaturesCommand(ids));
-    selectionRepository.clearSelection();
+    context.deleteSelection();
   }
 }

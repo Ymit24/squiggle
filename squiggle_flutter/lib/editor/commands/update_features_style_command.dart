@@ -1,7 +1,13 @@
-part of 'command.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_id.dart';
+
+import 'command.dart';
 
 /// Updates style fields on the features identified by [ids], snapshotting
-/// previous kinds for undo.
+/// previous kinds and sizes for undo.
 ///
 /// Only non-null style fields are applied.
 final class UpdateFeaturesStyleCommand extends Command {
@@ -26,7 +32,7 @@ final class UpdateFeaturesStyleCommand extends Command {
   Map<FeatureId, Size>? _previousSizes;
 
   @override
-  void apply(Document document) {
+  void redo(Document document) {
     _previousKinds ??= {};
     if (fontSize != null) {
       _previousSizes ??= {};
@@ -39,7 +45,7 @@ final class UpdateFeaturesStyleCommand extends Command {
       if (fontSize != null && feature.kind is FeatureKindText) {
         _previousSizes!.putIfAbsent(id, () => feature.size);
       }
-      feature.kind = switch (feature.kind) {
+      final newKind = switch (feature.kind) {
         FeatureKindText() => feature.kind.copyWithStyle(
           strokeColor: strokeColor,
           fillColor: fillColor,
@@ -54,14 +60,15 @@ final class UpdateFeaturesStyleCommand extends Command {
           strokeWidth: strokeWidth,
         ),
       };
-      if (fontSize != null && feature.kind is FeatureKindText) {
-        final textKind = feature.kind as FeatureKindText;
-        textKind.applySizeFromFontSize(
-          feature,
+
+      if (fontSize != null && newKind is FeatureKindText) {
+        final size = newKind.measureContents(
           width: feature.size.width,
-          origin: feature.origin,
-          fontSize: textKind.fontSize,
+          fontSize: newKind.fontSize,
         );
+        document.setFeatureKind(id, newKind, size: size);
+      } else {
+        document.setFeatureKind(id, newKind);
       }
     }
   }
@@ -72,28 +79,11 @@ final class UpdateFeaturesStyleCommand extends Command {
     if (previousKinds == null) return;
 
     for (final entry in previousKinds.entries) {
-      document.featureById(entry.key)?.kind = entry.value;
-    }
-
-    final previousSizes = _previousSizes;
-    if (previousSizes != null) {
-      for (final entry in previousSizes.entries) {
-        document.featureById(entry.key)?.size = entry.value;
-      }
+      document.setFeatureKind(
+        entry.key,
+        entry.value,
+        size: _previousSizes?[entry.key],
+      );
     }
   }
-
-  @override
-  Command clone() => UpdateFeaturesStyleCommand(
-    ids: List.of(ids),
-    strokeColor: strokeColor,
-    fillColor: fillColor,
-    strokeWidth: strokeWidth,
-    fontSize: fontSize,
-    horizontalAlignment: horizontalAlignment,
-    verticalAlignment: verticalAlignment,
-  ).._previousKinds = _previousKinds == null
-      ? null
-      : Map.of(_previousKinds!)
-    .._previousSizes = _previousSizes == null ? null : Map.of(_previousSizes!);
 }

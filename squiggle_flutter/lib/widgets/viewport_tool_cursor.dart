@@ -1,11 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 MouseCursor _mouseCursorFor(EditorCursor cursor) {
@@ -49,18 +44,12 @@ MouseCursor _defaultMouseCursorFor(EditorCursor cursor) {
 class ViewportToolCursor extends StatefulWidget {
   const ViewportToolCursor({
     super.key,
-    required this.documentRepository,
-    required this.selectionRepository,
-    required this.toolRepository,
-    required this.camera,
+    required this.context,
     required this.canvasKey,
     required this.child,
   });
 
-  final DocumentRepository documentRepository;
-  final SelectionRepository selectionRepository;
-  final ToolRepository toolRepository;
-  final Camera camera;
+  final EditorContext context;
   final GlobalKey canvasKey;
   final Widget child;
 
@@ -72,36 +61,24 @@ class _ViewportToolCursorState extends State<ViewportToolCursor> {
   MouseCursor _cursor = SystemMouseCursors.basic;
   Offset? _lastPointerGlobal;
   bool _pointerDown = false;
-  StreamSubscription<void>? _repaintSubscription;
 
   @override
   void initState() {
     super.initState();
-    _repaintSubscription = widget.toolRepository.repaintStream.listen((_) {
-      _resolveAtLastPointer();
-    });
+    widget.context.addListener(_resolveAtLastPointer);
   }
 
   @override
   void dispose() {
-    _repaintSubscription?.cancel();
+    widget.context.removeListener(_resolveAtLastPointer);
     super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(ViewportToolCursor oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.camera.zoom != widget.camera.zoom ||
-        oldWidget.camera.location != widget.camera.location) {
-      _resolveAtLastPointer();
-    }
   }
 
   Offset? _worldFromGlobal(Offset global) {
     final renderBox =
         widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return null;
-    return widget.camera.screenToWorld(renderBox.globalToLocal(global));
+    return widget.context.camera.screenToWorld(renderBox.globalToLocal(global));
   }
 
   void _resolveAtLastPointer() {
@@ -114,12 +91,7 @@ class _ViewportToolCursorState extends State<ViewportToolCursor> {
     final world = _worldFromGlobal(global);
     if (world == null) return;
     final next = _mouseCursorFor(
-      widget.toolRepository.resolveCursor(
-        widget.documentRepository,
-        world,
-        widget.selectionRepository,
-        widget.camera,
-      ),
+      widget.context.tool.resolveCursor(widget.context, world, widget.context.camera),
     );
     if (next == _cursor) return;
     setState(() => _cursor = next);

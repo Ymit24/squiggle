@@ -1,15 +1,16 @@
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/selection_model.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
@@ -52,13 +53,12 @@ class SelectTool extends Tool {
   void paint(
     Canvas canvas,
     Camera camera,
-    DocumentRepository documentRepository,
-    SelectionRepository selection,
+    EditorContext context,
     ImageRepository imageRepository,
   ) {
-    final document = documentRepository.document;
+    final document = context.document;
 
-    for (final featureId in selection.selectedFeatures) {
+    for (final featureId in context.selection.selectedFeatures) {
       final feature = document.featureById(featureId);
       if (feature != null) {
         _paintSelectionBox(canvas, camera, feature.bounds());
@@ -91,9 +91,8 @@ class SelectTool extends Tool {
 
   @override
   EditorCursor resolveCursor(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
     Camera camera,
   ) {
     switch (_state) {
@@ -109,7 +108,7 @@ class SelectTool extends Tool {
         break;
     }
 
-    final document = documentRepository.document;
+    final document = context.document;
     final editingFeatureId = _editingFeatureId;
     if (editingFeatureId != null) {
       final feature = document.featureById(editingFeatureId);
@@ -124,8 +123,10 @@ class SelectTool extends Tool {
       }
     }
 
-    if (selection.selectedFeatures.length == 1) {
-      final selected = document.featureById(selection.selectedFeatures.single)!;
+    if (context.selection.selectedFeatures.length == 1) {
+      final selected = document.featureById(
+        context.selection.selectedFeatures.single,
+      )!;
       final bounds = selected.bounds();
       final handle = _hitTestResizeHandle(
         worldPoint: worldPosition,
@@ -147,15 +148,15 @@ class SelectTool extends Tool {
   }
 
   @override
-  void deactivate(SelectionRepository selection) {
-    selection.clearSelection();
+  void deactivate(EditorContext context) {
+    context.selection.clearSelection();
     _state = const _Idle();
     _lastTapFeatureId = null;
     _lastTapTime = null;
   }
 
   @override
-  bool onKeyEvent(DocumentRepository documentRepository, KeyDownEvent event) {
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
     if (_state is! _Editing) {
       return false;
     }
@@ -169,14 +170,14 @@ class SelectTool extends Tool {
 
   @override
   void onPointerDown(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-  ) {
-    final document = documentRepository.document;
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    final document = context.document;
+    final selection = context.selection;
     final editingFeatureId = _editingFeatureId;
 
     if (editingFeatureId != null &&
@@ -239,14 +240,14 @@ class SelectTool extends Tool {
 
   @override
   void onPointerMove(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-  ) {
-    final document = documentRepository.document;
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    final document = context.document;
+    final selection = context.selection;
     switch (_state) {
       case _Idle():
       case _Editing():
@@ -281,7 +282,7 @@ class SelectTool extends Tool {
           initialLocalPoints: initialLocalPoints,
           didMove: true,
         );
-        _movePolylinePoint(documentRepository, featureId, pointIndex, target);
+        _movePolylinePoint(document, featureId, pointIndex, target);
       case _Moving(
         :final initialOrigins,
         :final moveOffset,
@@ -297,8 +298,7 @@ class SelectTool extends Tool {
         var effectiveHasDuplicated = hasDuplicated;
         if (isAltPressed && !hasDuplicated) {
           effectiveMoveOffset = _tryAltDuplicate(
-            documentRepository,
-            selection,
+            context,
             worldPosition,
             draggedFeatureId,
             originsAtDragStart,
@@ -324,7 +324,7 @@ class SelectTool extends Tool {
             ? constrainMoveToAxis(pointerDownWorld, worldPosition)
             : worldPosition;
         _moveSelectedFeatures(
-          documentRepository,
+          document,
           selection,
           moveTarget,
           effectiveMoveOffset,
@@ -347,7 +347,7 @@ class SelectTool extends Tool {
           resumeEditing: resumeEditing,
         );
         _resizeFeature(
-          documentRepository,
+          document,
           featureId,
           handle,
           anchor,
@@ -362,15 +362,14 @@ class SelectTool extends Tool {
 
   @override
   void onPointerUp(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-    TextEditRepository textEditRepository,
-  ) {
-    final document = documentRepository.document;
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    final document = context.document;
+    final selection = context.selection;
     switch (_state) {
       case _EditingPoint(
         :final featureId,
@@ -381,7 +380,7 @@ class SelectTool extends Tool {
       ):
         if (didMove) {
           _commitPolylinePointMove(
-            documentRepository,
+            context,
             featureId,
             pointIndex,
             initialOrigin,
@@ -397,7 +396,7 @@ class SelectTool extends Tool {
         :final resumeEditing,
       ):
         if (didMove) {
-          _commitMove(documentRepository, initialOrigins);
+          _commitMove(context, initialOrigins);
         }
         final hovered = document.featureAtPoint(worldPosition);
         if (hovered != null && !didMove) {
@@ -411,7 +410,7 @@ class SelectTool extends Tool {
             }
             if (hovered.kind is FeatureKindText) {
               final textKind = hovered.kind as FeatureKindText;
-              textEditRepository.beginEdit(
+              context.startTextEdit(
                 EditTextEditSession(
                   featureId: hovered.id,
                   initialContents: textKind.contents,
@@ -453,7 +452,7 @@ class SelectTool extends Tool {
         :final resumeEditing,
       ):
         if (didResize) {
-          _commitResize(documentRepository, featureId, initialBounds);
+          _commitResize(context, featureId, initialBounds);
         }
         if (resumeEditing != null) {
           _state = _Editing(featureId: resumeEditing);
@@ -529,7 +528,7 @@ class SelectTool extends Tool {
   bool _tryBeginResize(
     Document document,
     Offset worldPosition,
-    SelectionRepository selection,
+    SelectionModel selection,
     Camera camera, {
     FeatureId? resumeEditing,
   }) {
@@ -773,7 +772,7 @@ class SelectTool extends Tool {
 
   void _updateMarqueeSelection(
     Document document,
-    SelectionRepository selection,
+    SelectionModel selection,
     bool isShiftPressed,
   ) {
     final state = _state;
@@ -807,15 +806,15 @@ class SelectTool extends Tool {
   /// Duplicates the dragged selection for alt-drag, leaving originals at drag
   /// start. Returns the [moveOffset] for the clone under the cursor.
   Offset _tryAltDuplicate(
-    DocumentRepository documentRepository,
-    SelectionRepository selection,
+    EditorContext context,
     Offset worldPosition,
     FeatureId draggedFeatureId,
     Map<FeatureId, Offset> originsAtDragStart,
     Offset moveOffset,
     bool draggedBeforeDuplicate,
   ) {
-    final document = documentRepository.document;
+    final document = context.document;
+    final selection = context.selection;
     final idsToDuplicate = selection.selectedFeatures.contains(draggedFeatureId)
         ? List<FeatureId>.of(selection.selectedFeatures)
         : [draggedFeatureId];
@@ -824,7 +823,7 @@ class SelectTool extends Tool {
       sourceIds: idsToDuplicate,
       originsAtDragStart: originsAtDragStart,
     );
-    documentRepository.executeCommand(command);
+    context.execute(command);
 
     final createdIds = command.createdIds;
     selection.setSelection(createdIds);
@@ -840,12 +839,11 @@ class SelectTool extends Tool {
   }
 
   void _moveSelectedFeatures(
-    DocumentRepository documentRepository,
-    SelectionRepository selection,
+    Document document,
+    SelectionModel selection,
     Offset worldPosition,
     Offset moveOffset,
   ) {
-    final document = documentRepository.document;
     final ids = List<FeatureId>.of(selection.selectedFeatures);
     if (ids.isEmpty) return;
 
@@ -860,17 +858,16 @@ class SelectTool extends Tool {
       }
     }
 
+    final targets = <FeatureId, Offset>{};
     for (final entry in offsets.entries) {
-      document
-          .featureById(entry.key)
-          ?.moveTo(worldPosition - moveOffset + entry.value);
+      targets[entry.key] = worldPosition - moveOffset + entry.value;
     }
-    documentRepository.notifyChanged();
+    document.moveFeatures(targets);
   }
 
   Map<FeatureId, Offset> _selectedFeatureOrigins(
     Document document,
-    SelectionRepository selection,
+    SelectionModel selection,
   ) {
     return {
       for (final id in selection.selectedFeatures)
@@ -879,10 +876,10 @@ class SelectTool extends Tool {
   }
 
   void _commitMove(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Map<FeatureId, Offset> initialOrigins,
   ) {
-    final document = documentRepository.document;
+    final document = context.document;
     final finalOrigins = <FeatureId, Offset>{};
     for (final id in initialOrigins.keys) {
       final feature = document.featureById(id);
@@ -892,13 +889,11 @@ class SelectTool extends Tool {
     }
     if (finalOrigins.isEmpty) return;
 
-    documentRepository.executeCommand(
-      MoveFeaturesCommand(finalOrigins, previousOrigins: initialOrigins),
-    );
+    context.record(MoveFeaturesCommand(initialOrigins, finalOrigins));
   }
 
   void _resizeFeature(
-    DocumentRepository documentRepository,
+    Document document,
     FeatureId featureId,
     SelectionResizeHandle handle,
     Offset anchor,
@@ -927,37 +922,36 @@ class SelectTool extends Tool {
             aspectRatio: aspectRatio,
           );
 
-    documentRepository.document.featureById(featureId)?.setBounds(newBounds);
-    documentRepository.notifyChanged();
+    document.setFeatureBounds(featureId, newBounds);
   }
 
   void _commitResize(
-    DocumentRepository documentRepository,
+    EditorContext context,
     FeatureId featureId,
     Rect initialBounds,
   ) {
-    final feature = documentRepository.document.featureById(featureId);
+    final feature = context.document.featureById(featureId);
     if (feature == null) return;
 
     final finalBounds = feature.bounds();
     if (finalBounds == initialBounds) return;
 
-    documentRepository.executeCommand(
+    context.record(
       ResizeFeatureCommand(
-        featureId,
-        finalBounds,
-        previousBounds: initialBounds,
+        id: featureId,
+        initialBounds: initialBounds,
+        finalBounds: finalBounds,
       ),
     );
   }
 
   void _movePolylinePoint(
-    DocumentRepository documentRepository,
+    Document document,
     FeatureId featureId,
     int pointIndex,
     Offset worldPosition,
   ) {
-    final feature = documentRepository.document.featureById(featureId);
+    final feature = document.featureById(featureId);
     if (feature == null) return;
 
     final kind = feature.kind;
@@ -966,23 +960,18 @@ class SelectTool extends Tool {
     final points = worldPoints(feature.origin, kind.localPoints);
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
-    points[pointIndex] = worldPosition;
-    final newOrigin = points.first;
-    final newLocal = localPointsFromWorld(points, newOrigin);
-    feature.moveTo(newOrigin);
-    feature.kind = kind.copyWith(localPoints: newLocal);
-    feature.size = feature.bounds().size;
-    documentRepository.notifyChanged();
+    document.setPolylinePoint(featureId, pointIndex, worldPosition);
   }
 
   void _commitPolylinePointMove(
-    DocumentRepository documentRepository,
+    EditorContext context,
     FeatureId featureId,
     int pointIndex,
     Offset initialOrigin,
     List<Offset> initialLocalPoints,
   ) {
-    final feature = documentRepository.document.featureById(featureId);
+    final document = context.document;
+    final feature = document.featureById(featureId);
     if (feature == null) return;
 
     final kind = feature.kind;
@@ -997,13 +986,13 @@ class SelectTool extends Tool {
       return;
     }
 
-    documentRepository.executeCommand(
+    context.record(
       MovePolylinePointCommand(
-        featureId,
-        pointIndex,
-        finalPoints[pointIndex],
-        previousOrigin: initialOrigin,
-        previousLocalPoints: initialLocalPoints,
+        id: featureId,
+        pointIndex: pointIndex,
+        initialOrigin: initialOrigin,
+        initialLocalPoints: initialLocalPoints,
+        finalWorldPosition: finalPoints[pointIndex],
       ),
     );
   }

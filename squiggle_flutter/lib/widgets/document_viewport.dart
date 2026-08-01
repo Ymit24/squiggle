@@ -6,38 +6,26 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
-import 'package:squiggle_flutter/repositories/viewport_repository.dart';
-import '../models/camera.dart';
+import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/models/camera.dart';
 import '../theme/squiggle_colors.dart';
 import 'document_canvas.dart';
 import 'viewport_tool_cursor.dart';
-import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
 class DocumentViewport extends StatefulWidget {
   const DocumentViewport({
     super.key,
-    required this.documentRepository,
-    required this.selectionRepository,
-    required this.toolRepository,
-    required this.textEditRepository,
+    required this.context,
     required this.imageRepository,
-    required this.viewportRepository,
   });
 
-  final DocumentRepository documentRepository;
-  final SelectionRepository selectionRepository;
-  final ToolRepository toolRepository;
-  final TextEditRepository textEditRepository;
+  final EditorContext context;
   final ImageRepository imageRepository;
-  final ViewportRepository viewportRepository;
 
   @override
   State<DocumentViewport> createState() => _DocumentViewportState();
@@ -51,7 +39,6 @@ class _DocumentViewportState extends State<DocumentViewport>
   final GlobalKey _canvasKey = GlobalKey();
   final GlobalKey _viewportKey = GlobalKey();
 
-  late Camera _camera;
   double _initialZoom = 1.0;
   Offset _initialLocation = Offset.zero;
   Offset? _pointerInCanvas;
@@ -66,10 +53,11 @@ class _DocumentViewportState extends State<DocumentViewport>
   double _flingSimXPos = 0;
   double _flingSimYPos = 0;
 
+  Camera get _camera => widget.context.camera;
+
   @override
   void initState() {
     super.initState();
-    _camera = Camera();
     _flingTicker = createTicker(_onFlingTick);
   }
 
@@ -114,9 +102,8 @@ class _DocumentViewportState extends State<DocumentViewport>
 
     if (dx == 0 && dy == 0) return;
 
-    setState(() {
-      _camera.panByScreenDelta(Offset(dx, dy));
-    });
+    _camera.panByScreenDelta(Offset(dx, dy));
+    widget.context.notifyViewportChanged();
   }
 
   Offset? _canvasLocal(PointerEvent event) {
@@ -156,15 +143,13 @@ class _DocumentViewportState extends State<DocumentViewport>
         if (world == null) return;
         _isPrimaryDragging = true;
         _pointerInCanvas = _canvasLocal(event);
-        widget.toolRepository.onPointerDown(
-          widget.documentRepository,
+        widget.context.tool.onPointerDown(
+          widget.context,
           world,
-          widget.selectionRepository,
-          _isShiftPressed,
-          _isAltPressed,
           _camera,
+          isShiftPressed: _isShiftPressed,
+          isAltPressed: _isAltPressed,
         );
-        setState(() {});
       },
       onPointerMove: (event) {
         if (!canvasInteractionsEnabled) return;
@@ -172,30 +157,26 @@ class _DocumentViewportState extends State<DocumentViewport>
         if (!_isPrimaryDragging) return;
         final world = _screenToWorld(event);
         if (world == null) return;
-        widget.toolRepository.onPointerMove(
-          widget.documentRepository,
+        widget.context.tool.onPointerMove(
+          widget.context,
           world,
-          widget.selectionRepository,
-          _isShiftPressed,
-          _isAltPressed,
           _camera,
+          isShiftPressed: _isShiftPressed,
+          isAltPressed: _isAltPressed,
         );
-        setState(() {});
       },
       onPointerHover: (event) {
         if (!canvasInteractionsEnabled) return;
         _pointerInCanvas = _canvasLocal(event);
         final world = _screenToWorld(event);
         if (world == null) return;
-        widget.toolRepository.onPointerHover(
-          widget.documentRepository,
+        widget.context.tool.onPointerHover(
+          widget.context,
           world,
-          widget.selectionRepository,
-          _isShiftPressed,
-          _isAltPressed,
           _camera,
+          isShiftPressed: _isShiftPressed,
+          isAltPressed: _isAltPressed,
         );
-        setState(() {});
       },
       onPointerUp: (event) {
         if (!canvasInteractionsEnabled) return;
@@ -203,17 +184,14 @@ class _DocumentViewportState extends State<DocumentViewport>
         _isPrimaryDragging = false;
         final world = _screenToWorld(event);
         if (world != null) {
-          widget.toolRepository.onPointerUp(
-            widget.documentRepository,
+          widget.context.tool.onPointerUp(
+            widget.context,
             world,
-            widget.selectionRepository,
-            _isShiftPressed,
-            _isAltPressed,
             _camera,
-            widget.textEditRepository,
+            isShiftPressed: _isShiftPressed,
+            isAltPressed: _isAltPressed,
           );
         }
-        setState(() {});
       },
       onPointerCancel: (event) {
         if (!canvasInteractionsEnabled) return;
@@ -221,17 +199,14 @@ class _DocumentViewportState extends State<DocumentViewport>
         _isPrimaryDragging = false;
         final world = _screenToWorld(event);
         if (world != null) {
-          widget.toolRepository.onPointerUp(
-            widget.documentRepository,
+          widget.context.tool.onPointerUp(
+            widget.context,
             world,
-            widget.selectionRepository,
-            _isShiftPressed,
-            _isAltPressed,
             _camera,
-            widget.textEditRepository,
+            isShiftPressed: _isShiftPressed,
+            isAltPressed: _isAltPressed,
           );
         }
-        setState(() {});
       },
       onPointerPanZoomStart: (event) {
         if (!canvasInteractionsEnabled) return;
@@ -256,10 +231,9 @@ class _DocumentViewportState extends State<DocumentViewport>
         _stopFling();
         final focal = _canvasLocal(event);
         if (focal == null) return;
-        setState(() {
-          final factor = math.exp(-event.scrollDelta.dy * 0.002);
-          _camera.zoomToward(focal, 1 / factor);
-        });
+        final factor = math.exp(-event.scrollDelta.dy * 0.002);
+        _camera.zoomToward(focal, 1 / factor);
+        widget.context.notifyViewportChanged();
       },
       onPointerPanZoomUpdate: (event) {
         if (!canvasInteractionsEnabled) return;
@@ -269,37 +243,30 @@ class _DocumentViewportState extends State<DocumentViewport>
         if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
           _panZoomHadSignificantPinch = true;
         }
-        setState(() {
-          final focal = _pointerInCanvas ?? _canvasLocal(event);
-          if (focal == null) return;
-          final prevZoom = _initialZoom;
-          final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
-            0.05,
-            10.0,
-          );
-          _camera.zoom = newZoom;
-          _camera.location =
-              _initialLocation +
-              focal * (prevZoom - newZoom) -
-              event.pan * newZoom;
-        });
+        final focal = _pointerInCanvas ?? _canvasLocal(event);
+        if (focal == null) return;
+        final prevZoom = _initialZoom;
+        final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
+          0.05,
+          10.0,
+        );
+        _camera.zoom = newZoom;
+        _camera.location =
+            _initialLocation +
+            focal * (prevZoom - newZoom) -
+            event.pan * newZoom;
+        widget.context.notifyViewportChanged();
       },
       child: Container(
         key: _viewportKey,
         color: SquiggleColors.base,
         child: ViewportToolCursor(
-          documentRepository: widget.documentRepository,
-          selectionRepository: widget.selectionRepository,
-          toolRepository: widget.toolRepository,
-          camera: _camera,
+          context: widget.context,
           canvasKey: _canvasKey,
           child: DocumentCanvas(
             key: _canvasKey,
-            documentRepository: widget.documentRepository,
-            toolRepository: widget.toolRepository,
-            selectionRepository: widget.selectionRepository,
+            context: widget.context,
             imageRepository: widget.imageRepository,
-            camera: _camera,
           ),
         ),
       ),
@@ -316,13 +283,10 @@ class _DocumentViewportState extends State<DocumentViewport>
         builder: (context, textEditState) {
           return LayoutBuilder(
             builder: (context, constraints) {
-              widget.viewportRepository
-                ..camera = _camera
-                ..viewportSize = Size(
-                  constraints.maxWidth,
-                  constraints.maxHeight,
-                );
-
+              widget.context.viewportSize = Size(
+                constraints.maxWidth,
+                constraints.maxHeight,
+              );
               return _buildCanvasLayer(
                 canvasInteractionsEnabled: textEditState is! TextEditOpen,
               );

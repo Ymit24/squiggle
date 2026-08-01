@@ -2,11 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
-import '../models/camera.dart';
 import '../models/document.dart';
 import '../theme/squiggle_colors.dart';
 
@@ -14,81 +11,41 @@ import '../theme/squiggle_colors.dart';
 class DocumentCanvas extends LeafRenderObjectWidget {
   const DocumentCanvas({
     super.key,
-    required this.documentRepository,
-    required this.toolRepository,
-    required this.selectionRepository,
+    required this.context,
     required this.imageRepository,
-    required this.camera,
   });
 
-  final DocumentRepository documentRepository;
-  final ToolRepository toolRepository;
-  final SelectionRepository selectionRepository;
+  final EditorContext context;
   final ImageRepository imageRepository;
-  final Camera camera;
 
   @override
   RenderDocumentCanvas createRenderObject(BuildContext context) {
     return RenderDocumentCanvas(
-      documentRepository: documentRepository,
-      toolRepository: toolRepository,
-      selectionRepository: selectionRepository,
+      context: this.context,
       imageRepository: imageRepository,
-      camera: camera,
     );
-  }
-
-  @override
+  }  @override
   void updateRenderObject(
     BuildContext context,
     RenderDocumentCanvas renderObject,
   ) {
     renderObject
-      ..documentRepository = documentRepository
-      ..toolRepository = toolRepository
-      ..selectionRepository = selectionRepository
+      ..context = this.context
       ..imageRepository = imageRepository
-      ..camera = camera
       ..markNeedsPaint();
   }
 }
 
 class RenderDocumentCanvas extends RenderBox {
-  RenderDocumentCanvas({
-    required this._documentRepository,
-    required this._toolRepository,
-    required this._selectionRepository,
-    required this._imageRepository,
-    required this._camera,
-  });
+  RenderDocumentCanvas({required this._context, required this._imageRepository});
 
-  DocumentRepository _documentRepository;
-  DocumentRepository get documentRepository => _documentRepository;
-  set documentRepository(DocumentRepository value) {
-    if (identical(_documentRepository, value)) return;
-    _unsubscribeFromDocumentChanges();
-    _documentRepository = value;
-    _subscribeToDocumentChanges();
-    markNeedsPaint();
-  }
-
-  ToolRepository _toolRepository;
-  ToolRepository get toolRepository => _toolRepository;
-  set toolRepository(ToolRepository value) {
-    if (identical(_toolRepository, value)) return;
-    _unsubscribeFromToolRepaints();
-    _toolRepository = value;
-    _subscribeToToolRepaints();
-    markNeedsPaint();
-  }
-
-  SelectionRepository _selectionRepository;
-  SelectionRepository get selectionRepository => _selectionRepository;
-  set selectionRepository(SelectionRepository value) {
-    if (identical(_selectionRepository, value)) return;
-    _unsubscribeFromSelectionChanges();
-    _selectionRepository = value;
-    _subscribeToSelectionChanges();
+  EditorContext _context;
+  EditorContext get context => _context;
+  set context(EditorContext value) {
+    if (identical(_context, value)) return;
+    _unsubscribeFromContext();
+    _context = value;
+    _subscribeToContext();
     markNeedsPaint();
   }
 
@@ -102,16 +59,6 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
-  Camera _camera;
-  Camera get camera => _camera;
-  set camera(Camera value) {
-    _camera = value;
-    markNeedsPaint();
-  }
-
-  StreamSubscription<void>? _documentChangesSubscription;
-  StreamSubscription<void>? _toolRepaintSubscription;
-  StreamSubscription<List<dynamic>>? _selectionChangesSubscription;
   StreamSubscription<void>? _imageRepaintSubscription;
 
   static const double _baseCellSize = 128.0;
@@ -119,53 +66,23 @@ class RenderDocumentCanvas extends RenderBox {
   @override
   void attach(covariant PipelineOwner owner) {
     super.attach(owner);
-    _subscribeToDocumentChanges();
-    _subscribeToToolRepaints();
-    _subscribeToSelectionChanges();
+    _subscribeToContext();
     _subscribeToImageRepaints();
   }
 
   @override
   void detach() {
-    _unsubscribeFromDocumentChanges();
-    _unsubscribeFromToolRepaints();
-    _unsubscribeFromSelectionChanges();
+    _unsubscribeFromContext();
     _unsubscribeFromImageRepaints();
     super.detach();
   }
 
-  void _subscribeToDocumentChanges() {
-    _documentChangesSubscription ??= _documentRepository.changesStream.listen(
-      (_) => markNeedsPaint(),
-    );
+  void _subscribeToContext() {
+    _context.addListener(markNeedsPaint);
   }
 
-  void _unsubscribeFromDocumentChanges() {
-    _documentChangesSubscription?.cancel();
-    _documentChangesSubscription = null;
-  }
-
-  void _subscribeToToolRepaints() {
-    _toolRepaintSubscription ??= _toolRepository.repaintStream.listen(
-      (_) => markNeedsPaint(),
-    );
-  }
-
-  void _unsubscribeFromToolRepaints() {
-    _toolRepaintSubscription?.cancel();
-    _toolRepaintSubscription = null;
-  }
-
-  void _subscribeToSelectionChanges() {
-    _selectionChangesSubscription ??=
-        _selectionRepository.selectedFeaturesStream.listen(
-      (_) => markNeedsPaint(),
-    );
-  }
-
-  void _unsubscribeFromSelectionChanges() {
-    _selectionChangesSubscription?.cancel();
-    _selectionChangesSubscription = null;
+  void _unsubscribeFromContext() {
+    _context.removeListener(markNeedsPaint);
   }
 
   void _subscribeToImageRepaints() {
@@ -191,7 +108,8 @@ class RenderDocumentCanvas extends RenderBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
-    final document = _documentRepository.document;
+    final document = _context.document;
+    final camera = _context.camera;
 
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
@@ -201,11 +119,10 @@ class RenderDocumentCanvas extends RenderBox {
     _applyWorldTransform(canvas);
     _drawGrid(canvas);
     _paintFeatures(canvas, document);
-    _toolRepository.activeTool.paint(
+    _context.tool.activeTool.paint(
       canvas,
-      _camera,
-      _documentRepository,
-      _selectionRepository,
+      camera,
+      _context,
       _imageRepository,
     );
     canvas.restore();
@@ -214,19 +131,19 @@ class RenderDocumentCanvas extends RenderBox {
   }
 
   void _applyWorldTransform(Canvas canvas) {
-    final zoom = _camera.zoom;
+    final zoom = _context.camera.zoom;
     if (zoom <= 0) return;
 
-    final location = _camera.location;
+    final location = _context.camera.location;
     canvas.scale(1 / zoom, 1 / zoom);
     canvas.translate(-location.dx, -location.dy);
   }
 
   void _drawGrid(Canvas canvas) {
-    final zoom = _camera.zoom;
+    final zoom = _context.camera.zoom;
     if (zoom <= 0) return;
 
-    final location = _camera.location;
+    final location = _context.camera.location;
     final firstGridX = (location.dx / _baseCellSize).floor() * _baseCellSize;
     final firstGridY = (location.dy / _baseCellSize).floor() * _baseCellSize;
 
@@ -266,12 +183,12 @@ class RenderDocumentCanvas extends RenderBox {
   }
 
   void _paintFeatures(Canvas canvas, Document document) {
-    final zoom = _camera.zoom;
+    final zoom = _context.camera.zoom;
     if (zoom <= 0) return;
 
     final visibleWorld = Rect.fromLTWH(
-      _camera.location.dx,
-      _camera.location.dy,
+      _context.camera.location.dx,
+      _context.camera.location.dy,
       size.width * zoom,
       size.height * zoom,
     );

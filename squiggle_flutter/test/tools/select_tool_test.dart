@@ -1,13 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart'
     show
         SelectTool,
@@ -18,17 +17,13 @@ import 'package:squiggle_flutter/tools/select_tool.dart'
 enum _SelectionEdge { top, right, bottom, left }
 
 void main() {
-  group('SelectTool via ToolRepository', () {
-    late DocumentRepository documentRepository;
-    late SelectionRepository selectionRepository;
-    late ToolRepository toolRepository;
-    late TextEditRepository textEditRepository;
+  group('SelectTool via EditorContext', () {
+    late EditorContext context;
     late Camera camera;
 
     setUp(() {
       camera = Camera();
-      textEditRepository = TextEditRepository();
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -42,47 +37,35 @@ void main() {
           ),
         ]),
       );
-      selectionRepository = SelectionRepository();
-      toolRepository = ToolRepository();
-    });
-
-    tearDown(() {
-      toolRepository.dispose();
-      textEditRepository.dispose();
-      documentRepository.dispose();
     });
 
     void pointerDown(Offset world, {bool shift = false, bool alt = false}) {
-      toolRepository.onPointerDown(
-        documentRepository,
+      context.tool.onPointerDown(
+        context,
         world,
-        selectionRepository,
-        shift,
-        alt,
         camera,
+        isShiftPressed: shift,
+        isAltPressed: alt,
       );
     }
 
     void pointerUp(Offset world, {bool shift = false, bool alt = false}) {
-      toolRepository.onPointerUp(
-        documentRepository,
+      context.tool.onPointerUp(
+        context,
         world,
-        selectionRepository,
-        shift,
-        alt,
         camera,
-        textEditRepository,
+        isShiftPressed: shift,
+        isAltPressed: alt,
       );
     }
 
     void pointerMove(Offset world, {bool shift = false, bool alt = false}) {
-      toolRepository.onPointerMove(
-        documentRepository,
+      context.tool.onPointerMove(
+        context,
         world,
-        selectionRepository,
-        shift,
-        alt,
         camera,
+        isShiftPressed: shift,
+        isAltPressed: alt,
       );
     }
 
@@ -94,8 +77,8 @@ void main() {
     }
 
     bool keyDown(LogicalKeyboardKey key) {
-      return toolRepository.onKeyEvent(
-        documentRepository,
+      return context.tool.onKeyEvent(
+        context,
         KeyDownEvent(
           physicalKey: PhysicalKeyboardKey.enter,
           logicalKey: key,
@@ -109,8 +92,8 @@ void main() {
       return worldPoints(feature.origin, kind.localPoints);
     }
 
-    DocumentRepository polylineDocument() {
-      return DocumentRepository(
+    EditorContext polylineDocument() {
+      return EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -155,10 +138,10 @@ void main() {
       pointerDown(const Offset(50, 50));
       pointerUp(const Offset(50, 50));
 
-      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(context.selection.selectedFeatures.length, 1);
       expect(
-        selectionRepository.selectedFeatures.single,
-        documentRepository.document.features.first.id,
+        context.selection.selectedFeatures.single,
+        context.document.features.first.id,
       );
     });
 
@@ -168,21 +151,19 @@ void main() {
       pointerDown(const Offset(250, 50));
       pointerUp(const Offset(250, 50));
 
-      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(context.selection.selectedFeatures.length, 1);
       expect(
-        selectionRepository.selectedFeatures.single,
-        documentRepository.document.features[1].id,
+        context.selection.selectedFeatures.single,
+        context.document.features[1].id,
       );
     });
 
     test('clears selection on empty click', () {
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
       pointerDown(const Offset(500, 500));
       pointerUp(const Offset(500, 500));
 
-      expect(selectionRepository.selectedFeatures, isEmpty);
+      expect(context.selection.selectedFeatures, isEmpty);
     });
 
     test('shift-click adds and removes from selection', () {
@@ -193,42 +174,42 @@ void main() {
       pointerDown(const Offset(50, 50), shift: true);
       pointerUp(const Offset(50, 50), shift: true);
 
-      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(context.selection.selectedFeatures.length, 1);
       expect(
-        selectionRepository.selectedFeatures.single,
-        documentRepository.document.features[1].id,
+        context.selection.selectedFeatures.single,
+        context.document.features[1].id,
       );
     });
 
     test('shift-click on empty preserves selection', () {
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
       pointerDown(const Offset(500, 500), shift: true);
       pointerUp(const Offset(500, 500), shift: true);
 
-      expect(selectionRepository.selectedFeatures.length, 1);
+      expect(context.selection.selectedFeatures.length, 1);
       expect(
-        selectionRepository.selectedFeatures.single,
-        documentRepository.document.features.first.id,
+        context.selection.selectedFeatures.single,
+        context.document.features.first.id,
       );
     });
 
     test('notifies repaint while marquee selecting', () async {
       final repaints = <void>[];
-      final subscription = toolRepository.repaintStream.listen(repaints.add);
+      final subscription = notifierChangesStream(context.tool).listen((_) {
+        repaints.add(null);
+      });
 
       pointerDown(const Offset(500, 500));
       pointerMove(const Offset(600, 600));
       await Future<void>.delayed(Duration.zero);
 
       expect(repaints, isNotEmpty);
-      expect(toolRepository.activeTool, isA<SelectTool>());
+      expect(context.tool.activeTool, isA<SelectTool>());
       await subscription.cancel();
     });
 
     test('moves group relative to clicked feature, not last selected', () {
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -247,7 +228,7 @@ void main() {
           ),
         ]),
       );
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       final idA = features[0].id;
       final idB = features[1].id;
       final idC = features[2].id;
@@ -258,21 +239,21 @@ void main() {
       pointerUp(const Offset(125, 25), shift: true);
       pointerDown(const Offset(225, 25), shift: true);
       pointerUp(const Offset(225, 25), shift: true);
-      expect(selectionRepository.selectedFeatures, [idA, idB, idC]);
+      expect(context.selection.selectedFeatures, [idA, idB, idC]);
 
       pointerDown(const Offset(25, 25));
       pointerMove(const Offset(35, 35));
 
       expect(
-        documentRepository.document.featureById(idA)!.origin,
+        context.document.featureById(idA)!.origin,
         const Offset(10, 10),
       );
       expect(
-        documentRepository.document.featureById(idB)!.origin,
+        context.document.featureById(idB)!.origin,
         const Offset(110, 10),
       );
       expect(
-        documentRepository.document.featureById(idC)!.origin,
+        context.document.featureById(idC)!.origin,
         const Offset(210, 10),
       );
     });
@@ -280,7 +261,9 @@ void main() {
     test('emits document changes on move', () async {
       pointerDown(const Offset(50, 50));
       final changes = <void>[];
-      final subscription = documentRepository.changesStream.listen(changes.add);
+      final subscription = notifierChangesStream(context.document).listen((_) {
+        changes.add(null);
+      });
       pointerMove(const Offset(60, 60));
       await Future<void>.delayed(Duration.zero);
       expect(changes, isNotEmpty);
@@ -288,7 +271,7 @@ void main() {
     });
 
     test('commits one undo state for a feature drag', () {
-      final feature = documentRepository.document.features.first;
+      final feature = context.document.features.first;
 
       pointerDown(const Offset(50, 50));
       pointerMove(const Offset(60, 60));
@@ -296,30 +279,30 @@ void main() {
       pointerMove(const Offset(80, 80));
 
       expect(feature.origin, const Offset(30, 30));
-      expect(documentRepository.document.undoStack, isEmpty);
+      expect(context.history.undoCount, 0);
 
       pointerUp(const Offset(80, 80));
 
-      expect(documentRepository.document.undoStack, hasLength(1));
-      documentRepository.undo();
+      expect(context.history.undoCount, 1);
+      context.undo();
       expect(feature.origin, Offset.zero);
     });
 
     test('commits one undo state for a multi-feature drag', () {
-      final features = documentRepository.document.features;
-      selectionRepository.selectFeature(features[0].id);
-      selectionRepository.selectFeature(features[1].id);
+      final features = context.document.features;
+      context.selection.selectFeature(features[0].id);
+      context.selection.selectFeature(features[1].id);
 
       pointerDown(const Offset(50, 50));
       pointerMove(const Offset(60, 60));
       pointerMove(const Offset(70, 70));
       pointerUp(const Offset(70, 70));
 
-      expect(documentRepository.document.undoStack, hasLength(1));
+      expect(context.history.undoCount, 1);
       expect(features[0].origin, const Offset(20, 20));
       expect(features[1].origin, const Offset(220, 20));
 
-      documentRepository.undo();
+      context.undo();
       expect(features[0].origin, Offset.zero);
       expect(features[1].origin, const Offset(200, 0));
     });
@@ -327,8 +310,8 @@ void main() {
     test(
       'resize does not snap on first move when grab is off-center on handle',
       () {
-        final feature = documentRepository.document.features.first;
-        selectionRepository.selectFeature(feature.id);
+        final feature = context.document.features.first;
+        context.selection.selectFeature(feature.id);
 
         final bounds = feature.bounds();
         final inflated = selectionBoxWorldBounds(bounds);
@@ -340,14 +323,14 @@ void main() {
         pointerDown(down);
         pointerMove(down);
 
-        final unchanged = documentRepository.document.featureById(feature.id)!;
+        final unchanged = context.document.featureById(feature.id)!;
         expect(unchanged.bounds(), bounds);
       },
     );
 
     test('resizes single selection from bottom-right handle', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final inflated = selectionBoxWorldBounds(bounds);
@@ -362,15 +345,15 @@ void main() {
       pointerMove(targetCorner + grabOffset);
       pointerUp(targetCorner + grabOffset);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       expect(resized.origin, bounds.topLeft);
       expect(resized.size.width, 150);
       expect(resized.size.height, 150);
     });
 
     test('commits one undo state for a resize drag', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final inflated = selectionBoxWorldBounds(bounds);
@@ -386,18 +369,18 @@ void main() {
       pointerMove(const Offset(160, 160) + grabOffset);
 
       expect(feature.size, const Size(160, 160));
-      expect(documentRepository.document.undoStack, isEmpty);
+      expect(context.history.undoCount, 0);
 
       pointerUp(const Offset(160, 160) + grabOffset);
 
-      expect(documentRepository.document.undoStack, hasLength(1));
-      documentRepository.undo();
+      expect(context.history.undoCount, 1);
+      context.undo();
       expect(feature.bounds(), bounds);
     });
 
     test('resizes single selection from top edge', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final down = edgeHitWorldPoint(bounds, _SelectionEdge.top);
@@ -408,15 +391,15 @@ void main() {
       pointerMove(targetTop + grabOffset);
       pointerUp(targetTop + grabOffset);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       expect(resized.origin, const Offset(0, -50));
       expect(resized.size.width, 100);
       expect(resized.size.height, 150);
     });
 
     test('resizes single selection from right edge', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final down = edgeHitWorldPoint(bounds, _SelectionEdge.right);
@@ -427,7 +410,7 @@ void main() {
       pointerMove(targetRight + grabOffset);
       pointerUp(targetRight + grabOffset);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       expect(resized.origin, bounds.topLeft);
       expect(resized.size.width, 200);
       expect(resized.size.height, 100);
@@ -436,8 +419,8 @@ void main() {
     test(
       'alt-resize from bottom-right handle resizes symmetrically from center',
       () {
-        final feature = documentRepository.document.features.first;
-        selectionRepository.selectFeature(feature.id);
+        final feature = context.document.features.first;
+        context.selection.selectFeature(feature.id);
 
         final bounds = feature.bounds();
         final center = bounds.center;
@@ -453,7 +436,7 @@ void main() {
         pointerMove(targetCorner + grabOffset, alt: true);
         pointerUp(targetCorner + grabOffset, alt: true);
 
-        final resized = documentRepository.document.featureById(feature.id)!;
+        final resized = context.document.featureById(feature.id)!;
         expect(resized.bounds().center, center);
         expect(resized.size.width, 200);
         expect(resized.size.height, 200);
@@ -461,8 +444,8 @@ void main() {
     );
 
     test('shift-resize from bottom-right handle locks aspect ratio', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final inflated = selectionBoxWorldBounds(bounds);
@@ -477,7 +460,7 @@ void main() {
       pointerMove(targetCorner + grabOffset, shift: true);
       pointerUp(targetCorner + grabOffset, shift: true);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       expect(resized.origin, bounds.topLeft);
       expect(resized.size.width / resized.size.height, closeTo(1.0, 0.001));
       expect(resized.size.width, closeTo(200, 0.001));
@@ -488,35 +471,35 @@ void main() {
       pointerDown(const Offset(50, 50));
       pointerMove(const Offset(80, 55), shift: true);
 
-      final moved = documentRepository.document.featureById(
-        documentRepository.document.features.first.id,
+      final moved = context.document.featureById(
+        context.document.features.first.id,
       )!;
       expect(moved.origin.dy, closeTo(0, 0.001));
       expect(moved.origin.dx, closeTo(30, 0.001));
     });
 
     test('alt-drag duplicates feature and leaves original in place', () {
-      final original = documentRepository.document.features.first;
+      final original = context.document.features.first;
       final originalId = original.id;
 
       pointerDown(const Offset(50, 50), alt: true);
       pointerMove(const Offset(70, 80), alt: true);
       pointerUp(const Offset(70, 80), alt: true);
 
-      expect(documentRepository.document.features, hasLength(3));
-      final unchanged = documentRepository.document.featureById(originalId)!;
+      expect(context.document.features, hasLength(3));
+      final unchanged = context.document.featureById(originalId)!;
       expect(unchanged.origin, Offset.zero);
 
-      expect(selectionRepository.selectedFeatures, hasLength(1));
-      final duplicate = documentRepository.document.featureById(
-        selectionRepository.selectedFeatures.single,
+      expect(context.selection.selectedFeatures, hasLength(1));
+      final duplicate = context.document.featureById(
+        context.selection.selectedFeatures.single,
       )!;
       expect(duplicate.id, isNot(originalId));
       expect(duplicate.origin, const Offset(20, 30));
     });
 
     test('alt-drag duplicates all selected features', () {
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       pointerDown(const Offset(50, 50));
       pointerUp(const Offset(50, 50));
       pointerDown(const Offset(250, 50), shift: true);
@@ -526,13 +509,13 @@ void main() {
       pointerMove(const Offset(60, 60), alt: true);
       pointerUp(const Offset(60, 60), alt: true);
 
-      expect(documentRepository.document.features, hasLength(4));
+      expect(context.document.features, hasLength(4));
       expect(features[0].origin, Offset.zero);
       expect(features[1].origin, const Offset(200, 0));
 
-      expect(selectionRepository.selectedFeatures, hasLength(2));
-      final selectedOrigins = selectionRepository.selectedFeatures
-          .map((id) => documentRepository.document.featureById(id)!.origin)
+      expect(context.selection.selectedFeatures, hasLength(2));
+      final selectedOrigins = context.selection.selectedFeatures
+          .map((id) => context.document.featureById(id)!.origin)
           .toSet();
       expect(selectedOrigins, {
         const Offset(10, 10),
@@ -541,7 +524,7 @@ void main() {
     });
 
     test('pressing alt mid-drag duplicates at current position', () {
-      final original = documentRepository.document.features.first;
+      final original = context.document.features.first;
       final originalId = original.id;
 
       pointerDown(const Offset(50, 50));
@@ -550,9 +533,9 @@ void main() {
       pointerMove(const Offset(90, 80), alt: true);
       pointerUp(const Offset(90, 80), alt: true);
 
-      expect(documentRepository.document.featureById(originalId)!.origin, Offset.zero);
-      final duplicate = documentRepository.document.featureById(
-        selectionRepository.selectedFeatures.single,
+      expect(context.document.featureById(originalId)!.origin, Offset.zero);
+      final duplicate = context.document.featureById(
+        context.selection.selectedFeatures.single,
       )!;
       expect(duplicate.origin, const Offset(40, 30));
     });
@@ -561,12 +544,12 @@ void main() {
       pointerDown(const Offset(50, 50), alt: true);
       pointerUp(const Offset(50, 50), alt: true);
 
-      expect(documentRepository.document.features, hasLength(2));
+      expect(context.document.features, hasLength(2));
     });
 
     test('shift-resize from bottom edge locks aspect ratio', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final down = edgeHitWorldPoint(bounds, _SelectionEdge.bottom);
@@ -577,7 +560,7 @@ void main() {
       pointerMove(targetBottom + grabOffset, shift: true);
       pointerUp(targetBottom + grabOffset, shift: true);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       expect(resized.origin.dy, closeTo(0, 0.001));
       expect(resized.size.width / resized.size.height, closeTo(1.0, 0.001));
       expect(resized.size.width, closeTo(200, 0.001));
@@ -585,8 +568,8 @@ void main() {
     });
 
     test('alt-resize from top edge expands symmetrically around center', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final center = bounds.center;
@@ -598,15 +581,15 @@ void main() {
       pointerMove(targetTop + grabOffset, alt: true);
       pointerUp(targetTop + grabOffset, alt: true);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       expect(resized.bounds().center, center);
       expect(resized.size.width, 100);
       expect(resized.size.height, 200);
     });
 
     test('edge resize does not snap on first move when grab is off-center', () {
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
 
       final bounds = feature.bounds();
       final down =
@@ -615,14 +598,14 @@ void main() {
       pointerDown(down);
       pointerMove(down);
 
-      final unchanged = documentRepository.document.featureById(feature.id)!;
+      final unchanged = context.document.featureById(feature.id)!;
       expect(unchanged.bounds(), bounds);
     });
 
     test('does not resize when multiple features are selected', () {
-      final features = documentRepository.document.features;
-      selectionRepository.selectFeature(features[0].id);
-      selectionRepository.selectFeature(features[1].id);
+      final features = context.document.features;
+      context.selection.selectFeature(features[0].id);
+      context.selection.selectFeature(features[1].id);
 
       final bounds = features[0].bounds();
       final inflated = selectionBoxWorldBounds(bounds);
@@ -639,7 +622,7 @@ void main() {
     });
 
     test('selects and resizes polyline by segment click and corner handle', () {
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -652,14 +635,14 @@ void main() {
           ),
         ]),
       );
-      final feature = documentRepository.document.features.first;
+      final feature = context.document.features.first;
       final endBefore =
           feature.origin +
           (feature.kind as FeatureKindPolyline).localPoints.last;
 
       pointerDown(const Offset(50, 50));
       pointerUp(const Offset(50, 50));
-      expect(selectionRepository.selectedFeatures.single, feature.id);
+      expect(context.selection.selectedFeatures.single, feature.id);
 
       final bounds = feature.bounds();
       final inflated = selectionBoxWorldBounds(bounds);
@@ -674,7 +657,7 @@ void main() {
       pointerMove(targetCorner + grabOffset);
       pointerUp(targetCorner + grabOffset);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       final endAfter =
           resized.origin +
           (resized.kind as FeatureKindPolyline).localPoints.last;
@@ -684,60 +667,60 @@ void main() {
     });
 
     test('double-click polyline enters edit mode and drags vertex', () {
-      documentRepository = polylineDocument();
-      final feature = documentRepository.document.features.first;
+      context = polylineDocument();
+      final feature = context.document.features.first;
 
       doubleClick(const Offset(50, 50));
-      expect(selectionRepository.selectedFeatures.single, feature.id);
+      expect(context.selection.selectedFeatures.single, feature.id);
 
       final endBefore = polylineWorldPoints(feature).last;
       pointerDown(const Offset(100, 100));
       pointerMove(const Offset(150, 100));
       pointerUp(const Offset(150, 100));
 
-      final moved = documentRepository.document.featureById(feature.id)!;
+      final moved = context.document.featureById(feature.id)!;
       expect(polylineWorldPoints(moved).last, const Offset(150, 100));
       expect(polylineWorldPoints(moved).last, isNot(endBefore));
     });
 
     test('escape exits edit mode and preserves selection', () {
-      documentRepository = polylineDocument();
-      final feature = documentRepository.document.features.first;
+      context = polylineDocument();
+      final feature = context.document.features.first;
 
       doubleClick(const Offset(50, 50));
       expect(keyDown(LogicalKeyboardKey.escape), isTrue);
-      expect(selectionRepository.selectedFeatures.single, feature.id);
+      expect(context.selection.selectedFeatures.single, feature.id);
     });
 
     test('empty click exits edit mode and clears selection', () {
-      documentRepository = polylineDocument();
+      context = polylineDocument();
 
       doubleClick(const Offset(50, 50));
       pointerDown(const Offset(500, 500));
       pointerUp(const Offset(500, 500));
 
-      expect(selectionRepository.selectedFeatures, isEmpty);
+      expect(context.selection.selectedFeatures, isEmpty);
     });
 
     test('undo restores vertex geometry after edit drag', () {
-      documentRepository = polylineDocument();
-      final feature = documentRepository.document.features.first;
+      context = polylineDocument();
+      final feature = context.document.features.first;
 
       doubleClick(const Offset(50, 50));
       pointerDown(const Offset(100, 100));
       pointerMove(const Offset(150, 100));
       pointerMove(const Offset(175, 125));
-      expect(documentRepository.document.undoStack, isEmpty);
+      expect(context.history.undoCount, 0);
       pointerUp(const Offset(175, 125));
 
       final afterDrag = polylineWorldPoints(
-        documentRepository.document.featureById(feature.id)!,
+        context.document.featureById(feature.id)!,
       );
       expect(afterDrag.last, const Offset(175, 125));
-      expect(documentRepository.document.undoStack, hasLength(1));
+      expect(context.history.undoCount, 1);
 
-      documentRepository.document.undo();
-      final restored = documentRepository.document.featureById(feature.id)!;
+      context.undo();
+      final restored = context.document.featureById(feature.id)!;
       expect(polylineWorldPoints(restored).last, const Offset(100, 100));
     });
 
@@ -749,16 +732,16 @@ void main() {
         pointerDown(const Offset(50, 50));
         pointerUp(const Offset(50, 50));
 
-        final feature = documentRepository.document.features.first;
-        expect(selectionRepository.selectedFeatures.single, feature.id);
+        final feature = context.document.features.first;
+        expect(context.selection.selectedFeatures.single, feature.id);
         expect(keyDown(LogicalKeyboardKey.escape), isTrue);
-        expect(selectionRepository.selectedFeatures.single, feature.id);
+        expect(context.selection.selectedFeatures.single, feature.id);
       },
     );
 
     test('corner resize scales text font size to fill new bounds', () {
       const contents = 'Line one\nLine two\nLine three';
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -767,8 +750,8 @@ void main() {
           ),
         ]),
       );
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
 
       final bounds = feature.bounds();
@@ -784,7 +767,7 @@ void main() {
       pointerMove(targetCorner + grabOffset);
       pointerUp(targetCorner + grabOffset);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       final textKind = resized.kind as FeatureKindText;
       expect(resized.origin, bounds.topLeft);
       expect(resized.size.width, 300);
@@ -799,7 +782,7 @@ void main() {
     });
 
     test('vertical resize scales text font size to fill taller box', () {
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -811,8 +794,8 @@ void main() {
           ),
         ]),
       );
-      final feature = documentRepository.document.features.first;
-      selectionRepository.selectFeature(feature.id);
+      final feature = context.document.features.first;
+      context.selection.selectFeature(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
 
       final bounds = feature.bounds();
@@ -824,7 +807,7 @@ void main() {
       pointerMove(targetBottom + grabOffset);
       pointerUp(targetBottom + grabOffset);
 
-      final resized = documentRepository.document.featureById(feature.id)!;
+      final resized = context.document.featureById(feature.id)!;
       final textKind = resized.kind as FeatureKindText;
       expect(resized.size.width, 200);
       expect(resized.size.height, 200);
@@ -834,8 +817,7 @@ void main() {
     test(
       'double-click text opens edit session without entering edit mode',
       () async {
-        textEditRepository = TextEditRepository();
-        documentRepository = DocumentRepository(
+        context = EditorContext(
           document: Document.fromFeatures([
             Feature(
               origin: const Offset(0, 0),
@@ -847,16 +829,18 @@ void main() {
             ),
           ]),
         );
-        final feature = documentRepository.document.features.first;
+        final feature = context.document.features.first;
         final sessions = <TextEditSession>[];
-        final subscription = textEditRepository.editSessionStream.listen(
-          sessions.add,
-        );
+        final subscription = notifierChangesStream(context.textEdit)
+            .map((_) => context.textEdit.session)
+            .where((session) => session != null)
+            .cast<TextEditSession>()
+            .listen(sessions.add);
 
         doubleClick(const Offset(50, 24));
         await Future<void>.delayed(Duration.zero);
 
-        expect(selectionRepository.selectedFeatures.single, feature.id);
+        expect(context.selection.selectedFeatures.single, feature.id);
         expect(sessions, hasLength(1));
         expect(sessions.first, isA<EditTextEditSession>());
         expect((sessions.first as EditTextEditSession).featureId, feature.id);
@@ -872,12 +856,13 @@ void main() {
     );
 
     test('double-click polyline does not open text edit session', () async {
-      textEditRepository = TextEditRepository();
-      documentRepository = polylineDocument();
+      context = polylineDocument();
       final sessions = <TextEditSession>[];
-      final subscription = textEditRepository.editSessionStream.listen(
-        sessions.add,
-      );
+      final subscription = notifierChangesStream(context.textEdit)
+          .map((_) => context.textEdit.session)
+          .where((session) => session != null)
+          .cast<TextEditSession>()
+          .listen(sessions.add);
 
       doubleClick(const Offset(50, 50));
 

@@ -1,90 +1,70 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
 
 void main() {
-  group('CreateLineTool via ToolRepository', () {
-    late DocumentRepository documentRepository;
-    late SelectionRepository selectionRepository;
-    late ToolRepository toolRepository;
-    late TextEditRepository textEditRepository;
+  group('CreateLineTool via EditorContext', () {
+    late EditorContext context;
     late Camera camera;
 
     setUp(() {
-      documentRepository = DocumentRepository(document: Document());
-      selectionRepository = SelectionRepository();
-      toolRepository = ToolRepository();
-      textEditRepository = TextEditRepository();
+      context = EditorContext(document: Document());
       camera = Camera();
     });
 
-    tearDown(() {
-      toolRepository.dispose();
-      textEditRepository.dispose();
-      documentRepository.dispose();
-    });
-
     void activateLineTool() {
-      toolRepository.setTool(CreateLineTool(), selectionRepository);
+      context.setTool(CreateLineTool());
     }
 
     void pointerDown(Offset world, {bool shift = false}) {
-      toolRepository.onPointerDown(
-        documentRepository,
+      context.tool.onPointerDown(
+        context,
         world,
-        selectionRepository,
-        shift,
-        false,
         camera,
+        isShiftPressed: shift,
+        isAltPressed: false,
       );
     }
 
     void pointerMove(Offset world, {bool shift = false}) {
-      toolRepository.onPointerMove(
-        documentRepository,
+      context.tool.onPointerMove(
+        context,
         world,
-        selectionRepository,
-        shift,
-        false,
         camera,
+        isShiftPressed: shift,
+        isAltPressed: false,
       );
     }
 
     void pointerUp(Offset world, {bool shift = false}) {
-      toolRepository.onPointerUp(
-        documentRepository,
+      context.tool.onPointerUp(
+        context,
         world,
-        selectionRepository,
-        shift,
-        false,
         camera,
-        textEditRepository,
+        isShiftPressed: shift,
+        isAltPressed: false,
       );
     }
 
     void pointerHover(Offset world, {bool shift = false}) {
-      toolRepository.onPointerHover(
-        documentRepository,
+      context.tool.onPointerHover(
+        context,
         world,
-        selectionRepository,
-        shift,
-        false,
         camera,
+        isShiftPressed: shift,
+        isAltPressed: false,
       );
     }
 
     bool finishWithKey(LogicalKeyboardKey key) {
-      return toolRepository.onKeyEvent(
-        documentRepository,
+      return context.tool.onKeyEvent(
+        context,
         KeyDownEvent(
           physicalKey: PhysicalKeyboardKey.enter,
           logicalKey: key,
@@ -104,7 +84,7 @@ void main() {
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
 
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
     });
 
     test('two clicks then Enter commits polyline with 2 points', () {
@@ -115,11 +95,11 @@ void main() {
       pointerDown(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindPolyline>());
       expect(
@@ -141,7 +121,7 @@ void main() {
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
       expect(
-        worldPointsFor(documentRepository.document.features.first),
+        worldPointsFor(context.document.features.first),
         [
           const Offset(0, 0),
           const Offset(100, 0),
@@ -162,7 +142,7 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.escape), isTrue);
 
-      expect(documentRepository.document.features, hasLength(1));
+      expect(context.document.features, hasLength(1));
     });
 
     test('Enter or Escape with 1 point discards without creating feature', () {
@@ -172,13 +152,13 @@ void main() {
       pointerUp(const Offset(0, 0));
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
 
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
 
       expect(finishWithKey(LogicalKeyboardKey.escape), isTrue);
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
     });
 
     test('drag from idle commits 2-point line on pointer up', () {
@@ -188,7 +168,7 @@ void main() {
       pointerMove(const Offset(50, 50));
       pointerUp(const Offset(50, 50));
 
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindPolyline>());
       expect(
@@ -207,12 +187,12 @@ void main() {
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
       expect(
-        worldPointsFor(documentRepository.document.features.first),
+        worldPointsFor(context.document.features.first),
         [const Offset(0, 0), const Offset(100, 100)],
       );
     });
@@ -225,9 +205,9 @@ void main() {
       pointerDown(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      toolRepository.setTool(SelectTool(), selectionRepository);
+      context.setTool(SelectTool());
 
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
     });
 
     test('hover updates preview while placing', () {
@@ -246,7 +226,7 @@ void main() {
       pointerMove(const Offset(100, 95), shift: true);
       pointerUp(const Offset(100, 95), shift: true);
 
-      final points = worldPointsFor(documentRepository.document.features.first);
+      final points = worldPointsFor(context.document.features.first);
       expect(points.first, const Offset(0, 0));
       expect(points.last.dx, closeTo(points.last.dy, 0.001));
     });
@@ -261,7 +241,7 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
-      final points = worldPointsFor(documentRepository.document.features.first);
+      final points = worldPointsFor(context.document.features.first);
       expect(points.last.dx, closeTo(points.last.dy, 0.001));
     });
   });

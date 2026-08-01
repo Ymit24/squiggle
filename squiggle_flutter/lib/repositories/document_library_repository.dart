@@ -1,26 +1,22 @@
 import 'dart:async';
 
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
 
 /// Manages the set of persisted documents and the active in-memory document.
 class DocumentLibraryRepository {
   DocumentLibraryRepository({
     required this.documentStorage,
-    required this.documentRepository,
-    required this.selectionRepository,
+    required this.context,
   });
 
   final DocumentStorage documentStorage;
-  final DocumentRepository documentRepository;
-  final SelectionRepository selectionRepository;
+  final EditorContext context;
 
   final StreamController<void> _changesController =
       StreamController<void>.broadcast();
-  StreamSubscription<void>? _autosaveSubscription;
 
   List<DocumentInfo> _documents = [];
   DocumentInfo? _currentDocument;
@@ -42,7 +38,7 @@ class DocumentLibraryRepository {
       final created = await documentStorage.createDocument();
       _documents = await documentStorage.listDocuments();
       _currentDocument = created;
-      documentRepository.replaceDocument(Document());
+      context.loadDocument(Document());
       await documentStorage.saveActiveDocumentId(created.id);
     }
 
@@ -54,12 +50,10 @@ class DocumentLibraryRepository {
     await _saveCurrentDocument();
     final created = await documentStorage.createDocument(name: name);
     _documents = await documentStorage.listDocuments();
-    await _loadDocumentIntoRepository(created.id);
-    _currentDocument = _documents.firstWhere(
-      (document) => document.id == created.id,
-    );
+    final info = _documents.firstWhere((document) => document.id == created.id);
+    _currentDocument = info;
+    await _loadDocumentIntoContext(created.id);
     await documentStorage.saveActiveDocumentId(created.id);
-    selectionRepository.clearSelection();
     _notify();
   }
 
@@ -118,16 +112,16 @@ class DocumentLibraryRepository {
       await _saveCurrentDocument();
     }
 
-    await _loadDocumentIntoRepository(id);
-    _currentDocument = _documents.firstWhere((document) => document.id == id);
+    final info = _documents.firstWhere((document) => document.id == id);
+    _currentDocument = info;
+    await _loadDocumentIntoContext(id);
     await documentStorage.saveActiveDocumentId(id);
-    selectionRepository.clearSelection();
     _notify();
   }
 
-  Future<void> _loadDocumentIntoRepository(String id) async {
+  Future<void> _loadDocumentIntoContext(String id) async {
     final decoded = await documentStorage.loadDocument(id);
-    documentRepository.replaceDocument(decoded?.document ?? Document());
+    context.loadDocument(decoded?.document ?? Document());
   }
 
   Future<void> _saveCurrentDocument() async {
@@ -138,7 +132,7 @@ class DocumentLibraryRepository {
 
     await documentStorage.saveDocument(
       current.id,
-      documentRepository.document,
+      context.document,
       current.name,
     );
     _documents = await documentStorage.listDocuments();
@@ -149,22 +143,26 @@ class DocumentLibraryRepository {
   }
 
   void _attachAutosave() {
-    _autosaveSubscription?.cancel();
-    _autosaveSubscription = documentRepository.changesStream.listen((_) {
-      final current = _currentDocument;
-      if (current == null) {
-        return;
-      }
+    _autosaveSubscribed = true;
+    context.addListener(_autosave);
+  }
 
-      unawaited(
-        documentStorage.saveDocument(
-          current.id,
-          documentRepository.document,
-          current.name,
-        ),
-      );
-      unawaited(_refreshDocumentInfo(current.id));
-    });
+  bool _autosaveSubscribed = false;
+
+  void _autosave() {
+    final current = _currentDocument;
+    if (current == null) {
+      return;
+    }
+
+    unawaited(
+      documentStorage.saveDocument(
+        current.id,
+        context.document,
+        current.name,
+      ),
+    );
+    unawaited(_refreshDocumentInfo(current.id));
   }
 
   Future<void> _refreshDocumentInfo(String id) async {
@@ -192,8 +190,10 @@ class DocumentLibraryRepository {
   }
 
   void dispose() {
-    _autosaveSubscription?.cancel();
-    _autosaveSubscription = null;
+    if (_autosaveSubscribed) {
+      context.removeListener(_autosave);
+      _autosaveSubscribed = false;
+    }
     _changesController.close();
   }
 }
