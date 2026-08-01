@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/document_library/document_library_page.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 enum _AppScreen { library, editor }
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.documentRepository});
+  const AppShell({super.key, required this.context});
 
-  final DocumentRepository documentRepository;
+  final EditorContext context;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -50,7 +50,7 @@ class _AppShellState extends State<AppShell> {
         onCreateAndOpen: _createAndOpen,
       ),
       _AppScreen.editor => Editor(
-        documentRepository: widget.documentRepository,
+        context: widget.context,
         onBackToLibrary: _returnToLibrary,
       ),
     };

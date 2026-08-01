@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
@@ -8,16 +10,13 @@ import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_layout.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
 
 void main() {
   group('StylePanelBloc', () {
-    late DocumentRepository documentRepository;
-    late SelectionRepository selectionRepository;
+    late EditorContext context;
 
     setUp(() {
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -47,17 +46,9 @@ void main() {
           ),
         ]),
       );
-      selectionRepository = SelectionRepository();
     });
 
-    tearDown(() {
-      documentRepository.dispose();
-    });
-
-    StylePanelBloc createBloc() => StylePanelBloc(
-      documentRepository: documentRepository,
-      selectionRepository: selectionRepository,
-    );
+    StylePanelBloc createBloc() => StylePanelBloc(context: context);
 
     test('emits StylePanelHiddenState when selection is empty', () async {
       final bloc = createBloc();
@@ -73,9 +64,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       );
@@ -93,9 +82,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       ) as StylePanelShowingState;
@@ -114,8 +101,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      for (final feature in documentRepository.document.features) {
-        selectionRepository.selectFeature(feature.id);
+      for (final feature in context.document.features) {
+        context.selection.selectFeature(feature.id);
       }
       final showingState = await bloc.stream.firstWhere(
         (state) =>
@@ -134,10 +121,10 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final featureId = documentRepository.document.features.first.id;
-      selectionRepository.selectFeature(featureId);
+      final featureId = context.document.features.first.id;
+      context.selection.selectFeature(featureId);
 
-      documentRepository.executeCommand(
+      context.execute(
         UpdateFeaturesStyleCommand(
           ids: [featureId],
           fillColor: transparentFillColor,
@@ -157,14 +144,14 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final featureId = documentRepository.document.features.first.id;
-      selectionRepository.selectFeature(featureId);
+      final featureId = context.document.features.first.id;
+      context.selection.selectFeature(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const ClearStrokeEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final kind = documentRepository.document.features.first.kind;
+      final kind = context.document.features.first.kind;
       expect(kind.hasVisibleStroke, isFalse);
       expect(kind.strokeWidth, StrokeWidthPreset.medium.width);
       await bloc.close();
@@ -175,11 +162,11 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final featureId = documentRepository.document.features.first.id;
-      selectionRepository.selectFeature(featureId);
+      final featureId = context.document.features.first.id;
+      context.selection.selectFeature(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
-      documentRepository.executeCommand(
+      context.execute(
         UpdateFeaturesStyleCommand(
           ids: [featureId],
           fillColor: transparentFillColor,
@@ -190,7 +177,7 @@ void main() {
       bloc.add(const ClearStrokeEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final kind = documentRepository.document.features.first.kind;
+      final kind = context.document.features.first.kind;
       expect(kind.hasVisibleStroke, isFalse);
       expect(kind.hasVisibleFill, isFalse);
       expect(kind.strokeWidth, StrokeWidthPreset.medium.width);
@@ -202,7 +189,7 @@ void main() {
       bloc.add(const SetStrokePresetEvent(0));
       await Future<void>.delayed(Duration.zero);
 
-      expect(documentRepository.document.features.first.kind.strokeColor,
+      expect(context.document.features.first.kind.strokeColor,
           stylePresets[1].strokeColor);
       await bloc.close();
     });
@@ -212,16 +199,14 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const SetStrokePresetEvent(0));
       await Future<void>.delayed(Duration.zero);
 
       expect(
-        documentRepository.document.features.first.kind.strokeColor,
+        context.document.features.first.kind.strokeColor,
         stylePresets[0].strokeColor,
       );
       await bloc.close();
@@ -232,8 +217,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final textFeature = documentRepository.document.features.last;
-      selectionRepository.selectFeature(textFeature.id);
+      final textFeature = context.document.features.last;
+      context.selection.selectFeature(textFeature.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       ) as StylePanelShowingState;
@@ -250,9 +235,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       ) as StylePanelShowingState;
@@ -266,12 +249,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      selectionRepository.selectFeature(
-        documentRepository.document.features.first.id,
-      );
-      selectionRepository.selectFeature(
-        documentRepository.document.features.last.id,
-      );
+      context.selection.selectFeature(context.document.features.first.id);
+      context.selection.selectFeature(context.document.features.last.id);
       final showingState = await bloc.stream.firstWhere(
         (state) =>
             state is StylePanelShowingState && state.showFontSize,
@@ -286,10 +265,10 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final rect = documentRepository.document.features.first;
-      final text = documentRepository.document.features.last;
-      selectionRepository.selectFeature(rect.id);
-      selectionRepository.selectFeature(text.id);
+      final rect = context.document.features.first;
+      final text = context.document.features.last;
+      context.selection.selectFeature(rect.id);
+      context.selection.selectFeature(text.id);
       await bloc.stream.firstWhere(
         (state) =>
             state is StylePanelShowingState && state.showFontSize,
@@ -309,9 +288,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      selectionRepository.selectFeature(
-        documentRepository.document.features.last.id,
-      );
+      context.selection.selectFeature(context.document.features.last.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       ) as StylePanelShowingState;
@@ -330,8 +307,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final text = documentRepository.document.features.last;
-      selectionRepository.selectFeature(text.id);
+      final text = context.document.features.last;
+      context.selection.selectFeature(text.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(
@@ -350,8 +327,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final text = documentRepository.document.features.last;
-      selectionRepository.selectFeature(text.id);
+      final text = context.document.features.last;
+      context.selection.selectFeature(text.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(
@@ -369,10 +346,10 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final first = documentRepository.document.features[0];
-      final second = documentRepository.document.features[1];
-      selectionRepository.selectFeature(first.id);
-      selectionRepository.selectFeature(second.id);
+      final first = context.document.features[0];
+      final second = context.document.features[1];
+      context.selection.selectFeature(first.id);
+      context.selection.selectFeature(second.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const AlignFeaturesEvent(FeatureAlignment.left));
@@ -388,16 +365,14 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final first = documentRepository.document.features[0];
-      final second = documentRepository.document.features[1];
-      documentRepository.executeCommand(
+      final first = context.document.features[0];
+      final second = context.document.features[1];
+      context.execute(
         MoveFeatureCommand(second.id, const Offset(40, 0)),
       );
-      selectionRepository.selectFeature(first.id);
-      selectionRepository.selectFeature(second.id);
-      selectionRepository.selectFeature(
-        documentRepository.document.features[2].id,
-      );
+      context.selection.selectFeature(first.id);
+      context.selection.selectFeature(second.id);
+      context.selection.selectFeature(context.document.features[2].id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const DistributeFeaturesEvent(FeatureDistribution.horizontal));

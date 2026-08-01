@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -115,7 +116,9 @@ void main() {
       final id = doc.features.first.id;
       final beforeEnd = worldPoint(doc.features.first, 1);
 
-      doc.executeCommand(MoveFeatureCommand(id, const Offset(20, 30)));
+      CommandHistory(document: doc).execute(
+        MoveFeatureCommand(id, const Offset(20, 30)),
+      );
 
       final moved = doc.features.first;
       final kind = moved.kind as FeatureKindPolyline;
@@ -136,8 +139,12 @@ void main() {
       ]);
       final id = doc.features.first.id;
 
-      doc.executeCommand(
-        ResizeFeatureCommand(id, const Rect.fromLTWH(0, 0, 200, 50)),
+      CommandHistory(document: doc).execute(
+        ResizeFeatureCommand(
+          id: id,
+          initialBounds: doc.features.first.bounds(),
+          finalBounds: const Rect.fromLTWH(0, 0, 200, 50),
+        ),
       );
 
       final resized = doc.features.first;

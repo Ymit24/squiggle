@@ -1,19 +1,16 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
-import 'package:squiggle_flutter/models/commands/command.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
 
 class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
-  StylePanelBloc({
-    required this.documentRepository,
-    required this.selectionRepository,
-  }) : super(const StylePanelHiddenState()) {
+  StylePanelBloc({required this.context}) : super(const StylePanelHiddenState()) {
     on<RequestWatchStylePanelStateEvent>(_onRequestWatchStylePanelState);
     on<SetStrokePresetEvent>(_onSetStrokePreset);
     on<ClearStrokeEvent>(_onClearStroke);
@@ -27,8 +24,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     on<DistributeFeaturesEvent>(_onDistributeFeatures);
   }
 
-  final DocumentRepository documentRepository;
-  final SelectionRepository selectionRepository;
+  final EditorContext context;
 
   Future<void> _onRequestWatchStylePanelState(
     RequestWatchStylePanelStateEvent event,
@@ -38,11 +34,11 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
 
     await Future.wait([
       emit.forEach(
-        selectionRepository.selectedFeaturesStream,
+        notifierChangesStream(context.selection),
         onData: (_) => _deriveState(),
       ),
       emit.forEach(
-        documentRepository.changesStream,
+        notifierChangesStream(context.document),
         onData: (_) => _deriveState(),
       ),
     ]);
@@ -50,14 +46,14 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
 
   StylePanelState _deriveState() {
     final selectedFeatureIds = List<FeatureId>.of(
-      selectionRepository.selectedFeatures,
+      context.selection.selectedFeatures,
     );
     if (selectedFeatureIds.isEmpty) {
       return const StylePanelHiddenState();
     }
 
     final kinds = selectedFeatureIds
-        .map(documentRepository.document.featureById)
+        .map(context.document.featureById)
         .whereType<Feature>()
         .map((feature) => feature.kind)
         .toList();
@@ -185,7 +181,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.isEmpty) return;
 
-    documentRepository.executeCommand(
+    context.execute(
       UpdateFeaturesStyleCommand(
         ids: ids,
         strokeColor: strokeColor,
@@ -283,7 +279,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 2) return;
 
-    documentRepository.executeCommand(
+    context.execute(
       LayoutFeaturesCommand.align(ids: ids, alignment: event.alignment),
     );
   }
@@ -295,7 +291,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 3) return;
 
-    documentRepository.executeCommand(
+    context.execute(
       LayoutFeaturesCommand.distribute(
         ids: ids,
         distribution: event.distribution,

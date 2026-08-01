@@ -2,13 +2,13 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +16,7 @@ void main() {
   group('DocumentLibraryRepository', () {
     late Directory tempDir;
     late DocumentLibraryRepository library;
-    late DocumentRepository documentRepository;
-    late SelectionRepository selectionRepository;
+    late EditorContext context;
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('squiggle_library_');
@@ -29,19 +28,17 @@ void main() {
         imageRepository: imageRepository,
         storageDirectory: tempDir,
       );
-      documentRepository = DocumentRepository(document: Document());
-      selectionRepository = SelectionRepository();
+      context = EditorContext(document: Document());
       library = DocumentLibraryRepository(
         documentStorage: documentStorage,
-        documentRepository: documentRepository,
-        selectionRepository: selectionRepository,
+        context: context,
       );
       await library.initialize();
     });
 
     tearDown(() async {
       library.dispose();
-      documentRepository.dispose();
+      context.dispose();
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
       }
@@ -49,7 +46,7 @@ void main() {
 
     test('switches documents and clears selection', () async {
       await library.createDocument(name: 'One');
-      documentRepository.executeCommand(
+      context.execute(
         AddFeatureCommand(
           Feature(
             origin: const Offset(0, 0),
@@ -58,19 +55,19 @@ void main() {
           ),
         ),
       );
-      selectionRepository.selectFeature(documentRepository.document.features.first.id);
-      expect(documentRepository.document.features, hasLength(1));
-      expect(selectionRepository.selectedFeatures, hasLength(1));
+      context.selection.selectFeature(context.document.features.first.id);
+      expect(context.document.features, hasLength(1));
+      expect(context.selection.selectedFeatures, hasLength(1));
 
       await library.createDocument(name: 'Two');
       expect(library.currentDocument?.name, 'Two');
-      expect(documentRepository.document.features, isEmpty);
-      expect(selectionRepository.selectedFeatures, isEmpty);
+      expect(context.document.features, isEmpty);
+      expect(context.selection.selectedFeatures, isEmpty);
 
       final one = library.documents.firstWhere((doc) => doc.name == 'One');
       await library.openDocument(one.id);
       expect(library.currentDocument?.name, 'One');
-      expect(documentRepository.document.features, hasLength(1));
+      expect(context.document.features, hasLength(1));
     });
 
     test('does not delete the last remaining document', () async {

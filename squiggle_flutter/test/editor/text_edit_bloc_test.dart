@@ -1,22 +1,21 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 
 void main() {
   group('TextEditBloc', () {
-    late DocumentRepository documentRepository;
-    late TextEditRepository textEditRepository;
+    late EditorContext context;
 
     setUp(() {
-      documentRepository = DocumentRepository(
+      context = EditorContext(
         document: Document.fromFeatures([
           Feature(
             origin: const Offset(0, 0),
@@ -28,27 +27,18 @@ void main() {
           ),
         ]),
       );
-      textEditRepository = TextEditRepository();
     });
 
-    tearDown(() {
-      textEditRepository.dispose();
-      documentRepository.dispose();
-    });
-
-    TextEditBloc createBloc() => TextEditBloc(
-      documentRepository: documentRepository,
-      textEditRepository: textEditRepository,
-    );
+    TextEditBloc createBloc() => TextEditBloc(context: context);
 
     test('beginEdit emits EditTextEditOpen', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final feature = documentRepository.document.features.first;
+      final feature = context.document.features.first;
       const bounds = Rect.fromLTWH(10, 20, 200, 48);
-      textEditRepository.beginEdit(
+      context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
           initialContents: 'initial text',
@@ -71,8 +61,8 @@ void main() {
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final feature = documentRepository.document.features.first;
-      textEditRepository.beginEdit(
+      final feature = context.document.features.first;
+      context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
           initialContents: 'initial text',
@@ -88,8 +78,7 @@ void main() {
 
       expect(closedState, isA<TextEditClosed>());
       expect(
-        (documentRepository.document.features.first.kind as FeatureKindText)
-            .contents,
+        (context.document.features.first.kind as FeatureKindText).contents,
         'updated text',
       );
       await bloc.close();
@@ -100,8 +89,8 @@ void main() {
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final feature = documentRepository.document.features.first;
-      textEditRepository.beginEdit(
+      final feature = context.document.features.first;
+      context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
           initialContents: 'initial text',
@@ -117,8 +106,7 @@ void main() {
 
       expect(closedState, isA<TextEditClosed>());
       expect(
-        (documentRepository.document.features.first.kind as FeatureKindText)
-            .contents,
+        (context.document.features.first.kind as FeatureKindText).contents,
         'initial text',
       );
       await bloc.close();
@@ -130,7 +118,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       const origin = Offset(100, 200);
-      textEditRepository.beginEdit(
+      context.startTextEdit(
         CreateTextEditSession(
           worldOrigin: origin,
           initialContents: '',
@@ -139,13 +127,13 @@ void main() {
       );
       await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-      expect(documentRepository.document.features, hasLength(1));
+      expect(context.document.features, hasLength(1));
 
       bloc.add(const TextEditSubmitted('new text'));
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(documentRepository.document.features, hasLength(2));
-      final created = documentRepository.document.features.last;
+      expect(context.document.features, hasLength(2));
+      final created = context.document.features.last;
       expect(created.origin, origin);
       expect((created.kind as FeatureKindText).contents, 'new text');
       expect(created.size.width, defaultNewTextWidth);
@@ -157,7 +145,7 @@ void main() {
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      textEditRepository.beginEdit(
+      context.startTextEdit(
         CreateTextEditSession(
           worldOrigin: const Offset(100, 200),
           initialContents: '',
@@ -169,7 +157,7 @@ void main() {
       bloc.add(const TextEditCancelled());
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(documentRepository.document.features, hasLength(1));
+      expect(context.document.features, hasLength(1));
       await bloc.close();
     });
 
@@ -178,7 +166,7 @@ void main() {
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      textEditRepository.beginEdit(
+      context.startTextEdit(
         CreateTextEditSession(
           worldOrigin: const Offset(100, 200),
           initialContents: '',
@@ -190,7 +178,7 @@ void main() {
       bloc.add(const TextEditSubmitted(''));
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(documentRepository.document.features, hasLength(1));
+      expect(context.document.features, hasLength(1));
       await bloc.close();
     });
   });

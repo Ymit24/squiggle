@@ -1,44 +1,30 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateFeatureTool extends Tool {
-  CreateFeatureTool({required this._ghost}) : _state = const _Idle();
+  CreateFeatureTool({required this.kind}) : _state = const _Idle();
 
-  factory CreateFeatureTool.rect() => CreateFeatureTool(
-    ghost: Feature(
-      origin: Offset.zero,
-      size: const Size(1, 1),
-      kind: const FeatureKindRectangle(),
-    ),
-  );
+  factory CreateFeatureTool.rect() =>
+      CreateFeatureTool(kind: const FeatureKindRectangle());
 
-  factory CreateFeatureTool.circle() => CreateFeatureTool(
-    ghost: Feature(
-      origin: Offset.zero,
-      size: const Size(1, 1),
-      kind: const FeatureKindCircle(),
-    ),
-  );
+  factory CreateFeatureTool.circle() =>
+      CreateFeatureTool(kind: const FeatureKindCircle());
 
-  Feature _ghost;
+  final FeatureKind kind;
   _CreateState _state;
 
   @override
   EditorCursor resolveCursor(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
     Camera camera,
   ) =>
       EditorCursor.crosshair;
@@ -47,72 +33,74 @@ class CreateFeatureTool extends Tool {
   void paint(
     Canvas canvas,
     Camera camera,
-    DocumentRepository documentRepository,
-    SelectionRepository selection,
+    EditorContext context,
     ImageRepository imageRepository,
   ) {
-    if (_state is! _Dragging) return;
-    _ghost.paint(canvas, imageRepository);
+    if (_state case _Dragging(:final bounds)) {
+      Feature(
+        origin: bounds.topLeft,
+        size: bounds.size,
+        kind: kind,
+      ).paint(canvas, imageRepository);
+    }
   }
 
   @override
-  void deactivate(SelectionRepository selection) {}
+  void deactivate(EditorContext context) {
+    _state = const _Idle();
+  }
 
   @override
   void onPointerDown(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-  ) {}
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
 
   @override
   void onPointerMove(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-  ) {
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
     switch (_state) {
       case _Idle():
-        _state = _Dragging(start: worldPosition);
-        _ghost.setBounds(
-          isAltPressed
+        _state = _Dragging(
+          start: worldPosition,
+          bounds: isAltPressed
               ? Rect.fromCenter(center: worldPosition, width: 1, height: 1)
-              : Rect.fromLTWH(
-                  worldPosition.dx,
-                  worldPosition.dy,
-                  1,
-                  1,
-                ),
+              : Rect.fromLTWH(worldPosition.dx, worldPosition.dy, 1, 1),
         );
       case _Dragging(:final start):
-        _ghost.setBounds(_boundsFromDrag(
-          start,
-          worldPosition,
-          isShiftPressed: isShiftPressed,
-          isAltPressed: isAltPressed,
-        ));
+        _state = _Dragging(
+          start: start,
+          bounds: _boundsFromDrag(
+            start,
+            worldPosition,
+            isShiftPressed: isShiftPressed,
+            isAltPressed: isAltPressed,
+          ),
+        );
     }
   }
 
   @override
   void onPointerUp(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-    TextEditRepository textEditRepository,
-  ) {
-    if (_state is _Dragging) {
-      documentRepository.executeCommand(
-        AddFeatureCommand(_ghost.copyWith(id: noId)),
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    if (_state case _Dragging(:final bounds)) {
+      context.execute(
+        AddFeatureCommand(
+          Feature(origin: bounds.topLeft, size: bounds.size, kind: kind),
+        ),
       );
       _state = const _Idle();
     }
@@ -146,7 +134,8 @@ final class _Idle extends _CreateState {
 }
 
 final class _Dragging extends _CreateState {
-  const _Dragging({required this.start});
+  const _Dragging({required this.start, required this.bounds});
 
   final Offset start;
+  final Rect bounds;
 }

@@ -12,12 +12,11 @@ import 'package:squiggle_flutter/services/document_codec.dart';
 class DocumentStorage {
   DocumentStorage({
     required this.imageRepository,
-    Directory? storageDirectory,
-  }) : _storageDirectory = storageDirectory;
+    this._storageDirectory,
+  });
 
   final ImageRepository imageRepository;
-  Directory? _storageDirectory;
-  Future<void>? _initializeFuture;
+  Directory? _storageDirectory;  Future<void>? _initializeFuture;
   bool _initialized = false;
 
   static const _legacyDocumentFileName = 'document.json';

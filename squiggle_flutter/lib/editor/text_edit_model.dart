@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 
 sealed class TextEditSession {
@@ -33,16 +33,20 @@ final class CreateTextEditSession extends TextEditSession {
   final Offset worldOrigin;
 }
 
-class TextEditRepository {
-  final _sessionController = StreamController<TextEditSession>.broadcast();
+/// Observable state of the active text edit session, if any.
+class TextEditModel extends ChangeNotifier {
+  TextEditSession? _session;
 
-  Stream<TextEditSession> get editSessionStream => _sessionController.stream;
+  TextEditSession? get session => _session;
 
-  void beginEdit(TextEditSession session) {
-    _sessionController.add(session);
+  void begin(TextEditSession session) {
+    _session = session;
+    notifyListeners();
   }
 
-  void dispose() {
-    _sessionController.close();
+  void end() {
+    if (_session == null) return;
+    _session = null;
+    notifyListeners();
   }
 }

@@ -1,26 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
-  ToolbarBloc({
-    required ToolRepository toolRepository,
-    required SelectionRepository selectionRepository,
-    required DocumentRepository documentRepository,
-  }) : // Public named parameters keep call sites readable while fields stay private.
+  ToolbarBloc({required EditorContext context})
+    : // Public named parameters keep call sites readable while fields stay private.
        // ignore: prefer_initializing_formals
-       _toolRepository = toolRepository,
-       // ignore: prefer_initializing_formals
-       _selectionRepository = selectionRepository,
-       // ignore: prefer_initializing_formals
-       _documentRepository = documentRepository,
+       _context = context,
        super(const ToolbarState(activeTool: ActiveToolKind.select)) {
     on<RequestWatchToolbarStateEvent>(_onRequestWatchToolbarState);
     on<ActivateSelectToolEvent>(_onActivateSelectTool);
@@ -32,9 +24,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     on<RedoDocumentEvent>(_onRedoDocument);
   }
 
-  final ToolRepository _toolRepository;
-  final SelectionRepository _selectionRepository;
-  final DocumentRepository _documentRepository;
+  final EditorContext _context;
 
   Future<void> _onRequestWatchToolbarState(
     RequestWatchToolbarStateEvent event,
@@ -43,7 +33,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     emit(_stateWithHistory(state));
 
     await emit.forEach(
-      _documentRepository.changesStream,
+      notifierChangesStream(_context.history),
       onData: (_) => _stateWithHistory(state),
     );
   }
@@ -52,7 +42,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     ActivateSelectToolEvent event,
     Emitter<ToolbarState> emit,
   ) {
-    _toolRepository.setTool(SelectTool(), _selectionRepository);
+    _context.setTool(SelectTool());
     emit(state.copyWith(activeTool: ActiveToolKind.select));
   }
 
@@ -60,7 +50,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     ActivateCreateRectToolEvent event,
     Emitter<ToolbarState> emit,
   ) {
-    _toolRepository.setTool(CreateFeatureTool.rect(), _selectionRepository);
+    _context.setTool(CreateFeatureTool.rect());
     emit(state.copyWith(activeTool: ActiveToolKind.createRect));
   }
 
@@ -68,7 +58,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     ActivateCreateCircleToolEvent event,
     Emitter<ToolbarState> emit,
   ) {
-    _toolRepository.setTool(CreateFeatureTool.circle(), _selectionRepository);
+    _context.setTool(CreateFeatureTool.circle());
     emit(state.copyWith(activeTool: ActiveToolKind.createCircle));
   }
 
@@ -76,7 +66,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     ActivateCreateLineToolEvent event,
     Emitter<ToolbarState> emit,
   ) {
-    _toolRepository.setTool(CreateLineTool(), _selectionRepository);
+    _context.setTool(CreateLineTool());
     emit(state.copyWith(activeTool: ActiveToolKind.createLine));
   }
 
@@ -84,22 +74,22 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     ActivateCreateTextToolEvent event,
     Emitter<ToolbarState> emit,
   ) {
-    _toolRepository.setTool(CreateTextTool(), _selectionRepository);
+    _context.setTool(CreateTextTool());
     emit(state.copyWith(activeTool: ActiveToolKind.createText));
   }
 
   void _onUndoDocument(UndoDocumentEvent event, Emitter<ToolbarState> emit) {
-    _documentRepository.undo();
+    _context.undo();
   }
 
   void _onRedoDocument(RedoDocumentEvent event, Emitter<ToolbarState> emit) {
-    _documentRepository.redo();
+    _context.redo();
   }
 
   ToolbarState _stateWithHistory(ToolbarState state) {
     return state.copyWith(
-      canUndo: _documentRepository.canUndo,
-      canRedo: _documentRepository.canRedo,
+      canUndo: _context.history.canUndo,
+      canRedo: _context.history.canRedo,
     );
   }
 }

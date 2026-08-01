@@ -1,23 +1,21 @@
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/models/commands/command.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/services/feature_clipboard.dart';
 
 /// Creates an image feature from a pasted clipboard image at the viewport center.
 Future<void> pasteImageFromClipboard({
   required ImageRepository imageRepository,
-  required DocumentRepository documentRepository,
-  required ViewportRepository viewportRepository,
+  required EditorContext context,
 }) async {
   final imported = await imageRepository.importFromClipboard();
   if (imported == null) {
     return;
   }
 
-  final center = viewportRepository.worldCenterAtViewportCenter();
+  final center = context.worldCenterAtViewportCenter();
   if (center == null) {
     return;
   }
@@ -27,7 +25,7 @@ Future<void> pasteImageFromClipboard({
     center,
   ).first;
 
-  documentRepository.executeCommand(AddFeatureCommand(feature));
+  context.execute(AddFeatureCommand(feature));
 }
 
 /// Testable helper for placing an imported image feature on the canvas.

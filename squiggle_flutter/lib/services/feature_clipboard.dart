@@ -1,12 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:super_clipboard/super_clipboard.dart';
-import 'package:squiggle_flutter/models/commands/command.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/viewport_repository.dart';
 import 'package:squiggle_flutter/services/document_codec.dart';
 
 const _clipboardPrefix = 'squiggle-features:1:';
@@ -39,18 +37,17 @@ List<Feature> repositionFeaturesToCenter(
 }
 
 Future<void> copySelectedFeaturesToClipboard({
-  required DocumentRepository documentRepository,
-  required SelectionRepository selectionRepository,
+  required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
-  final selectedIds = selectionRepository.selectedFeatures;
+  final selectedIds = context.selection.selectedFeatures;
   if (selectedIds.isEmpty) {
     return;
   }
 
   final features = <Feature>[];
   for (final id in selectedIds) {
-    final feature = documentRepository.document.featureById(id);
+    final feature = context.document.featureById(id);
     if (feature != null) {
       features.add(feature.copyWith());
     }
@@ -64,8 +61,7 @@ Future<void> copySelectedFeaturesToClipboard({
 }
 
 Future<bool> pasteFeaturesFromClipboard({
-  required DocumentRepository documentRepository,
-  required ViewportRepository viewportRepository,
+  required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
   final text = await _readPlainText();
@@ -81,13 +77,13 @@ Future<bool> pasteFeaturesFromClipboard({
     return false;
   }
 
-  final center = viewportRepository.worldCenterAtViewportCenter();
+  final center = context.worldCenterAtViewportCenter();
   if (center == null) {
     return false;
   }
 
   final pasted = repositionFeaturesToCenter(features, center);
-  documentRepository.executeCommand(AddFeaturesCommand(pasted));
+  context.execute(AddFeaturesCommand(pasted));
   return true;
 }
 

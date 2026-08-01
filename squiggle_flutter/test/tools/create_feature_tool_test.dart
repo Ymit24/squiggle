@@ -1,137 +1,118 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
-import 'package:squiggle_flutter/repositories/tool_repository.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 
 void main() {
-  group('CreateFeatureTool via ToolRepository', () {
-    late DocumentRepository documentRepository;
-    late SelectionRepository selectionRepository;
-    late ToolRepository toolRepository;
-    late TextEditRepository textEditRepository;
+  group('CreateFeatureTool via EditorContext', () {
+    late EditorContext context;
     late Camera camera;
 
     setUp(() {
-      documentRepository = DocumentRepository(document: Document());
-      selectionRepository = SelectionRepository();
-      toolRepository = ToolRepository();
-      textEditRepository = TextEditRepository();
+      context = EditorContext(document: Document());
       camera = Camera();
     });
 
-    tearDown(() {
-      toolRepository.dispose();
-      textEditRepository.dispose();
-      documentRepository.dispose();
-    });
-
     void pointerDown(Offset world) {
-      toolRepository.onPointerDown(
-        documentRepository,
+      context.tool.onPointerDown(
+        context,
         world,
-        selectionRepository,
-        false,
-        false,
         camera,
+        isShiftPressed: false,
+        isAltPressed: false,
       );
     }
 
     void pointerMove(Offset world, {bool shift = false, bool alt = false}) {
-      toolRepository.onPointerMove(
-        documentRepository,
+      context.tool.onPointerMove(
+        context,
         world,
-        selectionRepository,
-        shift,
-        alt,
         camera,
+        isShiftPressed: shift,
+        isAltPressed: alt,
       );
     }
 
     void pointerUp(Offset world, {bool shift = false, bool alt = false}) {
-      toolRepository.onPointerUp(
-        documentRepository,
+      context.tool.onPointerUp(
+        context,
         world,
-        selectionRepository,
-        shift,
-        alt,
         camera,
-        textEditRepository,
+        isShiftPressed: shift,
+        isAltPressed: alt,
       );
     }
 
     test('click without drag does not create feature', () {
-      toolRepository.setTool(CreateFeatureTool.rect(), selectionRepository);
+      context.setTool(CreateFeatureTool.rect());
 
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
 
-      expect(documentRepository.document.features, isEmpty);
+      expect(context.document.features, isEmpty);
     });
 
     test('drag creates rectangle feature', () {
-      toolRepository.setTool(CreateFeatureTool.rect(), selectionRepository);
+      context.setTool(CreateFeatureTool.rect());
 
       pointerDown(const Offset(0, 0));
       pointerMove(const Offset(0, 0));
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindRectangle>());
       expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
     test('drag creates circle feature', () {
-      toolRepository.setTool(CreateFeatureTool.circle(), selectionRepository);
+      context.setTool(CreateFeatureTool.circle());
 
       pointerDown(const Offset(0, 0));
       pointerMove(const Offset(0, 0));
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindCircle>());
       expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
     test('shift-drag creates square rectangle from non-square drag', () {
-      toolRepository.setTool(CreateFeatureTool.rect(), selectionRepository);
+      context.setTool(CreateFeatureTool.rect());
 
       pointerDown(const Offset(0, 0));
       pointerMove(const Offset(0, 0));
       pointerMove(const Offset(100, 50), shift: true);
       pointerUp(const Offset(100, 50), shift: true);
 
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       expect(features, hasLength(1));
       expect(features.first.bounds().width, features.first.bounds().height);
       expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
     test('shift-drag creates square circle bounds from non-square drag', () {
-      toolRepository.setTool(CreateFeatureTool.circle(), selectionRepository);
+      context.setTool(CreateFeatureTool.circle());
 
       pointerDown(const Offset(0, 0));
       pointerMove(const Offset(0, 0));
       pointerMove(const Offset(80, 140), shift: true);
       pointerUp(const Offset(80, 140), shift: true);
 
-      final features = documentRepository.document.features;
+      final features = context.document.features;
       expect(features.first.bounds().width, features.first.bounds().height);
       expect(features.first.bounds().width, closeTo(140, 0.001));
     });
 
     test('alt-drag creates rectangle from center', () {
-      toolRepository.setTool(CreateFeatureTool.rect(), selectionRepository);
+      context.setTool(CreateFeatureTool.rect());
 
       pointerDown(const Offset(50, 50));
       pointerMove(const Offset(50, 50));
@@ -139,20 +120,20 @@ void main() {
       pointerUp(const Offset(100, 80), alt: true);
 
       expect(
-        documentRepository.document.features.first.bounds(),
+        context.document.features.first.bounds(),
         const Rect.fromLTWH(0, 20, 100, 60),
       );
     });
 
     test('alt-shift-drag creates square from center', () {
-      toolRepository.setTool(CreateFeatureTool.circle(), selectionRepository);
+      context.setTool(CreateFeatureTool.circle());
 
       pointerDown(const Offset(50, 50));
       pointerMove(const Offset(50, 50));
       pointerMove(const Offset(100, 80), shift: true, alt: true);
       pointerUp(const Offset(100, 80), shift: true, alt: true);
 
-      final bounds = documentRepository.document.features.first.bounds();
+      final bounds = context.document.features.first.bounds();
       expect(bounds.width, bounds.height);
       expect(bounds, const Rect.fromLTWH(0, 0, 100, 100));
     });

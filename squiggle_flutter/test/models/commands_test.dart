@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -16,7 +17,7 @@ void main() {
   ]);
 
   group('AddFeatureCommand', () {
-    test('apply assigns id and adds feature; undo removes it', () {
+    test('redo assigns id and adds feature; undo removes it', () {
       final doc = Document();
       final feature = Feature(
         origin: const Offset(1, 2),
@@ -25,7 +26,7 @@ void main() {
       );
       final command = AddFeatureCommand(feature);
 
-      command.apply(doc);
+      command.redo(doc);
       expect(feature.id, isNot(noId));
       expect(doc.features, [feature]);
 
@@ -35,7 +36,7 @@ void main() {
   });
 
   group('AddFeaturesCommand', () {
-    test('apply adds all features; undo removes them', () {
+    test('redo adds all features; undo removes them', () {
       final doc = Document();
       final features = [
         Feature(
@@ -51,7 +52,7 @@ void main() {
       ];
       final command = AddFeaturesCommand(features);
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features, hasLength(2));
       expect(doc.features.every((feature) => feature.id != noId), isTrue);
 
@@ -61,12 +62,16 @@ void main() {
   });
 
   group('MoveFeatureCommand', () {
-    test('apply moves feature; undo restores origin', () {
+    test('redo moves feature; undo restores origin', () {
       final doc = docWithRectangle();
       final id = doc.features.first.id;
-      final command = MoveFeatureCommand(id, const Offset(5, 5));
+      final command = MoveFeatureCommand(
+        id,
+        const Offset(5, 5),
+        previousOrigin: Offset.zero,
+      );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features.first.origin, const Offset(5, 5));
 
       command.undo(doc);
@@ -75,12 +80,12 @@ void main() {
   });
 
   group('RemoveFeaturesCommand', () {
-    test('apply removes features; undo restores them', () {
+    test('redo removes features; undo restores them', () {
       final doc = docWithRectangle(origin: const Offset(2, 3));
       final id = doc.features.first.id;
       final command = RemoveFeaturesCommand([id]);
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features, isEmpty);
 
       command.undo(doc);
@@ -90,20 +95,25 @@ void main() {
   });
 
   group('ResizeFeatureCommand', () {
-    test('apply resizes feature; undo restores bounds', () {
+    test('redo resizes feature; undo restores bounds', () {
       final doc = docWithRectangle();
       final id = doc.features.first.id;
+      final initialBounds = doc.features.first.bounds();
       const newBounds = Rect.fromLTWH(1, 2, 20, 30);
-      final command = ResizeFeatureCommand(id, newBounds);
+      final command = ResizeFeatureCommand(
+        id: id,
+        initialBounds: initialBounds,
+        finalBounds: newBounds,
+      );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features.first.bounds(), newBounds);
 
       command.undo(doc);
       expect(doc.features.first.bounds(), const Rect.fromLTWH(0, 0, 10, 10));
     });
 
-    test('apply scales font size to fill resized bounds', () {
+    test('redo scales font size to fill resized bounds', () {
       const contents = 'Hello';
       final doc = Document.fromFeatures([
         Feature(
@@ -116,12 +126,17 @@ void main() {
         ),
       ]);
       final id = doc.features.first.id;
+      final initialBounds = doc.features.first.bounds();
       final initialFontSize =
           (doc.features.first.kind as FeatureKindText).fontSize;
       const newBounds = Rect.fromLTWH(0, 0, 100, 200);
-      final command = ResizeFeatureCommand(id, newBounds);
+      final command = ResizeFeatureCommand(
+        id: id,
+        initialBounds: initialBounds,
+        finalBounds: newBounds,
+      );
 
-      command.apply(doc);
+      command.redo(doc);
 
       final feature = doc.features.first;
       final textKind = feature.kind as FeatureKindText;
@@ -138,7 +153,7 @@ void main() {
   });
 
   group('UpdateFeaturesStyleCommand', () {
-    test('apply updates style; undo restores previous kind', () {
+    test('redo updates style; undo restores previous kind', () {
       final doc = docWithRectangle();
       final id = doc.features.first.id;
       const newStroke = Color(0xFFF38BA8);
@@ -147,14 +162,14 @@ void main() {
         strokeColor: newStroke,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features.first.kind.strokeColor, newStroke);
 
       command.undo(doc);
       expect(doc.features.first.kind.strokeColor, const Color(0xFFFFFFFF));
     });
 
-    test('apply updates multiple features in one step', () {
+    test('redo updates multiple features in one step', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: Offset.zero,
@@ -174,7 +189,7 @@ void main() {
         fillColor: newFill,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features.every((feature) => feature.kind.fillColor == newFill), isTrue);
 
       command.undo(doc);
@@ -195,14 +210,14 @@ void main() {
         strokeWidth: 4,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       final kind = doc.features.first.kind;
       expect(kind, isA<FeatureKindText>());
       expect((kind as FeatureKindText).contents, 'hello');
       expect(kind.strokeWidth, 4);
     });
 
-    test('apply updates font size on text features only in mixed selection', () {
+    test('redo updates font size on text features only in mixed selection', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: Offset.zero,
@@ -221,7 +236,7 @@ void main() {
         fontSize: FontSizePreset.small.size,
       );
 
-      command.apply(doc);
+      command.redo(doc);
 
       expect(doc.features.first.kind, isA<FeatureKindRectangle>());
       final textFeature = doc.features.last;
@@ -237,7 +252,7 @@ void main() {
       );
     });
 
-    test('apply font size change on text; undo restores size', () {
+    test('redo font size change on text; undo restores size', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: Offset.zero,
@@ -255,7 +270,7 @@ void main() {
         fontSize: FontSizePreset.large.size,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       final resized = doc.features.first;
       expect(resized.size.height, isNot(previousSize.height));
 
@@ -263,7 +278,7 @@ void main() {
       expect(doc.features.first.size, previousSize);
     });
 
-    test('apply text alignment change; undo restores previous kind', () {
+    test('redo text alignment change; undo restores previous kind', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: Offset.zero,
@@ -283,7 +298,7 @@ void main() {
         verticalAlignment: TextVerticalAlignment.center,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       final textKind = doc.features.first.kind as FeatureKindText;
       expect(textKind.horizontalAlignment, TextHorizontalAlignment.right);
       expect(textKind.verticalAlignment, TextVerticalAlignment.center);
@@ -296,7 +311,7 @@ void main() {
   });
 
   group('MovePolylinePointCommand', () {
-    test('apply moves middle vertex; undo restores geometry', () {
+    test('redo moves middle vertex; undo restores geometry', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: Offset.zero,
@@ -307,9 +322,16 @@ void main() {
         ),
       ]);
       final id = doc.features.first.id;
-      final command = MovePolylinePointCommand(id, 1, const Offset(50, 25));
+      final feature = doc.features.first;
+      final command = MovePolylinePointCommand(
+        id: id,
+        pointIndex: 1,
+        initialOrigin: feature.origin,
+        initialLocalPoints: (feature.kind as FeatureKindPolyline).localPoints,
+        finalWorldPosition: const Offset(50, 25),
+      );
 
-      command.apply(doc);
+      command.redo(doc);
       final points = worldPoints(
         doc.features.first.origin,
         (doc.features.first.kind as FeatureKindPolyline).localPoints,
@@ -324,7 +346,7 @@ void main() {
       expect(restored[1], const Offset(100, 0));
     });
 
-    test('apply moves index-0 vertex and re-origins polyline', () {
+    test('redo moves index-0 vertex and re-origins polyline', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: Offset.zero,
@@ -335,15 +357,22 @@ void main() {
         ),
       ]);
       final id = doc.features.first.id;
-      const newStart = Offset(10, 10);
-      final command = MovePolylinePointCommand(id, 0, newStart);
-
-      command.apply(doc);
       final feature = doc.features.first;
-      expect(feature.origin, newStart);
+      const newStart = Offset(10, 10);
+      final command = MovePolylinePointCommand(
+        id: id,
+        pointIndex: 0,
+        initialOrigin: feature.origin,
+        initialLocalPoints: (feature.kind as FeatureKindPolyline).localPoints,
+        finalWorldPosition: newStart,
+      );
+
+      command.redo(doc);
+      final moved = doc.features.first;
+      expect(moved.origin, newStart);
       final points = worldPoints(
-        feature.origin,
-        (feature.kind as FeatureKindPolyline).localPoints,
+        moved.origin,
+        (moved.kind as FeatureKindPolyline).localPoints,
       );
       expect(points, [newStart, const Offset(100, 0)]);
 
@@ -378,7 +407,7 @@ void main() {
         alignment: FeatureAlignment.left,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features[0].origin, const Offset(0, 0));
       expect(doc.features[1].origin, const Offset(0, 5));
 
@@ -411,7 +440,7 @@ void main() {
         distribution: FeatureDistribution.horizontal,
       );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features[0].origin, const Offset(0, 0));
       expect(doc.features[1].origin, const Offset(50, 0));
       expect(doc.features[2].origin, const Offset(100, 0));
@@ -437,13 +466,16 @@ void main() {
           ),
         ]);
 
-    test('apply updates contents; undo restores contents and size', () {
+    test('redo updates contents; undo restores contents and size', () {
       final doc = docWithText();
       final id = doc.features.first.id;
       final previousSize = doc.features.first.size;
-      final command = UpdateTextContentsCommand(id, 'goodbye');
+      final command = UpdateTextContentsCommand(
+        featureId: id,
+        contents: 'goodbye',
+      );
 
-      command.apply(doc);
+      command.redo(doc);
       final feature = doc.features.first;
       expect((feature.kind as FeatureKindText).contents, 'goodbye');
       expect(feature.size, previousSize);
@@ -455,7 +487,7 @@ void main() {
       expect((restored.kind as FeatureKindText).fontSize, defaultFontSize);
     });
 
-    test('apply refits font size for multiline contents while preserving bounds', () {
+    test('redo refits font size for multiline contents while preserving bounds', () {
       final doc = docWithText(contents: 'short', size: const Size(200, 120));
       final id = doc.features.first.id;
       final width = doc.features.first.size.width;
@@ -464,9 +496,12 @@ void main() {
           (doc.features.first.kind as FeatureKindText).fontSize;
       final multiline =
           'Line one\nLine two\nLine three\nLine four';
-      final command = UpdateTextContentsCommand(id, multiline);
+      final command = UpdateTextContentsCommand(
+        featureId: id,
+        contents: multiline,
+      );
 
-      command.apply(doc);
+      command.redo(doc);
       final feature = doc.features.first;
       final textKind = feature.kind as FeatureKindText;
       expect(textKind.contents, multiline);
@@ -503,7 +538,7 @@ void main() {
         },
       );
 
-      command.apply(doc);
+      command.redo(doc);
       expect(doc.features, hasLength(4));
       expect(doc.featureById(firstId)!.origin, const Offset(10, 20));
       expect(doc.featureById(secondId)!.origin, const Offset(120, 20));

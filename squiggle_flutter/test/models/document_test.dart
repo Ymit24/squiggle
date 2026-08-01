@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_id.dart';
 
 void main() {
   group('Document.featureAtPoint', () {
@@ -27,32 +28,84 @@ void main() {
     });
   });
 
-  group('Document undo/redo', () {
-    test('redo reapplies undone command', () {
-      final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
-      ]);
-      final id = doc.features.first.id;
+  group('Document mutations', () {
+    test('addFeature assigns an id when feature has noId', () {
+      final doc = Document();
+      final feature = Feature(
+        origin: const Offset(1, 2),
+        size: const Size(3, 4),
+        kind: const FeatureKindRectangle(),
+      );
 
-      doc.executeCommand(MoveFeatureCommand(id, const Offset(5, 5)));
-      doc.undo();
-      doc.redo();
+      doc.addFeature(feature);
 
-      expect(doc.features.first.origin, const Offset(5, 5));
+      expect(feature.id, isNot(noId));
+      expect(doc.features, [feature]);
     });
 
-    test('new command clears redo stack', () {
+    test('addFeatures adds multiple features in one change', () {
+      final doc = Document();
+      final features = [
+        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+        Feature(origin: const Offset(20, 0), size: const Size(10, 10), kind: const FeatureKindCircle()),
+      ];
+
+      doc.addFeatures(features);
+
+      expect(doc.features, hasLength(2));
+      expect(doc.features.every((feature) => feature.id != noId), isTrue);
+    });
+
+    test('removeFeature removes by id', () {
       final doc = Document.fromFeatures([
         Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
       ]);
       final id = doc.features.first.id;
 
-      doc.executeCommand(MoveFeatureCommand(id, const Offset(5, 5)));
-      doc.undo();
-      doc.executeCommand(MoveFeatureCommand(id, const Offset(10, 10)));
+      doc.removeFeature(id);
 
-      doc.redo();
-      expect(doc.features.first.origin, const Offset(10, 10));
+      expect(doc.features, isEmpty);
+    });
+
+    test('moveFeature updates origin and notifies', () {
+      final doc = Document.fromFeatures([
+        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+      ]);
+      final id = doc.features.first.id;
+      var notified = 0;
+      doc.addListener(() => notified++);
+
+      doc.moveFeature(id, const Offset(5, 5));
+
+      expect(doc.features.first.origin, const Offset(5, 5));
+      expect(notified, 1);
+    });
+
+    test('setFeatureBounds updates bounds', () {
+      final doc = Document.fromFeatures([
+        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+      ]);
+      final id = doc.features.first.id;
+
+      doc.setFeatureBounds(id, const Rect.fromLTWH(1, 2, 20, 30));
+
+      expect(doc.features.first.bounds(), const Rect.fromLTWH(1, 2, 20, 30));
+    });
+
+    test('replaceFrom replaces contents and next id', () {
+      final doc = Document.fromFeatures([
+        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+      ]);
+      final replacement = Document.fromFeatures([
+        Feature(origin: const Offset(5, 5), size: const Size(20, 20), kind: const FeatureKindCircle()),
+        Feature(origin: const Offset(30, 30), size: const Size(20, 20), kind: const FeatureKindCircle()),
+      ]);
+
+      doc.replaceFrom(replacement);
+
+      expect(doc.features, hasLength(2));
+      expect(doc.features.first.origin, const Offset(5, 5));
+      expect(doc.nextId, greaterThanOrEqualTo(2));
     });
   });
 }

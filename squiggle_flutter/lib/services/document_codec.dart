@@ -43,7 +43,7 @@ Future<String> encodeDocument(
   return jsonEncode({
     'version': documentFormatVersion,
     'name': name,
-    'nextId': document.nextId.value,
+    'nextId': document.nextId,
     'features': encoded,
   });
 }
@@ -82,7 +82,7 @@ DecodedDocument? decodeDocumentWithName(String json) {
     }
 
     final document = Document(nextId: FeatureId.newId(nextIdValue));
-    document.features.addAll(features);
+    document.addFeatures(features);
     final name = map['name'] as String?;
     return DecodedDocument(
       document: document,

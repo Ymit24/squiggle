@@ -1,20 +1,18 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/selection.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateTextTool extends Tool {
   @override
   EditorCursor resolveCursor(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
     Camera camera,
   ) =>
       EditorCursor.crosshair;
@@ -23,45 +21,40 @@ class CreateTextTool extends Tool {
   void paint(
     Canvas canvas,
     Camera camera,
-    DocumentRepository documentRepository,
-    SelectionRepository selection,
+    EditorContext context,
     ImageRepository imageRepository,
   ) {}
 
   @override
-  void deactivate(SelectionRepository selection) {}
+  void deactivate(EditorContext context) {}
 
   @override
   void onPointerDown(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-  ) {}
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
 
   @override
   void onPointerMove(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-  ) {}
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
 
   @override
   void onPointerUp(
-    DocumentRepository documentRepository,
+    EditorContext context,
     Offset worldPosition,
-    SelectionRepository selection,
-    bool isShiftPressed,
-    bool isAltPressed,
-    Camera camera,
-    TextEditRepository textEditRepository,
-  ) {
-    textEditRepository.beginEdit(
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    context.startTextEdit(
       CreateTextEditSession(
         worldOrigin: worldPosition,
         initialContents: '',

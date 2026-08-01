@@ -1,31 +1,30 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
+import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/models/commands/command.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
-import 'package:squiggle_flutter/repositories/document_repository.dart';
-import 'package:squiggle_flutter/repositories/text_edit_repository.dart';
 
 class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
-  TextEditBloc({
-    required this.documentRepository,
-    required this.textEditRepository,
-  }) : super(const TextEditClosed()) {
+  TextEditBloc({required this.context}) : super(const TextEditClosed()) {
     on<RequestWatchTextEditStateEvent>(_onRequestWatchTextEditState);
     on<TextEditSubmitted>(_onTextEditSubmitted);
     on<TextEditCancelled>(_onTextEditCancelled);
   }
 
-  final DocumentRepository documentRepository;
-  final TextEditRepository textEditRepository;
+  final EditorContext context;
 
   Future<void> _onRequestWatchTextEditState(
     RequestWatchTextEditStateEvent event,
     Emitter<TextEditState> emit,
   ) async {
     await emit.forEach(
-      textEditRepository.editSessionStream,
+      notifierChangesStream(context.textEdit)
+          .map((_) => context.textEdit.session)
+          .where((session) => session != null)
+          .cast<TextEditSession>(),
       onData: (session) => switch (session) {
         EditTextEditSession(
           :final featureId,
@@ -60,18 +59,22 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
 
     switch (current) {
       case EditTextEditOpen(:final featureId):
-        documentRepository.executeCommand(
-          UpdateTextContentsCommand(featureId, event.contents),
+        context.execute(
+          UpdateTextContentsCommand(
+            featureId: featureId,
+            contents: event.contents,
+          ),
         );
       case CreateTextEditOpen(:final worldOrigin):
         if (event.contents.isNotEmpty) {
-          documentRepository.executeCommand(
+          context.execute(
             AddFeatureCommand(
-              newTextFeatureAt(worldOrigin, event.contents).copyWith(id: noId),
+              newTextFeatureAt(worldOrigin, event.contents),
             ),
           );
         }
     }
+    context.endTextEdit();
     emit(const TextEditClosed());
   }
 
@@ -79,6 +82,7 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
     TextEditCancelled event,
     Emitter<TextEditState> emit,
   ) {
+    context.endTextEdit();
     emit(const TextEditClosed());
   }
 }
