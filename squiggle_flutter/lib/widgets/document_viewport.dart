@@ -1,8 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/physics.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +12,7 @@ import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import '../theme/squiggle_colors.dart';
 import 'document_canvas.dart';
+import 'fling_controller.dart';
 import 'viewport_tool_cursor.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
@@ -33,7 +32,6 @@ class DocumentViewport extends StatefulWidget {
 
 class _DocumentViewportState extends State<DocumentViewport>
     with SingleTickerProviderStateMixin {
-  static const _flingFriction = 0.135;
   static const _pinchScaleThreshold = 0.02;
 
   final GlobalKey _canvasKey = GlobalKey();
@@ -47,62 +45,24 @@ class _DocumentViewportState extends State<DocumentViewport>
 
   VelocityTracker _panVelocityTracker =
       VelocityTracker.withKind(PointerDeviceKind.trackpad);
-  late final Ticker _flingTicker;
-  FrictionSimulation? _flingSimX;
-  FrictionSimulation? _flingSimY;
-  double _flingSimXPos = 0;
-  double _flingSimYPos = 0;
+  late final FlingController _flingController;
 
   Camera get _camera => widget.context.camera;
 
   @override
   void initState() {
     super.initState();
-    _flingTicker = createTicker(_onFlingTick);
+    _flingController = FlingController(vsync: this, onPan: _onFlingPan);
   }
 
   @override
   void dispose() {
-    _flingTicker.dispose();
+    _flingController.dispose();
     super.dispose();
   }
 
-  void _stopFling() {
-    _flingTicker.stop();
-    _flingSimX = null;
-    _flingSimY = null;
-  }
-
-  void _startFling(Offset velocity) {
-    _stopFling();
-    _flingSimX = FrictionSimulation(_flingFriction, 0, velocity.dx);
-    _flingSimY = FrictionSimulation(_flingFriction, 0, velocity.dy);
-    _flingSimXPos = 0;
-    _flingSimYPos = 0;
-    _flingTicker.start();
-  }
-
-  void _onFlingTick(Duration elapsed) {
-    final simX = _flingSimX;
-    final simY = _flingSimY;
-    if (simX == null || simY == null) return;
-
-    final t = elapsed.inMicroseconds / 1e6;
-    if (simX.isDone(t) && simY.isDone(t)) {
-      _stopFling();
-      return;
-    }
-
-    final newX = simX.x(t);
-    final newY = simY.x(t);
-    final dx = newX - _flingSimXPos;
-    final dy = newY - _flingSimYPos;
-    _flingSimXPos = newX;
-    _flingSimYPos = newY;
-
-    if (dx == 0 && dy == 0) return;
-
-    _camera.panByScreenDelta(Offset(dx, dy));
+  void _onFlingPan(Offset delta) {
+    _camera.panByScreenDelta(delta);
     widget.context.notifyViewportChanged();
   }
 
@@ -128,7 +88,7 @@ class _DocumentViewportState extends State<DocumentViewport>
   void _resetPointerState() {
     _isPrimaryDragging = false;
     _pointerInCanvas = null;
-    _stopFling();
+    _flingController.stop();
   }
 
   Widget _buildCanvasLayer({required bool canvasInteractionsEnabled}) {
@@ -137,7 +97,7 @@ class _DocumentViewportState extends State<DocumentViewport>
       onPointerDown: (event) {
         if (!canvasInteractionsEnabled) return;
         ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
-        _stopFling();
+        _flingController.stop();
         if (event.buttons != kPrimaryButton) return;
         final world = _screenToWorld(event);
         if (world == null) return;
@@ -210,7 +170,7 @@ class _DocumentViewportState extends State<DocumentViewport>
       },
       onPointerPanZoomStart: (event) {
         if (!canvasInteractionsEnabled) return;
-        _stopFling();
+        _flingController.stop();
         _panVelocityTracker =
             VelocityTracker.withKind(PointerDeviceKind.trackpad);
         _panZoomHadSignificantPinch = false;
@@ -223,12 +183,12 @@ class _DocumentViewportState extends State<DocumentViewport>
         if (_panZoomHadSignificantPinch) return;
         final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
         if (velocity.distance < kMinFlingVelocity) return;
-        _startFling(velocity);
+        _flingController.fling(velocity);
       },
       onPointerSignal: (event) {
         if (!canvasInteractionsEnabled) return;
         if (event is! PointerScrollEvent) return;
-        _stopFling();
+        _flingController.stop();
         final focal = _canvasLocal(event);
         if (focal == null) return;
         final factor = math.exp(-event.scrollDelta.dy * 0.002);
