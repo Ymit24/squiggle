@@ -1,52 +1,68 @@
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/select/edit_point_interaction.dart';
+import 'package:squiggle_flutter/tools/select/marquee_interaction.dart';
+import 'package:squiggle_flutter/tools/select/move_interaction.dart';
+import 'package:squiggle_flutter/tools/select/resize_interaction.dart';
+import 'package:squiggle_flutter/tools/select/select_hit_test.dart';
+import 'package:squiggle_flutter/tools/select/select_interaction.dart';
+import 'package:squiggle_flutter/tools/select/select_overlay.dart';
+import 'package:squiggle_flutter/tools/select/select_resize_geometry.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
-import 'package:squiggle_flutter/utils/painting.dart';
 
-const kSelectionBoxPadding = 8.0;
-const kSelectionHandleHitSize = 20.0;
-const kSelectionHandlePaintSize = 12.0;
+export 'select/select_hit_test.dart'
+    show kSelectionBoxPadding, kSelectionHandleHitSize, selectionBoxWorldBounds;
+
 const kDoubleClickInterval = Duration(milliseconds: 300);
 
-enum SelectionResizeHandle {
-  topLeft,
-  top,
-  topRight,
-  right,
-  bottomRight,
-  bottom,
-  bottomLeft,
-  left,
+/// Persistent Select-tool mode, separate from any transient pointer
+/// interaction.
+sealed class SelectMode {
+  const SelectMode();
 }
 
-Rect selectionBoxWorldBounds(Rect featureBounds) {
-  return featureBounds.inflate(kSelectionBoxPadding);
+final class SelectModeNormal extends SelectMode {
+  const SelectModeNormal();
 }
 
+final class SelectModeEditing extends SelectMode {
+  const SelectModeEditing(this.featureId);
+
+  final FeatureId featureId;
+}
+
+/// Routes Select-mode input to the right interaction and coordinates
+/// selection, editing mode, and the Select overlay.
+///
+/// The details of moving, resizing, marquee selection, and point editing live
+/// in their respective [SelectInteraction]s; hit testing lives in
+/// [SelectHitTester]; rendering lives in [SelectOverlay]; resize math lives in
+/// the select_resize_geometry module.
 class SelectTool extends Tool {
-  SelectTool() : _state = const _Idle();
+  SelectTool()
+    : _mode = const SelectModeNormal(),
+      _interaction = null;
 
-  _SelectState _state;
+  static const SelectHitTester _hitTester = SelectHitTester();
+  static const SelectOverlay _overlay = SelectOverlay();
+
+  SelectMode _mode;
+  SelectInteraction? _interaction;
   FeatureId? _lastTapFeatureId;
   DateTime? _lastTapTime;
 
-  FeatureId? get _editingFeatureId => switch (_state) {
-    _Editing(:final featureId) => featureId,
-    _EditingPoint(:final featureId) => featureId,
-    _ => null,
+  FeatureId? get _editingFeatureId => switch (_mode) {
+    SelectModeNormal() => null,
+    SelectModeEditing(:final featureId) => featureId,
   };
 
   @override
@@ -56,37 +72,13 @@ class SelectTool extends Tool {
     EditorContext context,
     ImageRepository imageRepository,
   ) {
-    final document = context.document;
-
-    for (final featureId in context.selection.selectedFeatures) {
-      final feature = document.featureById(featureId);
-      if (feature != null) {
-        _paintSelectionBox(canvas, camera, feature.bounds());
-      }
-    }
-
-    final editingFeatureId = _editingFeatureId;
-    if (editingFeatureId != null) {
-      final feature = document.featureById(editingFeatureId);
-      if (feature != null && feature.kind is FeatureKindPolyline) {
-        final kind = feature.kind as FeatureKindPolyline;
-        for (final point in worldPoints(feature.origin, kind.localPoints)) {
-          _paintHandle(canvas, camera, point);
-        }
-      }
-    }
-
-    final state = _state;
-    if (state is _Selecting) {
-      final worldBounds = Rect.fromPoints(state.start, state.end);
-      canvas.drawRect(
-        worldBounds,
-        Paint()
-          ..color = SquiggleColors.selectionFill
-          ..style = PaintingStyle.fill,
-      );
-      paintDashedRect(canvas, worldBounds);
-    }
+    _overlay.paint(
+      canvas,
+      camera,
+      context,
+      interaction: _interaction,
+      editingFeatureId: _editingFeatureId,
+    );
   }
 
   @override
@@ -95,76 +87,54 @@ class SelectTool extends Tool {
     Offset worldPosition,
     Camera camera,
   ) {
-    switch (_state) {
-      case _EditingPoint():
-        return EditorCursor.grabbing;
-      case _Moving():
-        return EditorCursor.grabbing;
-      case _Resizing(:final handle):
-        return _cursorForResizeHandle(handle);
-      case _Idle():
-      case _Selecting():
-      case _Editing():
-        break;
-    }
-
-    final document = context.document;
-    final editingFeatureId = _editingFeatureId;
-    if (editingFeatureId != null) {
-      final feature = document.featureById(editingFeatureId);
-      if (feature != null &&
-          _hitTestPolylineVertex(
-                worldPoint: worldPosition,
-                feature: feature,
-                camera: camera,
-              ) !=
-              null) {
-        return EditorCursor.grab;
+    final interaction = _interaction;
+    if (interaction != null) {
+      switch (interaction) {
+        case MoveInteraction():
+        case EditPointInteraction():
+          return EditorCursor.grabbing;
+        case ResizeInteraction(:final handle):
+          return _cursorForResizeHandle(handle);
+        case MarqueeInteraction():
+          break;
       }
     }
 
-    if (context.selection.selectedFeatures.length == 1) {
-      final selected = document.featureById(
-        context.selection.selectedFeatures.single,
-      )!;
-      final bounds = selected.bounds();
-      final handle = _hitTestResizeHandle(
-        worldPoint: worldPosition,
-        featureBounds: bounds,
-        camera: camera,
-      );
-      if (handle != null) {
-        return _cursorForResizeHandle(handle);
-      }
-      if (selectionBoxWorldBounds(bounds).contains(worldPosition)) {
-        return EditorCursor.grab;
-      }
-    }
-
-    if (document.featureAtPoint(worldPosition) != null) {
-      return EditorCursor.grab;
-    }
-    return EditorCursor.basic;
+    final hit = _hitTester.hitTest(
+      document: context.document,
+      selection: context.selection,
+      worldPoint: worldPosition,
+      camera: camera,
+      editingFeatureId: _editingFeatureId,
+    );
+    return switch (hit) {
+      FeatureHit() ||
+      SelectionBoxHit() ||
+      PolylineVertexHit() => EditorCursor.grab,
+      ResizeHandleHit(:final handle) => _cursorForResizeHandle(handle),
+      EmptyHit() => EditorCursor.basic,
+    };
   }
 
   @override
   void deactivate(EditorContext context) {
+    _interaction?.cancel(context);
+    _interaction = null;
+    _mode = const SelectModeNormal();
     context.selection.clearSelection();
-    _state = const _Idle();
     _lastTapFeatureId = null;
     _lastTapTime = null;
   }
 
   @override
   bool onKeyEvent(EditorContext context, KeyDownEvent event) {
-    if (_state is! _Editing) {
-      return false;
-    }
+    if (_interaction != null) return false;
+    if (_mode is! SelectModeEditing) return false;
     if (event.logicalKey != LogicalKeyboardKey.enter &&
         event.logicalKey != LogicalKeyboardKey.escape) {
       return false;
     }
-    _state = const _Idle();
+    _mode = const SelectModeNormal();
     return true;
   }
 
@@ -176,65 +146,23 @@ class SelectTool extends Tool {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final document = context.document;
-    final selection = context.selection;
-    final editingFeatureId = _editingFeatureId;
-
-    if (editingFeatureId != null &&
-        _tryBeginEditPoint(document, worldPosition, editingFeatureId, camera)) {
-      return;
-    }
-
-    if (_tryBeginResize(
-      document,
-      worldPosition,
-      selection,
-      camera,
-      resumeEditing: editingFeatureId,
-    )) {
-      return;
-    }
-
-    final feature = document.featureAtPoint(worldPosition);
-
-    if (feature != null) {
-      if (editingFeatureId != null && feature.id != editingFeatureId) {
-        _exitEditing();
-      }
-
-      final didSelect = !selection.isFeatureSelected(feature.id);
-      if (!isShiftPressed && !selection.isFeatureSelected(feature.id)) {
-        selection.clearSelection();
-      }
-      selection.selectFeature(feature.id);
-
-      final resumeEditing =
-          editingFeatureId != null && feature.id == editingFeatureId
-          ? editingFeatureId
-          : null;
-      final initialOrigins = _selectedFeatureOrigins(document, selection);
-      _state = _Moving(
-        initialOrigins: initialOrigins,
-        moveOffset: worldPosition - feature.origin,
-        pointerDownWorld: worldPosition,
-        isFirstTimeSelect: didSelect,
-        didMove: false,
-        hasDuplicated: false,
-        draggedFeatureId: feature.id,
-        originsAtDragStart: _captureOrigins(
-          document,
-          selection.selectedFeatures,
-        ),
-        resumeEditing: resumeEditing,
-      );
-    } else {
-      if (editingFeatureId != null) {
-        _exitEditing();
-      }
-      _state = _Selecting(start: worldPosition, end: worldPosition);
-      if (!isShiftPressed) {
-        selection.clearSelection();
-      }
+    final hit = _hitTester.hitTest(
+      document: context.document,
+      selection: context.selection,
+      worldPoint: worldPosition,
+      camera: camera,
+      editingFeatureId: _editingFeatureId,
+    );
+    switch (hit) {
+      case PolylineVertexHit(:final featureId, :final pointIndex):
+        _beginEditPoint(context, worldPosition, featureId, pointIndex);
+      case ResizeHandleHit(:final handle):
+        _beginResize(context, worldPosition, handle);
+      case FeatureHit(:final featureId):
+        _beginMove(context, worldPosition, featureId, isShiftPressed);
+      case SelectionBoxHit():
+      case EmptyHit():
+        _beginMarquee(context, worldPosition, isShiftPressed);
     }
   }
 
@@ -246,118 +174,15 @@ class SelectTool extends Tool {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final document = context.document;
-    final selection = context.selection;
-    switch (_state) {
-      case _Idle():
-      case _Editing():
-        return;
-      case _Selecting(:final start):
-        _state = _Selecting(start: start, end: worldPosition);
-        _updateMarqueeSelection(document, selection, isShiftPressed);
-      case _EditingPoint(
-        :final featureId,
-        :final pointIndex,
-        :final dragOffset,
-        :final initialOrigin,
-        :final initialLocalPoints,
-      ):
-        final feature = document.featureById(featureId)!;
-        final kind = feature.kind as FeatureKindPolyline;
-        final points = worldPoints(feature.origin, kind.localPoints);
-        var target = worldPosition - dragOffset;
-        if (isShiftPressed) {
-          final origin = pointIndex > 0
-              ? points[pointIndex - 1]
-              : points.length > 1
-              ? points[1]
-              : target;
-          target = snapPointTo45DegreeAngle(origin, target);
-        }
-        _state = _EditingPoint(
-          featureId: featureId,
-          pointIndex: pointIndex,
-          dragOffset: dragOffset,
-          initialOrigin: initialOrigin,
-          initialLocalPoints: initialLocalPoints,
-          didMove: true,
-        );
-        _movePolylinePoint(document, featureId, pointIndex, target);
-      case _Moving(
-        :final initialOrigins,
-        :final moveOffset,
-        :final pointerDownWorld,
-        :final isFirstTimeSelect,
-        :final didMove,
-        :final hasDuplicated,
-        :final draggedFeatureId,
-        :final originsAtDragStart,
-        :final resumeEditing,
-      ):
-        var effectiveMoveOffset = moveOffset;
-        var effectiveHasDuplicated = hasDuplicated;
-        if (isAltPressed && !hasDuplicated) {
-          effectiveMoveOffset = _tryAltDuplicate(
-            context,
-            worldPosition,
-            draggedFeatureId,
-            originsAtDragStart,
-            moveOffset,
-            didMove,
-          );
-          effectiveHasDuplicated = true;
-        }
-        _state = _Moving(
-          initialOrigins: effectiveHasDuplicated
-              ? _selectedFeatureOrigins(document, selection)
-              : initialOrigins,
-          moveOffset: effectiveMoveOffset,
-          pointerDownWorld: pointerDownWorld,
-          isFirstTimeSelect: isFirstTimeSelect,
-          didMove: true,
-          hasDuplicated: effectiveHasDuplicated,
-          draggedFeatureId: draggedFeatureId,
-          originsAtDragStart: originsAtDragStart,
-          resumeEditing: resumeEditing,
-        );
-        final moveTarget = isShiftPressed
-            ? constrainMoveToAxis(pointerDownWorld, worldPosition)
-            : worldPosition;
-        _moveSelectedFeatures(
-          document,
-          selection,
-          moveTarget,
-          effectiveMoveOffset,
-        );
-      case _Resizing(
-        :final featureId,
-        :final handle,
-        :final anchor,
-        :final initialBounds,
-        :final resizeOffset,
-        :final resumeEditing,
-      ):
-        _state = _Resizing(
-          featureId: featureId,
-          handle: handle,
-          anchor: anchor,
-          initialBounds: initialBounds,
-          resizeOffset: resizeOffset,
-          didResize: true,
-          resumeEditing: resumeEditing,
-        );
-        _resizeFeature(
-          document,
-          featureId,
-          handle,
-          anchor,
-          initialBounds,
-          worldPosition,
-          resizeOffset,
-          isAltPressed,
-          isShiftPressed,
-        );
-    }
+    final interaction = _interaction;
+    if (interaction == null) return;
+    interaction.update(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
   }
 
   @override
@@ -368,278 +193,194 @@ class SelectTool extends Tool {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final document = context.document;
-    final selection = context.selection;
-    switch (_state) {
-      case _EditingPoint(
-        :final featureId,
-        :final pointIndex,
-        :final initialOrigin,
-        :final initialLocalPoints,
-        :final didMove,
-      ):
-        if (didMove) {
-          _commitPolylinePointMove(
-            context,
-            featureId,
-            pointIndex,
-            initialOrigin,
-            initialLocalPoints,
-          );
-        }
-        _state = _Editing(featureId: featureId);
-        return;
-      case _Moving(
-        :final initialOrigins,
-        :final isFirstTimeSelect,
-        :final didMove,
-        :final resumeEditing,
-      ):
-        if (didMove) {
-          _commitMove(context, initialOrigins);
-        }
-        final hovered = document.featureAtPoint(worldPosition);
-        if (hovered != null && !didMove) {
-          final now = DateTime.now();
-          if (_lastTapFeatureId == hovered.id &&
-              _lastTapTime != null &&
-              now.difference(_lastTapTime!) <= kDoubleClickInterval) {
-            if (!isShiftPressed) {
-              selection.clearSelection();
-              selection.selectFeature(hovered.id);
-            }
-            if (hovered.kind is FeatureKindText) {
-              final textKind = hovered.kind as FeatureKindText;
-              context.startTextEdit(
-                EditTextEditSession(
-                  featureId: hovered.id,
-                  initialContents: textKind.contents,
-                  canvasLocalBounds: camera.worldToScreenBounds(
-                    hovered.bounds(),
-                  ),
-                ),
-              );
-              _state = const _Idle();
-              _lastTapFeatureId = null;
-              _lastTapTime = null;
-              return;
-            }
-            _state = _Editing(featureId: hovered.id);
-            _lastTapFeatureId = null;
-            _lastTapTime = null;
-            return;
-          }
-          _lastTapFeatureId = hovered.id;
-          _lastTapTime = now;
-
-          if (isShiftPressed) {
-            if (!isFirstTimeSelect) {
-              selection.deselectFeature(hovered.id);
-            }
-          } else {
-            selection.clearSelection();
-            selection.selectFeature(hovered.id);
-          }
-        }
-        if (resumeEditing != null) {
-          _state = _Editing(featureId: resumeEditing);
-          return;
-        }
-      case _Resizing(
-        :final featureId,
-        :final initialBounds,
-        :final didResize,
-        :final resumeEditing,
-      ):
-        if (didResize) {
-          _commitResize(context, featureId, initialBounds);
-        }
-        if (resumeEditing != null) {
-          _state = _Editing(featureId: resumeEditing);
-          return;
-        }
-      case _Idle():
-      case _Selecting():
-      case _Editing():
-        break;
-    }
-    _state = const _Idle();
-  }
-
-  void _exitEditing() {
-    if (_state is _Editing || _state is _EditingPoint) {
-      _state = const _Idle();
-    }
-  }
-
-  bool _tryBeginEditPoint(
-    Document document,
-    Offset worldPosition,
-    FeatureId editingFeatureId,
-    Camera camera,
-  ) {
-    final feature = document.featureById(editingFeatureId);
-    if (feature == null) return false;
-
-    final pointIndex = _hitTestPolylineVertex(
-      worldPoint: worldPosition,
-      feature: feature,
-      camera: camera,
+    final interaction = _interaction;
+    if (interaction == null) return;
+    interaction.commit(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
     );
-    if (pointIndex == null) return false;
+    _handleInteractionEnd(
+      context,
+      worldPosition,
+      camera,
+      interaction,
+      isShiftPressed,
+    );
+    _interaction = null;
+  }
 
+  void _beginEditPoint(
+    EditorContext context,
+    Offset worldPosition,
+    FeatureId featureId,
+    int pointIndex,
+  ) {
+    final feature = context.document.featureById(featureId)!;
     final kind = feature.kind as FeatureKindPolyline;
     final points = worldPoints(feature.origin, kind.localPoints);
-    _state = _EditingPoint(
-      featureId: editingFeatureId,
+    _interaction = EditPointInteraction(
+      featureId: featureId,
       pointIndex: pointIndex,
       dragOffset: worldPosition - points[pointIndex],
       initialOrigin: feature.origin,
       initialLocalPoints: List.of(kind.localPoints),
-      didMove: false,
     );
-    return true;
   }
 
-  int? _hitTestPolylineVertex({
-    required Offset worldPoint,
-    required Feature feature,
-    required Camera camera,
-  }) {
-    final kind = feature.kind;
-    if (kind is! FeatureKindPolyline) return null;
-
-    final screenPoint = camera.worldToScreen(worldPoint);
-    final points = worldPoints(feature.origin, kind.localPoints);
-    for (var i = 0; i < points.length; i++) {
-      final screenCenter = camera.worldToScreen(points[i]);
-      final hitRect = Rect.fromCenter(
-        center: screenCenter,
-        width: kSelectionHandleHitSize,
-        height: kSelectionHandleHitSize,
-      );
-      if (hitRect.contains(screenPoint)) {
-        return i;
-      }
-    }
-    return null;
-  }
-
-  bool _tryBeginResize(
-    Document document,
+  void _beginResize(
+    EditorContext context,
     Offset worldPosition,
-    SelectionModel selection,
-    Camera camera, {
-    FeatureId? resumeEditing,
-  }) {
-    if (selection.selectedFeatures.length != 1) {
-      return false;
-    }
-
+    SelectionResizeHandle handle,
+  ) {
+    final document = context.document;
+    final selection = context.selection;
     final selectedId = selection.selectedFeatures.single;
     final selected = document.featureById(selectedId)!;
 
-    final handle = _hitTestResizeHandle(
-      worldPoint: worldPosition,
-      featureBounds: selected.bounds(),
-      camera: camera,
-    );
-    if (handle == null) {
-      return false;
-    }
-
     final bounds = selected.bounds();
-    final reference = _referencePointForResizeHandle(handle, bounds);
-    _state = _Resizing(
+    _interaction = ResizeInteraction(
       featureId: selectedId,
       handle: handle,
-      anchor: _anchorForResizeHandle(handle, bounds),
+      anchor: anchorForResizeHandle(handle, bounds),
       initialBounds: bounds,
-      resizeOffset: worldPosition - reference,
-      didResize: false,
+      resizeOffset: worldPosition - referencePointForResizeHandle(handle, bounds),
+      resumeEditing: _editingFeatureId,
+    );
+  }
+
+  void _beginMove(
+    EditorContext context,
+    Offset worldPosition,
+    FeatureId featureId,
+    bool isShiftPressed,
+  ) {
+    final document = context.document;
+    final selection = context.selection;
+
+    final editingFeatureId = _editingFeatureId;
+    if (editingFeatureId != null && featureId != editingFeatureId) {
+      _mode = const SelectModeNormal();
+    }
+
+    final didSelect = !selection.isFeatureSelected(featureId);
+    if (!isShiftPressed && !selection.isFeatureSelected(featureId)) {
+      selection.clearSelection();
+    }
+    selection.selectFeature(featureId);
+
+    final resumeEditing = editingFeatureId != null && featureId == editingFeatureId
+        ? editingFeatureId
+        : null;
+
+    final feature = document.featureById(featureId)!;
+    _interaction = MoveInteraction(
+      initialOrigins: originsForFeatures(document, selection.selectedFeatures),
+      moveOffset: worldPosition - feature.origin,
+      pointerDownWorld: worldPosition,
+      isFirstTimeSelect: didSelect,
+      draggedFeatureId: featureId,
+      originsAtDragStart: originsForFeatures(
+        document,
+        selection.selectedFeatures,
+      ),
       resumeEditing: resumeEditing,
     );
-    return true;
   }
 
-  void _paintSelectionBox(Canvas canvas, Camera camera, Rect worldBounds) {
-    canvas.save();
-    canvas.translate(camera.location.dx, camera.location.dy);
-    canvas.scale(camera.zoom, camera.zoom);
-
-    final screenBounds = camera.worldToScreenBounds(worldBounds);
-    final inflatedBounds = screenBounds.inflate(
-      kSelectionBoxPadding / camera.zoom,
-    );
-    final half = kSelectionHandlePaintSize / 2;
-
-    canvas.drawRect(
-      inflatedBounds,
-      Paint()
-        ..color = SquiggleColors.accent
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-    for (final center in [
-      inflatedBounds.topLeft - Offset(half, half),
-      inflatedBounds.topRight + Offset(half, -half),
-      inflatedBounds.bottomLeft + Offset(-half, half),
-      inflatedBounds.bottomRight + Offset(half, half),
-    ]) {
-      _paintSquareHandleAtScreenCenter(canvas, center);
+  void _beginMarquee(
+    EditorContext context,
+    Offset worldPosition,
+    bool isShiftPressed,
+  ) {
+    if (_editingFeatureId != null) {
+      _mode = const SelectModeNormal();
     }
-    canvas.restore();
+    _interaction = MarqueeInteraction(start: worldPosition, end: worldPosition);
+    if (!isShiftPressed) {
+      context.selection.clearSelection();
+    }
   }
 
-  void _paintHandle(Canvas canvas, Camera camera, Offset worldPoint) {
-    canvas.save();
-    canvas.translate(camera.location.dx, camera.location.dy);
-    canvas.scale(camera.zoom, camera.zoom);
-    _paintCircleHandleAtScreenCenter(canvas, camera.worldToScreen(worldPoint));
-    canvas.restore();
+  void _handleInteractionEnd(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+    SelectInteraction interaction,
+    bool isShiftPressed,
+  ) {
+    switch (interaction) {
+      case MoveInteraction():
+        _handleMoveEnd(context, worldPosition, camera, interaction, isShiftPressed);
+      case ResizeInteraction(:final resumeEditing):
+        if (resumeEditing != null) {
+          _mode = SelectModeEditing(resumeEditing);
+        }
+      case EditPointInteraction(:final featureId):
+        _mode = SelectModeEditing(featureId);
+      case MarqueeInteraction():
+        break;
+    }
   }
 
-  void _paintSquareHandleAtScreenCenter(Canvas canvas, Offset center) {
-    final handleRRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: center,
-        width: kSelectionHandlePaintSize,
-        height: kSelectionHandlePaintSize,
-      ),
-      const Radius.circular(2.0),
-    );
-    canvas.drawRRect(
-      handleRRect,
-      Paint()
-        ..color = SquiggleColors.base
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawRRect(
-      handleRRect,
-      Paint()
-        ..color = SquiggleColors.accent
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-  }
+  void _handleMoveEnd(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+    MoveInteraction interaction,
+    bool isShiftPressed,
+  ) {
+    final document = context.document;
+    final selection = context.selection;
 
-  void _paintCircleHandleAtScreenCenter(Canvas canvas, Offset center) {
-    final radius = kSelectionHandlePaintSize / 2;
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = SquiggleColors.base
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = SquiggleColors.accent
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
+    final hovered = document.featureAtPoint(worldPosition);
+    if (hovered != null && !interaction.didMove) {
+      final now = DateTime.now();
+      if (_lastTapFeatureId == hovered.id &&
+          _lastTapTime != null &&
+          now.difference(_lastTapTime!) <= kDoubleClickInterval) {
+        if (!isShiftPressed) {
+          selection.clearSelection();
+          selection.selectFeature(hovered.id);
+        }
+        if (hovered.kind is FeatureKindText) {
+          final textKind = hovered.kind as FeatureKindText;
+          context.startTextEdit(
+            EditTextEditSession(
+              featureId: hovered.id,
+              initialContents: textKind.contents,
+              canvasLocalBounds: camera.worldToScreenBounds(hovered.bounds()),
+            ),
+          );
+          _mode = const SelectModeNormal();
+          _lastTapFeatureId = null;
+          _lastTapTime = null;
+          return;
+        }
+        _mode = SelectModeEditing(hovered.id);
+        _lastTapFeatureId = null;
+        _lastTapTime = null;
+        return;
+      }
+      _lastTapFeatureId = hovered.id;
+      _lastTapTime = now;
+
+      if (isShiftPressed) {
+        if (!interaction.isFirstTimeSelect) {
+          selection.deselectFeature(hovered.id);
+        }
+      } else {
+        selection.clearSelection();
+        selection.selectFeature(hovered.id);
+      }
+    }
+
+    final resumeEditing = interaction.resumeEditing;
+    _mode = resumeEditing != null
+        ? SelectModeEditing(resumeEditing)
+        : const SelectModeNormal();
   }
 
   EditorCursor _cursorForResizeHandle(SelectionResizeHandle handle) {
@@ -654,581 +395,4 @@ class SelectTool extends Tool {
       SelectionResizeHandle.left => EditorCursor.resizeLeft,
     };
   }
-
-  SelectionResizeHandle? _hitTestResizeHandle({
-    required Offset worldPoint,
-    required Rect featureBounds,
-    required Camera camera,
-  }) {
-    final screenPoint = camera.worldToScreen(worldPoint);
-    final screenBounds = camera.worldToScreenBounds(featureBounds);
-    final inflated = screenBounds.inflate(kSelectionBoxPadding / camera.zoom);
-    final half = kSelectionHandleHitSize / 2;
-
-    final handleCenters = <(SelectionResizeHandle, Offset)>[
-      (SelectionResizeHandle.topLeft, inflated.topLeft - Offset(half, half)),
-      (SelectionResizeHandle.topRight, inflated.topRight + Offset(half, -half)),
-      (
-        SelectionResizeHandle.bottomLeft,
-        inflated.bottomLeft + Offset(-half, half),
-      ),
-      (
-        SelectionResizeHandle.bottomRight,
-        inflated.bottomRight + Offset(half, half),
-      ),
-    ];
-
-    for (final (handle, center) in handleCenters) {
-      final hitRect = Rect.fromCenter(
-        center: center,
-        width: kSelectionHandleHitSize,
-        height: kSelectionHandleHitSize,
-      );
-      if (hitRect.contains(screenPoint)) {
-        return handle;
-      }
-    }
-
-    if (inflated.width <= kSelectionHandleHitSize ||
-        inflated.height <= kSelectionHandleHitSize) {
-      return null;
-    }
-
-    final edgeStrips = <(SelectionResizeHandle, Rect)>[
-      (
-        SelectionResizeHandle.top,
-        Rect.fromLTWH(
-          inflated.left + half,
-          inflated.top - half,
-          inflated.width - kSelectionHandleHitSize,
-          kSelectionHandleHitSize,
-        ),
-      ),
-      (
-        SelectionResizeHandle.bottom,
-        Rect.fromLTWH(
-          inflated.left + half,
-          inflated.bottom - half,
-          inflated.width - kSelectionHandleHitSize,
-          kSelectionHandleHitSize,
-        ),
-      ),
-      (
-        SelectionResizeHandle.left,
-        Rect.fromLTWH(
-          inflated.left - half,
-          inflated.top + half,
-          kSelectionHandleHitSize,
-          inflated.height - kSelectionHandleHitSize,
-        ),
-      ),
-      (
-        SelectionResizeHandle.right,
-        Rect.fromLTWH(
-          inflated.right - half,
-          inflated.top + half,
-          kSelectionHandleHitSize,
-          inflated.height - kSelectionHandleHitSize,
-        ),
-      ),
-    ];
-
-    for (final (handle, strip) in edgeStrips) {
-      if (strip.contains(screenPoint)) {
-        return handle;
-      }
-    }
-    return null;
-  }
-
-  Offset _anchorForResizeHandle(SelectionResizeHandle handle, Rect bounds) {
-    return switch (handle) {
-      SelectionResizeHandle.topLeft => bounds.bottomRight,
-      SelectionResizeHandle.top => bounds.bottomLeft,
-      SelectionResizeHandle.topRight => bounds.bottomLeft,
-      SelectionResizeHandle.right => bounds.topLeft,
-      SelectionResizeHandle.bottomRight => bounds.topLeft,
-      SelectionResizeHandle.bottom => bounds.topLeft,
-      SelectionResizeHandle.bottomLeft => bounds.topRight,
-      SelectionResizeHandle.left => bounds.topRight,
-    };
-  }
-
-  Offset _referencePointForResizeHandle(
-    SelectionResizeHandle handle,
-    Rect bounds,
-  ) {
-    return switch (handle) {
-      SelectionResizeHandle.topLeft => bounds.topLeft,
-      SelectionResizeHandle.top => bounds.topLeft,
-      SelectionResizeHandle.topRight => bounds.topRight,
-      SelectionResizeHandle.right => bounds.bottomRight,
-      SelectionResizeHandle.bottomRight => bounds.bottomRight,
-      SelectionResizeHandle.bottom => bounds.bottomRight,
-      SelectionResizeHandle.bottomLeft => bounds.bottomLeft,
-      SelectionResizeHandle.left => bounds.topLeft,
-    };
-  }
-
-  void _updateMarqueeSelection(
-    Document document,
-    SelectionModel selection,
-    bool isShiftPressed,
-  ) {
-    final state = _state;
-    if (state is! _Selecting) return;
-
-    final bounds = Rect.fromPoints(state.start, state.end);
-    final hits = document.features
-        .where((f) => f.intersectsRect(bounds))
-        .map((f) => f.id)
-        .toList();
-
-    if (isShiftPressed) {
-      for (final id in hits) {
-        selection.selectFeature(id);
-      }
-    } else {
-      selection.setSelection(hits);
-    }
-  }
-
-  Map<FeatureId, Offset> _captureOrigins(
-    Document document,
-    List<FeatureId> ids,
-  ) {
-    return {
-      for (final id in ids)
-        if (document.featureById(id) case final feature?) id: feature.origin,
-    };
-  }
-
-  /// Duplicates the dragged selection for alt-drag, leaving originals at drag
-  /// start. Returns the [moveOffset] for the clone under the cursor.
-  Offset _tryAltDuplicate(
-    EditorContext context,
-    Offset worldPosition,
-    FeatureId draggedFeatureId,
-    Map<FeatureId, Offset> originsAtDragStart,
-    Offset moveOffset,
-    bool draggedBeforeDuplicate,
-  ) {
-    final document = context.document;
-    final selection = context.selection;
-    final idsToDuplicate = selection.selectedFeatures.contains(draggedFeatureId)
-        ? List<FeatureId>.of(selection.selectedFeatures)
-        : [draggedFeatureId];
-
-    final command = DuplicateFeaturesCommand(
-      sourceIds: idsToDuplicate,
-      originsAtDragStart: originsAtDragStart,
-    );
-    context.execute(command);
-
-    final createdIds = command.createdIds;
-    selection.setSelection(createdIds);
-
-    final draggedIndex = idsToDuplicate.indexOf(draggedFeatureId);
-    final draggedClone = document.featureById(createdIds[draggedIndex])!;
-    selection.selectFeature(draggedClone.id);
-
-    if (draggedBeforeDuplicate) {
-      return worldPosition - draggedClone.origin;
-    }
-    return moveOffset;
-  }
-
-  void _moveSelectedFeatures(
-    Document document,
-    SelectionModel selection,
-    Offset worldPosition,
-    Offset moveOffset,
-  ) {
-    final ids = List<FeatureId>.of(selection.selectedFeatures);
-    if (ids.isEmpty) return;
-
-    final chaseFeature = document.featureById(ids.last);
-    if (chaseFeature == null) return;
-
-    final offsets = <FeatureId, Offset>{};
-    for (final id in ids) {
-      final feature = document.featureById(id);
-      if (feature != null) {
-        offsets[id] = feature.origin - chaseFeature.origin;
-      }
-    }
-
-    final targets = <FeatureId, Offset>{};
-    for (final entry in offsets.entries) {
-      targets[entry.key] = worldPosition - moveOffset + entry.value;
-    }
-    document.moveFeatures(targets);
-  }
-
-  Map<FeatureId, Offset> _selectedFeatureOrigins(
-    Document document,
-    SelectionModel selection,
-  ) {
-    return {
-      for (final id in selection.selectedFeatures)
-        if (document.featureById(id) case final feature?) id: feature.origin,
-    };
-  }
-
-  void _commitMove(
-    EditorContext context,
-    Map<FeatureId, Offset> initialOrigins,
-  ) {
-    final document = context.document;
-    final finalOrigins = <FeatureId, Offset>{};
-    for (final id in initialOrigins.keys) {
-      final feature = document.featureById(id);
-      if (feature != null && feature.origin != initialOrigins[id]) {
-        finalOrigins[id] = feature.origin;
-      }
-    }
-    if (finalOrigins.isEmpty) return;
-
-    context.record(MoveFeaturesCommand(initialOrigins, finalOrigins));
-  }
-
-  void _resizeFeature(
-    Document document,
-    FeatureId featureId,
-    SelectionResizeHandle handle,
-    Offset anchor,
-    Rect initialBounds,
-    Offset pointerWorld,
-    Offset resizeOffset,
-    bool symmetric,
-    bool lockAspectRatio,
-  ) {
-    final dragged = pointerWorld - resizeOffset;
-    final aspectRatio = initialBounds.width / initialBounds.height;
-    final newBounds = symmetric
-        ? _symmetricBoundsForResize(
-            handle,
-            initialBounds,
-            dragged,
-            lockAspectRatio: lockAspectRatio,
-            aspectRatio: aspectRatio,
-          )
-        : _asymmetricBoundsForResize(
-            handle,
-            anchor,
-            initialBounds,
-            dragged,
-            lockAspectRatio: lockAspectRatio,
-            aspectRatio: aspectRatio,
-          );
-
-    document.setFeatureBounds(featureId, newBounds);
-  }
-
-  void _commitResize(
-    EditorContext context,
-    FeatureId featureId,
-    Rect initialBounds,
-  ) {
-    final feature = context.document.featureById(featureId);
-    if (feature == null) return;
-
-    final finalBounds = feature.bounds();
-    if (finalBounds == initialBounds) return;
-
-    context.record(
-      ResizeFeatureCommand(
-        id: featureId,
-        initialBounds: initialBounds,
-        finalBounds: finalBounds,
-      ),
-    );
-  }
-
-  void _movePolylinePoint(
-    Document document,
-    FeatureId featureId,
-    int pointIndex,
-    Offset worldPosition,
-  ) {
-    final feature = document.featureById(featureId);
-    if (feature == null) return;
-
-    final kind = feature.kind;
-    if (kind is! FeatureKindPolyline) return;
-
-    final points = worldPoints(feature.origin, kind.localPoints);
-    if (pointIndex < 0 || pointIndex >= points.length) return;
-
-    document.setPolylinePoint(featureId, pointIndex, worldPosition);
-  }
-
-  void _commitPolylinePointMove(
-    EditorContext context,
-    FeatureId featureId,
-    int pointIndex,
-    Offset initialOrigin,
-    List<Offset> initialLocalPoints,
-  ) {
-    final document = context.document;
-    final feature = document.featureById(featureId);
-    if (feature == null) return;
-
-    final kind = feature.kind;
-    if (kind is! FeatureKindPolyline) return;
-
-    final finalPoints = worldPoints(feature.origin, kind.localPoints);
-    if (pointIndex < 0 || pointIndex >= finalPoints.length) return;
-
-    final initialWorldPoints = worldPoints(initialOrigin, initialLocalPoints);
-    if (pointIndex >= initialWorldPoints.length ||
-        finalPoints[pointIndex] == initialWorldPoints[pointIndex]) {
-      return;
-    }
-
-    context.record(
-      MovePolylinePointCommand(
-        id: featureId,
-        pointIndex: pointIndex,
-        initialOrigin: initialOrigin,
-        initialLocalPoints: initialLocalPoints,
-        finalWorldPosition: finalPoints[pointIndex],
-      ),
-    );
-  }
-
-  Rect _asymmetricBoundsForResize(
-    SelectionResizeHandle handle,
-    Offset anchor,
-    Rect bounds,
-    Offset dragged, {
-    required bool lockAspectRatio,
-    required double aspectRatio,
-  }) {
-    if (lockAspectRatio) {
-      return switch (handle) {
-        SelectionResizeHandle.topLeft ||
-        SelectionResizeHandle.topRight ||
-        SelectionResizeHandle.bottomLeft ||
-        SelectionResizeHandle.bottomRight => rectFromAnchorWithAspectRatio(
-          anchor,
-          dragged,
-          aspectRatio,
-        ),
-        SelectionResizeHandle.top => edgeResizeWithAspectRatio(
-          bounds,
-          dragged,
-          resizeTop: true,
-          resizeBottom: false,
-          resizeLeft: false,
-          resizeRight: false,
-          aspectRatio: aspectRatio,
-        ),
-        SelectionResizeHandle.bottom => edgeResizeWithAspectRatio(
-          bounds,
-          dragged,
-          resizeTop: false,
-          resizeBottom: true,
-          resizeLeft: false,
-          resizeRight: false,
-          aspectRatio: aspectRatio,
-        ),
-        SelectionResizeHandle.left => edgeResizeWithAspectRatio(
-          bounds,
-          dragged,
-          resizeTop: false,
-          resizeBottom: false,
-          resizeLeft: true,
-          resizeRight: false,
-          aspectRatio: aspectRatio,
-        ),
-        SelectionResizeHandle.right => edgeResizeWithAspectRatio(
-          bounds,
-          dragged,
-          resizeTop: false,
-          resizeBottom: false,
-          resizeLeft: false,
-          resizeRight: true,
-          aspectRatio: aspectRatio,
-        ),
-      };
-    }
-
-    return switch (handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.topRight ||
-      SelectionResizeHandle.bottomLeft ||
-      SelectionResizeHandle.bottomRight => Rect.fromPoints(anchor, dragged),
-      SelectionResizeHandle.top => Rect.fromLTRB(
-        bounds.left,
-        dragged.dy,
-        bounds.right,
-        bounds.bottom,
-      ),
-      SelectionResizeHandle.bottom => Rect.fromLTRB(
-        bounds.left,
-        bounds.top,
-        bounds.right,
-        dragged.dy,
-      ),
-      SelectionResizeHandle.left => Rect.fromLTRB(
-        dragged.dx,
-        bounds.top,
-        bounds.right,
-        bounds.bottom,
-      ),
-      SelectionResizeHandle.right => Rect.fromLTRB(
-        bounds.left,
-        bounds.top,
-        dragged.dx,
-        bounds.bottom,
-      ),
-    };
-  }
-
-  Rect _symmetricBoundsForResize(
-    SelectionResizeHandle handle,
-    Rect initialBounds,
-    Offset dragged, {
-    required bool lockAspectRatio,
-    required double aspectRatio,
-  }) {
-    final center = initialBounds.center;
-    if (lockAspectRatio) {
-      return switch (handle) {
-        SelectionResizeHandle.topLeft ||
-        SelectionResizeHandle.topRight ||
-        SelectionResizeHandle.bottomLeft ||
-        SelectionResizeHandle.bottomRight => symmetricRectWithAspectRatio(
-          center,
-          dragged,
-          aspectRatio,
-          resizeHorizontal: true,
-          resizeVertical: true,
-        ),
-        SelectionResizeHandle.top ||
-        SelectionResizeHandle.bottom => symmetricRectWithAspectRatio(
-          center,
-          dragged,
-          aspectRatio,
-          resizeHorizontal: false,
-          resizeVertical: true,
-        ),
-        SelectionResizeHandle.left ||
-        SelectionResizeHandle.right => symmetricRectWithAspectRatio(
-          center,
-          dragged,
-          aspectRatio,
-          resizeHorizontal: true,
-          resizeVertical: false,
-        ),
-      };
-    }
-
-    return switch (handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.topRight ||
-      SelectionResizeHandle.bottomLeft ||
-      SelectionResizeHandle.bottomRight => Rect.fromCenter(
-        center: center,
-        width: (dragged.dx - center.dx).abs() * 2,
-        height: (dragged.dy - center.dy).abs() * 2,
-      ),
-      SelectionResizeHandle.top ||
-      SelectionResizeHandle.bottom => Rect.fromCenter(
-        center: center,
-        width: initialBounds.width,
-        height: (dragged.dy - center.dy).abs() * 2,
-      ),
-      SelectionResizeHandle.left ||
-      SelectionResizeHandle.right => Rect.fromCenter(
-        center: center,
-        width: (dragged.dx - center.dx).abs() * 2,
-        height: initialBounds.height,
-      ),
-    };
-  }
-}
-
-sealed class _SelectState {
-  const _SelectState();
-}
-
-final class _Idle extends _SelectState {
-  const _Idle();
-}
-
-final class _Selecting extends _SelectState {
-  const _Selecting({required this.start, required this.end});
-
-  final Offset start;
-  final Offset end;
-}
-
-final class _Editing extends _SelectState {
-  const _Editing({required this.featureId});
-
-  final FeatureId featureId;
-}
-
-final class _EditingPoint extends _SelectState {
-  const _EditingPoint({
-    required this.featureId,
-    required this.pointIndex,
-    required this.dragOffset,
-    required this.initialOrigin,
-    required this.initialLocalPoints,
-    required this.didMove,
-  });
-
-  final FeatureId featureId;
-  final int pointIndex;
-  final Offset dragOffset;
-  final Offset initialOrigin;
-  final List<Offset> initialLocalPoints;
-  final bool didMove;
-}
-
-final class _Moving extends _SelectState {
-  const _Moving({
-    required this.initialOrigins,
-    required this.moveOffset,
-    required this.pointerDownWorld,
-    required this.isFirstTimeSelect,
-    required this.didMove,
-    required this.hasDuplicated,
-    required this.draggedFeatureId,
-    required this.originsAtDragStart,
-    this.resumeEditing,
-  });
-
-  final Map<FeatureId, Offset> initialOrigins;
-  final Offset moveOffset;
-  final Offset pointerDownWorld;
-  final bool isFirstTimeSelect;
-  final bool didMove;
-  final bool hasDuplicated;
-  final FeatureId draggedFeatureId;
-  final Map<FeatureId, Offset> originsAtDragStart;
-  final FeatureId? resumeEditing;
-}
-
-final class _Resizing extends _SelectState {
-  const _Resizing({
-    required this.featureId,
-    required this.handle,
-    required this.anchor,
-    required this.initialBounds,
-    required this.resizeOffset,
-    required this.didResize,
-    this.resumeEditing,
-  });
-
-  final FeatureId featureId;
-  final SelectionResizeHandle handle;
-  final Offset anchor;
-  final Rect initialBounds;
-  final Offset resizeOffset;
-  final bool didResize;
-  final FeatureId? resumeEditing;
 }
