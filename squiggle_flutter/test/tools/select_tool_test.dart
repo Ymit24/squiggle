@@ -666,11 +666,12 @@ void main() {
       expect(endAfter, isNot(endBefore));
     });
 
-    test('double-click polyline enters edit mode and drags vertex', () {
+    test('selected polyline exposes vertex handles and drags a vertex', () {
       context = polylineDocument();
       final feature = context.document.features.first;
 
-      doubleClick(const Offset(50, 50));
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
       expect(context.selection.selectedFeatures.single, feature.id);
 
       final endBefore = polylineWorldPoints(feature).last;
@@ -683,19 +684,65 @@ void main() {
       expect(polylineWorldPoints(moved).last, isNot(endBefore));
     });
 
-    test('escape exits edit mode and preserves selection', () {
+    test('does not edit vertices when multiple lines are selected', () {
+      context = EditorContext(
+        document: Document.fromFeatures([
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(100, 1),
+            kind: const FeatureKindPolyline([
+              Offset.zero,
+              Offset(100, 0),
+            ], strokeColor: Color(0xFFFFFFFF)),
+          ),
+          Feature(
+            origin: const Offset(200, 0),
+            size: const Size(100, 1),
+            kind: const FeatureKindPolyline([
+              Offset.zero,
+              Offset(100, 0),
+            ], strokeColor: Color(0xFFFFFFFF)),
+          ),
+        ]),
+      );
+      final first = context.document.features[0];
+      final second = context.document.features[1];
+      context.selection.selectFeature(first.id);
+      context.selection.selectFeature(second.id);
+      final firstLocalPoints = (first.kind as FeatureKindPolyline).localPoints
+          .toList();
+
+      pointerDown(const Offset(100, 0));
+      pointerMove(const Offset(150, 20));
+      pointerUp(const Offset(150, 20));
+
+      final movedFirst = context.document.featureById(first.id)!;
+      expect(
+        (movedFirst.kind as FeatureKindPolyline).localPoints,
+        firstLocalPoints,
+      );
+      expect(movedFirst.origin, isNot(const Offset(0, 0)));
+      expect(
+        context.document.featureById(second.id)!.origin,
+        isNot(const Offset(200, 0)),
+      );
+    });
+
+    test('escape does not enter a line edit mode', () {
       context = polylineDocument();
       final feature = context.document.features.first;
 
-      doubleClick(const Offset(50, 50));
-      expect(keyDown(LogicalKeyboardKey.escape), isTrue);
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
+      expect(keyDown(LogicalKeyboardKey.escape), isFalse);
       expect(context.selection.selectedFeatures.single, feature.id);
     });
 
-    test('empty click exits edit mode and clears selection', () {
+    test('empty click clears a selected line', () {
       context = polylineDocument();
 
-      doubleClick(const Offset(50, 50));
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
       pointerDown(const Offset(500, 500));
       pointerUp(const Offset(500, 500));
 
@@ -706,7 +753,8 @@ void main() {
       context = polylineDocument();
       final feature = context.document.features.first;
 
-      doubleClick(const Offset(50, 50));
+      pointerDown(const Offset(50, 50));
+      pointerUp(const Offset(50, 50));
       pointerDown(const Offset(100, 100));
       pointerMove(const Offset(150, 100));
       pointerMove(const Offset(175, 125));
@@ -725,7 +773,7 @@ void main() {
     });
 
     test(
-      'double-click non-polyline enters edit mode without vertex side effects',
+      'double-click non-polyline does not enter a select-tool edit mode',
       () {
         pointerDown(const Offset(50, 50));
         pointerUp(const Offset(50, 50));
@@ -734,7 +782,7 @@ void main() {
 
         final feature = context.document.features.first;
         expect(context.selection.selectedFeatures.single, feature.id);
-        expect(keyDown(LogicalKeyboardKey.escape), isTrue);
+        expect(keyDown(LogicalKeyboardKey.escape), isFalse);
         expect(context.selection.selectedFeatures.single, feature.id);
       },
     );
