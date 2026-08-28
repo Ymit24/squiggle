@@ -15,8 +15,8 @@ abstract class Tool {
 
   /// Paints tool-specific overlays after the world transform is applied.
   ///
-  /// Most overlays are world-space; selection and edit handles use [camera] for
-  /// screen-constant sizing.
+  /// Most overlays are world-space; selection and vertex handles use [camera]
+  /// for screen-constant sizing.
   void paint(
     Canvas canvas,
     Camera camera,

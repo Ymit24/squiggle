@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -43,12 +42,6 @@ class SelectTool extends Tool {
   FeatureId? _lastTapFeatureId;
   DateTime? _lastTapTime;
 
-  FeatureId? get _editingFeatureId => switch (_state) {
-    _Editing(:final featureId) => featureId,
-    _EditingPoint(:final featureId) => featureId,
-    _ => null,
-  };
-
   @override
   void paint(
     Canvas canvas,
@@ -65,14 +58,14 @@ class SelectTool extends Tool {
       }
     }
 
-    final editingFeatureId = _editingFeatureId;
-    if (editingFeatureId != null) {
-      final feature = document.featureById(editingFeatureId);
-      if (feature != null && feature.kind is FeatureKindPolyline) {
-        final kind = feature.kind as FeatureKindPolyline;
-        for (final point in worldPoints(feature.origin, kind.localPoints)) {
-          _paintHandle(canvas, camera, point);
-        }
+    final selectedPolyline = _selectedPolyline(document, context.selection);
+    if (selectedPolyline != null) {
+      final kind = selectedPolyline.kind as FeatureKindPolyline;
+      for (final point in worldPoints(
+        selectedPolyline.origin,
+        kind.localPoints,
+      )) {
+        _paintHandle(canvas, camera, point);
       }
     }
 
@@ -96,7 +89,7 @@ class SelectTool extends Tool {
     Camera camera,
   ) {
     switch (_state) {
-      case _EditingPoint():
+      case _DraggingPolylinePoint():
         return EditorCursor.grabbing;
       case _Moving():
         return EditorCursor.grabbing;
@@ -104,23 +97,19 @@ class SelectTool extends Tool {
         return _cursorForResizeHandle(handle);
       case _Idle():
       case _Selecting():
-      case _Editing():
         break;
     }
 
     final document = context.document;
-    final editingFeatureId = _editingFeatureId;
-    if (editingFeatureId != null) {
-      final feature = document.featureById(editingFeatureId);
-      if (feature != null &&
-          _hitTestPolylineVertex(
-                worldPoint: worldPosition,
-                feature: feature,
-                camera: camera,
-              ) !=
-              null) {
-        return EditorCursor.grab;
-      }
+    final selectedPolyline = _selectedPolyline(document, context.selection);
+    if (selectedPolyline != null &&
+        _hitTestPolylineVertex(
+              worldPoint: worldPosition,
+              feature: selectedPolyline,
+              camera: camera,
+            ) !=
+            null) {
+      return EditorCursor.grab;
     }
 
     if (context.selection.selectedFeatures.length == 1) {
@@ -156,19 +145,6 @@ class SelectTool extends Tool {
   }
 
   @override
-  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
-    if (_state is! _Editing) {
-      return false;
-    }
-    if (event.logicalKey != LogicalKeyboardKey.enter &&
-        event.logicalKey != LogicalKeyboardKey.escape) {
-      return false;
-    }
-    _state = const _Idle();
-    return true;
-  }
-
-  @override
   void onPointerDown(
     EditorContext context,
     Offset worldPosition,
@@ -178,40 +154,24 @@ class SelectTool extends Tool {
   }) {
     final document = context.document;
     final selection = context.selection;
-    final editingFeatureId = _editingFeatureId;
 
-    if (editingFeatureId != null &&
-        _tryBeginEditPoint(document, worldPosition, editingFeatureId, camera)) {
+    if (_tryBeginPolylinePoint(document, worldPosition, selection, camera)) {
       return;
     }
 
-    if (_tryBeginResize(
-      document,
-      worldPosition,
-      selection,
-      camera,
-      resumeEditing: editingFeatureId,
-    )) {
+    if (_tryBeginResize(document, worldPosition, selection, camera)) {
       return;
     }
 
     final feature = document.featureAtPoint(worldPosition);
 
     if (feature != null) {
-      if (editingFeatureId != null && feature.id != editingFeatureId) {
-        _exitEditing();
-      }
-
       final didSelect = !selection.isFeatureSelected(feature.id);
       if (!isShiftPressed && !selection.isFeatureSelected(feature.id)) {
         selection.clearSelection();
       }
       selection.selectFeature(feature.id);
 
-      final resumeEditing =
-          editingFeatureId != null && feature.id == editingFeatureId
-          ? editingFeatureId
-          : null;
       final initialOrigins = _selectedFeatureOrigins(document, selection);
       _state = _Moving(
         initialOrigins: initialOrigins,
@@ -225,12 +185,8 @@ class SelectTool extends Tool {
           document,
           selection.selectedFeatures,
         ),
-        resumeEditing: resumeEditing,
       );
     } else {
-      if (editingFeatureId != null) {
-        _exitEditing();
-      }
       _state = _Selecting(start: worldPosition, end: worldPosition);
       if (!isShiftPressed) {
         selection.clearSelection();
@@ -250,12 +206,11 @@ class SelectTool extends Tool {
     final selection = context.selection;
     switch (_state) {
       case _Idle():
-      case _Editing():
         return;
       case _Selecting(:final start):
         _state = _Selecting(start: start, end: worldPosition);
         _updateMarqueeSelection(document, selection, isShiftPressed);
-      case _EditingPoint(
+      case _DraggingPolylinePoint(
         :final featureId,
         :final pointIndex,
         :final dragOffset,
@@ -274,7 +229,7 @@ class SelectTool extends Tool {
               : target;
           target = snapPointTo45DegreeAngle(origin, target);
         }
-        _state = _EditingPoint(
+        _state = _DraggingPolylinePoint(
           featureId: featureId,
           pointIndex: pointIndex,
           dragOffset: dragOffset,
@@ -292,7 +247,6 @@ class SelectTool extends Tool {
         :final hasDuplicated,
         :final draggedFeatureId,
         :final originsAtDragStart,
-        :final resumeEditing,
       ):
         var effectiveMoveOffset = moveOffset;
         var effectiveHasDuplicated = hasDuplicated;
@@ -318,7 +272,6 @@ class SelectTool extends Tool {
           hasDuplicated: effectiveHasDuplicated,
           draggedFeatureId: draggedFeatureId,
           originsAtDragStart: originsAtDragStart,
-          resumeEditing: resumeEditing,
         );
         final moveTarget = isShiftPressed
             ? constrainMoveToAxis(pointerDownWorld, worldPosition)
@@ -335,7 +288,6 @@ class SelectTool extends Tool {
         :final anchor,
         :final initialBounds,
         :final resizeOffset,
-        :final resumeEditing,
       ):
         _state = _Resizing(
           featureId: featureId,
@@ -344,7 +296,6 @@ class SelectTool extends Tool {
           initialBounds: initialBounds,
           resizeOffset: resizeOffset,
           didResize: true,
-          resumeEditing: resumeEditing,
         );
         _resizeFeature(
           document,
@@ -371,7 +322,7 @@ class SelectTool extends Tool {
     final document = context.document;
     final selection = context.selection;
     switch (_state) {
-      case _EditingPoint(
+      case _DraggingPolylinePoint(
         :final featureId,
         :final pointIndex,
         :final initialOrigin,
@@ -387,13 +338,12 @@ class SelectTool extends Tool {
             initialLocalPoints,
           );
         }
-        _state = _Editing(featureId: featureId);
+        _state = const _Idle();
         return;
       case _Moving(
         :final initialOrigins,
         :final isFirstTimeSelect,
         :final didMove,
-        :final resumeEditing,
       ):
         if (didMove) {
           _commitMove(context, initialOrigins);
@@ -424,10 +374,6 @@ class SelectTool extends Tool {
               _lastTapTime = null;
               return;
             }
-            _state = _Editing(featureId: hovered.id);
-            _lastTapFeatureId = null;
-            _lastTapTime = null;
-            return;
           }
           _lastTapFeatureId = hovered.id;
           _lastTapTime = now;
@@ -441,44 +387,31 @@ class SelectTool extends Tool {
             selection.selectFeature(hovered.id);
           }
         }
-        if (resumeEditing != null) {
-          _state = _Editing(featureId: resumeEditing);
-          return;
-        }
-      case _Resizing(
-        :final featureId,
-        :final initialBounds,
-        :final didResize,
-        :final resumeEditing,
-      ):
+      case _Resizing(:final featureId, :final initialBounds, :final didResize):
         if (didResize) {
           _commitResize(context, featureId, initialBounds);
         }
-        if (resumeEditing != null) {
-          _state = _Editing(featureId: resumeEditing);
-          return;
-        }
       case _Idle():
       case _Selecting():
-      case _Editing():
         break;
     }
     _state = const _Idle();
   }
 
-  void _exitEditing() {
-    if (_state is _Editing || _state is _EditingPoint) {
-      _state = const _Idle();
-    }
+  Feature? _selectedPolyline(Document document, SelectionModel selection) {
+    if (selection.selectedFeatures.length != 1) return null;
+
+    final feature = document.featureById(selection.selectedFeatures.single);
+    return feature?.kind is FeatureKindPolyline ? feature : null;
   }
 
-  bool _tryBeginEditPoint(
+  bool _tryBeginPolylinePoint(
     Document document,
     Offset worldPosition,
-    FeatureId editingFeatureId,
+    SelectionModel selection,
     Camera camera,
   ) {
-    final feature = document.featureById(editingFeatureId);
+    final feature = _selectedPolyline(document, selection);
     if (feature == null) return false;
 
     final pointIndex = _hitTestPolylineVertex(
@@ -490,8 +423,8 @@ class SelectTool extends Tool {
 
     final kind = feature.kind as FeatureKindPolyline;
     final points = worldPoints(feature.origin, kind.localPoints);
-    _state = _EditingPoint(
-      featureId: editingFeatureId,
+    _state = _DraggingPolylinePoint(
+      featureId: feature.id,
       pointIndex: pointIndex,
       dragOffset: worldPosition - points[pointIndex],
       initialOrigin: feature.origin,
@@ -529,9 +462,8 @@ class SelectTool extends Tool {
     Document document,
     Offset worldPosition,
     SelectionModel selection,
-    Camera camera, {
-    FeatureId? resumeEditing,
-  }) {
+    Camera camera,
+  ) {
     if (selection.selectedFeatures.length != 1) {
       return false;
     }
@@ -557,7 +489,6 @@ class SelectTool extends Tool {
       initialBounds: bounds,
       resizeOffset: worldPosition - reference,
       didResize: false,
-      resumeEditing: resumeEditing,
     );
     return true;
   }
@@ -1165,14 +1096,8 @@ final class _Selecting extends _SelectState {
   final Offset end;
 }
 
-final class _Editing extends _SelectState {
-  const _Editing({required this.featureId});
-
-  final FeatureId featureId;
-}
-
-final class _EditingPoint extends _SelectState {
-  const _EditingPoint({
+final class _DraggingPolylinePoint extends _SelectState {
+  const _DraggingPolylinePoint({
     required this.featureId,
     required this.pointIndex,
     required this.dragOffset,
@@ -1199,7 +1124,6 @@ final class _Moving extends _SelectState {
     required this.hasDuplicated,
     required this.draggedFeatureId,
     required this.originsAtDragStart,
-    this.resumeEditing,
   });
 
   final Map<FeatureId, Offset> initialOrigins;
@@ -1210,7 +1134,6 @@ final class _Moving extends _SelectState {
   final bool hasDuplicated;
   final FeatureId draggedFeatureId;
   final Map<FeatureId, Offset> originsAtDragStart;
-  final FeatureId? resumeEditing;
 }
 
 final class _Resizing extends _SelectState {
@@ -1221,7 +1144,6 @@ final class _Resizing extends _SelectState {
     required this.initialBounds,
     required this.resizeOffset,
     required this.didResize,
-    this.resumeEditing,
   });
 
   final FeatureId featureId;
@@ -1230,5 +1152,4 @@ final class _Resizing extends _SelectState {
   final Rect initialBounds;
   final Offset resizeOffset;
   final bool didResize;
-  final FeatureId? resumeEditing;
 }
