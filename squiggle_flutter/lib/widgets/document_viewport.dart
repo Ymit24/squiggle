@@ -164,8 +164,6 @@ class _DocumentViewportState extends State<DocumentViewport>
     _isSecondaryDragging = true;
 
     print("Starting right mouse down at ${event.position}");
-
-    _panVelocityTracker = VelocityTracker.withKind(PointerDeviceKind.mouse);
   }
 
   void _onRightPointerUpdate(PointerMoveEvent event) {
@@ -175,26 +173,14 @@ class _DocumentViewportState extends State<DocumentViewport>
     widget.context.notifyViewportChanged();
     print("move t=${event.timeStamp.inMilliseconds} pos=${event.position}");
     print("Event: ${event.delta} and position: ${event.position}");
-
-    _panVelocityTracker.addPosition(event.timeStamp, event.position);
   }
 
   void _onRightPointerUp(PointerUpEvent event) {
     _isSecondaryDragging = false;
-
-    final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
-
-    print(
-      "Releasing right mouse up at ${event.position} with velocity $velocity",
-    );
-
-    if (velocity.distance < kMinFlingVelocity) return;
-    _flingController.fling(velocity);
   }
 
   void _onRightPointerCancel(PointerCancelEvent event) {
     _isSecondaryDragging = false;
-    _flingController.stop();
   }
 
   Widget _buildCanvasLayer({required bool canvasInteractionsEnabled}) {
