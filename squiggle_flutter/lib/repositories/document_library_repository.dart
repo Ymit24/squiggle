@@ -144,7 +144,7 @@ class DocumentLibraryRepository {
 
   void _attachAutosave() {
     _autosaveSubscribed = true;
-    context.addListener(_autosave);
+    context.history.addListener(_autosave);
   }
 
   bool _autosaveSubscribed = false;
