@@ -31,17 +31,17 @@ class Editor extends StatelessWidget {
     final imageRepository = context.read<ImageRepository>();
 
     return BlocProvider(
-      create: (context) => StylePanelBloc(
-        context: this.context,
-      )..add(const RequestWatchStylePanelStateEvent()),
+      create: (context) =>
+          StylePanelBloc(context: this.context)
+            ..add(const RequestWatchStylePanelStateEvent()),
       child: BlocProvider(
-        create: (context) => TextEditBloc(
-          context: this.context,
-        )..add(const RequestWatchTextEditStateEvent()),
+        create: (context) =>
+            TextEditBloc(context: this.context)
+              ..add(const RequestWatchTextEditStateEvent()),
         child: BlocProvider(
-          create: (context) => EditorBloc(
-            context: this.context,
-          )..add(const RequestWatchEditorStateEvent()),
+          create: (context) =>
+              EditorBloc(context: this.context)
+                ..add(const RequestWatchEditorStateEvent()),
           child: BlocBuilder<TextEditBloc, TextEditState>(
             builder: (context, textEditState) {
               final textEditOpen = textEditState is TextEditOpen;
@@ -59,7 +59,7 @@ class Editor extends StatelessWidget {
                       fit: StackFit.expand,
                       children: [
                         DocumentViewport(
-                          context: this.context,
+                          editorContext: this.context,
                           imageRepository: imageRepository,
                         ),
                         const EditorToolbar(),
