@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
-const squiggleBaseColor = Color(0xFF1E1E2E);
-const squiggleMantleColor = Color(0xFF181825);
-const squiggleSurface0Color = Color(0xFF313244);
-const squiggleSurface1Color = Color(0xFF45475A);
-const squiggleSubtext0Color = Color(0xFFA6ADC8);
-const squiggleTextColor = Color(0xFFCDD6F4);
-const squiggleAccentColor = Color(0xFF89B4FA);
+// Neutral graphite UI palette with a restrained blue-gray interaction accent.
+const squiggleBaseColor = Color(0xFF171717);
+const squiggleMantleColor = Color(0xFF111111);
+const squiggleSurface0Color = Color(0xFF242424);
+const squiggleSurface1Color = Color(0xFF363636);
+const squiggleSubtext0Color = Color(0xFFA0A0A0);
+const squiggleTextColor = Color(0xFFE4E4E4);
+const squiggleAccentColor = Color(0xFFA8B3C2);
 const squiggleScrimColor = Color(0x33000000);
-const squiggleSelectionFillColor = Color(0x0F89B4FA);
+const squiggleSelectionFillColor = Color(0x1AA8B3C2);
 
-/// Semantic UI color tokens (Catppuccin Mocha, matches rust-version `colors.rs`).
+/// Semantic UI color tokens for Squiggle's dark graphite theme.
 @immutable
 class SquiggleColorScheme {
   const SquiggleColorScheme({
