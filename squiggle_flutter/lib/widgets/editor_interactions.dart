@@ -276,8 +276,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _flingController.stop();
 
     _isSecondaryDragging = true;
-
-    print("Starting right mouse down at ${event.position}");
   }
 
   void _onRightPointerUpdate(PointerMoveEvent event) {
@@ -285,8 +283,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
     _camera.panByScreenDelta(event.delta);
     widget.context.notifyViewportChanged();
-    print("move t=${event.timeStamp.inMilliseconds} pos=${event.position}");
-    print("Event: ${event.delta} and position: ${event.position}");
   }
 
   void _onRightPointerUp(PointerUpEvent event) {
