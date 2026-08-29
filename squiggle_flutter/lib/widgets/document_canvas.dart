@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import '../models/document.dart';
+import '../utils/grid.dart';
 
 /// Paints a [Document]'s features on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
@@ -65,15 +66,7 @@ class RenderDocumentCanvas extends RenderBox {
 
   StreamSubscription<void>? _imageRepaintSubscription;
 
-  // The grid is based on powers of two so it changes scale without visibly
-  // drifting away from the document origin. The target sizes are in screen
-  // pixels; the actual spacing is chosen in world space below.
-  static const double _gridUnit = 128.0;
-  static const double _minMajorScreenSize = 64.0;
-  static const double _maxMajorScreenSize = 160.0;
   static const Color _canvasColor = Color(0xFF171717);
-  static const Color _minorGridColor = Color(0xFF252525);
-  static const Color _majorGridColor = Color(0xFF363636);
 
   @override
   void attach(covariant PipelineOwner owner) {
@@ -130,7 +123,12 @@ class RenderDocumentCanvas extends RenderBox {
 
     canvas.save();
     _applyWorldTransform(canvas);
-    _drawGrid(canvas);
+    paintAdaptiveGrid(
+      canvas,
+      size: size,
+      location: _context.camera.location,
+      zoom: _context.camera.zoom,
+    );
     _paintFeatures(canvas, document);
     _context.tool.activeTool.paint(canvas, camera, _context, _imageRepository);
     canvas.restore();
@@ -149,84 +147,6 @@ class RenderDocumentCanvas extends RenderBox {
 
   void _drawBackground(Canvas canvas) {
     canvas.drawRect(Offset.zero & size, Paint()..color = _canvasColor);
-  }
-
-  void _drawGrid(Canvas canvas) {
-    final zoom = _context.camera.zoom;
-    if (zoom <= 0) return;
-
-    final location = _context.camera.location;
-    var majorCellSize = _gridUnit;
-    var majorScreenSize = majorCellSize / zoom;
-
-    while (majorScreenSize < _minMajorScreenSize) {
-      majorCellSize *= 2;
-      majorScreenSize *= 2;
-    }
-    while (majorScreenSize > _maxMajorScreenSize) {
-      majorCellSize /= 2;
-      majorScreenSize /= 2;
-    }
-
-    final minorCellSize = majorCellSize / 4;
-    final firstMinorGridX =
-        (location.dx / minorCellSize).floor() * minorCellSize;
-    final firstMinorGridY =
-        (location.dy / minorCellSize).floor() * minorCellSize;
-
-    final visibleWorld = Rect.fromLTWH(
-      location.dx,
-      location.dy,
-      size.width * zoom,
-      size.height * zoom,
-    );
-
-    final minorPaint = Paint()
-      ..color = _minorGridColor
-      ..style = PaintingStyle.fill;
-    final majorPaint = Paint()
-      ..color = _majorGridColor
-      ..style = PaintingStyle.fill;
-
-    final minorLineWidth = zoom * 0.6;
-    final majorLineWidth = zoom * 1.2;
-
-    for (
-      var x = firstMinorGridX;
-      x < visibleWorld.right + minorCellSize;
-      x += minorCellSize
-    ) {
-      final isMajor =
-          ((x / majorCellSize).round() * majorCellSize - x).abs() <
-          minorCellSize / 100;
-      canvas.drawRect(
-        Rect.fromLTWH(
-          x,
-          visibleWorld.top,
-          isMajor ? majorLineWidth : minorLineWidth,
-          visibleWorld.height,
-        ),
-        isMajor ? majorPaint : minorPaint,
-      );
-    }
-    for (
-      var y = firstMinorGridY;
-      y < visibleWorld.bottom + minorCellSize;
-      y += minorCellSize
-    ) {
-      final isMajor =
-          ((y / majorCellSize).round() * majorCellSize - y).abs() <
-          minorCellSize / 100;
-      canvas.drawRect(
-        Rect.fromLTWH(
-          visibleWorld.left,
-          y,
-          visibleWorld.width,
-          isMajor ? majorLineWidth : minorLineWidth,
-        ),
-        isMajor ? majorPaint : minorPaint,
-      );
-    }
   }
 
   void _paintFeatures(Canvas canvas, Document document) {
