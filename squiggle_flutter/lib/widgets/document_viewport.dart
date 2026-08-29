@@ -10,24 +10,18 @@ import 'viewport_tool_cursor.dart';
 import 'editor_interactions.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
-class DocumentViewport extends StatefulWidget {
-  const DocumentViewport({
+class DocumentViewport extends StatelessWidget {
+  DocumentViewport({
     super.key,
-    required this.context,
+    required this.editorContext,
     required this.imageRepository,
   });
 
-  final EditorContext context;
-  final ImageRepository imageRepository;
-
-  @override
-  State<DocumentViewport> createState() => _DocumentViewportState();
-}
-
-class _DocumentViewportState extends State<DocumentViewport>
-    with SingleTickerProviderStateMixin {
   final GlobalKey _canvasKey = GlobalKey();
   final GlobalKey _viewportKey = GlobalKey();
+
+  final EditorContext editorContext;
+  final ImageRepository imageRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -35,25 +29,25 @@ class _DocumentViewportState extends State<DocumentViewport>
       builder: (context, textEditState) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            widget.context.viewportSize = Size(
+            editorContext.viewportSize = Size(
               constraints.maxWidth,
               constraints.maxHeight,
             );
             return EditorInteractions(
-              context: widget.context,
+              context: editorContext,
               canvasKey: _canvasKey,
-              imageRepository: widget.imageRepository,
+              imageRepository: imageRepository,
               canvasInteractionsEnabled: textEditState is! TextEditOpen,
               child: Container(
                 key: _viewportKey,
                 color: SquiggleColors.base,
                 child: ViewportToolCursor(
-                  context: widget.context,
+                  context: editorContext,
                   canvasKey: _canvasKey,
                   child: DocumentCanvas(
                     key: _canvasKey,
-                    context: widget.context,
-                    imageRepository: widget.imageRepository,
+                    context: editorContext,
+                    imageRepository: imageRepository,
                   ),
                 ),
               ),
