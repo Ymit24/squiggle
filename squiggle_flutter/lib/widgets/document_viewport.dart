@@ -41,10 +41,12 @@ class _DocumentViewportState extends State<DocumentViewport>
   Offset _initialLocation = Offset.zero;
   Offset? _pointerInCanvas;
   bool _isPrimaryDragging = false;
+  bool _isSecondaryDragging = false;
   bool _panZoomHadSignificantPinch = false;
 
-  VelocityTracker _panVelocityTracker =
-      VelocityTracker.withKind(PointerDeviceKind.trackpad);
+  VelocityTracker _panVelocityTracker = VelocityTracker.withKind(
+    PointerDeviceKind.trackpad,
+  );
   late final FlingController _flingController;
 
   Camera get _camera => widget.context.camera;
@@ -91,39 +93,131 @@ class _DocumentViewportState extends State<DocumentViewport>
     _flingController.stop();
   }
 
+  void _onLeftPointerDown(PointerDownEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    _isPrimaryDragging = true;
+    _pointerInCanvas = _canvasLocal(event);
+
+    widget.context.tool.onPointerDown(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onLeftPointerUpdate(PointerMoveEvent event) {
+    _pointerInCanvas = _canvasLocal(event);
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onPointerMove(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onLeftPointerUp(PointerUpEvent event) {
+    _isPrimaryDragging = false;
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onPointerUp(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onLeftPointerCancel(PointerCancelEvent event) {
+    _isPrimaryDragging = false;
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onPointerUp(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onRightPointerDown(PointerDownEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    _isSecondaryDragging = true;
+
+    print("Starting right mouse down at ${event.position}");
+
+    _panVelocityTracker = VelocityTracker.withKind(PointerDeviceKind.mouse);
+  }
+
+  void _onRightPointerUpdate(PointerMoveEvent event) {
+    if (event.synthesized) return;
+
+    _camera.panByScreenDelta(event.delta);
+    widget.context.notifyViewportChanged();
+    print("move t=${event.timeStamp.inMilliseconds} pos=${event.position}");
+    print("Event: ${event.delta} and position: ${event.position}");
+
+    _panVelocityTracker.addPosition(event.timeStamp, event.position);
+  }
+
+  void _onRightPointerUp(PointerUpEvent event) {
+    _isSecondaryDragging = false;
+
+    final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
+
+    print(
+      "Releasing right mouse up at ${event.position} with velocity $velocity",
+    );
+
+    if (velocity.distance < kMinFlingVelocity) return;
+    _flingController.fling(velocity);
+  }
+
+  void _onRightPointerCancel(PointerCancelEvent event) {
+    _isSecondaryDragging = false;
+    _flingController.stop();
+  }
+
   Widget _buildCanvasLayer({required bool canvasInteractionsEnabled}) {
     return Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
         if (!canvasInteractionsEnabled) return;
-        ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
-        _flingController.stop();
-        if (event.buttons != kPrimaryButton) return;
-        final world = _screenToWorld(event);
-        if (world == null) return;
-        _isPrimaryDragging = true;
-        _pointerInCanvas = _canvasLocal(event);
-        widget.context.tool.onPointerDown(
-          widget.context,
-          world,
-          _camera,
-          isShiftPressed: _isShiftPressed,
-          isAltPressed: _isAltPressed,
-        );
+
+        if (event.buttons == kPrimaryButton) {
+          _onLeftPointerDown(event);
+        } else if (event.buttons == kSecondaryButton) {
+          _onRightPointerDown(event);
+        }
       },
       onPointerMove: (event) {
         if (!canvasInteractionsEnabled) return;
-        _pointerInCanvas = _canvasLocal(event);
-        if (!_isPrimaryDragging) return;
-        final world = _screenToWorld(event);
-        if (world == null) return;
-        widget.context.tool.onPointerMove(
-          widget.context,
-          world,
-          _camera,
-          isShiftPressed: _isShiftPressed,
-          isAltPressed: _isAltPressed,
-        );
+
+        // TODO: This sucks for state machine
+        if (_isPrimaryDragging) {
+          _onLeftPointerUpdate(event);
+        } else if (_isSecondaryDragging) {
+          _onRightPointerUpdate(event);
+        }
       },
       onPointerHover: (event) {
         if (!canvasInteractionsEnabled) return;
@@ -140,39 +234,29 @@ class _DocumentViewportState extends State<DocumentViewport>
       },
       onPointerUp: (event) {
         if (!canvasInteractionsEnabled) return;
-        if (!_isPrimaryDragging) return;
-        _isPrimaryDragging = false;
-        final world = _screenToWorld(event);
-        if (world != null) {
-          widget.context.tool.onPointerUp(
-            widget.context,
-            world,
-            _camera,
-            isShiftPressed: _isShiftPressed,
-            isAltPressed: _isAltPressed,
-          );
+
+        // TODO: This sucks for state machine
+        if (_isPrimaryDragging) {
+          _onLeftPointerUp(event);
+        } else if (_isSecondaryDragging) {
+          _onRightPointerUp(event);
         }
       },
       onPointerCancel: (event) {
         if (!canvasInteractionsEnabled) return;
-        if (!_isPrimaryDragging) return;
-        _isPrimaryDragging = false;
-        final world = _screenToWorld(event);
-        if (world != null) {
-          widget.context.tool.onPointerUp(
-            widget.context,
-            world,
-            _camera,
-            isShiftPressed: _isShiftPressed,
-            isAltPressed: _isAltPressed,
-          );
+        // TODO: This sucks for state machine
+        if (_isPrimaryDragging) {
+          _onLeftPointerCancel(event);
+        } else if (_isSecondaryDragging) {
+          _onRightPointerCancel(event);
         }
       },
       onPointerPanZoomStart: (event) {
         if (!canvasInteractionsEnabled) return;
         _flingController.stop();
-        _panVelocityTracker =
-            VelocityTracker.withKind(PointerDeviceKind.trackpad);
+        _panVelocityTracker = VelocityTracker.withKind(
+          PointerDeviceKind.trackpad,
+        );
         _panZoomHadSignificantPinch = false;
         _initialZoom = _camera.zoom;
         _initialLocation = _camera.location;
