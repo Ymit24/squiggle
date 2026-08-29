@@ -62,13 +62,24 @@ class Editor extends StatelessWidget {
                           editorContext: this.context,
                           imageRepository: imageRepository,
                         ),
-                        const EditorToolbar(),
                         Positioned(
                           top: context.squiggleTheme.spacing.overlayTop,
-                          right: context.squiggleTheme.spacing.overlaySide,
-                          child: EditorBackButton(onPressed: onBackToLibrary),
+                          bottom: context.squiggleTheme.spacing.overlayTop,
+                          left: context.squiggleTheme.spacing.overlaySide,
+                          child: Column(
+                            spacing: 8,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              EditorBackButton(onPressed: onBackToLibrary),
+                              Expanded(
+                                child: StylePanel(
+                                  viewportHeight: viewportSize.height,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        StylePanel(viewportHeight: viewportSize.height),
+                        const EditorToolbar(),
                         if (textEditOpen)
                           TextEditOverlay(
                             state: textEditState,

@@ -100,15 +100,6 @@ class _EditorBackButtonState extends State<EditorBackButton> {
                   size: 16,
                   color: _hovering ? colors.text : colors.subtext0,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'All documents',
-                    style: theme.typography.inputText.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _hovering ? colors.text : colors.subtext0,
-                  ),
-                ),
               ],
             ),
           ),
