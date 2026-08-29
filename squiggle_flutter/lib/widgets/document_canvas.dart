@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import '../models/document.dart';
-import '../theme/squiggle_colors.dart';
+import '../utils/grid.dart';
 
 /// Paints a [Document]'s features on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
@@ -24,7 +24,9 @@ class DocumentCanvas extends LeafRenderObjectWidget {
       context: this.context,
       imageRepository: imageRepository,
     );
-  }  @override
+  }
+
+  @override
   void updateRenderObject(
     BuildContext context,
     RenderDocumentCanvas renderObject,
@@ -37,7 +39,10 @@ class DocumentCanvas extends LeafRenderObjectWidget {
 }
 
 class RenderDocumentCanvas extends RenderBox {
-  RenderDocumentCanvas({required this._context, required this._imageRepository});
+  RenderDocumentCanvas({
+    required this._context,
+    required this._imageRepository,
+  });
 
   EditorContext _context;
   EditorContext get context => _context;
@@ -61,7 +66,7 @@ class RenderDocumentCanvas extends RenderBox {
 
   StreamSubscription<void>? _imageRepaintSubscription;
 
-  static const double _baseCellSize = 128.0;
+  static const Color _canvasColor = Color(0xFF171717);
 
   @override
   void attach(covariant PipelineOwner owner) {
@@ -114,17 +119,18 @@ class RenderDocumentCanvas extends RenderBox {
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
     canvas.clipRect(Offset.zero & size);
+    _drawBackground(canvas);
 
     canvas.save();
     _applyWorldTransform(canvas);
-    _drawGrid(canvas);
-    _paintFeatures(canvas, document);
-    _context.tool.activeTool.paint(
+    paintAdaptiveGrid(
       canvas,
-      camera,
-      _context,
-      _imageRepository,
+      size: size,
+      location: _context.camera.location,
+      zoom: _context.camera.zoom,
     );
+    _paintFeatures(canvas, document);
+    _context.tool.activeTool.paint(canvas, camera, _context, _imageRepository);
     canvas.restore();
 
     canvas.restore();
@@ -139,47 +145,8 @@ class RenderDocumentCanvas extends RenderBox {
     canvas.translate(-location.dx, -location.dy);
   }
 
-  void _drawGrid(Canvas canvas) {
-    final zoom = _context.camera.zoom;
-    if (zoom <= 0) return;
-
-    final location = _context.camera.location;
-    final firstGridX = (location.dx / _baseCellSize).floor() * _baseCellSize;
-    final firstGridY = (location.dy / _baseCellSize).floor() * _baseCellSize;
-
-    final visibleWorld = Rect.fromLTWH(
-      location.dx,
-      location.dy,
-      size.width * zoom,
-      size.height * zoom,
-    );
-
-    final paint = Paint()
-      ..color = SquiggleColors.surface1
-      ..style = PaintingStyle.fill;
-
-    final lineWidth = zoom;
-
-    for (
-      var x = firstGridX;
-      x < visibleWorld.right + _baseCellSize;
-      x += _baseCellSize
-    ) {
-      canvas.drawRect(
-        Rect.fromLTWH(x, visibleWorld.top, lineWidth, visibleWorld.height),
-        paint,
-      );
-    }
-    for (
-      var y = firstGridY;
-      y < visibleWorld.bottom + _baseCellSize;
-      y += _baseCellSize
-    ) {
-      canvas.drawRect(
-        Rect.fromLTWH(visibleWorld.left, y, visibleWorld.width, lineWidth),
-        paint,
-      );
-    }
+  void _drawBackground(Canvas canvas) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = _canvasColor);
   }
 
   void _paintFeatures(Canvas canvas, Document document) {
