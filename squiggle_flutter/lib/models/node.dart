@@ -25,4 +25,6 @@ abstract class Node {
 
   /// TODO: comment
   Rect bounds();
+
+  Node copyWith({FeatureId? id, Offset? origin});
 }

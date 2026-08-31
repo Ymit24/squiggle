@@ -46,6 +46,7 @@ class Feature extends Node {
     origin = newOrigin;
   }
 
+  @override
   Feature copyWith({
     FeatureId? id,
     Offset? origin,

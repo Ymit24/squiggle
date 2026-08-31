@@ -45,7 +45,7 @@ class Document extends ChangeNotifier {
     return null;
   }
 
-  int? featureIndexById(FeatureId id) {
+  int? _featureIndexById(FeatureId id) {
     for (var i = 0; i < _features.length; i++) {
       if (_features[i].id == id) return i;
     }
@@ -90,7 +90,7 @@ class Document extends ChangeNotifier {
   }
 
   void removeFeature(FeatureId id) {
-    final index = featureIndexById(id);
+    final index = _featureIndexById(id);
     if (index == null) return;
     _features.removeAt(index);
     notifyListeners();
@@ -99,7 +99,7 @@ class Document extends ChangeNotifier {
   void removeFeatures(Iterable<FeatureId> ids) {
     var changed = false;
     for (final id in ids) {
-      final index = featureIndexById(id);
+      final index = _featureIndexById(id);
       if (index != null) {
         _features.removeAt(index);
         changed = true;
@@ -108,6 +108,7 @@ class Document extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
+  /// TODO: This is marked for refactoring.
   void moveFeature(FeatureId id, Offset origin) {
     final feature = featureById(id);
     if (feature == null) return;
@@ -115,6 +116,7 @@ class Document extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// TODO: This is marked for refactoring.
   void moveFeatures(Map<FeatureId, Offset> origins) {
     var changed = false;
     for (final entry in origins.entries) {
@@ -127,6 +129,7 @@ class Document extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
+  /// TODO: This is marked for refactoring.
   void setFeatureBounds(FeatureId id, Rect bounds) {
     final feature = featureById(id);
     if (feature == null) return;
@@ -134,6 +137,7 @@ class Document extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// TODO: This is marked for refactoring.
   void setFeatureKind(FeatureId id, FeatureKind kind, {Size? size}) {
     final feature = featureById(id);
     if (feature == null) return;
@@ -143,6 +147,7 @@ class Document extends ChangeNotifier {
   }
 
   /// Moves a polyline vertex to [worldPosition], re-normalizing origin and size.
+  /// TODO: This is marked for refactoring.
   void setPolylinePoint(FeatureId id, int pointIndex, Offset worldPosition) {
     final feature = featureById(id);
     if (feature == null) return;
@@ -162,6 +167,7 @@ class Document extends ChangeNotifier {
   }
 
   /// Replaces a polyline's origin and local points, re-normalizing its size.
+  /// TODO: This is marked for refactoring.
   void setPolylineGeometry(
     FeatureId id, {
     required Offset origin,
