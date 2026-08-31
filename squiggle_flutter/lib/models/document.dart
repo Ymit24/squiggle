@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:squiggle_flutter/models/group.dart';
+import 'package:squiggle_flutter/models/node.dart';
 
 import 'feature.dart';
 import 'feature_geometry.dart';
@@ -184,5 +186,16 @@ class Document extends ChangeNotifier {
       ..addAll(other._features.map((feature) => feature.copyWith()));
     _nextId = other._nextId;
     notifyListeners();
+  }
+
+  void groupNodes(List<Node> nodes) {
+    final groupOrigin = Node.boundsOfNodes(nodes).center;
+
+    for (var child in nodes) {
+      child.origin -= groupOrigin;
+      removeFeature(child.id);
+    }
+
+    final group = Group(origin: groupOrigin, children: nodes);
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -1078,6 +1079,21 @@ class SelectTool extends Tool {
         height: initialBounds.height,
       ),
     };
+  }
+
+  @override
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    final isCtrlG =
+        event.logicalKey == LogicalKeyboardKey.keyG &&
+        HardwareKeyboard.instance.isControlPressed;
+
+    if (context.selection.isEmpty) return false;
+    if (!isCtrlG) return false;
+
+    print(
+      'Ctrl+G detected during selection with ${context.selection.selectedFeatures.length} features!',
+    );
+    return true;
   }
 }
 

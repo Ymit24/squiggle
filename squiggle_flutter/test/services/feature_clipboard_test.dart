@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/services/feature_clipboard.dart';
 
 void main() {
@@ -12,10 +13,9 @@ void main() {
         kind: const FeatureKindRectangle(),
       );
 
-      final repositioned = repositionFeaturesToCenter(
-        [feature],
-        const Offset(500, 400),
-      );
+      final repositioned = repositionFeaturesToCenter([
+        feature,
+      ], const Offset(500, 400));
 
       expect(repositioned, hasLength(1));
       expect(repositioned.first.bounds().center, const Offset(500, 400));
@@ -33,15 +33,12 @@ void main() {
         kind: const FeatureKindCircle(),
       );
 
-      final repositioned = repositionFeaturesToCenter(
-        [first, second],
-        const Offset(300, 300),
-      );
+      final repositioned = repositionFeaturesToCenter([
+        first,
+        second,
+      ], const Offset(300, 300));
 
-      expect(
-        boundsOfFeatures(repositioned).center,
-        const Offset(300, 300),
-      );
+      expect(Node.boundsOfNodes(repositioned).center, const Offset(300, 300));
       expect(
         repositioned[1].origin - repositioned[0].origin,
         second.origin - first.origin,

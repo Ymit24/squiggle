@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 import 'feature_id.dart';
@@ -10,16 +11,14 @@ export 'stroke_width_preset.dart';
 export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.
-class Feature {
+class Feature extends Node {
   Feature({
-    this.id = noId,
-    required this.origin,
+    super.id,
+    required super.origin,
     required this.size,
     required this.kind,
   });
 
-  FeatureId id;
-  Offset origin;
   Size size;
   FeatureKind kind;
 
@@ -27,6 +26,7 @@ class Feature {
 
   double get height => size.height;
 
+  @override
   Rect bounds() => kind.boundsFor(this);
 
   void setBounds(Rect bounds) => kind.applyBounds(this, bounds);

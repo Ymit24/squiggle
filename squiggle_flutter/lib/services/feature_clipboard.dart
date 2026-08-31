@@ -4,22 +4,11 @@ import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/document_codec.dart';
 
 const _clipboardPrefix = 'squiggle-features:1:';
-
-/// Union of [features] bounds in world space.
-Rect boundsOfFeatures(List<Feature> features) {
-  if (features.isEmpty) {
-    return Rect.zero;
-  }
-  var rect = features.first.bounds();
-  for (final feature in features.skip(1)) {
-    rect = rect.expandToInclude(feature.bounds());
-  }
-  return rect;
-}
 
 /// Offsets [features] so their combined bounds center at [targetCenter].
 List<Feature> repositionFeaturesToCenter(
@@ -29,7 +18,7 @@ List<Feature> repositionFeaturesToCenter(
   if (features.isEmpty) {
     return features;
   }
-  final offset = targetCenter - boundsOfFeatures(features).center;
+  final offset = targetCenter - Node.boundsOfNodes(features).center;
   return [
     for (final feature in features)
       feature.copyWith(id: noId, origin: feature.origin + offset),
