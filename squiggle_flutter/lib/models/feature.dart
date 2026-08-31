@@ -38,6 +38,7 @@ class Feature extends Node {
 
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
 
+  @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
 
   Offset center() => bounds().center;

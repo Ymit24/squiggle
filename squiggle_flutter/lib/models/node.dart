@@ -30,4 +30,6 @@ abstract class Node {
   Node copyWith({FeatureId? id, Offset? origin});
 
   void paint(Canvas canvas, ImageRepository imageRepository);
+
+  bool intersectsRect(Rect rect);
 }

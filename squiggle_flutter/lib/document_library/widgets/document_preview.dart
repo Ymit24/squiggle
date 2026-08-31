@@ -1,20 +1,21 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 /// Renders a scaled-down view of a document's actual features.
+/// TODO: This whole thing is complete garbage.
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
     super.key,
-    required this.features,
+    required this.nodes,
     required this.imageRepository,
   });
 
-  final List<Feature> features;
+  final List<Node> nodes;
   final ImageRepository imageRepository;
 
   @override
@@ -25,7 +26,7 @@ class DocumentPreview extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: CustomPaint(
         painter: _DocumentPreviewPainter(
-          features: features,
+          features: nodes,
           imageRepository: imageRepository,
           gridColor: SquiggleColors.surface1.withValues(alpha: 0.55),
           baseColor: theme.colors.base,
@@ -44,7 +45,7 @@ class _DocumentPreviewPainter extends CustomPainter {
     required this.baseColor,
   });
 
-  final List<Feature> features;
+  final List<Node> features;
   final ImageRepository imageRepository;
   final Color gridColor;
   final Color baseColor;
@@ -71,7 +72,7 @@ class _DocumentPreviewPainter extends CustomPainter {
     canvas.restore();
   }
 
-  Rect _contentBounds(List<Feature> features) {
+  Rect _contentBounds(List<Node> features) {
     if (features.isEmpty) {
       return _emptyView;
     }
@@ -89,17 +90,11 @@ class _DocumentPreviewPainter extends CustomPainter {
     if (content.width <= 0 || content.height <= 0) {
       return 1;
     }
-    return math.min(
-      size.width / content.width,
-      size.height / content.height,
-    );
+    return math.min(size.width / content.width, size.height / content.height);
   }
 
   double _paddingFor(Rect bounds) {
-    return math.max(
-      48.0,
-      math.max(bounds.width, bounds.height) * 0.12,
-    );
+    return math.max(48.0, math.max(bounds.width, bounds.height) * 0.12);
   }
 
   Offset _fitOffset(Rect content, Size size, double scale) {
@@ -116,24 +111,14 @@ class _DocumentPreviewPainter extends CustomPainter {
       ..color = gridColor
       ..strokeWidth = 1;
 
-    final firstX =
-        (world.left / _gridCellSize).floorToDouble() * _gridCellSize;
-    final firstY =
-        (world.top / _gridCellSize).floorToDouble() * _gridCellSize;
+    final firstX = (world.left / _gridCellSize).floorToDouble() * _gridCellSize;
+    final firstY = (world.top / _gridCellSize).floorToDouble() * _gridCellSize;
 
     for (var x = firstX; x <= world.right; x += _gridCellSize) {
-      canvas.drawLine(
-        Offset(x, world.top),
-        Offset(x, world.bottom),
-        paint,
-      );
+      canvas.drawLine(Offset(x, world.top), Offset(x, world.bottom), paint);
     }
     for (var y = firstY; y <= world.bottom; y += _gridCellSize) {
-      canvas.drawLine(
-        Offset(world.left, y),
-        Offset(world.right, y),
-        paint,
-      );
+      canvas.drawLine(Offset(world.left, y), Offset(world.right, y), paint);
     }
   }
 

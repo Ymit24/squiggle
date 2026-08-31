@@ -711,7 +711,7 @@ class SelectTool extends Tool {
     if (state is! _Selecting) return;
 
     final bounds = Rect.fromPoints(state.start, state.end);
-    final hits = document.features
+    final hits = document.nodes
         .where((f) => f.intersectsRect(bounds))
         .map((f) => f.id)
         .toList();
@@ -1102,9 +1102,9 @@ class SelectTool extends Tool {
     if (context.selection.isEmpty) return false;
     if (!isCtrlG) return false;
 
-    print(
-      'Ctrl+G detected during selection with ${context.selection.selectedFeatures.length} features!',
-    );
+    // print(
+    //   'Ctrl+G detected during selection with ${context.selection.selectedFeatures.length} features!',
+    // );
     return true;
   }
 }

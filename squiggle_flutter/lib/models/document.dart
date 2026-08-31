@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
 
 import 'feature.dart';
@@ -128,6 +127,6 @@ class Document extends ChangeNotifier {
       removeFeature(child.id);
     }
 
-    final group = Group(origin: groupOrigin, children: nodes);
+    // final group = Group(origin: groupOrigin, children: nodes);
   }
 }
