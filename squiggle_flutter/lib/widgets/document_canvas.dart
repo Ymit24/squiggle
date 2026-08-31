@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import '../models/document.dart';
 import '../utils/grid.dart';
 
-/// Paints a [Document]'s features on an infinite world-space grid.
+/// Paints a [Document]'s nodes on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {
   const DocumentCanvas({
     super.key,
@@ -129,7 +129,7 @@ class RenderDocumentCanvas extends RenderBox {
       location: _context.camera.location,
       zoom: _context.camera.zoom,
     );
-    _paintFeatures(canvas, document);
+    _paintNodes(canvas, document);
     _context.tool.activeTool.paint(canvas, camera, _context, _imageRepository);
     canvas.restore();
 
@@ -149,7 +149,7 @@ class RenderDocumentCanvas extends RenderBox {
     canvas.drawRect(Offset.zero & size, Paint()..color = _canvasColor);
   }
 
-  void _paintFeatures(Canvas canvas, Document document) {
+  void _paintNodes(Canvas canvas, Document document) {
     final zoom = _context.camera.zoom;
     if (zoom <= 0) return;
 
@@ -160,11 +160,11 @@ class RenderDocumentCanvas extends RenderBox {
       size.height * zoom,
     );
 
-    for (final feature in document.features) {
-      final worldBounds = feature.bounds();
+    for (final node in document.nodes) {
+      final worldBounds = node.bounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
-      feature.paint(canvas, _imageRepository);
+      node.paint(canvas, _imageRepository);
     }
   }
 }

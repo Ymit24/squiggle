@@ -64,6 +64,7 @@ class Feature extends Node {
     kind: kind ?? this.kind,
   );
 
+  @override
   void paint(Canvas canvas, ImageRepository imageRepository) =>
       kind.paint(this, canvas, imageRepository);
 }

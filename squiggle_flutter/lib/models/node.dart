@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 abstract class Node {
   /// Returns the union of [nodes] bounds in world space.
@@ -27,4 +28,6 @@ abstract class Node {
   Rect bounds();
 
   Node copyWith({FeatureId? id, Offset? origin});
+
+  void paint(Canvas canvas, ImageRepository imageRepository);
 }
