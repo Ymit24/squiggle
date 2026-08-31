@@ -29,9 +29,10 @@ class Feature extends Node {
   @override
   Rect bounds() => kind.boundsFor(this);
 
-  void setBounds(Rect bounds) => kind.applyBounds(this, bounds);
+  @override
+  void resize(Rect bounds) => kind.applyBounds(this, bounds);
 
-  void setBoundsDirect(Rect bounds) {
+  void setBounds(Rect bounds) {
     origin = bounds.topLeft;
     size = bounds.size;
   }

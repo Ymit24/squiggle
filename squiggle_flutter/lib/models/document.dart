@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:data_models/data_models.dart' as data;
 
 import 'feature.dart';
 import 'feature_id.dart';
@@ -20,6 +21,11 @@ class Document extends ChangeNotifier {
       doc.addFeature(feature);
     }
     return doc;
+  }
+
+  factory Document.fromDataModel(data.Document raw) {
+    // TODO: create document from raw
+    return Document();
   }
 
   final List<Feature> _features = [];

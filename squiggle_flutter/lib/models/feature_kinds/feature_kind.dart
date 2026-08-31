@@ -78,8 +78,12 @@ sealed class FeatureKind {
     };
   }
 
-  Rect boundsFor(Feature feature) =>
-      Rect.fromLTWH(feature.origin.dx, feature.origin.dy, feature.size.width, feature.size.height);
+  Rect boundsFor(Feature feature) => Rect.fromLTWH(
+    feature.origin.dx,
+    feature.origin.dy,
+    feature.size.width,
+    feature.size.height,
+  );
 
   bool hitTest(Feature feature, Offset worldPoint) =>
       boundsFor(feature).contains(worldPoint);
@@ -87,7 +91,7 @@ sealed class FeatureKind {
   bool intersectsRect(Feature feature, Rect rect) =>
       boundsFor(feature).overlaps(rect);
 
-  void applyBounds(Feature feature, Rect bounds) => feature.setBoundsDirect(bounds);
+  void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }

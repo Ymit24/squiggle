@@ -32,4 +32,6 @@ abstract class Node {
   void paint(Canvas canvas, ImageRepository imageRepository);
 
   bool intersectsRect(Rect rect);
+
+  void resize(Rect bounds);
 }

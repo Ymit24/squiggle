@@ -135,7 +135,7 @@ final class FeatureKindPolyline extends FeatureKind {
       return newWorld - bounds.topLeft;
     }).toList();
 
-    feature.setBoundsDirect(bounds);
+    feature.setBounds(bounds);
     feature.kind = copyWith(localPoints: scaledLocalPoints);
   }
 

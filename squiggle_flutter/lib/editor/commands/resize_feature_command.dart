@@ -21,7 +21,7 @@ final class ResizeFeatureCommand extends Command {
   void redo(Document document) {
     final feature = document.featureById(id);
     if (feature == null) return;
-    feature.setBounds(finalBounds);
+    feature.resize(finalBounds);
     document.notifyChanged();
   }
 
@@ -29,7 +29,7 @@ final class ResizeFeatureCommand extends Command {
   void undo(Document document) {
     final feature = document.featureById(id);
     if (feature == null) return;
-    feature.setBounds(initialBounds);
+    feature.resize(initialBounds);
     document.notifyChanged();
   }
 }

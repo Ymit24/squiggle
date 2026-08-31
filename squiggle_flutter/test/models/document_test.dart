@@ -120,7 +120,7 @@ void main() {
       ]);
       final id = doc.features.first.id;
 
-      doc.featureById(id)!.setBounds(const Rect.fromLTWH(1, 2, 20, 30));
+      doc.featureById(id)!.resize(const Rect.fromLTWH(1, 2, 20, 30));
       doc.notifyChanged();
 
       expect(doc.features.first.bounds(), const Rect.fromLTWH(1, 2, 20, 30));

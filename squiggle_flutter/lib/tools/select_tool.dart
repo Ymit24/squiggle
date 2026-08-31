@@ -864,7 +864,7 @@ class SelectTool extends Tool {
 
     final feature = document.featureById(featureId);
     if (feature == null) return;
-    feature.setBounds(newBounds);
+    feature.resize(newBounds);
     document.notifyChanged();
   }
 

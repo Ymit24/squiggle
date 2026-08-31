@@ -28,4 +28,7 @@ class Group extends Node {
   void paint(Canvas canvas, ImageRepository imageRepository) {
     // TODO: implement paint
   }
+
+  @override
+  void resize(Rect bounds) {}
 }
