@@ -24,8 +24,20 @@ class Document extends ChangeNotifier {
   }
 
   factory Document.fromDataModel(data.Document raw) {
-    // TODO: create document from raw
-    return Document();
+    final document = Document();
+    document.addFeatures([
+      for (final node in raw.nodes)
+        switch (node) {
+          data.Feature() => Feature.fromDataModel(node),
+          data.Group() => throw FormatException(
+            'Groups are not supported by the current Document model',
+          ),
+          _ => throw FormatException(
+            'Unsupported node type: ${node.runtimeType}',
+          ),
+        },
+    ]);
+    return document;
   }
 
   final List<Feature> _features = [];

@@ -8,6 +8,13 @@ final class FeatureKindImage extends FeatureKind {
     super.strokeWidth,
   });
 
+  factory FeatureKindImage.fromDataModel(Map<String, dynamic> content) =>
+      FeatureKindImage(
+        content['imageId'] as String,
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+      );
+
   final String imageId;
 
   @override
@@ -23,11 +30,7 @@ final class FeatureKindImage extends FeatureKind {
   }
 
   @override
-  void paint(
-    Feature feature,
-    Canvas canvas,
-    ImageRepository imageRepository,
-  ) {
+  void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.bounds();
     final image = imageRepository.getCached(imageId);
     if (image != null) {
@@ -39,10 +42,7 @@ final class FeatureKindImage extends FeatureKind {
       );
     } else {
       imageRepository.requestImage(imageId);
-      canvas.drawRect(
-        bounds,
-        Paint()..color = SquiggleColors.surface1,
-      );
+      canvas.drawRect(bounds, Paint()..color = SquiggleColors.surface1);
     }
 
     if (hasVisibleStroke) {

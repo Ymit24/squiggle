@@ -7,6 +7,13 @@ final class FeatureKindRectangle extends FeatureKind {
     super.strokeWidth,
   });
 
+  factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
+      FeatureKindRectangle(
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        fillColor: _colorFromDataModel(content, 'fillColor'),
+        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+      );
+
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.bounds();

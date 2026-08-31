@@ -95,3 +95,16 @@ sealed class FeatureKind {
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }
+
+double _doubleFromDataModel(Map<String, dynamic> content, String key) {
+  return (content[key] as num).toDouble();
+}
+
+Color _colorFromDataModel(Map<String, dynamic> content, String key) {
+  return Color((content[key] as num).toInt());
+}
+
+Offset _offsetFromDataModel(Object value) {
+  final point = value as Map;
+  return Offset((point['x'] as num).toDouble(), (point['y'] as num).toDouble());
+}

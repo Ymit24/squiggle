@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
@@ -18,6 +19,25 @@ class Feature extends Node {
     required this.size,
     required this.kind,
   });
+
+  factory Feature.fromDataModel(data.Feature raw) {
+    final content = raw.content;
+    final kind = switch (content['type']) {
+      'rectangle' => FeatureKindRectangle.fromDataModel(content),
+      'circle' => FeatureKindCircle.fromDataModel(content),
+      'text' => FeatureKindText.fromDataModel(content),
+      'polyline' => FeatureKindPolyline.fromDataModel(content),
+      'image' => FeatureKindImage.fromDataModel(content),
+      _ => throw FormatException('Unknown feature kind: ${content['type']}'),
+    };
+
+    return Feature(
+      id: FeatureId.newId(raw.id),
+      origin: Offset(raw.originX, raw.originY),
+      size: Size(raw.width, raw.height),
+      kind: kind,
+    );
+  }
 
   Size size;
   FeatureKind kind;
