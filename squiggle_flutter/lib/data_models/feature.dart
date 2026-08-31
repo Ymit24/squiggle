@@ -1,31 +1,33 @@
-import 'dart:ui';
-
-import 'feature_kind.dart';
-import 'json_helpers.dart';
 import 'node.dart';
 
 final class Feature extends Node {
   const Feature({
     required super.id,
-    required super.origin,
-    required this.size,
-    required this.kind,
+    required super.originX,
+    required super.originY,
+    required this.width,
+    required this.height,
+    required this.content,
   });
 
-  final Size size;
-  final FeatureKind kind;
+  final double width;
+  final double height;
+  final Map<String, dynamic> content;
 
   factory Feature.fromJson(Map<String, dynamic> json) => Feature(
     id: json['id'] as int,
-    origin: offsetFromJson(json['origin'] as Map<String, dynamic>),
-    size: sizeFromJson(json['size'] as Map<String, dynamic>),
-    kind: FeatureKind.fromJson(json['kind'] as Map<String, dynamic>),
+    originX: (json['originX'] as num).toDouble(),
+    originY: (json['originY'] as num).toDouble(),
+    width: (json['width'] as num).toDouble(),
+    height: (json['height'] as num).toDouble(),
+    content: Map<String, dynamic>.from(json['content'] as Map),
   );
 
   @override
   Map<String, dynamic> toJson() => {
     ...baseJson('feature'),
-    'size': sizeToJson(size),
-    'kind': kind.toJson(),
+    'width': width,
+    'height': height,
+    'content': content,
   };
 }

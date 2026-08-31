@@ -1,14 +1,12 @@
-import 'dart:ui';
-
 import 'feature.dart';
 import 'group.dart';
-import 'json_helpers.dart';
 
 abstract class Node {
-  const Node({required this.id, required this.origin});
+  const Node({required this.id, required this.originX, required this.originY});
 
   final int id;
-  final Offset origin;
+  final double originX;
+  final double originY;
 
   Map<String, dynamic> toJson();
 
@@ -21,6 +19,7 @@ abstract class Node {
   Map<String, dynamic> baseJson(String type) => {
     'type': type,
     'id': id,
-    'origin': offsetToJson(origin),
+    'originX': originX,
+    'originY': originY,
   };
 }
