@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
 
 import 'feature.dart';
-import 'feature_geometry.dart';
 import 'feature_id.dart';
 
 /// World model: editable collection of features in world space.
@@ -26,6 +25,8 @@ class Document extends ChangeNotifier {
 
   final List<Feature> _features = [];
 
+  List<Node> get nodes => [];
+
   /// Live view of the features in document order.
   List<Feature> get features => List.unmodifiable(_features);
 
@@ -37,6 +38,8 @@ class Document extends ChangeNotifier {
     _nextId = FeatureId.newId(_nextId.value + 1);
     return id;
   }
+
+  void notifyChanged() => notifyListeners();
 
   Feature? featureById(FeatureId id) {
     for (final feature in _features) {
@@ -106,83 +109,6 @@ class Document extends ChangeNotifier {
       }
     }
     if (changed) notifyListeners();
-  }
-
-  /// TODO: This is marked for refactoring.
-  void moveFeature(FeatureId id, Offset origin) {
-    final feature = featureById(id);
-    if (feature == null) return;
-    feature.moveTo(origin);
-    notifyListeners();
-  }
-
-  /// TODO: This is marked for refactoring.
-  void moveFeatures(Map<FeatureId, Offset> origins) {
-    var changed = false;
-    for (final entry in origins.entries) {
-      final feature = featureById(entry.key);
-      if (feature != null && feature.origin != entry.value) {
-        feature.moveTo(entry.value);
-        changed = true;
-      }
-    }
-    if (changed) notifyListeners();
-  }
-
-  /// TODO: This is marked for refactoring.
-  void setFeatureBounds(FeatureId id, Rect bounds) {
-    final feature = featureById(id);
-    if (feature == null) return;
-    feature.setBounds(bounds);
-    notifyListeners();
-  }
-
-  /// TODO: This is marked for refactoring.
-  void setFeatureKind(FeatureId id, FeatureKind kind, {Size? size}) {
-    final feature = featureById(id);
-    if (feature == null) return;
-    if (size != null) feature.size = size;
-    feature.kind = kind;
-    notifyListeners();
-  }
-
-  /// Moves a polyline vertex to [worldPosition], re-normalizing origin and size.
-  /// TODO: This is marked for refactoring.
-  void setPolylinePoint(FeatureId id, int pointIndex, Offset worldPosition) {
-    final feature = featureById(id);
-    if (feature == null) return;
-
-    final kind = feature.kind;
-    if (kind is! FeatureKindPolyline) return;
-
-    final points = worldPoints(feature.origin, kind.localPoints);
-    if (pointIndex < 0 || pointIndex >= points.length) return;
-
-    points[pointIndex] = worldPosition;
-    setPolylineGeometry(
-      id,
-      origin: points.first,
-      localPoints: localPointsFromWorld(points, points.first),
-    );
-  }
-
-  /// Replaces a polyline's origin and local points, re-normalizing its size.
-  /// TODO: This is marked for refactoring.
-  void setPolylineGeometry(
-    FeatureId id, {
-    required Offset origin,
-    required List<Offset> localPoints,
-  }) {
-    final feature = featureById(id);
-    if (feature == null) return;
-
-    final kind = feature.kind;
-    if (kind is! FeatureKindPolyline) return;
-
-    feature.moveTo(origin);
-    feature.kind = kind.copyWith(localPoints: List.of(localPoints));
-    feature.size = feature.bounds().size;
-    notifyListeners();
   }
 
   /// Replaces this document's contents with [other], notifying once.

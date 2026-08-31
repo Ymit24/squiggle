@@ -19,11 +19,17 @@ final class ResizeFeatureCommand extends Command {
 
   @override
   void redo(Document document) {
-    document.setFeatureBounds(id, finalBounds);
+    final feature = document.featureById(id);
+    if (feature == null) return;
+    feature.setBounds(finalBounds);
+    document.notifyChanged();
   }
 
   @override
   void undo(Document document) {
-    document.setFeatureBounds(id, initialBounds);
+    final feature = document.featureById(id);
+    if (feature == null) return;
+    feature.setBounds(initialBounds);
+    document.notifyChanged();
   }
 }

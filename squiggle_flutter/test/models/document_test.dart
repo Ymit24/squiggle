@@ -9,8 +9,16 @@ void main() {
   group('Document.featureAtPoint', () {
     test('returns top-most feature at point', () {
       final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
-        Feature(origin: const Offset(50, 50), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(50, 50),
+          size: const Size(100, 100),
+          kind: const FeatureKindRectangle(),
+        ),
       ]);
 
       final hit = doc.featureAtPoint(const Offset(75, 75));
@@ -21,7 +29,11 @@ void main() {
 
     test('returns null when no feature contains point', () {
       final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(50, 50), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(50, 50),
+          kind: const FeatureKindRectangle(),
+        ),
       ]);
 
       expect(doc.featureAtPoint(const Offset(200, 200)), isNull);
@@ -46,8 +58,16 @@ void main() {
     test('addFeatures adds multiple features in one change', () {
       final doc = Document();
       final features = [
-        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
-        Feature(origin: const Offset(20, 0), size: const Size(10, 10), kind: const FeatureKindCircle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
+        Feature(
+          origin: const Offset(20, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindCircle(),
+        ),
       ];
 
       doc.addFeatures(features);
@@ -58,7 +78,11 @@ void main() {
 
     test('removeFeature removes by id', () {
       final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
       ]);
       final id = doc.features.first.id;
 
@@ -69,13 +93,18 @@ void main() {
 
     test('moveFeature updates origin and notifies', () {
       final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
       ]);
       final id = doc.features.first.id;
       var notified = 0;
       doc.addListener(() => notified++);
 
-      doc.moveFeature(id, const Offset(5, 5));
+      doc.featureById(id)!.moveTo(const Offset(5, 5));
+      doc.notifyChanged();
 
       expect(doc.features.first.origin, const Offset(5, 5));
       expect(notified, 1);
@@ -83,22 +112,39 @@ void main() {
 
     test('setFeatureBounds updates bounds', () {
       final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
       ]);
       final id = doc.features.first.id;
 
-      doc.setFeatureBounds(id, const Rect.fromLTWH(1, 2, 20, 30));
+      doc.featureById(id)!.setBounds(const Rect.fromLTWH(1, 2, 20, 30));
+      doc.notifyChanged();
 
       expect(doc.features.first.bounds(), const Rect.fromLTWH(1, 2, 20, 30));
     });
 
     test('replaceFrom replaces contents and next id', () {
       final doc = Document.fromFeatures([
-        Feature(origin: const Offset(0, 0), size: const Size(10, 10), kind: const FeatureKindRectangle()),
+        Feature(
+          origin: const Offset(0, 0),
+          size: const Size(10, 10),
+          kind: const FeatureKindRectangle(),
+        ),
       ]);
       final replacement = Document.fromFeatures([
-        Feature(origin: const Offset(5, 5), size: const Size(20, 20), kind: const FeatureKindCircle()),
-        Feature(origin: const Offset(30, 30), size: const Size(20, 20), kind: const FeatureKindCircle()),
+        Feature(
+          origin: const Offset(5, 5),
+          size: const Size(20, 20),
+          kind: const FeatureKindCircle(),
+        ),
+        Feature(
+          origin: const Offset(30, 30),
+          size: const Size(20, 20),
+          kind: const FeatureKindCircle(),
+        ),
       ]);
 
       doc.replaceFrom(replacement);

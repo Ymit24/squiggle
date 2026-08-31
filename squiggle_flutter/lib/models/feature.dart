@@ -46,6 +46,11 @@ class Feature extends Node {
     origin = newOrigin;
   }
 
+  void setKind(FeatureKind newKind, {Size? newSize}) {
+    if (newSize != null) size = newSize;
+    kind = newKind;
+  }
+
   @override
   Feature copyWith({
     FeatureId? id,

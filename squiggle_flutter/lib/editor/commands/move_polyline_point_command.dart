@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 
 import 'command.dart';
@@ -24,15 +25,25 @@ final class MovePolylinePointCommand extends Command {
 
   @override
   void redo(Document document) {
-    document.setPolylinePoint(id, pointIndex, finalWorldPosition);
+    final feature = document.featureById(id);
+    if (feature == null) return;
+    final kind = feature.kind;
+    if (kind is! FeatureKindPolyline) return;
+    kind.setPoint(feature, pointIndex, finalWorldPosition);
+    document.notifyChanged();
   }
 
   @override
   void undo(Document document) {
-    document.setPolylineGeometry(
-      id,
+    final feature = document.featureById(id);
+    if (feature == null) return;
+    final kind = feature.kind;
+    if (kind is! FeatureKindPolyline) return;
+    kind.setGeometry(
+      feature,
       origin: initialOrigin,
       localPoints: initialLocalPoints,
     );
+    document.notifyChanged();
   }
 }

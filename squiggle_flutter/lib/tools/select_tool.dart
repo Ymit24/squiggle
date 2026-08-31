@@ -794,7 +794,15 @@ class SelectTool extends Tool {
     for (final entry in offsets.entries) {
       targets[entry.key] = worldPosition - moveOffset + entry.value;
     }
-    document.moveFeatures(targets);
+    var changed = false;
+    for (final entry in targets.entries) {
+      final feature = document.featureById(entry.key);
+      if (feature != null && feature.origin != entry.value) {
+        feature.moveTo(entry.value);
+        changed = true;
+      }
+    }
+    if (changed) document.notifyChanged();
   }
 
   Map<FeatureId, Offset> _selectedFeatureOrigins(
@@ -854,7 +862,10 @@ class SelectTool extends Tool {
             aspectRatio: aspectRatio,
           );
 
-    document.setFeatureBounds(featureId, newBounds);
+    final feature = document.featureById(featureId);
+    if (feature == null) return;
+    feature.setBounds(newBounds);
+    document.notifyChanged();
   }
 
   void _commitResize(
@@ -892,7 +903,8 @@ class SelectTool extends Tool {
     final points = worldPoints(feature.origin, kind.localPoints);
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
-    document.setPolylinePoint(featureId, pointIndex, worldPosition);
+    kind.setPoint(feature, pointIndex, worldPosition);
+    document.notifyChanged();
   }
 
   void _commitPolylinePointMove(

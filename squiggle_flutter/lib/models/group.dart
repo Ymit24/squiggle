@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/models/node.dart';
 
 class Group extends Node {
@@ -9,4 +10,10 @@ class Group extends Node {
 
   @override
   Rect bounds() => Node.boundsOfNodes(children);
+
+  @override
+  Node copyWith({FeatureId? id, Offset? origin}) {
+    // TODO: implement copyWith
+    throw UnimplementedError();
+  }
 }

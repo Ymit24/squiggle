@@ -37,7 +37,8 @@ final class UpdateTextContentsCommand extends Command {
       fillColor: textKind.fillColor,
       strokeWidth: textKind.strokeWidth,
     ).fittedToBounds(width: bounds.width, height: bounds.height);
-    document.setFeatureKind(featureId, newKind);
+    feature.setKind(newKind);
+    document.notifyChanged();
   }
 
   @override
@@ -46,6 +47,9 @@ final class UpdateTextContentsCommand extends Command {
     final previousSize = _previousSize;
     if (previousKind == null || previousSize == null) return;
 
-    document.setFeatureKind(featureId, previousKind, size: previousSize);
+    final feature = document.featureById(featureId);
+    if (feature == null) return;
+    feature.setKind(previousKind, newSize: previousSize);
+    document.notifyChanged();
   }
 }

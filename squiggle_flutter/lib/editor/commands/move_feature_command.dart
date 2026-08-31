@@ -15,14 +15,20 @@ final class MoveFeatureCommand extends Command {
 
   @override
   void redo(Document document) {
-    document.moveFeature(id, origin);
+    final feature = document.featureById(id);
+    if (feature == null) return;
+    feature.moveTo(origin);
+    document.notifyChanged();
   }
 
   @override
   void undo(Document document) {
     final previousOrigin = this.previousOrigin;
     if (previousOrigin == null) return;
-    document.moveFeature(id, previousOrigin);
+    final feature = document.featureById(id);
+    if (feature == null) return;
+    feature.moveTo(previousOrigin);
+    document.notifyChanged();
   }
 }
 
@@ -38,11 +44,23 @@ final class MoveFeaturesCommand extends Command {
 
   @override
   void redo(Document document) {
-    document.moveFeatures(finalOrigins);
+    _moveFeatures(document, finalOrigins);
   }
 
   @override
   void undo(Document document) {
-    document.moveFeatures(initialOrigins);
+    _moveFeatures(document, initialOrigins);
+  }
+
+  void _moveFeatures(Document document, Map<FeatureId, Offset> origins) {
+    var changed = false;
+    for (final entry in origins.entries) {
+      final feature = document.featureById(entry.key);
+      if (feature != null && feature.origin != entry.value) {
+        feature.moveTo(entry.value);
+        changed = true;
+      }
+    }
+    if (changed) document.notifyChanged();
   }
 }

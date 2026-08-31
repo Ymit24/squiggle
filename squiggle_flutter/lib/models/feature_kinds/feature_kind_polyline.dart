@@ -24,6 +24,28 @@ final class FeatureKindPolyline extends FeatureKind {
     );
   }
 
+  void setGeometry(
+    Feature feature, {
+    required Offset origin,
+    required List<Offset> localPoints,
+  }) {
+    feature.moveTo(origin);
+    feature.kind = copyWith(localPoints: List.of(localPoints));
+    feature.size = feature.bounds().size;
+  }
+
+  void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
+    final points = worldPoints(feature.origin, localPoints);
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+
+    points[pointIndex] = worldPosition;
+    setGeometry(
+      feature,
+      origin: points.first,
+      localPoints: localPointsFromWorld(points, points.first),
+    );
+  }
+
   double get _hitRadius {
     if (hasVisibleStroke && hasVisibleFill) {
       return strokeWidth;
@@ -69,7 +91,8 @@ final class FeatureKindPolyline extends FeatureKind {
     final threshold = _selectionTolerance;
     final points = worldPoints(feature.origin, localPoints);
     for (var i = 0; i < points.length - 1; i++) {
-      if (distanceToSegment(worldPoint, points[i], points[i + 1]) <= threshold) {
+      if (distanceToSegment(worldPoint, points[i], points[i + 1]) <=
+          threshold) {
         return true;
       }
     }

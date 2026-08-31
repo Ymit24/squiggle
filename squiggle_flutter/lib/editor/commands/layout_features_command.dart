@@ -8,10 +8,8 @@ import 'command.dart';
 
 /// Aligns or distributes features in one undo step.
 final class LayoutFeaturesCommand extends Command {
-  LayoutFeaturesCommand.align({
-    required this.ids,
-    required this.alignment,
-  }) : distribution = null;
+  LayoutFeaturesCommand.align({required this.ids, required this.alignment})
+    : distribution = null;
 
   LayoutFeaturesCommand.distribute({
     required this.ids,
@@ -26,10 +24,16 @@ final class LayoutFeaturesCommand extends Command {
   @override
   void redo(Document document) {
     final offsets = switch ((alignment, distribution)) {
-      (final alignment?, null) =>
-        computeAlignmentOffsets(document, ids, alignment),
-      (null, final distribution?) =>
-        computeDistributionOffsets(document, ids, distribution),
+      (final alignment?, null) => computeAlignmentOffsets(
+        document,
+        ids,
+        alignment,
+      ),
+      (null, final distribution?) => computeDistributionOffsets(
+        document,
+        ids,
+        distribution,
+      ),
       _ => const <FeatureId, Offset>{},
     };
     if (offsets.isEmpty) return;
@@ -43,8 +47,18 @@ final class LayoutFeaturesCommand extends Command {
       _previousOrigins!.putIfAbsent(entry.key, () => feature.origin);
       targets[entry.key] = feature.origin + entry.value;
     }
+    var changed = false;
     if (targets.isNotEmpty) {
-      document.moveFeatures(targets);
+      for (final entry in targets.entries) {
+        final feature = document.featureById(entry.key);
+        if (feature != null && feature.origin != entry.value) {
+          feature.moveTo(entry.value);
+          changed = true;
+        }
+      }
+      if (changed) {
+        document.notifyChanged();
+      }
     }
   }
 
@@ -53,6 +67,14 @@ final class LayoutFeaturesCommand extends Command {
     final previousOrigins = _previousOrigins;
     if (previousOrigins == null) return;
 
-    document.moveFeatures(previousOrigins);
+    var changed = false;
+    for (final entry in previousOrigins.entries) {
+      final feature = document.featureById(entry.key);
+      if (feature != null && feature.origin != entry.value) {
+        feature.moveTo(entry.value);
+        changed = true;
+      }
+    }
+    if (changed) document.notifyChanged();
   }
 }
