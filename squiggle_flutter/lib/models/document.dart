@@ -77,13 +77,6 @@ class Document extends ChangeNotifier {
     return null;
   }
 
-  int? _featureIndexById(FeatureId id) {
-    for (var i = 0; i < _features.length; i++) {
-      if (_features[i].id == id) return i;
-    }
-    return null;
-  }
-
   /// Top-most feature whose bounds contain [worldPoint], if any.
   Feature? featureAtPoint(Offset worldPoint) {
     for (var i = _features.length - 1; i >= 0; i--) {
