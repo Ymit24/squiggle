@@ -44,10 +44,13 @@ void main() {
   group('Document Serde', () {
     group('Decode', () {
       test('Factory fromDataModel works with empty document', () {
-        final document = Document.fromDataModel(const data.Document());
+        final document = Document.fromDataModel(
+          const data.Document(name: 'Named document'),
+        );
 
         expect(document.features, isEmpty);
         expect(document.nextId, 1);
+        expect(document.name, 'Named document');
       });
       test('Factory fromDataModel preserves feature order', () {
         final raw = data.Document(
@@ -96,9 +99,11 @@ void main() {
             kind: const FeatureKindCircle(),
           ),
         ]);
+        document.name = 'Named document';
 
         final raw = document.toDataModel();
 
+        expect(raw.name, 'Named document');
         expect(raw.nodes, hasLength(2));
         expect((raw.nodes[0] as data.Feature).id, 4);
         expect((raw.nodes[1] as data.Feature).id, 7);
@@ -233,10 +238,12 @@ void main() {
           kind: const FeatureKindCircle(),
         ),
       ]);
+      replacement.name = 'Replacement';
 
       doc.replaceFrom(replacement);
 
       expect(doc.features, hasLength(2));
+      expect(doc.name, 'Replacement');
       expect(doc.features.first.origin, const Offset(5, 5));
       expect(doc.nextId, greaterThanOrEqualTo(2));
     });

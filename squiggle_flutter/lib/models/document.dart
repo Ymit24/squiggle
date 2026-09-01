@@ -13,7 +13,10 @@ import 'feature_id.dart';
 /// exposes no command or history concept; changes are announced to observers
 /// via [ChangeNotifier]. Undo/redo bookkeeping lives in the command layer.
 class Document extends ChangeNotifier {
-  Document({FeatureId? nextId}) : _nextId = nextId ?? FeatureId.newId(1);
+  Document({this.name = 'Untitled', FeatureId? nextId})
+    : _nextId = nextId ?? FeatureId.newId(1);
+
+  String name;
 
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
@@ -24,7 +27,7 @@ class Document extends ChangeNotifier {
   }
 
   factory Document.fromDataModel(data.Document raw) {
-    final document = Document();
+    final document = Document(name: raw.name);
     document.addFeatures([
       for (final node in raw.nodes)
         switch (node) {
@@ -42,6 +45,7 @@ class Document extends ChangeNotifier {
 
   data.Document toDataModel() {
     return data.Document(
+      name: name,
       nodes: _features.map((feature) => feature.toDataModel()).toList(),
     );
   }
@@ -130,10 +134,11 @@ class Document extends ChangeNotifier {
 
   /// Replaces this document's contents with [other], notifying once.
   void replaceFrom(Document other) {
-    _features
+    _nodes
       ..clear()
       ..addAll(other._features.map((feature) => feature.copyWith()));
     _nextId = other._nextId;
+    name = other.name;
     notifyListeners();
   }
 
