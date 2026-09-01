@@ -40,6 +40,12 @@ class Document extends ChangeNotifier {
     return document;
   }
 
+  data.Document toDataModel() {
+    return data.Document(
+      nodes: _features.map((feature) => feature.toDataModel()).toList(),
+    );
+  }
+
   final List<Feature> _features = [];
 
   List<Node> get nodes => [];

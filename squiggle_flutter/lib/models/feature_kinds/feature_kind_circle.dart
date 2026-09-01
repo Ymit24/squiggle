@@ -15,6 +15,14 @@ final class FeatureKindCircle extends FeatureKind {
       );
 
   @override
+  Map<String, dynamic> toDataModel() => {
+    'type': 'circle',
+    'strokeColor': strokeColor.toARGB32(),
+    'fillColor': fillColor.toARGB32(),
+    'strokeWidth': strokeWidth,
+  };
+
+  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.bounds();
     canvas.drawOval(bounds, Paint()..color = fillColor);

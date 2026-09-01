@@ -19,6 +19,17 @@ final class FeatureKindPolyline extends FeatureKind {
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
+  @override
+  Map<String, dynamic> toDataModel() => {
+    'type': 'polyline',
+    'localPoints': [
+      for (final point in localPoints) {'x': point.dx, 'y': point.dy},
+    ],
+    'strokeColor': strokeColor.toARGB32(),
+    'fillColor': fillColor.toARGB32(),
+    'strokeWidth': strokeWidth,
+  };
+
   final List<Offset> localPoints;
 
   FeatureKindPolyline copyWith({

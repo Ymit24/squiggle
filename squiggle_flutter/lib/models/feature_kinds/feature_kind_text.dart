@@ -29,6 +29,20 @@ final class FeatureKindText extends FeatureKind {
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
+  @override
+  Map<String, dynamic> toDataModel() {
+    return {
+      'type': 'text',
+      'contents': contents,
+      'fontSize': fontSize,
+      'horizontalAlignment': horizontalAlignment.name,
+      'verticalAlignment': verticalAlignment.name,
+      'strokeColor': strokeColor.toARGB32(),
+      'fillColor': fillColor.toARGB32(),
+      'strokeWidth': strokeWidth,
+    };
+  }
+
   final String contents;
   final double fontSize;
   final TextHorizontalAlignment horizontalAlignment;

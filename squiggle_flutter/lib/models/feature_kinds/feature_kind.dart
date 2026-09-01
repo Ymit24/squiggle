@@ -21,6 +21,8 @@ sealed class FeatureKind {
     this.strokeWidth = defaultStrokeWidth,
   });
 
+  Map<String, dynamic> toDataModel();
+
   final Color strokeColor;
   final Color fillColor;
   final double strokeWidth;

@@ -15,6 +15,14 @@ final class FeatureKindImage extends FeatureKind {
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
+  @override
+  Map<String, dynamic> toDataModel() => {
+    'type': 'image',
+    'imageId': imageId,
+    'strokeColor': strokeColor.toARGB32(),
+    'strokeWidth': strokeWidth,
+  };
+
   final String imageId;
 
   @override

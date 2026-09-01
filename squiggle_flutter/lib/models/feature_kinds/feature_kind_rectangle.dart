@@ -15,6 +15,14 @@ final class FeatureKindRectangle extends FeatureKind {
       );
 
   @override
+  Map<String, dynamic> toDataModel() => {
+    'type': 'rectangle',
+    'strokeColor': strokeColor.toARGB32(),
+    'fillColor': fillColor.toARGB32(),
+    'strokeWidth': strokeWidth,
+  };
+
+  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.bounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);

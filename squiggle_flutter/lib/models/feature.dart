@@ -39,6 +39,17 @@ class Feature extends Node {
     );
   }
 
+  data.Feature toDataModel() {
+    return data.Feature(
+      id: id.value,
+      originX: origin.dx,
+      originY: origin.dy,
+      width: size.width,
+      height: size.height,
+      content: kind.toDataModel(),
+    );
+  }
+
   Size size;
   FeatureKind kind;
 
