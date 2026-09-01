@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/tools/select_tool.dart'
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart'
     show
         SelectTool,
         kSelectionBoxPadding,
