@@ -16,7 +16,11 @@ void main() {
     setUp(() {
       context = EditorContext(
         document: Document.fromFeatures([
-          Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(100, 100),
+            kind: const FeatureKindRectangle(),
+          ),
         ]),
       );
     });
@@ -27,7 +31,7 @@ void main() {
       await bloc.stream.first;
 
       var documentChanged = false;
-      final subscription = notifierChangesStream(context.document).listen((_) {
+      final subscription = notifierChangesStream(context.history).listen((_) {
         documentChanged = true;
       });
 
@@ -40,10 +44,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(documentChanged, isTrue);
-      expect(
-        context.document.features.first.origin,
-        const Offset(10, 10),
-      );
+      expect(context.document.features.first.origin, const Offset(10, 10));
       await subscription.cancel();
       await bloc.close();
     });
