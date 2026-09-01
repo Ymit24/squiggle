@@ -798,7 +798,7 @@ class SelectTool extends Tool {
     for (final entry in targets.entries) {
       final feature = document.featureById(entry.key);
       if (feature != null && feature.origin != entry.value) {
-        feature.moveTo(entry.value);
+        feature.origin = entry.value;
         changed = true;
       }
     }

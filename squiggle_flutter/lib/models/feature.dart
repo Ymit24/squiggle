@@ -75,10 +75,6 @@ class Feature extends Node {
 
   Offset center() => bounds().center;
 
-  void moveTo(Offset newOrigin) {
-    origin = newOrigin;
-  }
-
   void setKind(FeatureKind newKind, {Size? newSize}) {
     if (newSize != null) size = newSize;
     kind = newKind;

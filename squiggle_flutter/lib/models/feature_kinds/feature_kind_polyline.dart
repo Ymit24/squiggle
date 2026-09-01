@@ -51,7 +51,7 @@ final class FeatureKindPolyline extends FeatureKind {
     required Offset origin,
     required List<Offset> localPoints,
   }) {
-    feature.moveTo(origin);
+    feature.origin = origin;
     feature.kind = copyWith(localPoints: List.of(localPoints));
     feature.size = feature.bounds().size;
   }

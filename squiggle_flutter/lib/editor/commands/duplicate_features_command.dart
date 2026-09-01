@@ -41,7 +41,7 @@ final class DuplicateFeaturesCommand extends Command {
 
       final restoreOrigin = originsAtDragStart[id];
       if (restoreOrigin != null) {
-        feature.moveTo(restoreOrigin);
+        feature.origin = restoreOrigin;
         document.notifyChanged();
       }
     }
@@ -59,7 +59,7 @@ final class DuplicateFeaturesCommand extends Command {
       for (final entry in originsBeforeRestore.entries) {
         final feature = document.featureById(entry.key);
         if (feature != null && feature.origin != entry.value) {
-          feature.moveTo(entry.value);
+          feature.origin = entry.value;
           changed = true;
         }
       }

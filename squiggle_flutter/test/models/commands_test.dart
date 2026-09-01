@@ -527,8 +527,8 @@ void main() {
       ]);
       final firstId = doc.features[0].id;
       final secondId = doc.features[1].id;
-      doc.features[0].moveTo(const Offset(30, 40));
-      doc.features[1].moveTo(const Offset(140, 40));
+      doc.features[0].origin = const Offset(30, 40);
+      doc.features[1].origin = const Offset(140, 40);
 
       final command = DuplicateFeaturesCommand(
         sourceIds: [firstId, secondId],

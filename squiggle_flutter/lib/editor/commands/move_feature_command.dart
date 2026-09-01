@@ -17,7 +17,7 @@ final class MoveFeatureCommand extends Command {
   void redo(Document document) {
     final feature = document.featureById(id);
     if (feature == null) return;
-    feature.moveTo(origin);
+    feature.origin = origin;
     document.notifyChanged();
   }
 
@@ -27,7 +27,7 @@ final class MoveFeatureCommand extends Command {
     if (previousOrigin == null) return;
     final feature = document.featureById(id);
     if (feature == null) return;
-    feature.moveTo(previousOrigin);
+    feature.origin = previousOrigin;
     document.notifyChanged();
   }
 }
@@ -57,7 +57,7 @@ final class MoveFeaturesCommand extends Command {
     for (final entry in origins.entries) {
       final feature = document.featureById(entry.key);
       if (feature != null && feature.origin != entry.value) {
-        feature.moveTo(entry.value);
+        feature.origin = entry.value;
         changed = true;
       }
     }

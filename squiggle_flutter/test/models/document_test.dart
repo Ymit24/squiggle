@@ -190,7 +190,7 @@ void main() {
       var notified = 0;
       doc.addListener(() => notified++);
 
-      doc.featureById(id)!.moveTo(const Offset(5, 5));
+      doc.featureById(id)!.origin = const Offset(5, 5);
       doc.notifyChanged();
 
       expect(doc.features.first.origin, const Offset(5, 5));
