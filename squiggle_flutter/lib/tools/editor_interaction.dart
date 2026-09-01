@@ -1,6 +1,19 @@
+import 'dart:ui';
+
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
+
+/// An optional capability for interactions that draw transient visuals.
+abstract interface class PaintableEditorInteraction {
+  void paint(
+    Canvas canvas,
+    Camera camera,
+    EditorContext context,
+    ImageRepository imageRepository,
+  );
+}
 
 /// A focused piece of editor input behavior.
 ///
