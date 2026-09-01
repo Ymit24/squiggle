@@ -23,18 +23,13 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
       ),
     );
 
-    await Future.wait([
-      emit.forEach(
-        notifierChangesStream(context.selection),
-        onData: (_) => state.copyWith(
-          selectedFeatures: List.of(context.selection.selectedFeatures),
-        ),
+    await emit.forEach(
+      notifierChangesStream(context),
+      onData: (_) => EditorState(
+        document: context.document,
+        selectedFeatures: List.of(context.selection.selectedFeatures),
       ),
-      emit.forEach(
-        notifierChangesStream(context.document),
-        onData: (_) => state.copyWith(document: context.document),
-      ),
-    ]);
+    );
   }
 
   void _onDeleteSelectedFeatures(

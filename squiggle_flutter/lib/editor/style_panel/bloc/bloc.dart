@@ -10,7 +10,8 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 
 class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
-  StylePanelBloc({required this.context}) : super(const StylePanelHiddenState()) {
+  StylePanelBloc({required this.context})
+    : super(const StylePanelHiddenState()) {
     on<RequestWatchStylePanelStateEvent>(_onRequestWatchStylePanelState);
     on<SetStrokePresetEvent>(_onSetStrokePreset);
     on<ClearStrokeEvent>(_onClearStroke);
@@ -32,16 +33,10 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   ) async {
     emit(_deriveState());
 
-    await Future.wait([
-      emit.forEach(
-        notifierChangesStream(context.selection),
-        onData: (_) => _deriveState(),
-      ),
-      emit.forEach(
-        notifierChangesStream(context.document),
-        onData: (_) => _deriveState(),
-      ),
-    ]);
+    await emit.forEach(
+      notifierChangesStream(context),
+      onData: (_) => _deriveState(),
+    );
   }
 
   StylePanelState _deriveState() {
@@ -107,15 +102,17 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     var verticalAlignmentMixed = false;
     TextVerticalAlignment? activeVerticalAlignment;
     if (showFontSize) {
-      final horizontalStates =
-          textKinds.map((kind) => kind.horizontalAlignment).toSet();
+      final horizontalStates = textKinds
+          .map((kind) => kind.horizontalAlignment)
+          .toSet();
       horizontalAlignmentMixed = horizontalStates.length > 1;
       if (!horizontalAlignmentMixed) {
         activeHorizontalAlignment = textKinds.first.horizontalAlignment;
       }
 
-      final verticalStates =
-          textKinds.map((kind) => kind.verticalAlignment).toSet();
+      final verticalStates = textKinds
+          .map((kind) => kind.verticalAlignment)
+          .toSet();
       verticalAlignmentMixed = verticalStates.length > 1;
       if (!verticalAlignmentMixed) {
         activeVerticalAlignment = textKinds.first.verticalAlignment;
@@ -205,10 +202,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(strokeColor: preset.strokeColor);
   }
 
-  void _onClearStroke(
-    ClearStrokeEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onClearStroke(ClearStrokeEvent event, Emitter<StylePanelState> emit) {
     final current = state;
     if (current is! StylePanelShowingState || !current.canClearStroke) return;
 
@@ -226,10 +220,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(fillColor: preset.fillColor);
   }
 
-  void _onClearFill(
-    ClearFillEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onClearFill(ClearFillEvent event, Emitter<StylePanelState> emit) {
     final current = state;
     if (current is! StylePanelShowingState || !current.canClearFill) return;
 
@@ -245,10 +236,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(strokeWidth: event.preset.width);
   }
 
-  void _onSetFontSize(
-    SetFontSizeEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onSetFontSize(SetFontSizeEvent event, Emitter<StylePanelState> emit) {
     if (state is! StylePanelShowingState) return;
 
     _applyStyleUpdate(fontSize: event.preset.size);

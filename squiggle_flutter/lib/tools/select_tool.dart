@@ -238,7 +238,7 @@ class SelectTool extends Tool {
           initialLocalPoints: initialLocalPoints,
           didMove: true,
         );
-        _movePolylinePoint(document, featureId, pointIndex, target);
+        _movePolylinePoint(document, context, featureId, pointIndex, target);
       case _Moving(
         :final initialOrigins,
         :final moveOffset,
@@ -280,6 +280,7 @@ class SelectTool extends Tool {
         _moveSelectedFeatures(
           document,
           selection,
+          context,
           moveTarget,
           effectiveMoveOffset,
         );
@@ -300,6 +301,7 @@ class SelectTool extends Tool {
         );
         _resizeFeature(
           document,
+          context,
           featureId,
           handle,
           anchor,
@@ -773,6 +775,7 @@ class SelectTool extends Tool {
   void _moveSelectedFeatures(
     Document document,
     SelectionModel selection,
+    EditorContext context,
     Offset worldPosition,
     Offset moveOffset,
   ) {
@@ -802,7 +805,7 @@ class SelectTool extends Tool {
         changed = true;
       }
     }
-    if (changed) document.notifyChanged();
+    if (changed) context.notifyViewportChanged();
   }
 
   Map<FeatureId, Offset> _selectedFeatureOrigins(
@@ -834,6 +837,7 @@ class SelectTool extends Tool {
 
   void _resizeFeature(
     Document document,
+    EditorContext context,
     FeatureId featureId,
     SelectionResizeHandle handle,
     Offset anchor,
@@ -865,7 +869,7 @@ class SelectTool extends Tool {
     final feature = document.featureById(featureId);
     if (feature == null) return;
     feature.resize(newBounds);
-    document.notifyChanged();
+    context.notifyViewportChanged();
   }
 
   void _commitResize(
@@ -890,6 +894,7 @@ class SelectTool extends Tool {
 
   void _movePolylinePoint(
     Document document,
+    EditorContext context,
     FeatureId featureId,
     int pointIndex,
     Offset worldPosition,
@@ -904,7 +909,7 @@ class SelectTool extends Tool {
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
     kind.setPoint(feature, pointIndex, worldPosition);
-    document.notifyChanged();
+    context.notifyViewportChanged();
   }
 
   void _commitPolylinePointMove(

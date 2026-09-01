@@ -12,7 +12,7 @@ import 'feature_id.dart';
 /// `Document` is a pure data model plus the source of truth for mutations. It
 /// exposes no command or history concept; changes are announced to observers
 /// via [ChangeNotifier]. Undo/redo bookkeeping lives in the command layer.
-class Document extends ChangeNotifier {
+class Document {
   Document({this.name = 'Untitled', FeatureId? nextId})
     : _nextId = nextId ?? FeatureId.newId(1);
 
@@ -68,8 +68,6 @@ class Document extends ChangeNotifier {
     return id;
   }
 
-  void notifyChanged() => notifyListeners();
-
   Feature? featureById(FeatureId id) {
     for (final feature in _features) {
       if (feature.id == id) return feature;
@@ -97,7 +95,7 @@ class Document extends ChangeNotifier {
       _nextId = FeatureId.newId(feature.id.value + 1);
     }
     _nodes.add(feature);
-    notifyListeners();
+
     return feature;
   }
 
@@ -106,7 +104,6 @@ class Document extends ChangeNotifier {
     for (final feature in features) {
       addFeature(feature);
     }
-    notifyListeners();
   }
 
   // TODO: Change this to return bool
@@ -115,14 +112,12 @@ class Document extends ChangeNotifier {
     if (index == -1) return;
 
     _nodes.removeAt(index);
-    notifyListeners();
   }
 
   void removeFeatures(Iterable<FeatureId> ids) {
     for (final id in ids) {
       removeFeature(id);
     }
-    notifyListeners();
   }
 
   /// Replaces this document's contents with [other], notifying once.
@@ -132,7 +127,6 @@ class Document extends ChangeNotifier {
       ..addAll(other._features.map((feature) => feature.copyWith()));
     _nextId = other._nextId;
     name = other.name;
-    notifyListeners();
   }
 
   void groupNodes(List<Node> nodes) {

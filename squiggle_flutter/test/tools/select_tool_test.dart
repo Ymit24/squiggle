@@ -244,24 +244,15 @@ void main() {
       pointerDown(const Offset(25, 25));
       pointerMove(const Offset(35, 35));
 
-      expect(
-        context.document.featureById(idA)!.origin,
-        const Offset(10, 10),
-      );
-      expect(
-        context.document.featureById(idB)!.origin,
-        const Offset(110, 10),
-      );
-      expect(
-        context.document.featureById(idC)!.origin,
-        const Offset(210, 10),
-      );
+      expect(context.document.featureById(idA)!.origin, const Offset(10, 10));
+      expect(context.document.featureById(idB)!.origin, const Offset(110, 10));
+      expect(context.document.featureById(idC)!.origin, const Offset(210, 10));
     });
 
     test('emits document changes on move', () async {
       pointerDown(const Offset(50, 50));
       final changes = <void>[];
-      final subscription = notifierChangesStream(context.document).listen((_) {
+      final subscription = notifierChangesStream(context).listen((_) {
         changes.add(null);
       });
       pointerMove(const Offset(60, 60));
@@ -517,10 +508,7 @@ void main() {
       final selectedOrigins = context.selection.selectedFeatures
           .map((id) => context.document.featureById(id)!.origin)
           .toSet();
-      expect(selectedOrigins, {
-        const Offset(10, 10),
-        const Offset(210, 10),
-      });
+      expect(selectedOrigins, {const Offset(10, 10), const Offset(210, 10)});
     });
 
     test('pressing alt mid-drag duplicates at current position', () {

@@ -183,7 +183,7 @@ void main() {
       expect(doc.features, isEmpty);
     });
 
-    test('moveFeature updates origin and notifies', () {
+    test('moveFeature updates origin', () {
       final doc = Document.fromFeatures([
         Feature(
           origin: const Offset(0, 0),
@@ -192,14 +192,10 @@ void main() {
         ),
       ]);
       final id = doc.features.first.id;
-      var notified = 0;
-      doc.addListener(() => notified++);
 
       doc.featureById(id)!.origin = const Offset(5, 5);
-      doc.notifyChanged();
 
       expect(doc.features.first.origin, const Offset(5, 5));
-      expect(notified, 1);
     });
 
     test('setFeatureBounds updates bounds', () {
@@ -213,7 +209,6 @@ void main() {
       final id = doc.features.first.id;
 
       doc.featureById(id)!.resize(const Rect.fromLTWH(1, 2, 20, 30));
-      doc.notifyChanged();
 
       expect(doc.features.first.bounds(), const Rect.fromLTWH(1, 2, 20, 30));
     });

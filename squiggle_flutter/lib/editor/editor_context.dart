@@ -26,7 +26,6 @@ class EditorContext extends ChangeNotifier {
        _tool = tool ?? ToolModel(),
        _history = history ?? CommandHistory(document: document),
        _textEdit = textEdit ?? TextEditModel() {
-    document.addListener(_forward);
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -96,7 +95,6 @@ class EditorContext extends ChangeNotifier {
 
   @override
   void dispose() {
-    document.removeListener(_forward);
     _selection.removeListener(_forward);
     _tool.removeListener(_forward);
     _history.removeListener(_forward);
