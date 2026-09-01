@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -42,16 +43,87 @@ void main() {
 
   group('Document Serde', () {
     group('Decode', () {
-      test('Factory fromDataModel works with empty document', () {});
-      test('Factory fromDataModel preserves feature order', () {});
+      test('Factory fromDataModel works with empty document', () {
+        final document = Document.fromDataModel(const data.Document());
+
+        expect(document.features, isEmpty);
+        expect(document.nextId, 1);
+      });
+      test('Factory fromDataModel preserves feature order', () {
+        final raw = data.Document(
+          nodes: [
+            _rawFeature(id: 1, type: 'rectangle'),
+            _rawFeature(id: 2, type: 'circle'),
+          ],
+        );
+
+        final document = Document.fromDataModel(raw);
+
+        expect(document.features[0].id.value, 1);
+        expect(document.features[0].kind, isA<FeatureKindRectangle>());
+        expect(document.features[1].id.value, 2);
+        expect(document.features[1].kind, isA<FeatureKindCircle>());
+      });
       test(
         'Factory fromDataModel with non-empty document has correct nextFeatureId',
-        () {},
+        () {
+          final document = Document.fromDataModel(
+            data.Document(
+              nodes: [
+                _rawFeature(id: 3, type: 'rectangle'),
+                _rawFeature(id: 8, type: 'circle'),
+              ],
+            ),
+          );
+
+          expect(document.nextId, 9);
+        },
       );
     });
     group('Encode', () {
-      test('toDataModel encodes all features', () {});
-      test('toDataModel preserves feature order', () {});
+      test('toDataModel encodes all features', () {
+        final document = Document.fromFeatures([
+          Feature(
+            id: FeatureId.newId(4),
+            origin: const Offset(1, 2),
+            size: const Size(3, 4),
+            kind: const FeatureKindRectangle(),
+          ),
+          Feature(
+            id: FeatureId.newId(7),
+            origin: const Offset(5, 6),
+            size: const Size(8, 9),
+            kind: const FeatureKindCircle(),
+          ),
+        ]);
+
+        final raw = document.toDataModel();
+
+        expect(raw.nodes, hasLength(2));
+        expect((raw.nodes[0] as data.Feature).id, 4);
+        expect((raw.nodes[1] as data.Feature).id, 7);
+      });
+      test('toDataModel preserves feature order', () {
+        final document = Document.fromFeatures([
+          Feature(
+            id: FeatureId.newId(10),
+            origin: Offset.zero,
+            size: const Size(1, 1),
+            kind: const FeatureKindCircle(),
+          ),
+          Feature(
+            id: FeatureId.newId(20),
+            origin: Offset.zero,
+            size: const Size(1, 1),
+            kind: const FeatureKindRectangle(),
+          ),
+        ]);
+
+        final raw = document.toDataModel();
+
+        expect((raw.nodes[0] as data.Feature).id, 10);
+        expect((raw.nodes[1] as data.Feature).id, 20);
+      });
     });
   });
 
@@ -170,3 +242,18 @@ void main() {
     });
   });
 }
+
+data.Feature _rawFeature({required int id, required String type}) =>
+    data.Feature(
+      id: id,
+      originX: 0,
+      originY: 0,
+      width: 10,
+      height: 20,
+      content: {
+        'type': type,
+        'strokeColor': 0xFF000000,
+        'fillColor': 0xFFFFFFFF,
+        'strokeWidth': 1.0,
+      },
+    );
