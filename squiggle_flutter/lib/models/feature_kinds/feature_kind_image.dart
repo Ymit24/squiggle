@@ -20,6 +20,7 @@ final class FeatureKindImage extends FeatureKind {
     'type': 'image',
     'imageId': imageId,
     'strokeColor': strokeColor.toARGB32(),
+    'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
   };
 

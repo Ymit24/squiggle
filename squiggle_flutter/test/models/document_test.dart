@@ -40,6 +40,21 @@ void main() {
     });
   });
 
+  group('Document Serde', () {
+    group('Decode', () {
+      test('Factory fromDataModel works with empty document', () {});
+      test('Factory fromDataModel preserves feature order', () {});
+      test(
+        'Factory fromDataModel with non-empty document has correct nextFeatureId',
+        () {},
+      );
+    });
+    group('Encode', () {
+      test('toDataModel encodes all features', () {});
+      test('toDataModel preserves feature order', () {});
+    });
+  });
+
   group('Document mutations', () {
     test('addFeature assigns an id when feature has noId', () {
       final doc = Document();
