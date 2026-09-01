@@ -5,9 +5,8 @@ import 'node.dart';
 const dataModelFormatVersion = 1;
 
 final class Document {
-  const Document({this.name = 'Untitled', this.nodes = const []});
+  const Document({this.nodes = const []});
 
-  final String name;
   final List<Node> nodes;
 
   factory Document.fromJson(Map<String, dynamic> json) {
@@ -20,12 +19,11 @@ final class Document {
         Node.fromJson(node as Map<String, dynamic>),
     ];
 
-    return Document(name: json['name'] as String? ?? 'Untitled', nodes: nodes);
+    return Document(nodes: nodes);
   }
 
   Map<String, dynamic> toJson() => {
     'version': dataModelFormatVersion,
-    'name': name,
     'nodes': nodes.map((node) => node.toJson()).toList(),
   };
 
