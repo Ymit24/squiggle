@@ -3,6 +3,52 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 
 void main() {
+  group('FeatureKindImage serde', () {
+    test('fromDataModel preserves image ID and style fields', () {
+      final kind = FeatureKindImage.fromDataModel({
+        'type': 'image',
+        'imageId': 'image-id',
+        'strokeColor': 0xFF112233,
+        'fillColor': 0xFF445566,
+        'strokeWidth': 3.5,
+      });
+      expect(kind.imageId, 'image-id');
+      expect(kind.strokeColor.toARGB32(), 0xFF112233);
+      expect(kind.fillColor.toARGB32(), 0xFF445566);
+      expect(kind.strokeWidth, 3.5);
+    });
+
+    test('toDataModel emits image ID and style fields', () {
+      const kind = FeatureKindImage(
+        'image-id',
+        strokeColor: Color(0xFF112233),
+        fillColor: Color(0xFF445566),
+        strokeWidth: 3.5,
+      );
+      expect(kind.toDataModel(), {
+        'type': 'image',
+        'imageId': 'image-id',
+        'strokeColor': 0xFF112233,
+        'fillColor': 0xFF445566,
+        'strokeWidth': 3.5,
+      });
+    });
+
+    test('round trip preserves image ID and style fields', () {
+      const kind = FeatureKindImage(
+        'image-id',
+        strokeColor: Color(0xFF112233),
+        fillColor: Color(0xFF445566),
+        strokeWidth: 3.5,
+      );
+      final decoded = FeatureKindImage.fromDataModel(kind.toDataModel());
+      expect(decoded.imageId, kind.imageId);
+      expect(decoded.strokeColor, kind.strokeColor);
+      expect(decoded.fillColor, kind.fillColor);
+      expect(decoded.strokeWidth, kind.strokeWidth);
+    });
+  });
+
   group('FeatureKindImage', () {
     test('has no visible stroke by default', () {
       const kind = FeatureKindImage('img_test.png');

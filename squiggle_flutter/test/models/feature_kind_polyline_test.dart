@@ -28,6 +28,41 @@ Offset worldPoint(Feature feature, int index) {
 }
 
 void main() {
+  group('FeatureKindPolyline serde', () {
+    test('toDataModel emits type and encodes points', () {
+      const kind = FeatureKindPolyline([Offset(1.5, -2.5), Offset(10, 20)]);
+      expect(kind.toDataModel(), {
+        'type': 'polyline',
+        'localPoints': [
+          {'x': 1.5, 'y': -2.5},
+          {'x': 10.0, 'y': 20.0},
+        ],
+        'strokeColor': kind.strokeColor.toARGB32(),
+        'fillColor': kind.fillColor.toARGB32(),
+        'strokeWidth': kind.strokeWidth,
+      });
+    });
+
+    test('toDataModel preserves an empty point list', () {
+      const kind = FeatureKindPolyline([]);
+      expect(kind.toDataModel()['localPoints'], isEmpty);
+    });
+
+    test('round trip preserves points and style fields', () {
+      const kind = FeatureKindPolyline(
+        [Offset(1.5, -2.5), Offset(10, 20)],
+        strokeColor: Color(0xFF112233),
+        fillColor: Color(0xFF445566),
+        strokeWidth: 3.5,
+      );
+      final decoded = FeatureKindPolyline.fromDataModel(kind.toDataModel());
+      expect(decoded.localPoints, kind.localPoints);
+      expect(decoded.strokeColor, kind.strokeColor);
+      expect(decoded.fillColor, kind.fillColor);
+      expect(decoded.strokeWidth, kind.strokeWidth);
+    });
+  });
+
   group('FeatureKindPolyline geometry', () {
     test('boundsFor includes stroke padding around centerline points', () {
       final feature = polylineFeature(
@@ -36,10 +71,7 @@ void main() {
         localPoints: const [Offset.zero, Offset(100, 100)],
       );
 
-      expect(
-        feature.bounds(),
-        const Rect.fromLTWH(2, 12, 116, 116),
-      );
+      expect(feature.bounds(), const Rect.fromLTWH(2, 12, 116, 116));
     });
 
     test('hitTest hits on segment and misses off to the side', () {
@@ -53,26 +85,25 @@ void main() {
       expect(feature.hitTest(const Offset(50, 40)), isFalse);
     });
 
-    test('intersectsRect detects segment overlap and ignores empty envelope gaps', () {
-      final feature = polylineFeature(
-        origin: const Offset(0, 0),
-        size: const Size(100, 100),
-        localPoints: const [
-          Offset.zero,
-          Offset(100, 0),
-          Offset(100, 100),
-        ],
-      );
+    test(
+      'intersectsRect detects segment overlap and ignores empty envelope gaps',
+      () {
+        final feature = polylineFeature(
+          origin: const Offset(0, 0),
+          size: const Size(100, 100),
+          localPoints: const [Offset.zero, Offset(100, 0), Offset(100, 100)],
+        );
 
-      expect(
-        feature.intersectsRect(const Rect.fromLTWH(40, -5, 20, 10)),
-        isTrue,
-      );
-      expect(
-        feature.intersectsRect(const Rect.fromLTWH(10, 50, 20, 20)),
-        isFalse,
-      );
-    });
+        expect(
+          feature.intersectsRect(const Rect.fromLTWH(40, -5, 20, 10)),
+          isTrue,
+        );
+        expect(
+          feature.intersectsRect(const Rect.fromLTWH(10, 50, 20, 20)),
+          isFalse,
+        );
+      },
+    );
 
     test('intersectsRect uses same tolerance as hitTest for near misses', () {
       final feature = polylineFeature(
@@ -116,9 +147,9 @@ void main() {
       final id = doc.features.first.id;
       final beforeEnd = worldPoint(doc.features.first, 1);
 
-      CommandHistory(document: doc).execute(
-        MoveFeatureCommand(id, const Offset(20, 30)),
-      );
+      CommandHistory(
+        document: doc,
+      ).execute(MoveFeatureCommand(id, const Offset(20, 30)));
 
       final moved = doc.features.first;
       final kind = moved.kind as FeatureKindPolyline;
@@ -157,16 +188,20 @@ void main() {
   group('feature_geometry', () {
     test('distanceToSegment returns perpendicular distance', () {
       expect(
-        distanceToSegment(const Offset(50, 10), Offset.zero, const Offset(100, 0)),
+        distanceToSegment(
+          const Offset(50, 10),
+          Offset.zero,
+          const Offset(100, 0),
+        ),
         10,
       );
     });
 
     test('envelopeOfPoints enforces minimum dimension', () {
-      final envelope = envelopeOfPoints(
-        const [Offset(0, 5), Offset(100, 5)],
-        strokePadding: 4,
-      );
+      final envelope = envelopeOfPoints(const [
+        Offset(0, 5),
+        Offset(100, 5),
+      ], strokePadding: 4);
 
       expect(envelope.width, 108);
       expect(envelope.height, greaterThanOrEqualTo(kMinEnvelopeDimension));

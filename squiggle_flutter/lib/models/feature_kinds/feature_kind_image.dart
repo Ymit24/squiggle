@@ -12,6 +12,7 @@ final class FeatureKindImage extends FeatureKind {
       FeatureKindImage(
         content['imageId'] as String,
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        fillColor: _colorFromDataModel(content, 'fillColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
