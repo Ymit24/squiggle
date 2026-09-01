@@ -38,7 +38,6 @@ final class UpdateTextContentsCommand extends Command {
       strokeWidth: textKind.strokeWidth,
     ).fittedToBounds(width: bounds.width, height: bounds.height);
     feature.setKind(newKind);
-    document.notifyChanged();
   }
 
   @override
@@ -50,6 +49,5 @@ final class UpdateTextContentsCommand extends Command {
     final feature = document.featureById(featureId);
     if (feature == null) return;
     feature.setKind(previousKind, newSize: previousSize);
-    document.notifyChanged();
   }
 }

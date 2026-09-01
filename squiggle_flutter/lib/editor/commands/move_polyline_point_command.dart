@@ -30,7 +30,6 @@ final class MovePolylinePointCommand extends Command {
     final kind = feature.kind;
     if (kind is! FeatureKindPolyline) return;
     kind.setPoint(feature, pointIndex, finalWorldPosition);
-    document.notifyChanged();
   }
 
   @override
@@ -44,6 +43,5 @@ final class MovePolylinePointCommand extends Command {
       origin: initialOrigin,
       localPoints: initialLocalPoints,
     );
-    document.notifyChanged();
   }
 }

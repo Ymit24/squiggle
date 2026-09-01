@@ -37,7 +37,6 @@ final class UpdateFeaturesStyleCommand extends Command {
     if (fontSize != null) {
       _previousSizes ??= {};
     }
-    var changed = false;
     for (final id in ids) {
       final feature = document.featureById(id);
       if (feature == null) continue;
@@ -71,10 +70,6 @@ final class UpdateFeaturesStyleCommand extends Command {
       } else {
         feature.setKind(newKind);
       }
-      changed = true;
-    }
-    if (changed) {
-      document.notifyChanged();
     }
   }
 
@@ -83,15 +78,10 @@ final class UpdateFeaturesStyleCommand extends Command {
     final previousKinds = _previousKinds;
     if (previousKinds == null) return;
 
-    var changed = false;
     for (final entry in previousKinds.entries) {
       final feature = document.featureById(entry.key);
       if (feature == null) continue;
       feature.setKind(entry.value, newSize: _previousSizes?[entry.key]);
-      changed = true;
-    }
-    if (changed) {
-      document.notifyChanged();
     }
   }
 }

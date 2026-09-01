@@ -47,17 +47,12 @@ final class LayoutFeaturesCommand extends Command {
       _previousOrigins!.putIfAbsent(entry.key, () => feature.origin);
       targets[entry.key] = feature.origin + entry.value;
     }
-    var changed = false;
     if (targets.isNotEmpty) {
       for (final entry in targets.entries) {
         final feature = document.featureById(entry.key);
         if (feature != null && feature.origin != entry.value) {
           feature.origin = entry.value;
-          changed = true;
         }
-      }
-      if (changed) {
-        document.notifyChanged();
       }
     }
   }
@@ -67,14 +62,11 @@ final class LayoutFeaturesCommand extends Command {
     final previousOrigins = _previousOrigins;
     if (previousOrigins == null) return;
 
-    var changed = false;
     for (final entry in previousOrigins.entries) {
       final feature = document.featureById(entry.key);
       if (feature != null && feature.origin != entry.value) {
-          feature.origin = entry.value;
-        changed = true;
+        feature.origin = entry.value;
       }
     }
-    if (changed) document.notifyChanged();
   }
 }

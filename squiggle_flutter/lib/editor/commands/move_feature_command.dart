@@ -18,7 +18,6 @@ final class MoveFeatureCommand extends Command {
     final feature = document.featureById(id);
     if (feature == null) return;
     feature.origin = origin;
-    document.notifyChanged();
   }
 
   @override
@@ -28,7 +27,6 @@ final class MoveFeatureCommand extends Command {
     final feature = document.featureById(id);
     if (feature == null) return;
     feature.origin = previousOrigin;
-    document.notifyChanged();
   }
 }
 
@@ -53,14 +51,11 @@ final class MoveFeaturesCommand extends Command {
   }
 
   void _moveFeatures(Document document, Map<FeatureId, Offset> origins) {
-    var changed = false;
     for (final entry in origins.entries) {
       final feature = document.featureById(entry.key);
       if (feature != null && feature.origin != entry.value) {
         feature.origin = entry.value;
-        changed = true;
       }
     }
-    if (changed) document.notifyChanged();
   }
 }

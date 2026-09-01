@@ -22,7 +22,6 @@ final class ResizeFeatureCommand extends Command {
     final feature = document.featureById(id);
     if (feature == null) return;
     feature.resize(finalBounds);
-    document.notifyChanged();
   }
 
   @override
@@ -30,6 +29,5 @@ final class ResizeFeatureCommand extends Command {
     final feature = document.featureById(id);
     if (feature == null) return;
     feature.resize(initialBounds);
-    document.notifyChanged();
   }
 }
