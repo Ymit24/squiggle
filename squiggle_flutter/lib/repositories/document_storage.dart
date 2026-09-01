@@ -2,24 +2,29 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:path_provider/path_provider.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/document_codec.dart';
+
+class StoredDocument {
+  const StoredDocument(this.document);
+
+  final Document document;
+
+  String get name => document.name;
+}
 
 /// Persists documents as individual JSON files in the app data directory.
 class DocumentStorage {
-  DocumentStorage({
-    required this.imageRepository,
-    this._storageDirectory,
-  });
+  DocumentStorage({required this.imageRepository, this._storageDirectory});
 
   final ImageRepository imageRepository;
-  Directory? _storageDirectory;  Future<void>? _initializeFuture;
+  Directory? _storageDirectory;
+  Future<void>? _initializeFuture;
   bool _initialized = false;
 
-  static const _legacyDocumentFileName = 'document.json';
   static const _documentsDirName = 'documents';
   static const _activeDocumentFileName = 'active_document.txt';
   static const _defaultDocumentName = 'Untitled';
@@ -35,7 +40,6 @@ class DocumentStorage {
 
   Future<void> _initializeOnce() async {
     await _ensureStorageReady();
-    await _migrateLegacyDocumentIfNeeded();
     _initialized = true;
   }
 
@@ -68,40 +72,6 @@ class DocumentStorage {
     return File('${directory.path}/$_activeDocumentFileName');
   }
 
-  Future<void> _migrateLegacyDocumentIfNeeded() async {
-    final storage = _storageDirectory;
-    if (storage == null) {
-      return;
-    }
-
-    final legacyFile = File('${storage.path}/$_legacyDocumentFileName');
-    if (!await legacyFile.exists()) {
-      return;
-    }
-
-    final hasDocuments = _documentsDirectory
-        .listSync()
-        .any((entity) => entity.path.endsWith('.json'));
-    if (hasDocuments) {
-      return;
-    }
-
-    try {
-      final json = await legacyFile.readAsString();
-      final decoded = decodeDocumentWithName(json);
-      if (decoded == null) {
-        return;
-      }
-
-      final id = _generateDocumentId();
-      await saveDocument(id, decoded.document, decoded.name);
-      await saveActiveDocumentId(id);
-      await legacyFile.delete();
-    } on Object {
-      // Leave legacy file in place if migration fails.
-    }
-  }
-
   Future<List<DocumentInfo>> listDocuments() async {
     await initialize();
 
@@ -126,7 +96,7 @@ class DocumentStorage {
     return _readDocumentInfo(_documentFile(id));
   }
 
-  Future<DecodedDocument?> loadDocument(String id) async {
+  Future<StoredDocument?> loadDocument(String id) async {
     await initialize();
     final file = _documentFile(id);
     if (!await file.exists()) {
@@ -135,7 +105,7 @@ class DocumentStorage {
 
     try {
       final json = await file.readAsString();
-      return decodeDocumentWithName(json);
+      return StoredDocument(Document.fromDataModel(data.Document.decode(json)));
     } on Object {
       return null;
     }
@@ -155,19 +125,12 @@ class DocumentStorage {
     return info;
   }
 
-  Future<void> saveDocument(
-    String id,
-    Document document,
-    String name,
-  ) async {
+  Future<void> saveDocument(String id, Document document, String name) async {
     await _ensureStorageReady();
     try {
-      final json = await encodeDocument(
-        document,
-        imageRepository,
-        name: name,
-      );
-      await _documentFile(id).writeAsString(json, flush: true);
+      final raw = document.toDataModel();
+      final namedRaw = data.Document(name: name, nodes: raw.nodes);
+      await _documentFile(id).writeAsString(namedRaw.encode(), flush: true);
     } on Object {
       // Ignore persistence failures during autosave.
     }
@@ -182,12 +145,8 @@ class DocumentStorage {
 
     try {
       final json = await file.readAsString();
-      final decoded = decodeDocumentWithName(json);
-      if (decoded == null) {
-        return;
-      }
-
-      await saveDocument(id, decoded.document, newName);
+      final document = Document.fromDataModel(data.Document.decode(json));
+      await saveDocument(id, document, newName);
     } on Object {
       // Ignore rename failures.
     }
@@ -229,17 +188,14 @@ class DocumentStorage {
     try {
       final stat = await file.stat();
       final json = await file.readAsString();
-      final decoded = decodeDocumentWithName(json);
-      if (decoded == null) {
-        return null;
-      }
+      final document = Document.fromDataModel(data.Document.decode(json));
 
       final id = file.uri.pathSegments.last.replaceAll('.json', '');
       return DocumentInfo(
         id: id,
-        name: decoded.name,
+        name: document.name,
         updatedAt: stat.modified,
-        featureCount: decoded.document.features.length,
+        featureCount: document.nodes.length,
       );
     } on Object {
       return null;

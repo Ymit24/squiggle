@@ -56,32 +56,6 @@ void main() {
       expect(await storage.loadDocument(second.id), isNull);
     });
 
-    test('migrates legacy document.json into documents directory', () async {
-      final legacyDir = await Directory.systemTemp.createTemp('squiggle_legacy_');
-      addTearDown(() => legacyDir.delete(recursive: true));
-
-      final legacyImageRepository = ImageRepository(
-        imagesDirectory: Directory('${legacyDir.path}/images'),
-      );
-      await legacyImageRepository.initialize();
-
-      final legacy = File('${legacyDir.path}/document.json');
-      await legacy.writeAsString(
-        '{"version":1,"name":"Legacy","nextId":1,"features":[]}',
-      );
-
-      final migratedStorage = DocumentStorage(
-        imageRepository: legacyImageRepository,
-        storageDirectory: legacyDir,
-      );
-      await migratedStorage.initialize();
-
-      final documents = await migratedStorage.listDocuments();
-      expect(documents, hasLength(1));
-      expect(documents.first.name, 'Legacy');
-      expect(await legacy.exists(), isFalse);
-    });
-
     test('persists and restores active document id', () async {
       final created = await storage.createDocument(name: 'Active');
       await storage.saveActiveDocumentId(created.id);
