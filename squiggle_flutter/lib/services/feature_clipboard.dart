@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:data_models/data_models.dart' as data;
 import 'package:flutter/widgets.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 import 'package:squiggle_flutter/editor/commands/commands.dart';
@@ -6,7 +9,6 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/document_codec.dart';
 
 const _clipboardPrefix = 'squiggle-features:1:';
 
@@ -45,7 +47,11 @@ Future<void> copySelectedFeaturesToClipboard({
     return;
   }
 
-  final payload = await encodeFeaturesForClipboard(features, imageRepository);
+  final payload = jsonEncode({
+    'features': [
+      for (final feature in features) feature.toDataModel().toJson(),
+    ],
+  });
   await _writePlainText('$_clipboardPrefix$payload');
 }
 
@@ -58,10 +64,7 @@ Future<bool> pasteFeaturesFromClipboard({
     return false;
   }
 
-  final features = await decodeFeaturesFromClipboard(
-    text.substring(_clipboardPrefix.length),
-    imageRepository,
-  );
+  final features = _decodeFeatures(text.substring(_clipboardPrefix.length));
   if (features == null || features.isEmpty) {
     return false;
   }
@@ -74,6 +77,25 @@ Future<bool> pasteFeaturesFromClipboard({
   final pasted = repositionFeaturesToCenter(features, center);
   context.execute(AddFeaturesCommand(pasted));
   return true;
+}
+
+List<Feature>? _decodeFeatures(String payload) {
+  try {
+    final json = jsonDecode(payload) as Map<String, dynamic>;
+    final rawFeatures = json['features'] as List<dynamic>?;
+    if (rawFeatures == null) {
+      return null;
+    }
+
+    return [
+      for (final raw in rawFeatures)
+        Feature.fromDataModel(
+          data.Feature.fromJson(raw as Map<String, dynamic>),
+        ),
+    ];
+  } on Object {
+    return null;
+  }
 }
 
 Future<String?> readClipboardPlainText() => _readPlainText();
