@@ -46,9 +46,11 @@ class Document extends ChangeNotifier {
     );
   }
 
-  final List<Feature> _features = [];
+  List<Feature> get _features => nodes.whereType<Feature>().toList();
 
-  List<Node> get nodes => [];
+  final List<Node> _nodes = [];
+
+  List<Node> get nodes => _nodes;
 
   /// Live view of the features in document order.
   List<Feature> get features => List.unmodifiable(_features);
@@ -97,7 +99,7 @@ class Document extends ChangeNotifier {
     } else if (feature.id.value >= _nextId.value) {
       _nextId = FeatureId.newId(feature.id.value + 1);
     }
-    _features.add(feature);
+    _nodes.add(feature);
     notifyListeners();
     return feature;
   }
@@ -105,33 +107,25 @@ class Document extends ChangeNotifier {
   /// Adds multiple features in one change notification.
   void addFeatures(Iterable<Feature> features) {
     for (final feature in features) {
-      if (feature.id == noId) {
-        feature.id = generateId();
-      } else if (feature.id.value >= _nextId.value) {
-        _nextId = FeatureId.newId(feature.id.value + 1);
-      }
-      _features.add(feature);
+      addFeature(feature);
     }
     notifyListeners();
   }
 
+  // TODO: Change this to return bool
   void removeFeature(FeatureId id) {
-    final index = _featureIndexById(id);
-    if (index == null) return;
-    _features.removeAt(index);
+    final index = _nodes.indexWhere((node) => node.id == id);
+    if (index == -1) return;
+
+    _nodes.removeAt(index);
     notifyListeners();
   }
 
   void removeFeatures(Iterable<FeatureId> ids) {
-    var changed = false;
     for (final id in ids) {
-      final index = _featureIndexById(id);
-      if (index != null) {
-        _features.removeAt(index);
-        changed = true;
-      }
+      removeFeature(id);
     }
-    if (changed) notifyListeners();
+    notifyListeners();
   }
 
   /// Replaces this document's contents with [other], notifying once.
