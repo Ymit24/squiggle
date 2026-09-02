@@ -4,11 +4,12 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Holds the active editor tool and notifies observers when it repaints.
 class ToolModel extends ChangeNotifier {
-  ToolModel({Tool? initialTool}) : _activeTool = initialTool ?? SelectTool();
+  ToolModel({Tool? initialTool}) : _activeTool = initialTool ?? SelectTool2();
 
   Tool _activeTool;
 

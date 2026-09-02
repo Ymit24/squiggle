@@ -14,8 +14,7 @@ class CreateTextTool extends Tool {
     EditorContext context,
     Offset worldPosition,
     Camera camera,
-  ) =>
-      EditorCursor.crosshair;
+  ) => EditorCursor.crosshair;
 
   @override
   void paint(
@@ -29,25 +28,25 @@ class CreateTextTool extends Tool {
   void deactivate(EditorContext context) {}
 
   @override
-  void onPointerDown(
+  bool onPointerDown(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
-  }) {}
+  }) => true;
 
   @override
-  void onPointerMove(
+  bool onPointerMove(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
-  }) {}
+  }) => false;
 
   @override
-  void onPointerUp(
+  bool onPointerUp(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -63,5 +62,6 @@ class CreateTextTool extends Tool {
         ),
       ),
     );
+    return true;
   }
 }

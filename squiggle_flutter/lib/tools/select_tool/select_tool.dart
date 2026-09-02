@@ -13,6 +13,11 @@ import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/editor_interaction.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_marquee_interaction.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_move_interaction.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_polyline_point_interaction.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_resize_interaction.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/utils/painting.dart';
 
@@ -37,9 +42,18 @@ Rect selectionBoxWorldBounds(Rect featureBounds) {
 }
 
 class SelectTool extends Tool {
-  SelectTool() : _state = const _Idle();
+  SelectTool()
+    : _state = const _Idle(),
+      _pointerInteractions = [
+        SelectPolylinePointInteraction(),
+        SelectResizeInteraction(),
+        SelectMoveInteraction(),
+        SelectMarqueeInteraction(),
+      ];
 
   _SelectState _state;
+  final List<EditorInteraction> _pointerInteractions;
+  EditorInteraction? _activePointerInteraction;
   FeatureId? _lastTapFeatureId;
   DateTime? _lastTapTime;
 
@@ -81,6 +95,11 @@ class SelectTool extends Tool {
       );
       paintDashedRect(canvas, worldBounds);
     }
+
+    final activeInteraction = _activePointerInteraction;
+    if (activeInteraction case final PaintableEditorInteraction paintable) {
+      paintable.paint(canvas, camera, context, imageRepository);
+    }
   }
 
   @override
@@ -89,6 +108,16 @@ class SelectTool extends Tool {
     Offset worldPosition,
     Camera camera,
   ) {
+    final activeInteraction = _activePointerInteraction;
+    if (activeInteraction is SelectResizeInteraction) {
+      final handle = activeInteraction.handle;
+      if (handle != null) return _cursorForResizeHandle(handle);
+    }
+    if (activeInteraction is SelectMoveInteraction ||
+        activeInteraction is SelectPolylinePointInteraction) {
+      return EditorCursor.grabbing;
+    }
+
     switch (_state) {
       case _DraggingPolylinePoint():
         return EditorCursor.grabbing;
@@ -139,6 +168,10 @@ class SelectTool extends Tool {
 
   @override
   void deactivate(EditorContext context) {
+    for (final interaction in _pointerInteractions) {
+      interaction.deactivate(context);
+    }
+    _activePointerInteraction = null;
     context.selection.clearSelection();
     _state = const _Idle();
     _lastTapFeatureId = null;
@@ -146,22 +179,35 @@ class SelectTool extends Tool {
   }
 
   @override
-  void onPointerDown(
+  bool onPointerDown(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    for (final interaction in _pointerInteractions) {
+      if (interaction.onPointerDown(
+        context,
+        worldPosition,
+        camera,
+        isShiftPressed: isShiftPressed,
+        isAltPressed: isAltPressed,
+      )) {
+        _activePointerInteraction = interaction;
+        return true;
+      }
+    }
+
     final document = context.document;
     final selection = context.selection;
 
     if (_tryBeginPolylinePoint(document, worldPosition, selection, camera)) {
-      return;
+      return true;
     }
 
     if (_tryBeginResize(document, worldPosition, selection, camera)) {
-      return;
+      return true;
     }
 
     final feature = document.featureAtPoint(worldPosition);
@@ -193,21 +239,33 @@ class SelectTool extends Tool {
         selection.clearSelection();
       }
     }
+    return true;
   }
 
   @override
-  void onPointerMove(
+  bool onPointerMove(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    final activeInteraction = _activePointerInteraction;
+    if (activeInteraction != null) {
+      return activeInteraction.onPointerMove(
+        context,
+        worldPosition,
+        camera,
+        isShiftPressed: isShiftPressed,
+        isAltPressed: isAltPressed,
+      );
+    }
+
     final document = context.document;
     final selection = context.selection;
     switch (_state) {
       case _Idle():
-        return;
+        return false;
       case _Selecting(:final start):
         _state = _Selecting(start: start, end: worldPosition);
         _updateMarqueeSelection(document, selection, isShiftPressed);
@@ -312,16 +370,29 @@ class SelectTool extends Tool {
           isShiftPressed,
         );
     }
+    return true;
   }
 
   @override
-  void onPointerUp(
+  bool onPointerUp(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    final activeInteraction = _activePointerInteraction;
+    if (activeInteraction != null) {
+      _activePointerInteraction = null;
+      return activeInteraction.onPointerUp(
+        context,
+        worldPosition,
+        camera,
+        isShiftPressed: isShiftPressed,
+        isAltPressed: isAltPressed,
+      );
+    }
+
     final document = context.document;
     final selection = context.selection;
     switch (_state) {
@@ -342,7 +413,7 @@ class SelectTool extends Tool {
           );
         }
         _state = const _Idle();
-        return;
+        return true;
       case _Moving(
         :final initialOrigins,
         :final isFirstTimeSelect,
@@ -375,7 +446,7 @@ class SelectTool extends Tool {
               _state = const _Idle();
               _lastTapFeatureId = null;
               _lastTapTime = null;
-              return;
+              return true;
             }
           }
           _lastTapFeatureId = hovered.id;
@@ -399,6 +470,7 @@ class SelectTool extends Tool {
         break;
     }
     _state = const _Idle();
+    return true;
   }
 
   Feature? _selectedPolyline(Document document, SelectionModel selection) {

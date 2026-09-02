@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
   ToolbarBloc({required EditorContext context})
@@ -42,7 +43,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     ActivateSelectToolEvent event,
     Emitter<ToolbarState> emit,
   ) {
-    _context.setTool(SelectTool());
+    _context.setTool(SelectTool2());
     emit(state.copyWith(activeTool: ActiveToolKind.select));
   }
 

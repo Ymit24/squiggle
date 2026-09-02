@@ -17,6 +17,8 @@ class SelectResizeInteraction extends EditorInteraction {
   Offset? _resizeOffset;
   bool _didResize = false;
 
+  SelectionResizeHandle? get handle => _handle;
+
   @override
   bool onPointerDown(
     EditorContext context,

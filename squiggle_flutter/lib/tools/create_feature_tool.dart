@@ -26,8 +26,7 @@ class CreateFeatureTool extends Tool {
     EditorContext context,
     Offset worldPosition,
     Camera camera,
-  ) =>
-      EditorCursor.crosshair;
+  ) => EditorCursor.crosshair;
 
   @override
   void paint(
@@ -51,16 +50,16 @@ class CreateFeatureTool extends Tool {
   }
 
   @override
-  void onPointerDown(
+  bool onPointerDown(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
-  }) {}
+  }) => true;
 
   @override
-  void onPointerMove(
+  bool onPointerMove(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -86,10 +85,11 @@ class CreateFeatureTool extends Tool {
           ),
         );
     }
+    return true;
   }
 
   @override
-  void onPointerUp(
+  bool onPointerUp(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -104,6 +104,7 @@ class CreateFeatureTool extends Tool {
       );
       _state = const _Idle();
     }
+    return true;
   }
 
   Rect _boundsFromDrag(

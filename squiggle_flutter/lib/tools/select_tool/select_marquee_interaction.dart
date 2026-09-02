@@ -94,5 +94,3 @@ class SelectMarqueeInteraction extends EditorInteraction
     _end = null;
   }
 }
-
-/// Select-tool interaction for moving the current selection.

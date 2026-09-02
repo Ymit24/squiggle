@@ -36,10 +36,12 @@ class SelectMoveInteraction extends EditorInteraction {
     if (feature == null) return false;
     final selection = context.selection;
     final isFirstTimeSelect = !selection.isFeatureSelected(feature.id);
-    if (!selection.isFeatureSelected(feature.id)) {
-      if (!isShiftPressed) selection.clearSelection();
-      selection.selectFeature(feature.id);
+    if (!isShiftPressed && !selection.isFeatureSelected(feature.id)) {
+      selection.clearSelection();
     }
+    // Re-selecting also preserves the existing tool's ordering semantics:
+    // the clicked feature becomes the chase feature for group movement.
+    selection.selectFeature(feature.id);
     _initialOrigins = {
       for (final id in selection.selectedFeatures)
         if (context.document.featureById(id) case final f?) id: f.origin,
@@ -69,10 +71,6 @@ class SelectMoveInteraction extends EditorInteraction {
     final offset = _moveOffset;
     final down = _pointerDownWorld;
     if (origins == null || offset == null || down == null) return false;
-    final ids = List<FeatureId>.of(context.selection.selectedFeatures);
-    if (ids.isEmpty) return false;
-    final chase = context.document.featureById(ids.last);
-    if (chase == null) return false;
     final target = isShiftPressed
         ? constrainMoveToAxis(down, worldPosition)
         : worldPosition;
@@ -97,6 +95,10 @@ class SelectMoveInteraction extends EditorInteraction {
       }
     }
 
+    final ids = List<FeatureId>.of(context.selection.selectedFeatures);
+    if (ids.isEmpty) return false;
+    final chase = context.document.featureById(ids.last);
+    if (chase == null) return false;
     final effectiveOffset = _moveOffset!;
     final offsets = <FeatureId, Offset>{};
     for (final id in ids) {
