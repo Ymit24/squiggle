@@ -133,7 +133,7 @@ class SelectTool2 extends Tool {
 
     final screenBounds = camera.worldToScreenBounds(worldBounds);
     final inflatedBounds = screenBounds.inflate(
-      kSelectionBoxPadding / camera.zoom,
+      camera.worldLengthToScreenLength(kSelectionBoxPadding),
     );
     final half = kSelectionHandlePaintSize / 2;
 
