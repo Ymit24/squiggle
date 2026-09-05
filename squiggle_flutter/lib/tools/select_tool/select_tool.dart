@@ -9,7 +9,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -799,10 +799,7 @@ class SelectTool extends Tool {
     }
   }
 
-  Map<NodeId, Offset> _captureOrigins(
-    Document document,
-    List<NodeId> ids,
-  ) {
+  Map<NodeId, Offset> _captureOrigins(Document document, List<NodeId> ids) {
     return {
       for (final id in ids)
         if (document.featureById(id) case final feature?) id: feature.origin,
@@ -890,10 +887,7 @@ class SelectTool extends Tool {
     };
   }
 
-  void _commitMove(
-    EditorContext context,
-    Map<NodeId, Offset> initialOrigins,
-  ) {
+  void _commitMove(EditorContext context, Map<NodeId, Offset> initialOrigins) {
     final document = context.document;
     final finalOrigins = <NodeId, Offset>{};
     for (final id in initialOrigins.keys) {

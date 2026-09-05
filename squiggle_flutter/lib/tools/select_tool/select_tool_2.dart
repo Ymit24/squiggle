@@ -23,7 +23,7 @@ class SelectTool2 extends Tool {
     SelectMoveInteraction(),
     SelectMarqueeInteraction(),
   ];
-  EditorInteraction? _activeInteraction = null;
+  EditorInteraction? _activeInteraction;
 
   @override
   void paint(

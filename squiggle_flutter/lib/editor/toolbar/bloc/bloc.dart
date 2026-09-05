@@ -6,7 +6,6 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {

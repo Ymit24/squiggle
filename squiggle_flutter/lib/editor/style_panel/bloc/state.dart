@@ -1,5 +1,5 @@
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 sealed class StylePanelState {
   const StylePanelState();

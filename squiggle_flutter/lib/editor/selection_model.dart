@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 /// Pure observable state of the current feature selection.
 class SelectionModel extends ChangeNotifier {

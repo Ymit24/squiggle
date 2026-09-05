@@ -5,7 +5,7 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:data_models/data_models.dart' as data;
 
 import 'feature.dart';
-import 'feature_id.dart';
+import 'node_id.dart';
 
 /// World model: editable collection of features in world space.
 ///

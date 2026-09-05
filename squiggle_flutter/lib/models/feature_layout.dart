@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'document.dart';
 import 'feature.dart';
-import 'feature_id.dart';
+import 'node_id.dart';
 
 enum FeatureAlignment {
   left,
