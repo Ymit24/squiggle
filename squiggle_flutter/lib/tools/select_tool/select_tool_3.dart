@@ -10,7 +10,72 @@ import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class SelectTool extends Tool {
-  void transition(InteractionState state) {}
+  late InteractionState _activeInteractionState = IdleInteractionState(
+    parent: this,
+  );
+
+  void transition(InteractionState state) {
+    _activeInteractionState = state;
+  }
+
+  @override
+  bool onPointerDown(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _activeInteractionState.onPointerDown(
+      context,
+      CanvasTarget(),
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
+
+    // TODO: Update how change detection works to not be bool response based.
+    return true;
+  }
+
+  @override
+  bool onPointerMove(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _activeInteractionState.onPointerMove(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
+    // TODO: Update how change detection works to not be bool response based.
+    return true;
+  }
+
+  @override
+  bool onPointerUp(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _activeInteractionState.onPointerUp(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
+    // TODO: Update how change detection works to not be bool response based.
+    return true;
+  }
 
   @override
   void paint(
@@ -21,10 +86,35 @@ class SelectTool extends Tool {
   ) {}
 }
 
-class InteractionState {
+abstract class InteractionState {
   final SelectTool parent;
 
   InteractionState({required this.parent});
+
+  void onPointerDown(
+    EditorContext context,
+    HitTarget target,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
+
+  void onPointerMove(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
+
+  void onPointerUp(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
 }
 
 class HitTarget {}
@@ -46,11 +136,15 @@ class HandleTarget extends HitTarget {
 class IdleInteractionState extends InteractionState {
   IdleInteractionState({required super.parent});
 
-  void onDown(
-    HitTarget target,
+  @override
+  void onPointerDown(
     EditorContext context,
+    HitTarget target,
     Offset cursorWorldPosition,
-  ) {
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
     switch (target) {
       case HandleTarget():
         // parent.transition("resize");
@@ -91,8 +185,11 @@ class ClickFeatureState extends InteractionState {
   final Feature _chase;
   final List<Feature> _selectedFeatures;
 
-  void onMove({
-    required EditorContext context,
+  @override
+  void onPointerMove(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
@@ -115,6 +212,17 @@ class ClickFeatureState extends InteractionState {
         ),
       );
     }
+  }
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent));
   }
 }
 
@@ -145,6 +253,17 @@ class DuplicateState extends InteractionState {
       ),
     );
   }
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent));
+  }
 }
 
 class TranslateState extends InteractionState {
@@ -163,11 +282,29 @@ class TranslateState extends InteractionState {
   final List<Feature> _selectedFeatures;
   late final Map<FeatureId, Offset> _initialOrigins;
 
-  void onMove(EditorContext context, Offset cursorWorldPosition) {
+  @override
+  void onPointerMove(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
     final totalMotion = cursorWorldPosition - _start;
 
     for (var feature in _selectedFeatures) {
       feature.origin = _initialOrigins[feature.id]! + totalMotion;
     }
+  }
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent));
   }
 }
