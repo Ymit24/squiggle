@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'feature_id.dart';
+part of 'node_id.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -12,20 +12,20 @@ part of 'feature_id.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$FeatureId {
+mixin _$NodeId {
 
  int get value;
-/// Create a copy of FeatureId
+/// Create a copy of NodeId
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$FeatureIdCopyWith<FeatureId> get copyWith => _$FeatureIdCopyWithImpl<FeatureId>(this as FeatureId, _$identity);
+$NodeIdCopyWith<NodeId> get copyWith => _$NodeIdCopyWithImpl<NodeId>(this as NodeId, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FeatureId&&(identical(other.value, value) || other.value == value));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NodeId&&(identical(other.value, value) || other.value == value));
 }
 
 
@@ -34,15 +34,15 @@ int get hashCode => Object.hash(runtimeType,value);
 
 @override
 String toString() {
-  return 'FeatureId(value: $value)';
+  return 'NodeId(value: $value)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $FeatureIdCopyWith<$Res>  {
-  factory $FeatureIdCopyWith(FeatureId value, $Res Function(FeatureId) _then) = _$FeatureIdCopyWithImpl;
+abstract mixin class $NodeIdCopyWith<$Res>  {
+  factory $NodeIdCopyWith(NodeId value, $Res Function(NodeId) _then) = _$NodeIdCopyWithImpl;
 @useResult
 $Res call({
  int value
@@ -53,14 +53,14 @@ $Res call({
 
 }
 /// @nodoc
-class _$FeatureIdCopyWithImpl<$Res>
-    implements $FeatureIdCopyWith<$Res> {
-  _$FeatureIdCopyWithImpl(this._self, this._then);
+class _$NodeIdCopyWithImpl<$Res>
+    implements $NodeIdCopyWith<$Res> {
+  _$NodeIdCopyWithImpl(this._self, this._then);
 
-  final FeatureId _self;
-  final $Res Function(FeatureId) _then;
+  final NodeId _self;
+  final $Res Function(NodeId) _then;
 
-/// Create a copy of FeatureId
+/// Create a copy of NodeId
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? value = null,}) {
   return _then(_self.copyWith(
@@ -72,8 +72,8 @@ as int,
 }
 
 
-/// Adds pattern-matching-related methods to [FeatureId].
-extension FeatureIdPatterns on FeatureId {
+/// Adds pattern-matching-related methods to [NodeId].
+extension NodeIdPatterns on NodeId {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -86,10 +86,10 @@ extension FeatureIdPatterns on FeatureId {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FeatureId value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _NodeId value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _FeatureId() when $default != null:
+case _NodeId() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -108,10 +108,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FeatureId value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _NodeId value)  $default,){
 final _that = this;
 switch (_that) {
-case _FeatureId():
+case _NodeId():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -129,10 +129,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FeatureId value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _NodeId value)?  $default,){
 final _that = this;
 switch (_that) {
-case _FeatureId() when $default != null:
+case _NodeId() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -152,7 +152,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int value)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _FeatureId() when $default != null:
+case _NodeId() when $default != null:
 return $default(_that.value);case _:
   return orElse();
 
@@ -173,7 +173,7 @@ return $default(_that.value);case _:
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int value)  $default,) {final _that = this;
 switch (_that) {
-case _FeatureId():
+case _NodeId():
 return $default(_that.value);case _:
   throw StateError('Unexpected subclass');
 
@@ -193,7 +193,7 @@ return $default(_that.value);case _:
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int value)?  $default,) {final _that = this;
 switch (_that) {
-case _FeatureId() when $default != null:
+case _NodeId() when $default != null:
 return $default(_that.value);case _:
   return null;
 
@@ -205,23 +205,23 @@ return $default(_that.value);case _:
 /// @nodoc
 
 
-class _FeatureId implements FeatureId {
-  const _FeatureId({required this.value});
+class _NodeId implements NodeId {
+  const _NodeId({required this.value});
   
 
 @override final  int value;
 
-/// Create a copy of FeatureId
+/// Create a copy of NodeId
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$FeatureIdCopyWith<_FeatureId> get copyWith => __$FeatureIdCopyWithImpl<_FeatureId>(this, _$identity);
+_$NodeIdCopyWith<_NodeId> get copyWith => __$NodeIdCopyWithImpl<_NodeId>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FeatureId&&(identical(other.value, value) || other.value == value));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NodeId&&(identical(other.value, value) || other.value == value));
 }
 
 
@@ -230,15 +230,15 @@ int get hashCode => Object.hash(runtimeType,value);
 
 @override
 String toString() {
-  return 'FeatureId(value: $value)';
+  return 'NodeId(value: $value)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$FeatureIdCopyWith<$Res> implements $FeatureIdCopyWith<$Res> {
-  factory _$FeatureIdCopyWith(_FeatureId value, $Res Function(_FeatureId) _then) = __$FeatureIdCopyWithImpl;
+abstract mixin class _$NodeIdCopyWith<$Res> implements $NodeIdCopyWith<$Res> {
+  factory _$NodeIdCopyWith(_NodeId value, $Res Function(_NodeId) _then) = __$NodeIdCopyWithImpl;
 @override @useResult
 $Res call({
  int value
@@ -249,17 +249,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$FeatureIdCopyWithImpl<$Res>
-    implements _$FeatureIdCopyWith<$Res> {
-  __$FeatureIdCopyWithImpl(this._self, this._then);
+class __$NodeIdCopyWithImpl<$Res>
+    implements _$NodeIdCopyWith<$Res> {
+  __$NodeIdCopyWithImpl(this._self, this._then);
 
-  final _FeatureId _self;
-  final $Res Function(_FeatureId) _then;
+  final _NodeId _self;
+  final $Res Function(_NodeId) _then;
 
-/// Create a copy of FeatureId
+/// Create a copy of NodeId
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
-  return _then(_FeatureId(
+  return _then(_NodeId(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as int,
   ));

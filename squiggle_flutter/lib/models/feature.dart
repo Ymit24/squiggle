@@ -32,7 +32,7 @@ class Feature extends Node {
     };
 
     return Feature(
-      id: FeatureId.newId(raw.id),
+      id: NodeId.newId(raw.id),
       origin: Offset(raw.originX, raw.originY),
       size: Size(raw.width, raw.height),
       kind: kind,
@@ -82,7 +82,7 @@ class Feature extends Node {
 
   @override
   Feature copyWith({
-    FeatureId? id,
+    NodeId? id,
     Offset? origin,
     Size? size,
     FeatureKind? kind,

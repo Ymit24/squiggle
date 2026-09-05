@@ -13,15 +13,15 @@ import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 /// Select-tool interaction for dragging a selected polyline vertex.
 class SelectMoveInteraction extends EditorInteraction {
-  Map<FeatureId, Offset>? _initialOrigins;
-  Map<FeatureId, Offset>? _originsAtDragStart;
+  Map<NodeId, Offset>? _initialOrigins;
+  Map<NodeId, Offset>? _originsAtDragStart;
   Offset? _moveOffset;
   Offset? _pointerDownWorld;
-  FeatureId? _draggedFeatureId;
+  NodeId? _draggedFeatureId;
   bool _isFirstTimeSelect = false;
   bool _hasDuplicated = false;
   bool _didMove = false;
-  FeatureId? _lastTapFeatureId;
+  NodeId? _lastTapFeatureId;
   DateTime? _lastTapTime;
 
   @override
@@ -95,12 +95,12 @@ class SelectMoveInteraction extends EditorInteraction {
       }
     }
 
-    final ids = List<FeatureId>.of(context.selection.selectedFeatures);
+    final ids = List<NodeId>.of(context.selection.selectedFeatures);
     if (ids.isEmpty) return false;
     final chase = context.document.featureById(ids.last);
     if (chase == null) return false;
     final effectiveOffset = _moveOffset!;
-    final offsets = <FeatureId, Offset>{};
+    final offsets = <NodeId, Offset>{};
     for (final id in ids) {
       final feature = context.document.featureById(id);
       if (feature != null) offsets[id] = feature.origin - chase.origin;
@@ -199,9 +199,9 @@ class SelectMoveInteraction extends EditorInteraction {
     _lastTapTime = null;
   }
 
-  Map<FeatureId, Offset> _captureOrigins(
+  Map<NodeId, Offset> _captureOrigins(
     Document document,
-    List<FeatureId> ids,
+    List<NodeId> ids,
   ) => {
     for (final id in ids)
       if (document.featureById(id) case final feature?) id: feature.origin,
@@ -210,14 +210,14 @@ class SelectMoveInteraction extends EditorInteraction {
   Offset _duplicateSelection(
     EditorContext context,
     Offset worldPosition,
-    FeatureId draggedFeatureId,
-    Map<FeatureId, Offset> originsAtDragStart,
+    NodeId draggedFeatureId,
+    Map<NodeId, Offset> originsAtDragStart,
     Offset moveOffset,
     bool draggedBeforeDuplicate,
   ) {
     final selection = context.selection;
     final ids = selection.selectedFeatures.contains(draggedFeatureId)
-        ? List<FeatureId>.of(selection.selectedFeatures)
+        ? List<NodeId>.of(selection.selectedFeatures)
         : [draggedFeatureId];
     final command = DuplicateFeaturesCommand(
       sourceIds: ids,

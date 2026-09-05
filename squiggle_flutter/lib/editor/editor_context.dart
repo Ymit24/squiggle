@@ -79,7 +79,7 @@ class EditorContext extends ChangeNotifier {
 
   /// Removes the selected features as one undoable edit.
   void deleteSelection() {
-    final ids = List<FeatureId>.of(selection.selectedFeatures);
+    final ids = List<NodeId>.of(selection.selectedFeatures);
     if (ids.isEmpty) return;
     execute(RemoveFeaturesCommand(ids));
     selection.clearSelection();

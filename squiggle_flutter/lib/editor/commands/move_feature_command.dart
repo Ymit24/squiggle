@@ -9,7 +9,7 @@ import 'command.dart';
 final class MoveFeatureCommand extends Command {
   MoveFeatureCommand(this.id, this.origin, {this.previousOrigin});
 
-  final FeatureId id;
+  final NodeId id;
   final Offset origin;
   final Offset? previousOrigin;
 
@@ -35,10 +35,10 @@ final class MoveFeaturesCommand extends Command {
   MoveFeaturesCommand(this.initialOrigins, this.finalOrigins);
 
   /// Origins captured before the gesture started.
-  final Map<FeatureId, Offset> initialOrigins;
+  final Map<NodeId, Offset> initialOrigins;
 
   /// Origins the features were moved to.
-  final Map<FeatureId, Offset> finalOrigins;
+  final Map<NodeId, Offset> finalOrigins;
 
   @override
   void redo(Document document) {
@@ -50,7 +50,7 @@ final class MoveFeaturesCommand extends Command {
     _moveFeatures(document, initialOrigins);
   }
 
-  void _moveFeatures(Document document, Map<FeatureId, Offset> origins) {
+  void _moveFeatures(Document document, Map<NodeId, Offset> origins) {
     for (final entry in origins.entries) {
       final feature = document.featureById(entry.key);
       if (feature != null && feature.origin != entry.value) {

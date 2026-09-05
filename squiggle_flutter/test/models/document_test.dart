@@ -87,13 +87,13 @@ void main() {
       test('toDataModel encodes all features', () {
         final document = Document.fromFeatures([
           Feature(
-            id: FeatureId.newId(4),
+            id: NodeId.newId(4),
             origin: const Offset(1, 2),
             size: const Size(3, 4),
             kind: const FeatureKindRectangle(),
           ),
           Feature(
-            id: FeatureId.newId(7),
+            id: NodeId.newId(7),
             origin: const Offset(5, 6),
             size: const Size(8, 9),
             kind: const FeatureKindCircle(),
@@ -111,13 +111,13 @@ void main() {
       test('toDataModel preserves feature order', () {
         final document = Document.fromFeatures([
           Feature(
-            id: FeatureId.newId(10),
+            id: NodeId.newId(10),
             origin: Offset.zero,
             size: const Size(1, 1),
             kind: const FeatureKindCircle(),
           ),
           Feature(
-            id: FeatureId.newId(20),
+            id: NodeId.newId(20),
             origin: Offset.zero,
             size: const Size(1, 1),
             kind: const FeatureKindRectangle(),
@@ -141,7 +141,7 @@ void main() {
         kind: const FeatureKindRectangle(),
       );
 
-      doc.addFeature(feature);
+      doc.addNode(feature);
 
       expect(feature.id, isNot(noId));
       expect(doc.features, [feature]);
@@ -162,7 +162,7 @@ void main() {
         ),
       ];
 
-      doc.addFeatures(features);
+      doc.addNodes(features);
 
       expect(doc.features, hasLength(2));
       expect(doc.features.every((feature) => feature.id != noId), isTrue);

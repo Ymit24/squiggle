@@ -11,7 +11,7 @@ final class AddFeatureCommand extends Command {
 
   @override
   void redo(Document document) {
-    document.addFeature(feature);
+    document.addNode(feature);
   }
 
   @override

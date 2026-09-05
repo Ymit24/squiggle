@@ -40,7 +40,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   StylePanelState _deriveState() {
-    final selectedFeatureIds = List<FeatureId>.of(
+    final selectedFeatureIds = List<NodeId>.of(
       context.selection.selectedFeatures,
     );
     if (selectedFeatureIds.isEmpty) {
@@ -159,7 +159,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     return 'fill:${kind.fillColor.toARGB32()}';
   }
 
-  List<FeatureId> _selectedIdsOrEmpty() {
+  List<NodeId> _selectedIdsOrEmpty() {
     final current = state;
     if (current is! StylePanelShowingState) {
       return const [];

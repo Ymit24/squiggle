@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EditorState {
 
- Document get document; List<FeatureId> get selectedFeatures;
+ Document get document; List<NodeId> get selectedFeatures;
 /// Create a copy of EditorState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $EditorStateCopyWith<$Res>  {
   factory $EditorStateCopyWith(EditorState value, $Res Function(EditorState) _then) = _$EditorStateCopyWithImpl;
 @useResult
 $Res call({
- Document document, List<FeatureId> selectedFeatures
+ Document document, List<NodeId> selectedFeatures
 });
 
 
@@ -66,7 +66,7 @@ class _$EditorStateCopyWithImpl<$Res>
   return _then(_self.copyWith(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
 as Document,selectedFeatures: null == selectedFeatures ? _self.selectedFeatures : selectedFeatures // ignore: cast_nullable_to_non_nullable
-as List<FeatureId>,
+as List<NodeId>,
   ));
 }
 
@@ -151,7 +151,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Document document,  List<FeatureId> selectedFeatures)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Document document,  List<NodeId> selectedFeatures)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EditorState() when $default != null:
 return $default(_that.document,_that.selectedFeatures);case _:
@@ -172,7 +172,7 @@ return $default(_that.document,_that.selectedFeatures);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Document document,  List<FeatureId> selectedFeatures)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Document document,  List<NodeId> selectedFeatures)  $default,) {final _that = this;
 switch (_that) {
 case _EditorState():
 return $default(_that.document,_that.selectedFeatures);case _:
@@ -192,7 +192,7 @@ return $default(_that.document,_that.selectedFeatures);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Document document,  List<FeatureId> selectedFeatures)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Document document,  List<NodeId> selectedFeatures)?  $default,) {final _that = this;
 switch (_that) {
 case _EditorState() when $default != null:
 return $default(_that.document,_that.selectedFeatures);case _:
@@ -207,12 +207,12 @@ return $default(_that.document,_that.selectedFeatures);case _:
 
 
 class _EditorState implements EditorState {
-  const _EditorState({required this.document, required final  List<FeatureId> selectedFeatures}): _selectedFeatures = selectedFeatures;
+  const _EditorState({required this.document, required final  List<NodeId> selectedFeatures}): _selectedFeatures = selectedFeatures;
   
 
 @override final  Document document;
- final  List<FeatureId> _selectedFeatures;
-@override List<FeatureId> get selectedFeatures {
+ final  List<NodeId> _selectedFeatures;
+@override List<NodeId> get selectedFeatures {
   if (_selectedFeatures is EqualUnmodifiableListView) return _selectedFeatures;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_selectedFeatures);
@@ -249,7 +249,7 @@ abstract mixin class _$EditorStateCopyWith<$Res> implements $EditorStateCopyWith
   factory _$EditorStateCopyWith(_EditorState value, $Res Function(_EditorState) _then) = __$EditorStateCopyWithImpl;
 @override @useResult
 $Res call({
- Document document, List<FeatureId> selectedFeatures
+ Document document, List<NodeId> selectedFeatures
 });
 
 
@@ -270,7 +270,7 @@ class __$EditorStateCopyWithImpl<$Res>
   return _then(_EditorState(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
 as Document,selectedFeatures: null == selectedFeatures ? _self._selectedFeatures : selectedFeatures // ignore: cast_nullable_to_non_nullable
-as List<FeatureId>,
+as List<NodeId>,
   ));
 }
 

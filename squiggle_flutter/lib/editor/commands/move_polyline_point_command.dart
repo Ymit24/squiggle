@@ -17,7 +17,7 @@ final class MovePolylinePointCommand extends Command {
     required this.finalWorldPosition,
   });
 
-  final FeatureId id;
+  final NodeId id;
   final int pointIndex;
   final Offset initialOrigin;
   final List<Offset> initialLocalPoints;

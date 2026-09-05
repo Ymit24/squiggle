@@ -33,7 +33,7 @@ final class StylePanelShowingState extends StylePanelState {
     required this.activeVerticalAlignment,
   });
 
-  final List<FeatureId> selectedFeatureIds;
+  final List<NodeId> selectedFeatureIds;
   final int? activeStrokePresetIndex;
   final bool isStrokeNone;
   final bool strokeMixed;

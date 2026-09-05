@@ -20,7 +20,7 @@ final class EditTextEditSession extends TextEditSession {
     required super.canvasLocalBounds,
   });
 
-  final FeatureId featureId;
+  final NodeId featureId;
 }
 
 final class CreateTextEditSession extends TextEditSession {

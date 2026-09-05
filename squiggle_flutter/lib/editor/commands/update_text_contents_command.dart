@@ -11,7 +11,7 @@ import 'command.dart';
 final class UpdateTextContentsCommand extends Command {
   UpdateTextContentsCommand({required this.featureId, required this.contents});
 
-  final FeatureId featureId;
+  final NodeId featureId;
   final String contents;
   FeatureKindText? _previousKind;
   Size? _previousSize;

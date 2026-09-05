@@ -27,7 +27,7 @@ final class EditTextEditOpen extends TextEditOpen {
     required super.canvasLocalBounds,
   });
 
-  final FeatureId featureId;
+  final NodeId featureId;
 }
 
 final class CreateTextEditOpen extends TextEditOpen {

@@ -16,10 +16,10 @@ final class LayoutFeaturesCommand extends Command {
     required this.distribution,
   }) : alignment = null;
 
-  final List<FeatureId> ids;
+  final List<NodeId> ids;
   final FeatureAlignment? alignment;
   final FeatureDistribution? distribution;
-  Map<FeatureId, Offset>? _previousOrigins;
+  Map<NodeId, Offset>? _previousOrigins;
 
   @override
   void redo(Document document) {
@@ -34,12 +34,12 @@ final class LayoutFeaturesCommand extends Command {
         ids,
         distribution,
       ),
-      _ => const <FeatureId, Offset>{},
+      _ => const <NodeId, Offset>{},
     };
     if (offsets.isEmpty) return;
 
     _previousOrigins ??= {};
-    final targets = <FeatureId, Offset>{};
+    final targets = <NodeId, Offset>{};
     for (final entry in offsets.entries) {
       final feature = document.featureById(entry.key);
       if (feature == null) continue;

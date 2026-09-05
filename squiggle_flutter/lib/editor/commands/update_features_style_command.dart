@@ -21,15 +21,15 @@ final class UpdateFeaturesStyleCommand extends Command {
     this.verticalAlignment,
   });
 
-  final List<FeatureId> ids;
+  final List<NodeId> ids;
   final Color? strokeColor;
   final Color? fillColor;
   final double? strokeWidth;
   final double? fontSize;
   final TextHorizontalAlignment? horizontalAlignment;
   final TextVerticalAlignment? verticalAlignment;
-  Map<FeatureId, FeatureKind>? _previousKinds;
-  Map<FeatureId, Size>? _previousSizes;
+  Map<NodeId, FeatureKind>? _previousKinds;
+  Map<NodeId, Size>? _previousSizes;
 
   @override
   void redo(Document document) {

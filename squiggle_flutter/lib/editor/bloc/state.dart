@@ -8,11 +8,9 @@ part 'state.freezed.dart';
 abstract class EditorState with _$EditorState {
   const factory EditorState({
     required Document document,
-    required List<FeatureId> selectedFeatures,
+    required List<NodeId> selectedFeatures,
   }) = _EditorState;
 
-  factory EditorState.empty(Document document) => EditorState(
-    document: document,
-    selectedFeatures: const [],
-  );
+  factory EditorState.empty(Document document) =>
+      EditorState(document: document, selectedFeatures: const []);
 }

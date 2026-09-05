@@ -8,7 +8,7 @@ import 'command.dart';
 final class RemoveFeaturesCommand extends Command {
   RemoveFeaturesCommand(this.ids);
 
-  final List<FeatureId> ids;
+  final List<NodeId> ids;
   List<Feature>? _removedFeatures;
 
   @override
@@ -23,7 +23,7 @@ final class RemoveFeaturesCommand extends Command {
   @override
   void undo(Document document) {
     for (final feature in _removedFeatures ?? const []) {
-      document.addFeature(feature);
+      document.addNode(feature);
     }
   }
 }

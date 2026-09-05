@@ -13,15 +13,12 @@ enum FeatureAlignment {
   bottom,
 }
 
-enum FeatureDistribution {
-  horizontal,
-  vertical,
-}
+enum FeatureDistribution { horizontal, vertical }
 
 /// Computes origin deltas to align [ids] within their selection bounds.
-Map<FeatureId, Offset> computeAlignmentOffsets(
+Map<NodeId, Offset> computeAlignmentOffsets(
   Document document,
-  List<FeatureId> ids,
+  List<NodeId> ids,
   FeatureAlignment alignment,
 ) {
   if (ids.length < 2) return const {};
@@ -34,7 +31,7 @@ Map<FeatureId, Offset> computeAlignmentOffsets(
     union = union.expandToInclude(feature.bounds());
   }
 
-  final offsets = <FeatureId, Offset>{};
+  final offsets = <NodeId, Offset>{};
   for (final feature in features) {
     final bounds = feature.bounds();
     final delta = switch (alignment) {
@@ -42,10 +39,14 @@ Map<FeatureId, Offset> computeAlignmentOffsets(
       FeatureAlignment.right => Offset(union.right - bounds.right, 0),
       FeatureAlignment.top => Offset(0, union.top - bounds.top),
       FeatureAlignment.bottom => Offset(0, union.bottom - bounds.bottom),
-      FeatureAlignment.centerHorizontal =>
-        Offset(union.center.dx - bounds.center.dx, 0),
-      FeatureAlignment.centerVertical =>
-        Offset(0, union.center.dy - bounds.center.dy),
+      FeatureAlignment.centerHorizontal => Offset(
+        union.center.dx - bounds.center.dx,
+        0,
+      ),
+      FeatureAlignment.centerVertical => Offset(
+        0,
+        union.center.dy - bounds.center.dy,
+      ),
     };
     if (delta != Offset.zero) {
       offsets[feature.id] = delta;
@@ -55,9 +56,9 @@ Map<FeatureId, Offset> computeAlignmentOffsets(
 }
 
 /// Computes origin deltas to evenly distribute [ids] between the extremes.
-Map<FeatureId, Offset> computeDistributionOffsets(
+Map<NodeId, Offset> computeDistributionOffsets(
   Document document,
-  List<FeatureId> ids,
+  List<NodeId> ids,
   FeatureDistribution distribution,
 ) {
   if (ids.length < 3) return const {};
@@ -79,7 +80,7 @@ Map<FeatureId, Offset> computeDistributionOffsets(
   }
 }
 
-Map<FeatureId, Offset> _distributeAlongAxis(
+Map<NodeId, Offset> _distributeAlongAxis(
   List<({Feature feature, Rect bounds})> sorted, {
   required bool horizontal,
 }) {
@@ -95,7 +96,7 @@ Map<FeatureId, Offset> _distributeAlongAxis(
   final span = horizontal ? last.right - first.left : last.bottom - first.top;
   final gap = (span - totalObjectSize) / (sorted.length - 1);
 
-  final offsets = <FeatureId, Offset>{};
+  final offsets = <NodeId, Offset>{};
   var current = horizontal ? first.left : first.top;
 
   for (final entry in sorted) {

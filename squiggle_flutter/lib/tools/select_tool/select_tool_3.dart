@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
@@ -121,10 +122,10 @@ class HitTarget {}
 
 class CanvasTarget extends HitTarget {}
 
-class FeatureTarget extends HitTarget {
-  final Feature feature;
+class NodeTarget extends HitTarget {
+  final Node node;
 
-  FeatureTarget({required this.feature});
+  NodeTarget({required this.node});
 }
 
 class HandleTarget extends HitTarget {
@@ -149,20 +150,20 @@ class IdleInteractionState extends InteractionState {
       case HandleTarget():
         // parent.transition("resize");
         break;
-      case FeatureTarget(feature: var chaseFeature):
-        final selectedFeatures = context.selection.selectedFeatures.map(
+      case NodeTarget(node: var chaseNode):
+        final selectedNodes = context.selection.selectedFeatures.map(
           (id) => context.document.featureById(id),
         );
-        if (selectedFeatures.any((f) => f == null)) {
+        if (selectedNodes.any((f) => f == null)) {
           // TODO: Is this possible? What to do?
           return;
         }
         parent.transition(
-          ClickFeatureState(
+          ClickNodeState(
             parent: parent,
             start: cursorWorldPosition,
-            chase: chaseFeature,
-            selectedFeatures: selectedFeatures.map((f) => f!).toList(),
+            chase: chaseNode,
+            selectedNodes: selectedNodes.map((f) => f!).toList(),
           ),
         );
         break;
@@ -173,17 +174,17 @@ class IdleInteractionState extends InteractionState {
   }
 }
 
-class ClickFeatureState extends InteractionState {
-  ClickFeatureState({
+class ClickNodeState extends InteractionState {
+  ClickNodeState({
     required super.parent,
     required this._start,
     required this._chase,
-    required this._selectedFeatures,
+    required this.selectedNodes,
   });
 
   final Offset _start;
-  final Feature _chase;
-  final List<Feature> _selectedFeatures;
+  final Node _chase;
+  final List<Node> selectedNodes;
 
   @override
   void onPointerMove(
@@ -198,7 +199,7 @@ class ClickFeatureState extends InteractionState {
         DuplicateState(
           parent: parent,
           chase: _chase,
-          selectedFeatures: _selectedFeatures,
+          selectedNodes: selectedNodes,
           start: _start,
         ),
       );
@@ -207,7 +208,7 @@ class ClickFeatureState extends InteractionState {
         TranslateState(
           parent: parent,
           chase: _chase,
-          selectedFeatures: _selectedFeatures,
+          selectedNodes: selectedNodes,
           start: _start,
         ),
       );
@@ -231,25 +232,23 @@ class DuplicateState extends InteractionState {
     required super.parent,
     required this._start,
     required this._chase,
-    required this._selectedFeatures,
+    required this.selectedNodes,
   });
 
   final Offset _start;
-  final Feature _chase;
-  final List<Feature> _selectedFeatures;
+  final Node _chase;
+  final List<Node> selectedNodes;
 
   void onEnter(EditorContext context) {
-    final cloneFeatures = _selectedFeatures
-        .map((f) => f.copyWith(id: noId))
-        .toList();
-    context.document.addFeatures(cloneFeatures);
+    final cloneNodes = selectedNodes.map((f) => f.copyWith(id: noId)).toList();
+    context.document.addNodes(cloneNodes);
 
     parent.transition(
       TranslateState(
         parent: parent,
         start: _start,
         chase: _chase,
-        selectedFeatures: cloneFeatures,
+        selectedNodes: cloneNodes,
       ),
     );
   }
@@ -270,17 +269,15 @@ class TranslateState extends InteractionState {
   TranslateState({
     required super.parent,
     required this._start,
-    required Feature chase,
-    required this._selectedFeatures,
+    required Node chase,
+    required this.selectedNodes,
   }) {
-    _initialOrigins = {
-      for (final feature in _selectedFeatures) feature.id: feature.origin,
-    };
+    _initialOrigins = {for (final node in selectedNodes) node.id: node.origin};
   }
 
   final Offset _start;
-  final List<Feature> _selectedFeatures;
-  late final Map<FeatureId, Offset> _initialOrigins;
+  final List<Node> selectedNodes;
+  late final Map<NodeId, Offset> _initialOrigins;
 
   @override
   void onPointerMove(
@@ -292,8 +289,8 @@ class TranslateState extends InteractionState {
   }) {
     final totalMotion = cursorWorldPosition - _start;
 
-    for (var feature in _selectedFeatures) {
-      feature.origin = _initialOrigins[feature.id]! + totalMotion;
+    for (var node in selectedNodes) {
+      node.origin = _initialOrigins[node.id]! + totalMotion;
     }
   }
 

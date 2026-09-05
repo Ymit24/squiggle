@@ -54,7 +54,7 @@ class SelectTool extends Tool {
   _SelectState _state;
   final List<EditorInteraction> _pointerInteractions;
   EditorInteraction? _activePointerInteraction;
-  FeatureId? _lastTapFeatureId;
+  NodeId? _lastTapFeatureId;
   DateTime? _lastTapTime;
 
   @override
@@ -799,9 +799,9 @@ class SelectTool extends Tool {
     }
   }
 
-  Map<FeatureId, Offset> _captureOrigins(
+  Map<NodeId, Offset> _captureOrigins(
     Document document,
-    List<FeatureId> ids,
+    List<NodeId> ids,
   ) {
     return {
       for (final id in ids)
@@ -814,15 +814,15 @@ class SelectTool extends Tool {
   Offset _tryAltDuplicate(
     EditorContext context,
     Offset worldPosition,
-    FeatureId draggedFeatureId,
-    Map<FeatureId, Offset> originsAtDragStart,
+    NodeId draggedFeatureId,
+    Map<NodeId, Offset> originsAtDragStart,
     Offset moveOffset,
     bool draggedBeforeDuplicate,
   ) {
     final document = context.document;
     final selection = context.selection;
     final idsToDuplicate = selection.selectedFeatures.contains(draggedFeatureId)
-        ? List<FeatureId>.of(selection.selectedFeatures)
+        ? List<NodeId>.of(selection.selectedFeatures)
         : [draggedFeatureId];
 
     final command = DuplicateFeaturesCommand(
@@ -851,13 +851,13 @@ class SelectTool extends Tool {
     Offset worldPosition,
     Offset moveOffset,
   ) {
-    final ids = List<FeatureId>.of(selection.selectedFeatures);
+    final ids = List<NodeId>.of(selection.selectedFeatures);
     if (ids.isEmpty) return;
 
     final chaseFeature = document.featureById(ids.last);
     if (chaseFeature == null) return;
 
-    final offsets = <FeatureId, Offset>{};
+    final offsets = <NodeId, Offset>{};
     for (final id in ids) {
       final feature = document.featureById(id);
       if (feature != null) {
@@ -865,7 +865,7 @@ class SelectTool extends Tool {
       }
     }
 
-    final targets = <FeatureId, Offset>{};
+    final targets = <NodeId, Offset>{};
     for (final entry in offsets.entries) {
       targets[entry.key] = worldPosition - moveOffset + entry.value;
     }
@@ -880,7 +880,7 @@ class SelectTool extends Tool {
     if (changed) context.notifyViewportChanged();
   }
 
-  Map<FeatureId, Offset> _selectedFeatureOrigins(
+  Map<NodeId, Offset> _selectedFeatureOrigins(
     Document document,
     SelectionModel selection,
   ) {
@@ -892,10 +892,10 @@ class SelectTool extends Tool {
 
   void _commitMove(
     EditorContext context,
-    Map<FeatureId, Offset> initialOrigins,
+    Map<NodeId, Offset> initialOrigins,
   ) {
     final document = context.document;
-    final finalOrigins = <FeatureId, Offset>{};
+    final finalOrigins = <NodeId, Offset>{};
     for (final id in initialOrigins.keys) {
       final feature = document.featureById(id);
       if (feature != null && feature.origin != initialOrigins[id]) {
@@ -910,7 +910,7 @@ class SelectTool extends Tool {
   void _resizeFeature(
     Document document,
     EditorContext context,
-    FeatureId featureId,
+    NodeId featureId,
     SelectionResizeHandle handle,
     Offset anchor,
     Rect initialBounds,
@@ -946,7 +946,7 @@ class SelectTool extends Tool {
 
   void _commitResize(
     EditorContext context,
-    FeatureId featureId,
+    NodeId featureId,
     Rect initialBounds,
   ) {
     final feature = context.document.featureById(featureId);
@@ -967,7 +967,7 @@ class SelectTool extends Tool {
   void _movePolylinePoint(
     Document document,
     EditorContext context,
-    FeatureId featureId,
+    NodeId featureId,
     int pointIndex,
     Offset worldPosition,
   ) {
@@ -986,7 +986,7 @@ class SelectTool extends Tool {
 
   void _commitPolylinePointMove(
     EditorContext context,
-    FeatureId featureId,
+    NodeId featureId,
     int pointIndex,
     Offset initialOrigin,
     List<Offset> initialLocalPoints,
@@ -1211,7 +1211,7 @@ final class _DraggingPolylinePoint extends _SelectState {
     required this.didMove,
   });
 
-  final FeatureId featureId;
+  final NodeId featureId;
   final int pointIndex;
   final Offset dragOffset;
   final Offset initialOrigin;
@@ -1231,14 +1231,14 @@ final class _Moving extends _SelectState {
     required this.originsAtDragStart,
   });
 
-  final Map<FeatureId, Offset> initialOrigins;
+  final Map<NodeId, Offset> initialOrigins;
   final Offset moveOffset;
   final Offset pointerDownWorld;
   final bool isFirstTimeSelect;
   final bool didMove;
   final bool hasDuplicated;
-  final FeatureId draggedFeatureId;
-  final Map<FeatureId, Offset> originsAtDragStart;
+  final NodeId draggedFeatureId;
+  final Map<NodeId, Offset> originsAtDragStart;
 }
 
 final class _Resizing extends _SelectState {
@@ -1251,7 +1251,7 @@ final class _Resizing extends _SelectState {
     required this.didResize,
   });
 
-  final FeatureId featureId;
+  final NodeId featureId;
   final SelectionResizeHandle handle;
   final Offset anchor;
   final Rect initialBounds;

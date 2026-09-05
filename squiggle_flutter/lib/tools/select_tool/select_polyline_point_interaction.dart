@@ -11,7 +11,7 @@ import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 /// Select-tool interaction for dragging a selected polyline vertex.
 class SelectPolylinePointInteraction extends EditorInteraction {
-  FeatureId? _featureId;
+  NodeId? _featureId;
   int? _pointIndex;
   Offset? _dragOffset;
   Offset? _initialOrigin;

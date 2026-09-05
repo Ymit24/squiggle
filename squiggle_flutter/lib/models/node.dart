@@ -17,7 +17,7 @@ abstract class Node {
   }
 
   /// TODO: comment
-  FeatureId id;
+  NodeId id;
 
   /// Relative to parent node.
   Offset origin;
@@ -27,7 +27,7 @@ abstract class Node {
   /// TODO: comment
   Rect bounds();
 
-  Node copyWith({FeatureId? id, Offset? origin});
+  Node copyWith({NodeId? id, Offset? origin});
 
   void paint(Canvas canvas, ImageRepository imageRepository);
 

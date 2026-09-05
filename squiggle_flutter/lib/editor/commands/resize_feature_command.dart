@@ -13,7 +13,7 @@ final class ResizeFeatureCommand extends Command {
     required this.finalBounds,
   });
 
-  final FeatureId id;
+  final NodeId id;
   final Rect initialBounds;
   final Rect finalBounds;
 

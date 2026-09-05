@@ -13,7 +13,7 @@ class Group extends Node {
   Rect bounds() => Node.boundsOfNodes(children);
 
   @override
-  Node copyWith({FeatureId? id, Offset? origin}) {
+  Node copyWith({NodeId? id, Offset? origin}) {
     // TODO: implement copyWith
     throw UnimplementedError();
   }

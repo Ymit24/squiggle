@@ -15,14 +15,14 @@ final class DuplicateFeaturesCommand extends Command {
     required this.originsAtDragStart,
   });
 
-  final List<FeatureId> sourceIds;
-  final Map<FeatureId, Offset> originsAtDragStart;
+  final List<NodeId> sourceIds;
+  final Map<NodeId, Offset> originsAtDragStart;
 
-  List<FeatureId>? _createdIds;
-  Map<FeatureId, Offset>? _originsBeforeRestore;
+  List<NodeId>? _createdIds;
+  Map<NodeId, Offset>? _originsBeforeRestore;
 
   /// Ids assigned to the clones during the last [redo], in [sourceIds] order.
-  List<FeatureId> get createdIds => _createdIds ?? const [];
+  List<NodeId> get createdIds => _createdIds ?? const [];
 
   @override
   void redo(Document document) {
@@ -36,7 +36,7 @@ final class DuplicateFeaturesCommand extends Command {
       _originsBeforeRestore![id] = feature.origin;
 
       final clone = feature.copyWith(id: noId);
-      document.addFeature(clone);
+      document.addNode(clone);
       _createdIds!.add(clone.id);
 
       final restoreOrigin = originsAtDragStart[id];

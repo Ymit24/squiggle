@@ -13,22 +13,22 @@ import 'feature_id.dart';
 /// exposes no command or history concept; changes are announced to observers
 /// via [ChangeNotifier]. Undo/redo bookkeeping lives in the command layer.
 class Document {
-  Document({this.name = 'Untitled', FeatureId? nextId})
-    : _nextId = nextId ?? FeatureId.newId(1);
+  Document({this.name = 'Untitled', NodeId? nextId})
+    : _nextId = nextId ?? NodeId.newId(1);
 
   String name;
 
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
     for (final feature in features) {
-      doc.addFeature(feature);
+      doc.addNode(feature);
     }
     return doc;
   }
 
   factory Document.fromDataModel(data.Document raw) {
     final document = Document(name: raw.name);
-    document.addFeatures([
+    document.addNodes([
       for (final node in raw.nodes)
         switch (node) {
           data.Feature() => Feature.fromDataModel(node),
@@ -59,16 +59,16 @@ class Document {
   /// Live view of the features in document order.
   List<Feature> get features => List.unmodifiable(_features);
 
-  FeatureId _nextId;
+  NodeId _nextId;
   int get nextId => _nextId.value;
 
-  FeatureId generateId() {
+  NodeId generateId() {
     final id = _nextId;
-    _nextId = FeatureId.newId(_nextId.value + 1);
+    _nextId = NodeId.newId(_nextId.value + 1);
     return id;
   }
 
-  Feature? featureById(FeatureId id) {
+  Feature? featureById(NodeId id) {
     for (final feature in _features) {
       if (feature.id == id) return feature;
     }
@@ -88,11 +88,11 @@ class Document {
   /// Adds [feature], assigning an id when it has [noId].
   ///
   /// Returns the added feature (which may now carry an assigned id).
-  Feature addFeature(Feature feature) {
+  Node addNode(Node feature) {
     if (feature.id == noId) {
       feature.id = generateId();
     } else if (feature.id.value >= _nextId.value) {
-      _nextId = FeatureId.newId(feature.id.value + 1);
+      _nextId = NodeId.newId(feature.id.value + 1);
     }
     _nodes.add(feature);
 
@@ -100,21 +100,21 @@ class Document {
   }
 
   /// Adds multiple features
-  void addFeatures(Iterable<Feature> features) {
-    for (final feature in features) {
-      addFeature(feature);
+  void addNodes(Iterable<Node> nodes) {
+    for (final node in nodes) {
+      addNode(node);
     }
   }
 
   // TODO: Change this to return bool
-  void removeFeature(FeatureId id) {
+  void removeFeature(NodeId id) {
     final index = _nodes.indexWhere((node) => node.id == id);
     if (index == -1) return;
 
     _nodes.removeAt(index);
   }
 
-  void removeFeatures(Iterable<FeatureId> ids) {
+  void removeFeatures(Iterable<NodeId> ids) {
     for (final id in ids) {
       removeFeature(id);
     }

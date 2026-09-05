@@ -56,31 +56,31 @@ void main() {
     group('Encode', () {
       final features = <Feature>[
         Feature(
-          id: FeatureId.newId(42),
+          id: NodeId.newId(42),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: const FeatureKindRectangle(),
         ),
         Feature(
-          id: FeatureId.newId(43),
+          id: NodeId.newId(43),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: const FeatureKindCircle(),
         ),
         Feature(
-          id: FeatureId.newId(44),
+          id: NodeId.newId(44),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: const FeatureKindText('text'),
         ),
         Feature(
-          id: FeatureId.newId(45),
+          id: NodeId.newId(45),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: const FeatureKindPolyline([Offset.zero, Offset(1, 1)]),
         ),
         Feature(
-          id: FeatureId.newId(46),
+          id: NodeId.newId(46),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: const FeatureKindImage('image-id'),
