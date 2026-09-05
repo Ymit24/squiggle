@@ -99,7 +99,7 @@ class Document {
     return feature;
   }
 
-  /// Adds multiple features in one change notification.
+  /// Adds multiple features
   void addFeatures(Iterable<Feature> features) {
     for (final feature in features) {
       addFeature(feature);
