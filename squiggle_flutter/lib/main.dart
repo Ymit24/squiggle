@@ -52,6 +52,7 @@ class SquiggleApp extends StatelessWidget {
     return MaterialApp(
       title: 'Squiggle',
       theme: SquiggleThemeData.dark(),
+      debugShowCheckedModeBanner: true,
       home: SquiggleHomePage(
         imageRepository: imageRepository,
         context: this.context,
@@ -90,9 +91,9 @@ class SquiggleHomePage extends StatelessWidget {
               create: (context) => documentLibraryRepository,
               dispose: (repository) => repository.dispose(),
               child: BlocProvider(
-                create: (context) => ToolbarBloc(
-                  context: this.context,
-                )..add(const RequestWatchToolbarStateEvent()),
+                create: (context) =>
+                    ToolbarBloc(context: this.context)
+                      ..add(const RequestWatchToolbarStateEvent()),
                 child: AppShell(context: this.context),
               ),
             ),

@@ -173,6 +173,26 @@ class IdleInteractionState extends InteractionState {
   }
 }
 
+class BoxSelectionState extends InteractionState {
+  BoxSelectionState({required super.parent, required this._start}) {
+    _current = _start;
+  }
+
+  final Offset _start;
+  late Offset _current;
+
+  @override
+  void onPointerMove(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _current = cursorWorldPosition;
+  }
+}
+
 class ClickNodeState extends InteractionState {
   ClickNodeState({
     required super.parent,
