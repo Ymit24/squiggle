@@ -171,7 +171,7 @@ class NodeTarget extends HitTarget {
 }
 
 class HandleTarget extends HitTarget {
-  final SelectionResizeHandle handle;
+  final ResizeHandle handle;
 
   HandleTarget({required this.handle});
 }
@@ -190,9 +190,9 @@ class IdleInteractionState extends InteractionState {
   }) {
     print("D: idle state down. Hit target: $target");
     switch (target) {
-      case HandleTarget():
+      case HandleTarget(handle: var handle):
         print("D: Clicked on handle: ${target.handle}");
-        // parent.transition("resize");
+        parent.transition(ResizeState(parent: parent, handle: handle), context);
         break;
       case NodeTarget(node: var chaseNode):
         final selectedNodes = context.selection.selectedFeatures.map(
@@ -219,6 +219,70 @@ class IdleInteractionState extends InteractionState {
         );
         break;
     }
+  }
+}
+
+class ResizeState extends InteractionState {
+  ResizeState({required super.parent, required this._handle});
+
+  final ResizeHandle _handle;
+  late final Rect _initialBounds = _handle.node.bounds();
+
+  @override
+  void onPointerMove(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    print("D: on pointer move");
+
+    final newBounds = getNewBounds(cursorWorldPosition);
+    _handle.node.resize(newBounds);
+  }
+
+  Rect getNewBounds(Offset cursorWorldPosition) {
+    final left = switch (_handle.handle) {
+      SelectionResizeHandle.topLeft ||
+      SelectionResizeHandle.left ||
+      SelectionResizeHandle.bottomLeft => cursorWorldPosition.dx,
+      _ => _initialBounds.left,
+    };
+
+    final right = switch (_handle.handle) {
+      SelectionResizeHandle.topRight ||
+      SelectionResizeHandle.right ||
+      SelectionResizeHandle.bottomRight => cursorWorldPosition.dx,
+      _ => _initialBounds.right,
+    };
+
+    final top = switch (_handle.handle) {
+      SelectionResizeHandle.topLeft ||
+      SelectionResizeHandle.top ||
+      SelectionResizeHandle.topRight => cursorWorldPosition.dy,
+      _ => _initialBounds.top,
+    };
+
+    final bottom = switch (_handle.handle) {
+      SelectionResizeHandle.bottomLeft ||
+      SelectionResizeHandle.bottom ||
+      SelectionResizeHandle.bottomRight => cursorWorldPosition.dy,
+      _ => _initialBounds.bottom,
+    };
+
+    return Rect.fromPoints(Offset(left, top), Offset(right, bottom));
+  }
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent), context);
   }
 }
 
@@ -501,11 +565,7 @@ class ResizeHandle {
 }
 
 class ResizeHandleUtil {
-  static SelectionResizeHandle? hitTest(
-    Node node,
-    Offset worldPoint,
-    Camera camera,
-  ) {
+  static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {
     final resizeHandles = getResizeHandles(node, camera);
     print(
       "D: location of resize handles: ${resizeHandles.map((h) => h.geometry).toList()}",
@@ -515,7 +575,7 @@ class ResizeHandleUtil {
     print("D: Location of screenPoint: $screenPoint");
     for (final handle in resizeHandles) {
       if (handle.geometry.contains(screenPoint)) {
-        return handle.handle;
+        return handle;
       }
     }
     return null;
