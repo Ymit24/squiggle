@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 
@@ -11,5 +13,16 @@ void main() {
 
     expect(roundTrip.dx, closeTo(screen.dx, 0.001));
     expect(roundTrip.dy, closeTo(screen.dy, 0.001));
+  });
+
+  test('screenToWorldBounds converts origin and size', () {
+    final camera = Camera(location: const Offset(100, 200), zoom: 2.0);
+
+    const screenBounds = Rect.fromLTWH(10, 20, 50, 75);
+
+    expect(
+      camera.screenToWorldBounds(screenBounds),
+      const Rect.fromLTWH(120, 240, 100, 150),
+    );
   });
 }

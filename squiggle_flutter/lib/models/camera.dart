@@ -52,6 +52,17 @@ class Camera {
     );
   }
 
+  Rect screenToWorldBounds(Rect screenBounds) {
+    final worldOrigin = screenToWorld(screenBounds.topLeft);
+    final worldSize = screenBounds.size * zoom;
+    return Rect.fromLTWH(
+      worldOrigin.dx,
+      worldOrigin.dy,
+      worldSize.width,
+      worldSize.height,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
