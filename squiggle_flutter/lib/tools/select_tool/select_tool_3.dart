@@ -12,6 +12,24 @@ import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
+  if (context.selection.selectedFeatures.length == 1) {
+    print("D: single selection, checking resize handles");
+    final feature = context.document.featureById(
+      context.selection.selectedFeatures.first,
+    );
+    print("D: feature found: $feature");
+    if (feature != null) {
+      final handle = ResizeHandleUtil.hitTest(
+        feature,
+        worldPosition,
+        context.camera,
+      );
+      print("D: resize handle found: $handle");
+      if (handle != null) {
+        return HandleTarget(handle: handle);
+      }
+    }
+  }
   final feature = context.document.featureAtPoint(worldPosition);
   if (feature != null) {
     return NodeTarget(node: feature);
@@ -173,6 +191,7 @@ class IdleInteractionState extends InteractionState {
     print("D: idle state down. Hit target: $target");
     switch (target) {
       case HandleTarget():
+        print("D: Clicked on handle: ${target.handle}");
         // parent.transition("resize");
         break;
       case NodeTarget(node: var chaseNode):
@@ -466,5 +485,74 @@ class TranslateState extends InteractionState {
     required bool isAltPressed,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
+  }
+}
+
+class ResizeHandle {
+  final Node node;
+  final SelectionResizeHandle handle;
+  final Rect geometry;
+
+  ResizeHandle({
+    required this.node,
+    required this.handle,
+    required this.geometry,
+  });
+}
+
+class ResizeHandleUtil {
+  static SelectionResizeHandle? hitTest(
+    Node node,
+    Offset worldPoint,
+    Camera camera,
+  ) {
+    final resizeHandles = getResizeHandles(node, camera);
+    print(
+      "D: location of resize handles: ${resizeHandles.map((h) => h.geometry).toList()}",
+    );
+    print("D: Location of worldPoint: $worldPoint");
+    final screenPoint = camera.worldToScreen(worldPoint);
+    print("D: Location of screenPoint: $screenPoint");
+    for (final handle in resizeHandles) {
+      if (handle.geometry.contains(screenPoint)) {
+        return handle.handle;
+      }
+    }
+    return null;
+  }
+
+  static List<ResizeHandle> getResizeHandles(Node node, Camera camera) {
+    const kSelectionBoxPadding = 8.0;
+    const kSelectionHandleHitSize = 20.0;
+
+    final screenBounds = camera.worldToScreenBounds(node.bounds());
+    final inflated = screenBounds.inflate(kSelectionBoxPadding / camera.zoom);
+    final half = kSelectionHandleHitSize / 2;
+
+    final handleCenters = <(SelectionResizeHandle, Offset)>[
+      (SelectionResizeHandle.topLeft, inflated.topLeft - Offset(half, half)),
+      (SelectionResizeHandle.topRight, inflated.topRight + Offset(half, -half)),
+      (
+        SelectionResizeHandle.bottomLeft,
+        inflated.bottomLeft + Offset(-half, half),
+      ),
+      (
+        SelectionResizeHandle.bottomRight,
+        inflated.bottomRight + Offset(half, half),
+      ),
+    ];
+
+    return handleCenters.map((info) {
+      final (handle, center) = info;
+      return ResizeHandle(
+        node: node,
+        handle: handle,
+        geometry: Rect.fromCenter(
+          center: center,
+          width: kSelectionHandleHitSize,
+          height: kSelectionHandleHitSize,
+        ),
+      );
+    }).toList();
   }
 }
