@@ -7,24 +7,22 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
   if (context.selection.selectedFeatures.length == 1) {
-    print("D: single selection, checking resize handles");
     final feature = context.document.featureById(
       context.selection.selectedFeatures.first,
     );
-    print("D: feature found: $feature");
     if (feature != null) {
       final handle = ResizeHandleUtil.hitTest(
         feature,
         worldPosition,
         context.camera,
       );
-      print("D: resize handle found: $handle");
       if (handle != null) {
         return HandleTarget(handle: handle);
       }
@@ -36,6 +34,19 @@ HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
   }
 
   return CanvasTarget();
+}
+
+EditorCursor cursorForResizeHandle(SelectionResizeHandle handle) {
+  return switch (handle) {
+    SelectionResizeHandle.topLeft => EditorCursor.resizeUpLeft,
+    SelectionResizeHandle.top => EditorCursor.resizeUp,
+    SelectionResizeHandle.topRight => EditorCursor.resizeUpRight,
+    SelectionResizeHandle.right => EditorCursor.resizeRight,
+    SelectionResizeHandle.bottomRight => EditorCursor.resizeDownRight,
+    SelectionResizeHandle.bottom => EditorCursor.resizeDown,
+    SelectionResizeHandle.bottomLeft => EditorCursor.resizeDownLeft,
+    SelectionResizeHandle.left => EditorCursor.resizeLeft,
+  };
 }
 
 class SelectTool3 extends Tool {
@@ -118,6 +129,19 @@ class SelectTool3 extends Tool {
 
     SelectionPainter.paintSelectedFeatureBoxes(canvas, camera, context);
   }
+
+  @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return _activeInteractionState.resolveCursor(
+      context,
+      worldPosition,
+      camera,
+    );
+  }
 }
 
 abstract class InteractionState {
@@ -158,6 +182,14 @@ abstract class InteractionState {
     EditorContext context,
     ImageRepository imageRepository,
   ) {}
+
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return EditorCursor.basic;
+  }
 }
 
 class HitTarget {}
@@ -178,6 +210,22 @@ class HandleTarget extends HitTarget {
 
 class IdleInteractionState extends InteractionState {
   IdleInteractionState({required super.parent});
+
+  @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return switch (getTargetUnderCursor(context, worldPosition)) {
+      HandleTarget(handle: final handle) => cursorForResizeHandle(
+        handle.handle,
+      ),
+      NodeTarget() => EditorCursor.grab,
+      CanvasTarget() => EditorCursor.basic,
+      _ => EditorCursor.basic,
+    };
+  }
 
   @override
   void onPointerDown(
@@ -227,6 +275,15 @@ class ResizeState extends InteractionState {
 
   final ResizeHandle _handle;
   late final Rect _initialBounds = _handle.node.bounds();
+
+  @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return cursorForResizeHandle(_handle.handle);
+  }
 
   @override
   void onPointerMove(
@@ -408,6 +465,15 @@ class ClickNodeState extends InteractionState {
   final List<Node> selectedNodes;
 
   @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return EditorCursor.grabbing;
+  }
+
+  @override
   void onEnter(EditorContext context) {
     if (context.selection.isFeatureSelected(_chase.id)) {
       return;
@@ -526,6 +592,15 @@ class TranslateState extends InteractionState {
   late final Map<NodeId, Offset> _initialOrigins;
 
   @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return EditorCursor.grabbing;
+  }
+
+  @override
   void onPointerMove(
     EditorContext context,
     Offset cursorWorldPosition,
@@ -567,12 +642,7 @@ class ResizeHandle {
 class ResizeHandleUtil {
   static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {
     final resizeHandles = getResizeHandles(node, camera);
-    print(
-      "D: location of resize handles: ${resizeHandles.map((h) => h.geometry).toList()}",
-    );
-    print("D: Location of worldPoint: $worldPoint");
     final screenPoint = camera.worldToScreen(worldPoint);
-    print("D: Location of screenPoint: $screenPoint");
     for (final handle in resizeHandles) {
       if (handle.geometry.contains(screenPoint)) {
         return handle;
