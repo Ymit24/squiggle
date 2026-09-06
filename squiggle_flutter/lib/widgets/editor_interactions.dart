@@ -10,7 +10,22 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
 import 'fling_controller.dart';
+
+class PointerRecord {
+  final int pointer;
+  final int buttons;
+  final Offset screenPosition;
+  final Duration timeStamp;
+
+  PointerRecord({
+    required this.pointer,
+    required this.buttons,
+    required this.screenPosition,
+    required this.timeStamp,
+  });
+}
 
 class EditorInteractions extends StatefulWidget {
   const EditorInteractions({
@@ -37,6 +52,8 @@ class _EditorInteractionsState extends State<EditorInteractions>
   late final FlingController _flingController;
 
   Camera get _camera => widget.context.camera;
+
+  PointerRecord? lastPointerRecord;
 
   @override
   void initState() {
@@ -84,6 +101,29 @@ class _EditorInteractionsState extends State<EditorInteractions>
         behavior: HitTestBehavior.opaque,
         onPointerDown: (event) {
           if (!widget.canvasInteractionsEnabled) return;
+
+          if (lastPointerRecord != null) {
+            final recentEnough =
+                event.timeStamp - lastPointerRecord!.timeStamp <=
+                kDoubleClickInterval;
+            final sameButton = event.buttons == lastPointerRecord!.buttons;
+            final closeEnough =
+                (event.position - lastPointerRecord!.screenPosition).distance <
+                10;
+            final isLeftClick = event.buttons == kPrimaryButton;
+
+            if (recentEnough && sameButton && closeEnough && isLeftClick) {
+              _onLeftPointerDownDouble(event);
+              return;
+            }
+          }
+
+          lastPointerRecord = PointerRecord(
+            pointer: event.pointer,
+            buttons: event.buttons,
+            screenPosition: event.position,
+            timeStamp: event.timeStamp,
+          );
 
           if (event.buttons == kPrimaryButton) {
             _onLeftPointerDown(event);
@@ -224,6 +264,19 @@ class _EditorInteractionsState extends State<EditorInteractions>
       isShiftPressed: _isShiftPressed,
       isAltPressed: _isAltPressed,
     );
+  }
+
+  void _onLeftPointerDownDouble(PointerDownEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    _isPrimaryDragging = false;
+    _pointerInCanvas = _canvasLocal(event);
+
+    widget.context.tool.onDoubleClick(widget.context, world, _camera);
   }
 
   void _onLeftPointerUpdate(PointerMoveEvent event) {

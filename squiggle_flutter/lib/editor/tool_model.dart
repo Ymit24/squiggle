@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
@@ -36,6 +35,15 @@ class ToolModel extends ChangeNotifier {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
+    notifyListeners();
+  }
+
+  void onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    _activeTool.onDoubleClick(context, worldPosition, camera);
     notifyListeners();
   }
 

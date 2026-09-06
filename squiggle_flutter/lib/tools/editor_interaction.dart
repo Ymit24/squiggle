@@ -55,6 +55,12 @@ abstract class EditorInteraction {
     required bool isAltPressed,
   }) => false;
 
+  bool onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) => false;
+
   bool onKeyEvent(EditorContext context, KeyDownEvent event) => false;
 
   void deactivate(EditorContext context) {}

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
@@ -128,6 +129,21 @@ class SelectTool3 extends Tool {
   }
 
   @override
+  bool onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    _activeInteractionState.onDoubleClick(
+      context,
+      getTargetUnderCursor(context, worldPosition),
+      worldPosition,
+      camera,
+    );
+    return true;
+  }
+
+  @override
   void paint(
     Canvas canvas,
     Camera camera,
@@ -185,6 +201,13 @@ abstract class InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {}
+
+  void onDoubleClick(
+    EditorContext context,
+    HitTarget target,
+    Offset worldPosition,
+    Camera camera,
+  ) {}
 
   void paint(
     Canvas canvas,
@@ -290,6 +313,30 @@ class IdleInteractionState extends InteractionState {
           context,
         );
         break;
+    }
+  }
+
+  @override
+  void onDoubleClick(
+    EditorContext context,
+    HitTarget target,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    print("D: Idle double click on target: $target!");
+    if (target case NodeTarget(
+      node: final Feature feature,
+    ) when feature.kind is FeatureKindText) {
+      final text = feature.kind as FeatureKindText;
+      context.selection.setSelection([feature.id]);
+      context.startTextEdit(
+        EditTextEditSession(
+          featureId: feature.id,
+          initialContents: text.contents,
+          canvasLocalBounds: camera.worldToScreenBounds(feature.bounds()),
+        ),
+      );
+      return;
     }
   }
 }
