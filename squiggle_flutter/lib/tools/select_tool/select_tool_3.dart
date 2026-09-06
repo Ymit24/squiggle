@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -18,13 +19,21 @@ HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
       context.selection.selectedFeatures.first,
     );
     if (feature != null) {
+      final polyHandle = PolylineHandleUtil.hitTest(
+        feature,
+        worldPosition,
+        context.camera,
+      );
+      if (polyHandle != null) {
+        return PolylineHandleTarget(handle: polyHandle);
+      }
       final handle = ResizeHandleUtil.hitTest(
         feature,
         worldPosition,
         context.camera,
       );
       if (handle != null) {
-        return HandleTarget(handle: handle);
+        return ResizeHandleTarget(handle: handle);
       }
     }
   }
@@ -128,6 +137,7 @@ class SelectTool3 extends Tool {
     _activeInteractionState.paint(canvas, camera, context, imageRepository);
 
     SelectionPainter.paintSelectedFeatureBoxes(canvas, camera, context);
+    SelectionPainter.paintSelectedPolylineHandles(canvas, camera, context);
   }
 
   @override
@@ -202,10 +212,16 @@ class NodeTarget extends HitTarget {
   NodeTarget({required this.node});
 }
 
-class HandleTarget extends HitTarget {
+class ResizeHandleTarget extends HitTarget {
   final ResizeHandle handle;
 
-  HandleTarget({required this.handle});
+  ResizeHandleTarget({required this.handle});
+}
+
+class PolylineHandleTarget extends HitTarget {
+  final PolylineHandle handle;
+
+  PolylineHandleTarget({required this.handle});
 }
 
 class IdleInteractionState extends InteractionState {
@@ -218,9 +234,10 @@ class IdleInteractionState extends InteractionState {
     Camera camera,
   ) {
     return switch (getTargetUnderCursor(context, worldPosition)) {
-      HandleTarget(handle: final handle) => cursorForResizeHandle(
+      ResizeHandleTarget(handle: final handle) => cursorForResizeHandle(
         handle.handle,
       ),
+      PolylineHandleTarget() => EditorCursor.grab,
       NodeTarget() => EditorCursor.grab,
       CanvasTarget() => EditorCursor.basic,
       _ => EditorCursor.basic,
@@ -238,9 +255,16 @@ class IdleInteractionState extends InteractionState {
   }) {
     print("D: idle state down. Hit target: $target");
     switch (target) {
-      case HandleTarget(handle: var handle):
+      case ResizeHandleTarget(handle: var handle):
         print("D: Clicked on handle: ${target.handle}");
         parent.transition(ResizeState(parent: parent, handle: handle), context);
+        break;
+      case PolylineHandleTarget(handle: var handle):
+        print("D: Clicked on polyline handle: ${target.handle}");
+        parent.transition(
+          DragPolylineHandleState(parent: parent, handle: handle),
+          context,
+        );
         break;
       case NodeTarget(node: var chaseNode):
         final selectedNodes = context.selection.selectedFeatures.map(
@@ -267,6 +291,43 @@ class IdleInteractionState extends InteractionState {
         );
         break;
     }
+  }
+}
+
+class DragPolylineHandleState extends InteractionState {
+  DragPolylineHandleState({required super.parent, required this._handle});
+
+  final PolylineHandle _handle;
+  @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return EditorCursor.grabbing;
+  }
+
+  @override
+  void onPointerMove(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    final kind = _handle.feature.kind as FeatureKindPolyline;
+    kind.setPoint(_handle.feature, _handle.pointIndex, cursorWorldPosition);
+  }
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset cursorWorldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent), context);
   }
 }
 
@@ -637,6 +698,51 @@ class ResizeHandle {
     required this.handle,
     required this.geometry,
   });
+}
+
+class PolylineHandle {
+  final Feature feature;
+  final int pointIndex;
+  final Rect geometry;
+
+  PolylineHandle({
+    required this.feature,
+    required this.pointIndex,
+    required this.geometry,
+  });
+}
+
+class PolylineHandleUtil {
+  static PolylineHandle? hitTest(Node node, Offset worldPoint, Camera camera) {
+    if (node is! Feature) {
+      return null;
+    }
+
+    final feature = node;
+    if (feature.kind is! FeatureKindPolyline) {
+      return null;
+    }
+
+    final polyline = feature.kind as FeatureKindPolyline;
+
+    final screenPoint = camera.worldToScreen(worldPoint);
+    for (final (pointIndex, localPoint) in polyline.localPoints.indexed) {
+      final hitRect = Rect.fromCenter(
+        center: camera.worldToScreen(feature.origin + localPoint),
+        width: kSelectionHandleHitSize,
+        height: kSelectionHandleHitSize,
+      );
+      if (hitRect.contains(screenPoint)) {
+        return PolylineHandle(
+          feature: feature,
+          pointIndex: pointIndex,
+          geometry: hitRect,
+        );
+      }
+    }
+
+    return null;
+  }
 }
 
 class ResizeHandleUtil {
