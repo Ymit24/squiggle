@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -67,6 +68,12 @@ class SelectTool3 extends Tool {
   void transition(InteractionState state, EditorContext context) {
     _activeInteractionState = state;
     _activeInteractionState.onEnter(context);
+  }
+
+  @override
+  void deactivate(EditorContext context) {
+    _activeInteractionState = IdleInteractionState(parent: this);
+    context.selection.clearSelection();
   }
 
   @override
@@ -280,7 +287,14 @@ class IdleInteractionState extends InteractionState {
     switch (target) {
       case ResizeHandleTarget(handle: var handle):
         print("D: Clicked on handle: ${target.handle}");
-        parent.transition(ResizeState(parent: parent, handle: handle), context);
+        parent.transition(
+          ResizeState(
+            parent: parent,
+            handle: handle,
+            pointerDownWorld: cursorWorldPosition,
+          ),
+          context,
+        );
         break;
       case PolylineHandleTarget(handle: var handle):
         print("D: Clicked on polyline handle: ${target.handle}");
@@ -303,6 +317,7 @@ class IdleInteractionState extends InteractionState {
             start: cursorWorldPosition,
             chase: chaseNode,
             selectedNodes: selectedNodes.map((f) => f!).toList(),
+            isShiftPressed: isShiftPressed,
           ),
           context,
         );
@@ -363,7 +378,30 @@ class DragPolylineHandleState extends InteractionState {
     required bool isAltPressed,
   }) {
     final kind = _handle.feature.kind as FeatureKindPolyline;
-    kind.setPoint(_handle.feature, _handle.pointIndex, cursorWorldPosition);
+    final target = _targetPosition(
+      kind,
+      cursorWorldPosition,
+      isShiftPressed: isShiftPressed,
+    );
+    kind.setPoint(_handle.feature, _handle.pointIndex, target);
+  }
+
+  Offset _targetPosition(
+    FeatureKindPolyline kind,
+    Offset cursorWorldPosition, {
+    required bool isShiftPressed,
+  }) {
+    if (!isShiftPressed) return cursorWorldPosition;
+
+    final points = worldPoints(_handle.feature.origin, kind.localPoints);
+    final origin = _snapOrigin(points, cursorWorldPosition);
+    return snapPointTo45DegreeAngle(origin, cursorWorldPosition);
+  }
+
+  Offset _snapOrigin(List<Offset> points, Offset fallback) {
+    if (_handle.pointIndex > 0) return points[_handle.pointIndex - 1];
+    if (points.length > 1) return points[1];
+    return fallback;
   }
 
   @override
@@ -379,9 +417,16 @@ class DragPolylineHandleState extends InteractionState {
 }
 
 class ResizeState extends InteractionState {
-  ResizeState({required super.parent, required this._handle});
+  ResizeState({
+    required super.parent,
+    required this._handle,
+    required Offset pointerDownWorld,
+  }) : _resizeOffset =
+           pointerDownWorld -
+           _referenceFor(_handle.handle, _handle.node.bounds());
 
   final ResizeHandle _handle;
+  final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.bounds();
 
   @override
@@ -403,11 +448,78 @@ class ResizeState extends InteractionState {
   }) {
     print("D: on pointer move");
 
-    final newBounds = getNewBounds(cursorWorldPosition);
+    final newBounds = getNewBounds(
+      cursorWorldPosition - _resizeOffset,
+      lockAspectRatio: isShiftPressed,
+    );
     _handle.node.resize(newBounds);
   }
 
-  Rect getNewBounds(Offset cursorWorldPosition) {
+  Rect getNewBounds(
+    Offset cursorWorldPosition, {
+    bool lockAspectRatio = false,
+  }) {
+    if (lockAspectRatio) {
+      final ratio = _initialBounds.width / _initialBounds.height;
+      return switch (_handle.handle) {
+        SelectionResizeHandle.topLeft => rectFromAnchorWithAspectRatio(
+          _initialBounds.bottomRight,
+          cursorWorldPosition,
+          ratio,
+        ),
+        SelectionResizeHandle.topRight => rectFromAnchorWithAspectRatio(
+          _initialBounds.bottomLeft,
+          cursorWorldPosition,
+          ratio,
+        ),
+        SelectionResizeHandle.bottomRight => rectFromAnchorWithAspectRatio(
+          _initialBounds.topLeft,
+          cursorWorldPosition,
+          ratio,
+        ),
+        SelectionResizeHandle.bottomLeft => rectFromAnchorWithAspectRatio(
+          _initialBounds.topRight,
+          cursorWorldPosition,
+          ratio,
+        ),
+        SelectionResizeHandle.top => edgeResizeWithAspectRatio(
+          _initialBounds,
+          cursorWorldPosition,
+          resizeTop: true,
+          resizeBottom: false,
+          resizeLeft: false,
+          resizeRight: false,
+          aspectRatio: ratio,
+        ),
+        SelectionResizeHandle.bottom => edgeResizeWithAspectRatio(
+          _initialBounds,
+          cursorWorldPosition,
+          resizeTop: false,
+          resizeBottom: true,
+          resizeLeft: false,
+          resizeRight: false,
+          aspectRatio: ratio,
+        ),
+        SelectionResizeHandle.left => edgeResizeWithAspectRatio(
+          _initialBounds,
+          cursorWorldPosition,
+          resizeTop: false,
+          resizeBottom: false,
+          resizeLeft: true,
+          resizeRight: false,
+          aspectRatio: ratio,
+        ),
+        SelectionResizeHandle.right => edgeResizeWithAspectRatio(
+          _initialBounds,
+          cursorWorldPosition,
+          resizeTop: false,
+          resizeBottom: false,
+          resizeLeft: false,
+          resizeRight: true,
+          aspectRatio: ratio,
+        ),
+      };
+    }
     final left = switch (_handle.handle) {
       SelectionResizeHandle.topLeft ||
       SelectionResizeHandle.left ||
@@ -437,6 +549,19 @@ class ResizeState extends InteractionState {
     };
 
     return Rect.fromPoints(Offset(left, top), Offset(right, bottom));
+  }
+
+  static Offset _referenceFor(SelectionResizeHandle handle, Rect bounds) {
+    return switch (handle) {
+      SelectionResizeHandle.topLeft ||
+      SelectionResizeHandle.top ||
+      SelectionResizeHandle.left => bounds.topLeft,
+      SelectionResizeHandle.topRight => bounds.topRight,
+      SelectionResizeHandle.right ||
+      SelectionResizeHandle.bottomRight ||
+      SelectionResizeHandle.bottom => bounds.bottomRight,
+      SelectionResizeHandle.bottomLeft => bounds.bottomLeft,
+    };
   }
 
   @override
@@ -540,9 +665,18 @@ class ClickCanvasState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    parent.transition(
-      BoxSelectionState(parent: parent, start: _start, isShift: isShiftPressed),
+    final state = BoxSelectionState(
+      parent: parent,
+      start: _start,
+      isShift: isShiftPressed,
+    );
+    parent.transition(state, context);
+    state.onPointerMove(
       context,
+      cursorWorldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
     );
   }
 
@@ -555,7 +689,9 @@ class ClickCanvasState extends InteractionState {
     required bool isAltPressed,
   }) {
     print("D: click canvas state up");
-    context.selection.setSelection([]);
+    if (!isShiftPressed) {
+      context.selection.setSelection([]);
+    }
     parent.transition(IdleInteractionState(parent: parent), context);
   }
 }
@@ -566,11 +702,16 @@ class ClickNodeState extends InteractionState {
     required this._start,
     required this._chase,
     required this.selectedNodes,
+    required this.isShiftPressed,
   });
 
   final Offset _start;
   final Node _chase;
   final List<Node> selectedNodes;
+  final bool isShiftPressed;
+  late final bool _wasSelected = selectedNodes.any(
+    (node) => node.id == _chase.id,
+  );
 
   @override
   EditorCursor resolveCursor(
@@ -583,13 +724,19 @@ class ClickNodeState extends InteractionState {
 
   @override
   void onEnter(EditorContext context) {
-    if (context.selection.isFeatureSelected(_chase.id)) {
+    if (_wasSelected) {
       return;
     }
 
-    context.selection.setSelection([_chase.id]);
-    selectedNodes.clear();
-    selectedNodes.add(_chase);
+    if (isShiftPressed) {
+      context.selection.selectFeature(_chase.id);
+      selectedNodes.add(_chase);
+    } else {
+      context.selection.setSelection([_chase.id]);
+      selectedNodes
+        ..clear()
+        ..add(_chase);
+    }
   }
 
   @override
@@ -613,14 +760,19 @@ class ClickNodeState extends InteractionState {
           context,
         );
       } else {
-        parent.transition(
-          TranslateState(
-            parent: parent,
-            chase: _chase,
-            selectedNodes: selectedNodes,
-            start: _start,
-          ),
+        final state = TranslateState(
+          parent: parent,
+          chase: _chase,
+          selectedNodes: selectedNodes,
+          start: _start,
+        );
+        parent.transition(state, context);
+        state.onPointerMove(
           context,
+          cursorWorldPosition,
+          camera,
+          isShiftPressed: isShiftPressed,
+          isAltPressed: isAltPressed,
         );
       }
     }
@@ -635,11 +787,13 @@ class ClickNodeState extends InteractionState {
     required bool isAltPressed,
   }) {
     print("D: click state up");
-    // if (context.selection.isFeatureSelected(_chase.id)) {
-    //   context.selection.setSelection([]);
-    // } else {
-    //   context.selection.setSelection([_chase.id]);
-    // }
+    if (isShiftPressed) {
+      if (_wasSelected) {
+        context.selection.deselectFeature(_chase.id);
+      }
+    } else {
+      context.selection.setSelection([_chase.id]);
+    }
     parent.transition(IdleInteractionState(parent: parent), context);
   }
 }
@@ -716,7 +870,10 @@ class TranslateState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final totalMotion = cursorWorldPosition - _start;
+    final target = isShiftPressed
+        ? constrainMoveToAxis(_start, cursorWorldPosition)
+        : cursorWorldPosition;
+    final totalMotion = target - _start;
 
     for (var node in selectedNodes) {
       node.origin = _initialOrigins[node.id]! + totalMotion;
