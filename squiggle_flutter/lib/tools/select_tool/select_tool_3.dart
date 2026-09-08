@@ -797,6 +797,7 @@ class ClickNodeState extends InteractionState {
               originsAtDragStart: {
                 for (final node in selectedNodes) node.id: node.origin,
               },
+              selectionAlreadyMoved: false,
             )
           : TranslateState(
               parent: parent,
@@ -840,11 +841,13 @@ class DuplicateState extends InteractionState {
     required this._start,
     required this._selectedNodes,
     required this._originsAtDragStart,
+    required this._selectionAlreadyMoved,
   });
 
   final Offset _start;
   final List<Node> _selectedNodes;
   final Map<NodeId, Offset> _originsAtDragStart;
+  final bool _selectionAlreadyMoved;
 
   @override
   void onPointerMove(
@@ -874,7 +877,10 @@ class DuplicateState extends InteractionState {
       start: _start,
       selectedNodes: clones,
       initialOrigins: {
-        for (final node in clones) node.id: node.origin - totalMotion,
+        for (final node in clones)
+          node.id: _selectionAlreadyMoved
+              ? node.origin - totalMotion
+              : node.origin,
       },
       hasDuplicated: true,
     );
@@ -934,6 +940,7 @@ class TranslateState extends InteractionState {
         start: _start,
         selectedNodes: selectedNodes,
         originsAtDragStart: _initialOrigins,
+        selectionAlreadyMoved: true,
       );
       parent.transition(state, context);
       state.onPointerMove(
