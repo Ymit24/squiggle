@@ -183,6 +183,18 @@ Offset constrainMoveToAxis(Offset dragStart, Offset current) {
   return Offset(dragStart.dx, current.dy);
 }
 
+/// Returns movement from [dragStart], optionally locked to one axis.
+Offset constrainedMoveDelta(
+  Offset dragStart,
+  Offset current, {
+  required bool constrainToAxis,
+}) {
+  final target = constrainToAxis
+      ? constrainMoveToAxis(dragStart, current)
+      : current;
+  return target - dragStart;
+}
+
 /// Corner resize with a fixed [anchor] and locked width/height ratio.
 Rect rectFromAnchorWithAspectRatio(
   Offset anchor,

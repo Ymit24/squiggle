@@ -451,6 +451,7 @@ class ResizeState extends InteractionState {
     final newBounds = getNewBounds(
       cursorWorldPosition - _resizeOffset,
       lockAspectRatio: isShiftPressed,
+      symmetric: isAltPressed,
     );
     _handle.node.resize(newBounds);
   }
@@ -458,98 +459,137 @@ class ResizeState extends InteractionState {
   Rect getNewBounds(
     Offset cursorWorldPosition, {
     bool lockAspectRatio = false,
-  }) {
+    bool symmetric = false,
+  }) => symmetric
+      ? _symmetricBounds(cursorWorldPosition, lockAspectRatio)
+      : _asymmetricBounds(cursorWorldPosition, lockAspectRatio);
+
+  Rect _symmetricBounds(Offset cursorWorldPosition, bool lockAspectRatio) {
+    final center = _initialBounds.center;
     if (lockAspectRatio) {
-      final ratio = _initialBounds.width / _initialBounds.height;
-      return switch (_handle.handle) {
-        SelectionResizeHandle.topLeft => rectFromAnchorWithAspectRatio(
-          _initialBounds.bottomRight,
-          cursorWorldPosition,
-          ratio,
-        ),
-        SelectionResizeHandle.topRight => rectFromAnchorWithAspectRatio(
-          _initialBounds.bottomLeft,
-          cursorWorldPosition,
-          ratio,
-        ),
-        SelectionResizeHandle.bottomRight => rectFromAnchorWithAspectRatio(
-          _initialBounds.topLeft,
-          cursorWorldPosition,
-          ratio,
-        ),
-        SelectionResizeHandle.bottomLeft => rectFromAnchorWithAspectRatio(
-          _initialBounds.topRight,
-          cursorWorldPosition,
-          ratio,
-        ),
-        SelectionResizeHandle.top => edgeResizeWithAspectRatio(
-          _initialBounds,
-          cursorWorldPosition,
-          resizeTop: true,
-          resizeBottom: false,
-          resizeLeft: false,
-          resizeRight: false,
-          aspectRatio: ratio,
-        ),
-        SelectionResizeHandle.bottom => edgeResizeWithAspectRatio(
-          _initialBounds,
-          cursorWorldPosition,
-          resizeTop: false,
-          resizeBottom: true,
-          resizeLeft: false,
-          resizeRight: false,
-          aspectRatio: ratio,
-        ),
-        SelectionResizeHandle.left => edgeResizeWithAspectRatio(
-          _initialBounds,
-          cursorWorldPosition,
-          resizeTop: false,
-          resizeBottom: false,
-          resizeLeft: true,
-          resizeRight: false,
-          aspectRatio: ratio,
-        ),
-        SelectionResizeHandle.right => edgeResizeWithAspectRatio(
-          _initialBounds,
-          cursorWorldPosition,
-          resizeTop: false,
-          resizeBottom: false,
-          resizeLeft: false,
-          resizeRight: true,
-          aspectRatio: ratio,
-        ),
+      final isCorner = switch (_handle.handle) {
+        SelectionResizeHandle.topLeft ||
+        SelectionResizeHandle.topRight ||
+        SelectionResizeHandle.bottomLeft ||
+        SelectionResizeHandle.bottomRight => true,
+        _ => false,
       };
+      return symmetricRectWithAspectRatio(
+        center,
+        cursorWorldPosition,
+        _initialBounds.width / _initialBounds.height,
+        resizeHorizontal: isCorner || _resizesHorizontally,
+        resizeVertical: isCorner || _resizesVertically,
+      );
     }
-    final left = switch (_handle.handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.left ||
-      SelectionResizeHandle.bottomLeft => cursorWorldPosition.dx,
-      _ => _initialBounds.left,
-    };
 
-    final right = switch (_handle.handle) {
+    return switch (_handle.handle) {
+      SelectionResizeHandle.topLeft ||
       SelectionResizeHandle.topRight ||
-      SelectionResizeHandle.right ||
-      SelectionResizeHandle.bottomRight => cursorWorldPosition.dx,
-      _ => _initialBounds.right,
-    };
-
-    final top = switch (_handle.handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.top ||
-      SelectionResizeHandle.topRight => cursorWorldPosition.dy,
-      _ => _initialBounds.top,
-    };
-
-    final bottom = switch (_handle.handle) {
       SelectionResizeHandle.bottomLeft ||
-      SelectionResizeHandle.bottom ||
-      SelectionResizeHandle.bottomRight => cursorWorldPosition.dy,
-      _ => _initialBounds.bottom,
+      SelectionResizeHandle.bottomRight => Rect.fromCenter(
+        center: center,
+        width: (cursorWorldPosition.dx - center.dx).abs() * 2,
+        height: (cursorWorldPosition.dy - center.dy).abs() * 2,
+      ),
+      SelectionResizeHandle.top ||
+      SelectionResizeHandle.bottom => Rect.fromCenter(
+        center: center,
+        width: _initialBounds.width,
+        height: (cursorWorldPosition.dy - center.dy).abs() * 2,
+      ),
+      SelectionResizeHandle.left ||
+      SelectionResizeHandle.right => Rect.fromCenter(
+        center: center,
+        width: (cursorWorldPosition.dx - center.dx).abs() * 2,
+        height: _initialBounds.height,
+      ),
     };
-
-    return Rect.fromPoints(Offset(left, top), Offset(right, bottom));
   }
+
+  bool get _resizesHorizontally =>
+      _handle.handle == SelectionResizeHandle.left ||
+      _handle.handle == SelectionResizeHandle.right;
+
+  bool get _resizesVertically =>
+      _handle.handle == SelectionResizeHandle.top ||
+      _handle.handle == SelectionResizeHandle.bottom;
+
+  Rect _asymmetricBounds(Offset cursorWorldPosition, bool lockAspectRatio) =>
+      lockAspectRatio
+      ? _aspectLockedAsymmetricBounds(cursorWorldPosition)
+      : Rect.fromLTRB(
+          _movesLeft ? cursorWorldPosition.dx : _initialBounds.left,
+          _movesTop ? cursorWorldPosition.dy : _initialBounds.top,
+          _movesRight ? cursorWorldPosition.dx : _initialBounds.right,
+          _movesBottom ? cursorWorldPosition.dy : _initialBounds.bottom,
+        );
+
+  Rect _aspectLockedAsymmetricBounds(Offset cursorWorldPosition) {
+    final ratio = _initialBounds.width / _initialBounds.height;
+    return switch (_handle.handle) {
+      SelectionResizeHandle.topLeft => rectFromAnchorWithAspectRatio(
+        _initialBounds.bottomRight,
+        cursorWorldPosition,
+        ratio,
+      ),
+      SelectionResizeHandle.topRight => rectFromAnchorWithAspectRatio(
+        _initialBounds.bottomLeft,
+        cursorWorldPosition,
+        ratio,
+      ),
+      SelectionResizeHandle.bottomRight => rectFromAnchorWithAspectRatio(
+        _initialBounds.topLeft,
+        cursorWorldPosition,
+        ratio,
+      ),
+      SelectionResizeHandle.bottomLeft => rectFromAnchorWithAspectRatio(
+        _initialBounds.topRight,
+        cursorWorldPosition,
+        ratio,
+      ),
+      SelectionResizeHandle.top ||
+      SelectionResizeHandle.right ||
+      SelectionResizeHandle.bottom ||
+      SelectionResizeHandle.left => edgeResizeWithAspectRatio(
+        _initialBounds,
+        cursorWorldPosition,
+        resizeTop: _movesTop,
+        resizeBottom: _movesBottom,
+        resizeLeft: _movesLeft,
+        resizeRight: _movesRight,
+        aspectRatio: ratio,
+      ),
+    };
+  }
+
+  bool get _movesLeft => switch (_handle.handle) {
+    SelectionResizeHandle.topLeft ||
+    SelectionResizeHandle.left ||
+    SelectionResizeHandle.bottomLeft => true,
+    _ => false,
+  };
+
+  bool get _movesRight => switch (_handle.handle) {
+    SelectionResizeHandle.topRight ||
+    SelectionResizeHandle.right ||
+    SelectionResizeHandle.bottomRight => true,
+    _ => false,
+  };
+
+  bool get _movesTop => switch (_handle.handle) {
+    SelectionResizeHandle.topLeft ||
+    SelectionResizeHandle.top ||
+    SelectionResizeHandle.topRight => true,
+    _ => false,
+  };
+
+  bool get _movesBottom => switch (_handle.handle) {
+    SelectionResizeHandle.bottomLeft ||
+    SelectionResizeHandle.bottom ||
+    SelectionResizeHandle.bottomRight => true,
+    _ => false,
+  };
 
   static Offset _referenceFor(SelectionResizeHandle handle, Rect bounds) {
     return switch (handle) {
@@ -749,32 +789,28 @@ class ClickNodeState extends InteractionState {
   }) {
     print("D: click state move");
     if (selectedNodes.isNotEmpty) {
-      if (isAltPressed) {
-        parent.transition(
-          DuplicateState(
-            parent: parent,
-            chase: _chase,
-            selectedNodes: selectedNodes,
-            start: _start,
-          ),
-          context,
-        );
-      } else {
-        final state = TranslateState(
-          parent: parent,
-          chase: _chase,
-          selectedNodes: selectedNodes,
-          start: _start,
-        );
-        parent.transition(state, context);
-        state.onPointerMove(
-          context,
-          cursorWorldPosition,
-          camera,
-          isShiftPressed: isShiftPressed,
-          isAltPressed: isAltPressed,
-        );
-      }
+      final state = isAltPressed
+          ? DuplicateState(
+              parent: parent,
+              start: _start,
+              selectedNodes: selectedNodes,
+              originsAtDragStart: {
+                for (final node in selectedNodes) node.id: node.origin,
+              },
+            )
+          : TranslateState(
+              parent: parent,
+              selectedNodes: selectedNodes,
+              start: _start,
+            );
+      parent.transition(state, context);
+      state.onPointerMove(
+        context,
+        cursorWorldPosition,
+        camera,
+        isShiftPressed: isShiftPressed,
+        isAltPressed: isAltPressed,
+      );
     }
   }
 
@@ -802,40 +838,54 @@ class DuplicateState extends InteractionState {
   DuplicateState({
     required super.parent,
     required this._start,
-    required this._chase,
-    required this.selectedNodes,
+    required this._selectedNodes,
+    required this._originsAtDragStart,
   });
 
   final Offset _start;
-  final Node _chase;
-  final List<Node> selectedNodes;
+  final List<Node> _selectedNodes;
+  final Map<NodeId, Offset> _originsAtDragStart;
 
   @override
-  void onEnter(EditorContext context) {
-    print("D: duplicate state enter");
-    final cloneNodes = selectedNodes.map((f) => f.copyWith(id: noId)).toList();
-    context.document.addNodes(cloneNodes);
-
-    parent.transition(
-      TranslateState(
-        parent: parent,
-        start: _start,
-        chase: _chase,
-        selectedNodes: selectedNodes,
-      ),
-      context,
-    );
-  }
-
-  @override
-  void onPointerUp(
+  void onPointerMove(
     EditorContext context,
     Offset cursorWorldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    parent.transition(IdleInteractionState(parent: parent), context);
+    final totalMotion = constrainedMoveDelta(
+      _start,
+      cursorWorldPosition,
+      constrainToAxis: isShiftPressed,
+    );
+    final clones = _selectedNodes
+        .map((node) => node.copyWith(id: noId))
+        .toList();
+
+    for (final node in _selectedNodes) {
+      node.origin = _originsAtDragStart[node.id]!;
+    }
+    context.document.addNodes(clones);
+    context.selection.setSelection(clones.map((node) => node.id).toList());
+
+    final state = TranslateState(
+      parent: parent,
+      start: _start,
+      selectedNodes: clones,
+      initialOrigins: {
+        for (final node in clones) node.id: node.origin - totalMotion,
+      },
+      hasDuplicated: true,
+    );
+    parent.transition(state, context);
+    state.onPointerMove(
+      context,
+      cursorWorldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
   }
 }
 
@@ -843,15 +893,17 @@ class TranslateState extends InteractionState {
   TranslateState({
     required super.parent,
     required this._start,
-    required Node chase,
     required this.selectedNodes,
-  }) {
-    _initialOrigins = {for (final node in selectedNodes) node.id: node.origin};
-  }
+    Map<NodeId, Offset>? initialOrigins,
+    this._hasDuplicated = false,
+  }) : _initialOrigins =
+           initialOrigins ??
+           {for (final node in selectedNodes) node.id: node.origin};
 
   final Offset _start;
   final List<Node> selectedNodes;
-  late final Map<NodeId, Offset> _initialOrigins;
+  final Map<NodeId, Offset> _initialOrigins;
+  final bool _hasDuplicated;
 
   @override
   EditorCursor resolveCursor(
@@ -870,10 +922,29 @@ class TranslateState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final target = isShiftPressed
-        ? constrainMoveToAxis(_start, cursorWorldPosition)
-        : cursorWorldPosition;
-    final totalMotion = target - _start;
+    final totalMotion = constrainedMoveDelta(
+      _start,
+      cursorWorldPosition,
+      constrainToAxis: isShiftPressed,
+    );
+
+    if (isAltPressed && !_hasDuplicated) {
+      final state = DuplicateState(
+        parent: parent,
+        start: _start,
+        selectedNodes: selectedNodes,
+        originsAtDragStart: _initialOrigins,
+      );
+      parent.transition(state, context);
+      state.onPointerMove(
+        context,
+        cursorWorldPosition,
+        camera,
+        isShiftPressed: isShiftPressed,
+        isAltPressed: isAltPressed,
+      );
+      return;
+    }
 
     for (var node in selectedNodes) {
       node.origin = _initialOrigins[node.id]! + totalMotion;
