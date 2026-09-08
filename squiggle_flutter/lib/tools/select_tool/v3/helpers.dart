@@ -1,0 +1,46 @@
+part of '../select_tool_3.dart';
+
+HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
+  if (context.selection.selectedFeatures.length == 1) {
+    final feature = context.document.featureById(
+      context.selection.selectedFeatures.first,
+    );
+    if (feature != null) {
+      final polyHandle = PolylineHandleUtil.hitTest(
+        feature,
+        worldPosition,
+        context.camera,
+      );
+      if (polyHandle != null) {
+        return PolylineHandleTarget(handle: polyHandle);
+      }
+      final handle = ResizeHandleUtil.hitTest(
+        feature,
+        worldPosition,
+        context.camera,
+      );
+      if (handle != null) {
+        return ResizeHandleTarget(handle: handle);
+      }
+    }
+  }
+  final feature = context.document.featureAtPoint(worldPosition);
+  if (feature != null) {
+    return NodeTarget(node: feature);
+  }
+
+  return CanvasTarget();
+}
+
+EditorCursor cursorForResizeHandle(SelectionResizeHandle handle) {
+  return switch (handle) {
+    SelectionResizeHandle.topLeft => EditorCursor.resizeUpLeft,
+    SelectionResizeHandle.top => EditorCursor.resizeUp,
+    SelectionResizeHandle.topRight => EditorCursor.resizeUpRight,
+    SelectionResizeHandle.right => EditorCursor.resizeRight,
+    SelectionResizeHandle.bottomRight => EditorCursor.resizeDownRight,
+    SelectionResizeHandle.bottom => EditorCursor.resizeDown,
+    SelectionResizeHandle.bottomLeft => EditorCursor.resizeDownLeft,
+    SelectionResizeHandle.left => EditorCursor.resizeLeft,
+  };
+}
