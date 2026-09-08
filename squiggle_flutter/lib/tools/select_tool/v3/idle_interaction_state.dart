@@ -1,4 +1,18 @@
-part of '../select_tool_3.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
+import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
+
+import 'click_canvas_state.dart';
+import 'click_node_state.dart';
+import 'drag_polyline_handle_state.dart';
+import 'helpers.dart';
+import 'hit_target.dart';
+import 'interaction_state.dart';
+import 'resize_state.dart';
 
 class IdleInteractionState extends InteractionState {
   IdleInteractionState({required super.parent});

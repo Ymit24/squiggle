@@ -3,33 +3,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
-
-part 'v3/helpers.dart';
-part 'v3/interaction_state.dart';
-part 'v3/hit_target.dart';
-part 'v3/idle_interaction_state.dart';
-part 'v3/drag_polyline_handle_state.dart';
-part 'v3/resize_state.dart';
-part 'v3/box_selection_state.dart';
-part 'v3/click_canvas_state.dart';
-part 'v3/click_node_state.dart';
-part 'v3/duplicate_state.dart';
-part 'v3/translate_state.dart';
-part 'v3/resize_handle.dart';
-part 'v3/polyline_handle.dart';
-part 'v3/polyline_handle_util.dart';
-part 'v3/resize_handle_util.dart';
+import 'package:squiggle_flutter/tools/select_tool/v3/helpers.dart';
+import 'package:squiggle_flutter/tools/select_tool/v3/idle_interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/v3/interaction_state.dart';
 
 class SelectTool3 extends Tool {
   late InteractionState _activeInteractionState = IdleInteractionState(

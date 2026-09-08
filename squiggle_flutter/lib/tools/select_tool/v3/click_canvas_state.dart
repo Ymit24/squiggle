@@ -1,4 +1,11 @@
-part of '../select_tool_3.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/models/camera.dart';
+
+import 'box_selection_state.dart';
+import 'idle_interaction_state.dart';
+import 'interaction_state.dart';
 
 class ClickCanvasState extends InteractionState {
   ClickCanvasState({required super.parent, required this._start});

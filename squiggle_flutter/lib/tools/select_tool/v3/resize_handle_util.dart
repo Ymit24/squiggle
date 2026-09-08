@@ -1,4 +1,10 @@
-part of '../select_tool_3.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+
+import 'resize_handle.dart';
 
 class ResizeHandleUtil {
   static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {

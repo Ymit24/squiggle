@@ -1,4 +1,6 @@
-part of '../select_tool_3.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/models/feature.dart';
 
 class PolylineHandle {
   final Feature feature;

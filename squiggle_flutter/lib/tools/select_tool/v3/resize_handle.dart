@@ -1,4 +1,7 @@
-part of '../select_tool_3.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 class ResizeHandle {
   final Node node;

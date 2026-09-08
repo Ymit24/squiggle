@@ -1,4 +1,12 @@
-part of '../select_tool_3.dart';
+import 'dart:ui';
+
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
+
+import 'idle_interaction_state.dart';
+import 'interaction_state.dart';
 
 class BoxSelectionState extends InteractionState {
   BoxSelectionState({
