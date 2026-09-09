@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import 'node.dart';
 
 final class Feature extends Node {
@@ -30,4 +32,25 @@ final class Feature extends Node {
     'height': height,
     'content': content,
   };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Feature &&
+          id == other.id &&
+          originX == other.originX &&
+          originY == other.originY &&
+          width == other.width &&
+          height == other.height &&
+          const DeepCollectionEquality().equals(content, other.content);
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    originX,
+    originY,
+    width,
+    height,
+    const DeepCollectionEquality().hash(content),
+  );
 }

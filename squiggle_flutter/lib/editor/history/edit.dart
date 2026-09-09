@@ -114,7 +114,7 @@ final class DocumentEdit implements Edit {
     for (final entry in _before.entries) {
       final node = document.nodeById(entry.key);
       final after = node?.toDataModel();
-      if (!_sameNode(entry.value, after)) {
+      if (entry.value != after) {
         changes[entry.key] = _NodeChange(entry.value, after);
       }
     }
@@ -217,31 +217,4 @@ final class _NodeChange {
 
   final data.Node? before;
   final data.Node? after;
-}
-
-bool _sameNode(data.Node? a, data.Node? b) {
-  if (identical(a, b)) return true;
-  if (a is data.Feature && b is data.Feature) {
-    return a.id == b.id &&
-        a.originX == b.originX &&
-        a.originY == b.originY &&
-        a.width == b.width &&
-        a.height == b.height &&
-        const DeepCollectionEquality().equals(a.content, b.content);
-  }
-  if (a is data.Group && b is data.Group) {
-    return a.id == b.id &&
-        a.originX == b.originX &&
-        a.originY == b.originY &&
-        _sameNodes(a.children, b.children);
-  }
-  return false;
-}
-
-bool _sameNodes(List<data.Node> a, List<data.Node> b) {
-  if (a.length != b.length) return false;
-  for (var i = 0; i < a.length; i++) {
-    if (!_sameNode(a[i], b[i])) return false;
-  }
-  return true;
 }
