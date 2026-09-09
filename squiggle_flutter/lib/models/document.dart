@@ -50,11 +50,12 @@ class Document {
     );
   }
 
-  List<Feature> get _features => nodes.whereType<Feature>().toList();
+  List<Feature> get _features => _nodes.whereType<Feature>().toList();
 
   final List<Node> _nodes = [];
+  final Map<NodeId, Node> _nodesById = {};
 
-  List<Node> get nodes => _nodes;
+  List<Node> get nodes => List.unmodifiable(_nodes);
 
   /// Live view of the features in document order.
   List<Feature> get features => List.unmodifiable(_features);
@@ -68,11 +69,11 @@ class Document {
     return id;
   }
 
+  Node? nodeById(NodeId id) => _nodesById[id];
+
   Feature? featureById(NodeId id) {
-    for (final feature in _features) {
-      if (feature.id == id) return feature;
-    }
-    return null;
+    final node = _nodesById[id];
+    return node is Feature ? node : null;
   }
 
   /// Top-most feature whose bounds contain [worldPoint], if any.
@@ -94,7 +95,11 @@ class Document {
     } else if (feature.id.value >= _nextId.value) {
       _nextId = NodeId.newId(feature.id.value + 1);
     }
+    if (_nodesById.containsKey(feature.id)) {
+      throw ArgumentError.value(feature.id, 'feature.id', 'Duplicate node id');
+    }
     _nodes.add(feature);
+    _nodesById[feature.id] = feature;
 
     return feature;
   }
@@ -108,16 +113,32 @@ class Document {
 
   // TODO: Change this to return bool
   void removeFeature(NodeId id) {
-    final index = _nodes.indexWhere((node) => node.id == id);
-    if (index == -1) return;
-
-    _nodes.removeAt(index);
+    final node = _nodesById.remove(id);
+    if (node == null) return;
+    _nodes.remove(node);
   }
 
   void removeFeatures(Iterable<NodeId> ids) {
-    for (final id in ids) {
-      removeFeature(id);
+    final removedIds = ids.toSet();
+    if (removedIds.isEmpty) return;
+    _nodes.removeWhere((node) => removedIds.contains(node.id));
+    for (final id in removedIds) {
+      _nodesById.remove(id);
     }
+  }
+
+  /// Reorders all nodes without changing their contents.
+  void reorderNodes(Iterable<NodeId> ids) {
+    final order = ids.toList();
+    if (order.length != _nodes.length || order.toSet().length != order.length) {
+      throw ArgumentError('Order must contain every node id exactly once');
+    }
+    if (!order.every(_nodesById.containsKey)) {
+      throw ArgumentError('Order contains an unknown node id');
+    }
+    _nodes
+      ..clear()
+      ..addAll(order.map((id) => _nodesById[id]!));
   }
 
   /// Replaces this document's contents with [other], notifying once.
@@ -125,6 +146,9 @@ class Document {
     _nodes
       ..clear()
       ..addAll(other._features.map((feature) => feature.copyWith()));
+    _nodesById
+      ..clear()
+      ..addEntries(_nodes.map((node) => MapEntry(node.id, node)));
     _nextId = other._nextId;
     name = other.name;
   }
