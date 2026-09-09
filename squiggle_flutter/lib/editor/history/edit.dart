@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
@@ -65,7 +64,7 @@ final class DocumentEdit implements Edit {
       if (!identical(document.nodeById(node.id), node)) {
         throw ArgumentError.value(node, 'nodes', 'Node is not in the document');
       }
-      _before.putIfAbsent(node.id, () => _capture(node));
+      _before.putIfAbsent(node.id, node.toDataModel);
     }
   }
 
@@ -78,7 +77,6 @@ final class DocumentEdit implements Edit {
   @override
   T add<T extends Node>(T node) {
     _ensureOpen();
-    _ensureSupported(node);
     _watchOrder();
     document.addNode(node);
     final added = node;
@@ -115,7 +113,7 @@ final class DocumentEdit implements Edit {
     final changes = <NodeId, _NodeChange>{};
     for (final entry in _before.entries) {
       final node = document.nodeById(entry.key);
-      final after = node == null ? null : _capture(node);
+      final after = node?.toDataModel();
       if (!_sameNode(entry.value, after)) {
         changes[entry.key] = _NodeChange(entry.value, after);
       }
@@ -164,12 +162,6 @@ final class DocumentEdit implements Edit {
   void _ensureOpen() {
     if (!_isOpen) throw StateError('Edit is already closed');
   }
-
-  void _ensureSupported(Node node) {
-    if (node is! Feature) {
-      throw UnsupportedError('Cannot edit ${node.runtimeType}');
-    }
-  }
 }
 
 final class DocumentEditChange implements EditChange {
@@ -208,9 +200,9 @@ final class DocumentEditChange implements EditChange {
       if (state == null) {
         if (current != null) removals.add(entry.key);
       } else if (current == null) {
-        document.addNode(_restore(state));
+        document.addNode(Node.fromDataModel(state));
       } else {
-        _restoreInto(current, state);
+        current.restoreFromDataModel(state);
       }
     }
     document.removeFeatures(removals);
@@ -227,30 +219,6 @@ final class _NodeChange {
   final data.Node? after;
 }
 
-data.Node _capture(Node node) => switch (node) {
-  Feature feature => feature.toDataModel(),
-  _ => throw UnsupportedError('Cannot capture ${node.runtimeType}'),
-};
-
-Node _restore(data.Node node) => switch (node) {
-  data.Feature feature => Feature.fromDataModel(feature),
-  _ => throw UnsupportedError('Cannot restore ${node.runtimeType}'),
-};
-
-void _restoreInto(Node node, data.Node state) {
-  if (node case final Feature feature when state is data.Feature) {
-    final restored = Feature.fromDataModel(state);
-    feature
-      ..origin = restored.origin
-      ..size = restored.size
-      ..kind = restored.kind;
-    return;
-  }
-  throw UnsupportedError(
-    'Cannot restore ${state.runtimeType} into ${node.runtimeType}',
-  );
-}
-
 bool _sameNode(data.Node? a, data.Node? b) {
   if (identical(a, b)) return true;
   if (a is data.Feature && b is data.Feature) {
@@ -261,5 +229,19 @@ bool _sameNode(data.Node? a, data.Node? b) {
         a.height == b.height &&
         const DeepCollectionEquality().equals(a.content, b.content);
   }
+  if (a is data.Group && b is data.Group) {
+    return a.id == b.id &&
+        a.originX == b.originX &&
+        a.originY == b.originY &&
+        _sameNodes(a.children, b.children);
+  }
   return false;
+}
+
+bool _sameNodes(List<data.Node> a, List<data.Node> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!_sameNode(a[i], b[i])) return false;
+  }
+  return true;
 }

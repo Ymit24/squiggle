@@ -28,25 +28,14 @@ class Document {
 
   factory Document.fromDataModel(data.Document raw) {
     final document = Document(name: raw.name);
-    document.addNodes([
-      for (final node in raw.nodes)
-        switch (node) {
-          data.Feature() => Feature.fromDataModel(node),
-          data.Group() => throw FormatException(
-            'Groups are not supported by the current Document model',
-          ),
-          _ => throw FormatException(
-            'Unsupported node type: ${node.runtimeType}',
-          ),
-        },
-    ]);
+    document.addNodes(raw.nodes.map(Node.fromDataModel));
     return document;
   }
 
   data.Document toDataModel() {
     return data.Document(
       name: name,
-      nodes: _features.map((feature) => feature.toDataModel()).toList(),
+      nodes: _nodes.map((node) => node.toDataModel()).toList(),
     );
   }
 
@@ -145,7 +134,7 @@ class Document {
   void replaceFrom(Document other) {
     _nodes
       ..clear()
-      ..addAll(other._features.map((feature) => feature.copyWith()));
+      ..addAll(other._nodes.map((node) => node.copyWith()));
     _nodesById
       ..clear()
       ..addEntries(_nodes.map((node) => MapEntry(node.id, node)));

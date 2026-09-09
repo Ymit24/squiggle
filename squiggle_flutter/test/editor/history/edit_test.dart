@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 void main() {
@@ -96,6 +97,44 @@ void main() {
       change.undo(document);
 
       expect(feature.origin, Offset.zero);
+    });
+
+    test('captures and restores groups through Node data models', () {
+      final group = Group(
+        id: NodeId.newId(1),
+        origin: const Offset(10, 20),
+        children: [_rectangle(2, Offset.zero)],
+      );
+      final document = Document()..addNode(group);
+      final edit = DocumentEdit(document: document, label: 'Move group');
+
+      edit.update(group, (node) => node.origin = const Offset(40, 50));
+      final change = edit.commit()!;
+      change.undo(document);
+
+      expect(group.origin, const Offset(10, 20));
+      expect(group.children.single, isA<Feature>());
+      expect(group.children.single.id, NodeId.newId(2));
+
+      change.redo(document);
+      expect(group.origin, const Offset(40, 50));
+    });
+
+    test('adds and replays groups', () {
+      final document = Document();
+      final edit = DocumentEdit(document: document, label: 'Add group');
+      final group = Group(
+        origin: Offset.zero,
+        children: [_rectangle(2, Offset.zero)],
+      );
+
+      edit.add(group);
+      final change = edit.commit()!;
+      change.undo(document);
+      expect(document.nodes, isEmpty);
+
+      change.redo(document);
+      expect(document.nodeById(group.id), isA<Group>());
     });
 
     test('closed edits reject further use', () {
