@@ -7,11 +7,13 @@ import 'package:data_models/data_models.dart' as data;
 import 'feature.dart';
 import 'node_id.dart';
 
-/// World model: editable collection of features in world space.
+/// Editable document tree with document-wide node IDs.
 ///
-/// `Document` is a pure data model plus the source of truth for mutations. It
-/// exposes no command or history concept; changes are announced to observers
-/// via [ChangeNotifier]. Undo/redo bookkeeping lives in the command layer.
+/// Root nodes are stored in paint order. Descendants belong to their owning
+/// node's child collection, whose order defines painting within that container.
+/// ID lookup is independent of tree structure and sibling order.
+///
+/// Undo/redo bookkeeping lives in the editor's history layer.
 class Document {
   Document({this.name = 'Untitled', NodeId? nextId})
     : _nextId = nextId ?? NodeId.newId(1);
@@ -41,7 +43,12 @@ class Document {
 
   List<Feature> get _features => _nodes.whereType<Feature>().toList();
 
+  /// Root nodes in paint order; descendants live in their owners' child lists.
+  /// TODO: Rename to _rootNodes when the container API is introduced.
   final List<Node> _nodes = [];
+
+  /// ID lookup index, carrying no parent or paint-order information.
+  /// TODO: Index all descendants as well as roots as tree mutation support lands.
   final Map<NodeId, Node> _nodesById = {};
 
   List<Node> get nodes => List.unmodifiable(_nodes);
