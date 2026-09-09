@@ -16,12 +16,12 @@ abstract interface class Edit {
   void update<T extends Node>(T node, void Function(T node) change);
 
   /// Adds a node as part of this edit.
-  T add<T extends Node>(T node);
+  T add<T extends Node>(T node, {int? index});
 
   /// Removes nodes as part of this edit.
   void removeAll(Iterable<NodeId> ids);
 
-  /// Reorders every node in the document.
+  /// Reorders the scoped container's immediate children.
   void reorder(Iterable<NodeId> ids);
 
   /// Closes the edit and returns its change, or null when nothing changed.
@@ -41,11 +41,23 @@ abstract interface class EditChange {
   void redo(Document document);
 }
 
-/// An edit that snapshots only affected nodes.
+/// Snapshots affected immediate children (including their subtrees) in one
+/// container. Group/ungroup within that scope; transfers between existing
+/// containers require separate edits. Do not mutate other containers directly.
 final class DocumentEdit implements Edit {
-  DocumentEdit({required this.document, required this.label});
+  DocumentEdit({
+    required this.document,
+    required this.label,
+    NodeContainer? container,
+  }) : container = container ?? document {
+    if (!identical(this.container.document, document)) {
+      throw ArgumentError('The container must belong to the document');
+    }
+  }
 
   final Document document;
+  final NodeContainer container;
+  NodeId? get _containerId => container is Node ? (container as Node).id : null;
 
   @override
   final String label;
@@ -61,8 +73,8 @@ final class DocumentEdit implements Edit {
   void watch(Iterable<Node> nodes) {
     _ensureOpen();
     for (final node in nodes) {
-      if (!identical(document.nodeById(node.id), node)) {
-        throw ArgumentError.value(node, 'nodes', 'Node is not in the document');
+      if (!identical(container.childById(node.id), node)) {
+        throw ArgumentError.value(node, 'nodes', 'Node is not a direct child');
       }
       _before.putIfAbsent(node.id, node.toDataModel);
     }
@@ -75,13 +87,12 @@ final class DocumentEdit implements Edit {
   }
 
   @override
-  T add<T extends Node>(T node) {
+  T add<T extends Node>(T node, {int? index}) {
     _ensureOpen();
     _watchOrder();
-    document.addNode(node);
-    final added = node;
-    _before.putIfAbsent(added.id, () => null);
-    return added;
+    container.insert(node, index: index);
+    _before.putIfAbsent(node.id, () => null);
+    return node;
   }
 
   @override
@@ -89,47 +100,49 @@ final class DocumentEdit implements Edit {
     _ensureOpen();
     final nodes = <Node>[];
     for (final id in ids) {
-      final node = document.nodeById(id);
+      final node = container.childById(id);
       if (node != null) nodes.add(node);
     }
     if (nodes.isEmpty) return;
     _watchOrder();
     watch(nodes);
-    document.removeFeatures(nodes.map((node) => node.id));
+    container.removeAll(nodes.map((node) => node.id));
   }
 
   @override
   void reorder(Iterable<NodeId> ids) {
     _ensureOpen();
     _watchOrder();
-    document.reorderNodes(ids);
+    container.reorder(ids);
   }
 
   @override
   EditChange? commit() {
     _ensureOpen();
-    _isOpen = false;
-
-    final changes = <NodeId, _NodeChange>{};
+    final before = <NodeId, data.Node?>{};
+    final after = <NodeId, data.Node?>{};
     for (final entry in _before.entries) {
-      final node = document.nodeById(entry.key);
-      final after = node?.toDataModel();
-      if (entry.value != after) {
-        changes[entry.key] = _NodeChange(entry.value, after);
+      final state = container.childById(entry.key)?.toDataModel();
+      if (entry.value != state) {
+        before[entry.key] = entry.value;
+        after[entry.key] = state;
       }
     }
 
     final orderAfter = _orderBefore == null
         ? null
-        : List<NodeId>.unmodifiable(document.nodes.map((node) => node.id));
+        : List<NodeId>.unmodifiable(container.children.map((node) => node.id));
     final orderChanged =
         _orderBefore != null &&
         !const ListEquality<NodeId>().equals(_orderBefore, orderAfter);
-    if (changes.isEmpty && !orderChanged) return null;
+    _isOpen = false;
+    if (before.isEmpty && !orderChanged) return null;
 
     return DocumentEditChange._(
       label: label,
-      changes: changes,
+      containerId: _containerId,
+      before: before,
+      after: after,
       orderBefore: orderChanged ? _orderBefore : null,
       orderAfter: orderChanged ? orderAfter : null,
     );
@@ -138,24 +151,13 @@ final class DocumentEdit implements Edit {
   @override
   void cancel() {
     _ensureOpen();
+    _apply(container, states: _before, order: _orderBefore);
     _isOpen = false;
-    final orderAfter = _orderBefore == null
-        ? null
-        : List<NodeId>.unmodifiable(document.nodes.map((node) => node.id));
-    DocumentEditChange._(
-      label: label,
-      changes: {
-        for (final entry in _before.entries)
-          entry.key: _NodeChange(entry.value, null),
-      },
-      orderBefore: _orderBefore,
-      orderAfter: orderAfter,
-    ).undo(document);
   }
 
   void _watchOrder() {
     _orderBefore ??= List<NodeId>.unmodifiable(
-      document.nodes.map((node) => node.id),
+      container.children.map((node) => node.id),
     );
   }
 
@@ -167,54 +169,69 @@ final class DocumentEdit implements Edit {
 final class DocumentEditChange implements EditChange {
   DocumentEditChange._({
     required this.label,
-    required Map<NodeId, _NodeChange> changes,
+    required this.containerId,
+    required Map<NodeId, data.Node?> before,
+    required Map<NodeId, data.Node?> after,
     required this._orderBefore,
     required this._orderAfter,
-  }) : _changes = Map.unmodifiable(changes),
+  }) : _before = Map.unmodifiable(before),
+       _after = Map.unmodifiable(after),
        assert((_orderBefore == null) == (_orderAfter == null));
 
   @override
   final String label;
 
-  final Map<NodeId, _NodeChange> _changes;
+  /// Null identifies the document; group instances are resolved again on replay.
+  final NodeId? containerId;
+  final Map<NodeId, data.Node?> _before;
+  final Map<NodeId, data.Node?> _after;
   final List<NodeId>? _orderBefore;
   final List<NodeId>? _orderAfter;
 
   @override
-  int get affectedNodeCount => _changes.length;
+  int get affectedNodeCount => _before.length;
 
   @override
   bool get changesOrder => _orderBefore != null;
 
   @override
-  void undo(Document document) => _apply(document, useAfter: false);
+  void undo(Document document) =>
+      _apply(_resolve(document), states: _before, order: _orderBefore);
 
   @override
-  void redo(Document document) => _apply(document, useAfter: true);
+  void redo(Document document) =>
+      _apply(_resolve(document), states: _after, order: _orderAfter);
 
-  void _apply(Document document, {required bool useAfter}) {
-    final removals = <NodeId>[];
-    for (final entry in _changes.entries) {
-      final state = useAfter ? entry.value.after : entry.value.before;
-      final current = document.nodeById(entry.key);
-      if (state == null) {
-        if (current != null) removals.add(entry.key);
-      } else if (current == null) {
-        document.addNode(Node.fromDataModel(state));
-      } else {
-        current.restoreFromDataModel(state);
-      }
-    }
-    document.removeFeatures(removals);
-
-    final order = useAfter ? _orderAfter : _orderBefore;
-    if (order != null) document.reorderNodes(order);
+  NodeContainer _resolve(Document document) {
+    if (containerId == null) return document;
+    final node = document.nodeById(containerId!);
+    if (node is NodeContainer) return node as NodeContainer;
+    throw StateError('Edit container no longer exists');
   }
 }
 
-final class _NodeChange {
-  const _NodeChange(this.before, this.after);
-
-  final data.Node? before;
-  final data.Node? after;
+/// Applies one saved side. Structural replay detaches outgoing subtrees first
+/// so grouping/ungrouping can reuse descendant IDs without index collisions.
+void _apply(
+  NodeContainer container, {
+  required Map<NodeId, data.Node?> states,
+  required List<NodeId>? order,
+}) {
+  if (order == null) {
+    for (final entry in states.entries) {
+      if (entry.value != null) {
+        container.childById(entry.key)!.restoreFromDataModel(entry.value!);
+      }
+    }
+    return;
+  }
+  final restored = <NodeId, Node>{
+    for (final entry in states.entries)
+      if (entry.value != null) entry.key: Node.fromDataModel(entry.value!),
+  };
+  container.removeAll(states.keys);
+  for (final node in restored.values) {
+    container.insert(node);
+  }
+  container.reorder(order);
 }
