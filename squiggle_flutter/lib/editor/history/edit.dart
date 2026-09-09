@@ -129,9 +129,7 @@ final class DocumentEdit implements Edit {
       }
     }
 
-    final orderAfter = _orderBefore == null
-        ? null
-        : List<NodeId>.unmodifiable(container.children.map((node) => node.id));
+    final orderAfter = _orderBefore == null ? null : _captureOrder();
     final orderChanged =
         _orderBefore != null &&
         !const ListEquality<NodeId>().equals(_orderBefore, orderAfter);
@@ -156,10 +154,11 @@ final class DocumentEdit implements Edit {
   }
 
   void _watchOrder() {
-    _orderBefore ??= List<NodeId>.unmodifiable(
-      container.children.map((node) => node.id),
-    );
+    _orderBefore ??= _captureOrder();
   }
+
+  List<NodeId> _captureOrder() =>
+      List<NodeId>.unmodifiable(container.children.map((node) => node.id));
 
   void _ensureOpen() {
     if (!_isOpen) throw StateError('Edit is already closed');
@@ -218,11 +217,7 @@ void _apply(
   required List<NodeId>? order,
 }) {
   if (order == null) {
-    for (final entry in states.entries) {
-      if (entry.value != null) {
-        container.childById(entry.key)!.restoreFromDataModel(entry.value!);
-      }
-    }
+    _restoreInPlace(container, states);
     return;
   }
   final restored = <NodeId, Node>{
@@ -234,4 +229,12 @@ void _apply(
     container.insert(node);
   }
   container.reorder(order);
+}
+
+void _restoreInPlace(NodeContainer container, Map<NodeId, data.Node?> states) {
+  for (final entry in states.entries) {
+    if (entry.value != null) {
+      container.childById(entry.key)!.restoreFromDataModel(entry.value!);
+    }
+  }
 }

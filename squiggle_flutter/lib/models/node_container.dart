@@ -23,6 +23,14 @@ abstract mixin class NodeContainer {
 
   T insert<T extends Node>(T node, {int? index}) {
     final position = index ?? _children.length;
+    _validateInsertion(node, position);
+    document?.registerSubtree(node);
+    _children.insert(position, node);
+    node._parent = this;
+    return node;
+  }
+
+  void _validateInsertion(Node node, int position) {
     RangeError.checkValueInInterval(position, 0, _children.length, 'index');
     if (node.parent != null) {
       throw StateError('Detach the node before inserting');
@@ -34,10 +42,6 @@ abstract mixin class NodeContainer {
       }
       ancestor = (ancestor as Node).parent;
     }
-    document?.registerSubtree(node);
-    _children.insert(position, node);
-    node._parent = this;
-    return node;
   }
 
   void removeAll(Iterable<NodeId> ids) {
