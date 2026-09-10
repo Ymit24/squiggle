@@ -9,7 +9,6 @@ import 'package:squiggle_flutter/editor/tool_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
@@ -74,9 +73,27 @@ class EditorContext extends ChangeNotifier {
 
   void record(Command command) => historyOld.record(command);
 
-  void undo() => historyOld.undo();
+  void undo() {
+    history.undo();
+    _refreshSelectionAfterHistoryChange();
 
-  void redo() => historyOld.redo();
+    // HACK: Use old history change stream
+    historyOld.notifyListeners();
+  }
+
+  void redo() {
+    history.redo();
+    _refreshSelectionAfterHistoryChange();
+
+    // HACK: Use old history change stream
+    historyOld.notifyListeners();
+  }
+
+  void _refreshSelectionAfterHistoryChange() {
+    selection.setSelection(
+      selection.selectedFeatures.where((id) => document.nodeById(id) != null),
+    );
+  }
 
   void setTool(Tool tool) => _tool.setTool(tool, this);
 

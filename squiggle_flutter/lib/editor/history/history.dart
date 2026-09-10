@@ -68,18 +68,20 @@ class History {
     _undoStack.add(commit);
   }
 
-  void commit() {
+  bool commit() {
     if (_active == null) {
       throw StateError('No transaction is active');
     }
 
     final commit = _active!.commit();
+    _active = null;
     if (commit != null) {
       _undoStack.add(commit);
       _redoStack.clear();
+      return true;
     }
 
-    _active = null;
+    return false;
   }
 
   void cancel() {

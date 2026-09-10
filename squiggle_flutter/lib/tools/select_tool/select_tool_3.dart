@@ -37,6 +37,9 @@ class SelectTool3 extends Tool {
     if (_hasTransaction) {
       context.history.cancel();
       _hasTransaction = false;
+
+      // TODO: Move this somewhere else. we will need something like
+      // this during normal undo/redo anyway.
       context.selection.setSelection(
         context.selection.selectedFeatures.where(
           (id) => context.document.nodeById(id) != null,
@@ -122,7 +125,10 @@ class SelectTool3 extends Tool {
       isAltPressed: isAltPressed,
     );
     if (_hasTransaction) {
-      context.history.commit();
+      if (context.history.commit()) {
+        // HACK: Use old history change stream
+        context.historyOld.notifyListeners();
+      }
       _hasTransaction = false;
     }
     // TODO: Update how change detection works to not be bool response based.

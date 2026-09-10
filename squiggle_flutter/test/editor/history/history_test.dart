@@ -14,7 +14,7 @@ void main() {
   setUp(() {
     document = Document();
     node = document.insert(_rectangle());
-    history = History(document);
+    history = History(document: document);
   });
 
   void move(double x) => history.run('Move', (transaction) {

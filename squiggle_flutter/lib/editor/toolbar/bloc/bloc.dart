@@ -6,7 +6,6 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
@@ -89,8 +88,8 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
 
   ToolbarState _stateWithHistory(ToolbarState state) {
     return state.copyWith(
-      canUndo: _context.historyOld.canUndo,
-      canRedo: _context.historyOld.canRedo,
+      canUndo: _context.history.canUndo,
+      canRedo: _context.history.canRedo,
     );
   }
 }
