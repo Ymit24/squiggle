@@ -43,7 +43,6 @@ class ClickCanvasState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: click canvas state up");
     if (!isShiftPressed) {
       context.selection.setSelection([]);
     }

@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -35,12 +34,13 @@ void main() {
         documentChanged = true;
       });
 
-      context.execute(
-        MoveFeatureCommand(
-          context.document.features.first.id,
-          const Offset(10, 10),
-        ),
-      );
+      final feature = context.document.features.first;
+      context.history.run('Move feature', (transaction) {
+        transaction.update(
+          feature,
+          (feature) => feature.origin = const Offset(10, 10),
+        );
+      });
       await Future<void>.delayed(Duration.zero);
 
       expect(documentChanged, isTrue);
@@ -71,6 +71,10 @@ void main() {
 
       expect(context.document.features, isEmpty);
       expect(context.selection.selectedFeatures, isEmpty);
+      expect(context.history.canUndo, isTrue);
+
+      context.undo();
+      expect(context.document.features, hasLength(1));
       await bloc.close();
     });
   });

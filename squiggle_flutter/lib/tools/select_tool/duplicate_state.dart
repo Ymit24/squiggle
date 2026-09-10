@@ -43,7 +43,9 @@ class DuplicateState extends InteractionState {
     for (final node in _selectedNodes) {
       node.origin = _originsAtDragStart[node.id]!;
     }
-    context.document.addNodes(clones);
+    for (final clone in clones) {
+      context.history.active.add(clone);
+    }
     context.selection.setSelection(clones.map((node) => node.id).toList());
 
     final state = TranslateState(

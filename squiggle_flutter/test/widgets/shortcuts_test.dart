@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
@@ -37,7 +36,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -113,7 +114,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -140,15 +143,15 @@ void main() {
   ) async {
     final context = EditorContext(document: Document());
 
-    context.execute(
-      AddFeatureCommand(
+    context.history.run('Add feature', (transaction) {
+      transaction.add(
         Feature(
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: const FeatureKindRectangle(),
         ),
-      ),
-    );
+      );
+    });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -156,7 +159,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -200,13 +205,10 @@ void main() {
     );
     final feature = context.document.features.first;
     context.selection.selectFeature(feature.id);
-    context.execute(
-      MoveFeatureCommand(
-        feature.id,
-        const Offset(40, 40),
-        previousOrigin: Offset.zero,
-      ),
-    );
+    context.history.run('Move Feature', (transaction) {
+      transaction.watch([feature]);
+      feature.origin = const Offset(40, 40);
+    });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -214,7 +216,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -259,7 +263,9 @@ void main() {
             body: MultiRepositoryProvider(
               providers: [
                 RepositoryProvider<EditorContext>.value(value: context),
-                RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+                RepositoryProvider<ImageRepository>.value(
+                  value: ImageRepository(),
+                ),
               ],
               child: MultiBlocProvider(
                 providers: [

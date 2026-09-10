@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 import 'helpers.dart';
 import 'idle_interaction_state.dart';
@@ -25,6 +24,11 @@ class ResizeState extends InteractionState {
   late final Rect _initialBounds = _handle.node.bounds();
 
   @override
+  void onEnter(EditorContext context) {
+    parent.beginTransaction(context, 'Resize', [_handle.node]);
+  }
+
+  @override
   EditorCursor resolveCursor(
     EditorContext context,
     Offset worldPosition,
@@ -41,8 +45,6 @@ class ResizeState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: on pointer move");
-
     final newBounds = getNewBounds(
       cursorWorldPosition - _resizeOffset,
       lockAspectRatio: isShiftPressed,

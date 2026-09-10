@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import 'node.dart';
 
 final class Group extends Node {
@@ -25,4 +27,21 @@ final class Group extends Node {
     ...baseJson('group'),
     'children': children.map((child) => child.toJson()).toList(),
   };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Group &&
+          id == other.id &&
+          originX == other.originX &&
+          originY == other.originY &&
+          const ListEquality<Node>().equals(children, other.children);
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    originX,
+    originY,
+    const ListEquality<Node>().hash(children),
+  );
 }

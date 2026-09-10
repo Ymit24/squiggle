@@ -39,6 +39,7 @@ class Feature extends Node {
     );
   }
 
+  @override
   data.Feature toDataModel() {
     return data.Feature(
       id: id.value,
@@ -48,6 +49,17 @@ class Feature extends Node {
       height: size.height,
       content: kind.toDataModel(),
     );
+  }
+
+  @override
+  void restoreFromDataModel(data.Node raw) {
+    if (raw is! data.Feature || raw.id != id.value) {
+      throw ArgumentError.value(raw, 'raw', 'Feature snapshot does not match');
+    }
+    final restored = Feature.fromDataModel(raw);
+    origin = restored.origin;
+    size = restored.size;
+    kind = restored.kind;
   }
 
   Size size;

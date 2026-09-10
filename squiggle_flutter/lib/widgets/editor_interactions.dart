@@ -10,7 +10,7 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool_2.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'fling_controller.dart';
 
 class PointerRecord {
@@ -315,17 +315,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _onLeftPointerCancel(PointerCancelEvent event) {
     _isPrimaryDragging = false;
-
-    final world = _screenToWorld(event);
-    if (world == null) return;
-
-    widget.context.tool.onPointerUp(
-      widget.context,
-      world,
-      _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
-    );
+    widget.context.cancelInteraction();
   }
 
   void _onRightPointerDown(PointerDownEvent event) {

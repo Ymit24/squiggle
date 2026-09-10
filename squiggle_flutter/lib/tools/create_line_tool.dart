@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -50,7 +49,10 @@ class CreateLineTool extends Tool {
   }
 
   @override
-  void deactivate(EditorContext context) {
+  void deactivate(EditorContext context) => cancelInteraction(context);
+
+  @override
+  void cancelInteraction(EditorContext context) {
     _state = const _Idle();
   }
 
@@ -235,7 +237,9 @@ class CreateLineTool extends Tool {
   }
 
   void _commit(EditorContext context, List<Offset> worldPoints) {
-    context.execute(AddFeatureCommand(_buildFeature(worldPoints)));
+    context.history.run('Create feature', (transaction) {
+      transaction.add(_buildFeature(worldPoints));
+    });
   }
 
   Feature _buildFeature(List<Offset> worldPoints) {

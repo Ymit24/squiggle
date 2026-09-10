@@ -1,22 +1,26 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:data_models/data_models.dart' as data;
 
 import 'feature.dart';
 import 'node_id.dart';
 
-/// World model: editable collection of features in world space.
+/// Editable document tree with document-wide node IDs.
 ///
-/// `Document` is a pure data model plus the source of truth for mutations. It
-/// exposes no command or history concept; changes are announced to observers
-/// via [ChangeNotifier]. Undo/redo bookkeeping lives in the command layer.
-class Document {
+/// Root nodes are stored in paint order. Descendants belong to their owning
+/// node's child collection, whose order defines painting within that container.
+/// ID lookup is independent of tree structure and sibling order.
+///
+/// Undo/redo bookkeeping lives in the editor's history layer.
+class Document extends NodeContainer {
   Document({this.name = 'Untitled', NodeId? nextId})
     : _nextId = nextId ?? NodeId.newId(1);
 
   String name;
+
+  @override
+  Document get document => this;
 
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
@@ -28,33 +32,26 @@ class Document {
 
   factory Document.fromDataModel(data.Document raw) {
     final document = Document(name: raw.name);
-    document.addNodes([
-      for (final node in raw.nodes)
-        switch (node) {
-          data.Feature() => Feature.fromDataModel(node),
-          data.Group() => throw FormatException(
-            'Groups are not supported by the current Document model',
-          ),
-          _ => throw FormatException(
-            'Unsupported node type: ${node.runtimeType}',
-          ),
-        },
-    ]);
+    document.addNodes(raw.nodes.map(Node.fromDataModel));
     return document;
   }
 
   data.Document toDataModel() {
     return data.Document(
       name: name,
-      nodes: _features.map((feature) => feature.toDataModel()).toList(),
+      nodes: _rootNodes.map((node) => node.toDataModel()).toList(),
     );
   }
 
-  List<Feature> get _features => nodes.whereType<Feature>().toList();
+  List<Feature> get _features => _rootNodes.whereType<Feature>().toList();
 
-  final List<Node> _nodes = [];
+  /// Root nodes in paint order; descendants live in their owners' child lists.
+  List<Node> get _rootNodes => children;
 
-  List<Node> get nodes => _nodes;
+  /// ID lookup index, carrying no parent or paint-order information.
+  final Map<NodeId, Node> _nodesById = {};
+
+  List<Node> get nodes => _rootNodes;
 
   /// Live view of the features in document order.
   List<Feature> get features => List.unmodifiable(_features);
@@ -68,18 +65,18 @@ class Document {
     return id;
   }
 
+  Node? nodeById(NodeId id) => _nodesById[id];
+
   Feature? featureById(NodeId id) {
-    for (final feature in _features) {
-      if (feature.id == id) return feature;
-    }
-    return null;
+    final node = _nodesById[id];
+    return node is Feature ? node : null;
   }
 
   /// Top-most feature whose bounds contain [worldPoint], if any.
   Feature? featureAtPoint(Offset worldPoint) {
-    for (var i = _features.length - 1; i >= 0; i--) {
-      if (_features[i].hitTest(worldPoint)) {
-        return _features[i];
+    for (final node in _rootNodes.reversed) {
+      if (node is Feature && node.hitTest(worldPoint)) {
+        return node;
       }
     }
     return null;
@@ -88,15 +85,41 @@ class Document {
   /// Adds [feature], assigning an id when it has [noId].
   ///
   /// Returns the added feature (which may now carry an assigned id).
-  Node addNode(Node feature) {
-    if (feature.id == noId) {
-      feature.id = generateId();
-    } else if (feature.id.value >= _nextId.value) {
-      _nextId = NodeId.newId(feature.id.value + 1);
-    }
-    _nodes.add(feature);
+  Node addNode(Node feature) => insert(feature);
 
-    return feature;
+  /// Container bookkeeping: validate all IDs before registering a subtree.
+  void registerSubtree(Node root) {
+    final nodes = _subtree(root).toList();
+    final ids = <NodeId>{};
+    for (final node in nodes) {
+      if (node.id == noId) continue;
+      if (_nodesById.containsKey(node.id) || !ids.add(node.id)) {
+        throw ArgumentError.value(node.id, 'id', 'Duplicate node id');
+      }
+    }
+    for (final id in ids) {
+      if (id.value >= nextId) _nextId = NodeId.newId(id.value + 1);
+    }
+    for (final node in nodes) {
+      if (node.id == noId) node.id = generateId();
+      _nodesById[node.id] = node;
+    }
+  }
+
+  /// Container bookkeeping: descendants leave the index with their root.
+  void unregisterSubtree(Node root) {
+    for (final node in _subtree(root)) {
+      _nodesById.remove(node.id);
+    }
+  }
+
+  Iterable<Node> _subtree(Node node) sync* {
+    yield node;
+    if (node is NodeContainer) {
+      for (final child in (node as NodeContainer).children) {
+        yield* _subtree(child);
+      }
+    }
   }
 
   /// Adds multiple features
@@ -108,24 +131,25 @@ class Document {
 
   // TODO: Change this to return bool
   void removeFeature(NodeId id) {
-    final index = _nodes.indexWhere((node) => node.id == id);
-    if (index == -1) return;
-
-    _nodes.removeAt(index);
+    removeAll([id]);
   }
 
   void removeFeatures(Iterable<NodeId> ids) {
-    for (final id in ids) {
-      removeFeature(id);
-    }
+    removeAll(ids);
   }
 
-  /// Replaces this document's contents with [other], notifying once.
+  /// Reorders all nodes without changing their contents.
+  void reorderNodes(Iterable<NodeId> ids) {
+    reorder(ids);
+  }
+
+  /// Replaces this document's contents with a copy of [other].
   void replaceFrom(Document other) {
-    _nodes
-      ..clear()
-      ..addAll(other._features.map((feature) => feature.copyWith()));
-    _nextId = other._nextId;
+    final copies = other.nodes.map((node) => node.copyWith()).toList();
+    final next = other._nextId;
+    removeAll(nodes.map((node) => node.id));
+    _nextId = next;
+    addNodes(copies);
     name = other.name;
   }
 

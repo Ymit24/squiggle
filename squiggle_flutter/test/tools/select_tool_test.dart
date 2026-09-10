@@ -7,14 +7,13 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart'
-    show
-        SelectTool,
-        kSelectionBoxPadding,
-        kSelectionHandleHitSize,
-        selectionBoxWorldBounds;
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 enum _SelectionEdge { top, right, bottom, left }
+
+Rect selectionBoxWorldBounds(Rect featureBounds) {
+  return featureBounds.inflate(kSelectionBoxPadding);
+}
 
 void main() {
   group('SelectTool via EditorContext', () {
@@ -72,8 +71,7 @@ void main() {
     void doubleClick(Offset world, {bool shift = false}) {
       pointerDown(world, shift: shift);
       pointerUp(world, shift: shift);
-      pointerDown(world, shift: shift);
-      pointerUp(world, shift: shift);
+      context.tool.onDoubleClick(context, world, camera);
     }
 
     bool keyDown(LogicalKeyboardKey key) {
@@ -270,12 +268,12 @@ void main() {
       pointerMove(const Offset(80, 80));
 
       expect(feature.origin, const Offset(30, 30));
-      expect(context.history.undoCount, 0);
+      expect(context.history.canUndo, isFalse);
 
       pointerUp(const Offset(80, 80));
 
-      expect(context.history.undoCount, 1);
-      context.undo();
+      expect(context.history.canUndo, isTrue);
+      context.history.undo();
       expect(feature.origin, Offset.zero);
     });
 
@@ -289,11 +287,11 @@ void main() {
       pointerMove(const Offset(70, 70));
       pointerUp(const Offset(70, 70));
 
-      expect(context.history.undoCount, 1);
+      expect(context.history.canUndo, isTrue);
       expect(features[0].origin, const Offset(20, 20));
       expect(features[1].origin, const Offset(220, 20));
 
-      context.undo();
+      context.history.undo();
       expect(features[0].origin, Offset.zero);
       expect(features[1].origin, const Offset(200, 0));
     });
@@ -360,12 +358,12 @@ void main() {
       pointerMove(const Offset(160, 160) + grabOffset);
 
       expect(feature.size, const Size(160, 160));
-      expect(context.history.undoCount, 0);
+      expect(context.history.canUndo, isFalse);
 
       pointerUp(const Offset(160, 160) + grabOffset);
 
-      expect(context.history.undoCount, 1);
-      context.undo();
+      expect(context.history.canUndo, isTrue);
+      context.history.undo();
       expect(feature.bounds(), bounds);
     });
 
@@ -526,6 +524,33 @@ void main() {
         context.selection.selectedFeatures.single,
       )!;
       expect(duplicate.origin, const Offset(40, 30));
+    });
+
+    test('duplicate drag replays as one change', () {
+      final original = context.document.features.first;
+      pointerDown(const Offset(50, 50));
+      pointerMove(const Offset(70, 80), alt: true);
+      pointerMove(const Offset(90, 100), alt: true);
+      pointerUp(const Offset(90, 100), alt: true);
+      final id = context.selection.selectedFeatures.single;
+      final finalOrigin = context.document.nodeById(id)!.origin;
+      context.history.undo();
+      expect(context.document.nodeById(id), isNull);
+      expect(original.origin, Offset.zero);
+      expect(context.history.canUndo, isFalse);
+      context.history.redo();
+      expect(context.document.nodeById(id)!.origin, finalOrigin);
+    });
+
+    test('escape cancels a move without recording history', () {
+      final original = context.document.features.first;
+      pointerDown(const Offset(50, 50));
+      pointerMove(const Offset(70, 80));
+      keyDown(LogicalKeyboardKey.escape);
+      pointerUp(const Offset(70, 80));
+      expect(original.origin, Offset.zero);
+      expect(context.history.isActive, isFalse);
+      expect(context.history.canUndo, isFalse);
     });
 
     test('alt-click without drag does not duplicate', () {
@@ -746,16 +771,16 @@ void main() {
       pointerDown(const Offset(100, 100));
       pointerMove(const Offset(150, 100));
       pointerMove(const Offset(175, 125));
-      expect(context.history.undoCount, 0);
+      expect(context.history.canUndo, isFalse);
       pointerUp(const Offset(175, 125));
 
       final afterDrag = polylineWorldPoints(
         context.document.featureById(feature.id)!,
       );
       expect(afterDrag.last, const Offset(175, 125));
-      expect(context.history.undoCount, 1);
+      expect(context.history.canUndo, isTrue);
 
-      context.undo();
+      context.history.undo();
       final restored = context.document.featureById(feature.id)!;
       expect(polylineWorldPoints(restored).last, const Offset(100, 100));
     });
