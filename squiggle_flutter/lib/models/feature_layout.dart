@@ -1,7 +1,9 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/node.dart';
+
 import 'document.dart';
-import 'feature.dart';
+
 import 'node_id.dart';
 
 enum FeatureAlignment {
@@ -23,16 +25,13 @@ Map<NodeId, Offset> computeAlignmentOffsets(
 ) {
   if (ids.length < 2) return const {};
 
-  final features = ids.map(document.featureById).whereType<Feature>().toList();
-  if (features.length < 2) return const {};
+  final nodes = ids.map(document.nodeById).whereType<Node>().toList();
+  if (nodes.length < 2) return const {};
 
-  var union = features.first.localBounds();
-  for (final feature in features.skip(1)) {
-    union = union.expandToInclude(feature.localBounds());
-  }
+  var union = Node.localBoundsOfNodes(nodes);
 
   final offsets = <NodeId, Offset>{};
-  for (final feature in features) {
+  for (final feature in nodes) {
     final bounds = feature.localBounds();
     final delta = switch (alignment) {
       FeatureAlignment.left => Offset(union.left - bounds.left, 0),
@@ -64,9 +63,9 @@ Map<NodeId, Offset> computeDistributionOffsets(
   if (ids.length < 3) return const {};
 
   final entries = ids
-      .map(document.featureById)
-      .whereType<Feature>()
-      .map((feature) => (feature: feature, bounds: feature.localBounds()))
+      .map(document.nodeById)
+      .whereType<Node>()
+      .map((feature) => (node: feature, bounds: feature.localBounds()))
       .toList();
   if (entries.length < 3) return const {};
 
@@ -81,7 +80,7 @@ Map<NodeId, Offset> computeDistributionOffsets(
 }
 
 Map<NodeId, Offset> _distributeAlongAxis(
-  List<({Feature feature, Rect bounds})> sorted, {
+  List<({Node node, Rect bounds})> sorted, {
   required bool horizontal,
 }) {
   final first = sorted.first.bounds;
@@ -106,7 +105,7 @@ Map<NodeId, Offset> _distributeAlongAxis(
         : Offset(0, current - bounds.top);
 
     if (delta != Offset.zero) {
-      offsets[entry.feature.id] = delta;
+      offsets[entry.node.id] = delta;
     }
 
     current += (horizontal ? bounds.width : bounds.height) + gap;

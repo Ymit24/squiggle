@@ -19,7 +19,7 @@ class Group extends Node with NodeContainer {
   );
 
   @override
-  Rect localBounds() => Node.boundsOfNodes(children).shift(origin);
+  Rect localBounds() => Node.localBoundsOfNodes(children).shift(origin);
 
   @override
   Group copyWith({NodeId? id, Offset? origin}) => Group(
@@ -73,7 +73,7 @@ class Group extends Node with NodeContainer {
 
   @override
   void resize(Rect bounds) {
-    final childBounds = Node.boundsOfNodes(children);
+    final childBounds = Node.localBoundsOfNodes(children);
     final scaleX = childBounds.width == 0
         ? 1.0
         : bounds.width / childBounds.width;

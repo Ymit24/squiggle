@@ -167,7 +167,7 @@ class IdleInteractionState extends InteractionState {
 
     context.history.run('Group Selected Nodes', (transaction) {
       transaction.removeAll(context.selection.selectedNodes);
-      final bounds = Node.boundsOfNodes(selectedNodes);
+      final bounds = Node.localBoundsOfNodes(selectedNodes);
 
       for (final node in selectedNodes) {
         node.origin -= bounds.center;

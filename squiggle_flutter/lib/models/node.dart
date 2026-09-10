@@ -24,8 +24,8 @@ abstract class Node {
     _ => throw FormatException('Unknown node type: ${raw.runtimeType}'),
   };
 
-  /// Returns the union of [nodes] bounds in world space.
-  static Rect boundsOfNodes(List<Node> nodes) {
+  /// Returns the union of [nodes] bounds in local world space.
+  static Rect localBoundsOfNodes(List<Node> nodes) {
     if (nodes.isEmpty) {
       return Rect.zero;
     }

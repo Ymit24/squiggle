@@ -154,7 +154,7 @@ class Document extends NodeContainer {
   }
 
   void groupNodes(List<Node> nodes) {
-    final groupOrigin = Node.boundsOfNodes(nodes).center;
+    final groupOrigin = Node.localBoundsOfNodes(nodes).center;
 
     for (var child in nodes) {
       child.origin -= groupOrigin;

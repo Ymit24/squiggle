@@ -19,7 +19,7 @@ List<Feature> repositionFeaturesToCenter(
   if (features.isEmpty) {
     return features;
   }
-  final offset = targetCenter - Node.boundsOfNodes(features).center;
+  final offset = targetCenter - Node.localBoundsOfNodes(features).center;
   return [
     for (final feature in features)
       feature.copyWith(id: noId, origin: feature.origin + offset),

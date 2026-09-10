@@ -38,7 +38,7 @@ void main() {
         second,
       ], const Offset(300, 300));
 
-      expect(Node.boundsOfNodes(repositioned).center, const Offset(300, 300));
+      expect(Node.localBoundsOfNodes(repositioned).center, const Offset(300, 300));
       expect(
         repositioned[1].origin - repositioned[0].origin,
         second.origin - first.origin,

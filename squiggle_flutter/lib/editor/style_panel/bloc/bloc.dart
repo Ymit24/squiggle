@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
@@ -176,7 +177,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.isEmpty) return;
 
-    final features = _featuresById(ids);
+    final features = _nodesById(ids).whereType<Feature>();
     if (features.isEmpty) return;
     final container = features.first.parent;
     if (features.any((feature) => !identical(feature.parent, container))) {
@@ -307,20 +308,20 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     );
   }
 
-  List<Feature> _featuresById(Iterable<NodeId> ids) => [
-    for (final id in ids) ?context.document.featureById(id),
+  List<Node> _nodesById(Iterable<NodeId> ids) => [
+    for (final id in ids) ?context.document.nodeById(id),
   ];
 
   void _applyOffsets(Map<NodeId, Offset> offsets) {
-    final features = _featuresById(offsets.keys);
-    if (features.isEmpty) return;
-    final container = features.first.parent;
-    if (features.any((feature) => !identical(feature.parent, container))) {
+    final nodes = _nodesById(offsets.keys);
+    if (nodes.isEmpty) return;
+    final container = nodes.first.parent;
+    if (nodes.any((node) => !identical(node.parent, container))) {
       throw StateError('Selected nodes must share a container');
     }
     context.history.run('Layout selection', (transaction) {
-      for (final feature in features) {
-        transaction.update(feature, (node) => node.origin += offsets[node.id]!);
+      for (final node in nodes) {
+        transaction.update(node, (node) => node.origin += offsets[node.id]!);
       }
     }, container: container);
   }
