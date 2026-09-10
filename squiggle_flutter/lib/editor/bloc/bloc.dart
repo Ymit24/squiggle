@@ -36,6 +36,7 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     DeleteSelectedFeaturesEvent event,
     Emitter<EditorState> emit,
   ) {
-    context.deleteSelection();
+    // TODO: move this into select tool v3
+    // context.deleteSelection();
   }
 }
