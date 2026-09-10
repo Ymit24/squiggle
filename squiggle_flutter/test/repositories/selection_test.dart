@@ -15,7 +15,7 @@ void main() {
     test('can deselect features', () {
       final selection = SelectionModel();
       selection.selectNode(NodeId.newId(0));
-      selection.deselectFeature(NodeId.newId(0));
+      selection.deselectNode(NodeId.newId(0));
       expect(selection.selectedNodes.length, 0);
     });
 
@@ -55,7 +55,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       selection.selectNode(id1);
       await Future<void>.delayed(Duration.zero);
-      selection.deselectFeature(id0);
+      selection.deselectNode(id0);
       await Future<void>.delayed(Duration.zero);
       selection.clearSelection();
       await Future<void>.delayed(Duration.zero);

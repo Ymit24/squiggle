@@ -22,7 +22,7 @@ void main() {
         ),
       ]);
 
-      final hit = doc.featureAtPoint(const Offset(75, 75));
+      final hit = doc.nodeAtPoint(const Offset(75, 75));
 
       expect(hit, isNotNull);
       expect(hit!.origin, const Offset(50, 50));
@@ -37,7 +37,7 @@ void main() {
         ),
       ]);
 
-      expect(doc.featureAtPoint(const Offset(200, 200)), isNull);
+      expect(doc.nodeAtPoint(const Offset(200, 200)), isNull);
     });
   });
 
@@ -210,7 +210,7 @@ void main() {
 
       doc.featureById(id)!.resize(const Rect.fromLTWH(1, 2, 20, 30));
 
-      expect(doc.features.first.bounds(), const Rect.fromLTWH(1, 2, 20, 30));
+      expect(doc.features.first.localBounds(), const Rect.fromLTWH(1, 2, 20, 30));
     });
 
     test('replaceFrom replaces contents and next id', () {

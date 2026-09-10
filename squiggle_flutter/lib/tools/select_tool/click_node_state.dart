@@ -104,7 +104,7 @@ class ClickNodeState extends InteractionState {
   }) {
     if (isShiftPressed) {
       if (_wasSelected) {
-        context.selection.deselectFeature(_chase.id);
+        context.selection.deselectNode(_chase.id);
       }
     } else {
       context.selection.setSelection([_chase.id]);

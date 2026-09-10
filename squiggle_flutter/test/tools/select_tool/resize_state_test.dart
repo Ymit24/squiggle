@@ -16,19 +16,19 @@ void main() {
     test('does not snap on first move when corner grab is off-center', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
 
       harness.pointerDown(down);
       harness.pointerMove(down);
 
-      expect(feature.bounds(), bounds);
+      expect(feature.localBounds(), bounds);
     });
 
     test('resizes a single selection from the bottom-right corner', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
 
@@ -36,13 +36,13 @@ void main() {
       harness.pointerMove(const Offset(150, 150) + grabOffset);
       harness.pointerUp(const Offset(150, 150) + grabOffset);
 
-      expect(feature.bounds(), const Rect.fromLTWH(0, 0, 150, 150));
+      expect(feature.localBounds(), const Rect.fromLTWH(0, 0, 150, 150));
     });
 
     test('commits one undo entry for a resize drag', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
 
@@ -55,13 +55,13 @@ void main() {
 
       harness.pointerUp(const Offset(160, 160) + grabOffset);
       harness.context.history.undo();
-      expect(feature.bounds(), bounds);
+      expect(feature.localBounds(), bounds);
     });
 
     test('resizes from the top edge', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.top);
       final grabOffset = down - bounds.topLeft;
 
@@ -69,13 +69,13 @@ void main() {
       harness.pointerMove(const Offset(50, -50) + grabOffset);
       harness.pointerUp(const Offset(50, -50) + grabOffset);
 
-      expect(feature.bounds(), const Rect.fromLTWH(0, -50, 100, 150));
+      expect(feature.localBounds(), const Rect.fromLTWH(0, -50, 100, 150));
     });
 
     test('resizes from the right edge', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.right);
       final grabOffset = down - bounds.bottomRight;
 
@@ -83,13 +83,13 @@ void main() {
       harness.pointerMove(const Offset(200, 50) + grabOffset);
       harness.pointerUp(const Offset(200, 50) + grabOffset);
 
-      expect(feature.bounds(), const Rect.fromLTWH(0, 0, 200, 100));
+      expect(feature.localBounds(), const Rect.fromLTWH(0, 0, 200, 100));
     });
 
     test('alt-resize from a corner is symmetric around the center', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
 
@@ -97,14 +97,14 @@ void main() {
       harness.pointerMove(const Offset(150, 150) + grabOffset, alt: true);
       harness.pointerUp(const Offset(150, 150) + grabOffset, alt: true);
 
-      expect(feature.bounds().center, bounds.center);
+      expect(feature.localBounds().center, bounds.center);
       expect(feature.size, const Size(200, 200));
     });
 
     test('shift-resize from a corner locks the aspect ratio', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
 
@@ -119,7 +119,7 @@ void main() {
     test('shift-resize from an edge locks the aspect ratio', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.bottom);
       final grabOffset = down - bounds.bottomRight;
 
@@ -135,7 +135,7 @@ void main() {
     test('alt-resize from an edge expands around the center', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.top);
       final grabOffset = down - bounds.topLeft;
 
@@ -143,14 +143,14 @@ void main() {
       harness.pointerMove(const Offset(50, -50) + grabOffset, alt: true);
       harness.pointerUp(const Offset(50, -50) + grabOffset, alt: true);
 
-      expect(feature.bounds().center, bounds.center);
+      expect(feature.localBounds().center, bounds.center);
       expect(feature.size, const Size(100, 200));
     });
 
     test('does not snap on first move when edge grab is off-center', () {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down =
           harness.edgeHitWorldPoint(bounds, SelectionEdge.top) +
           const Offset(10, 0);
@@ -158,7 +158,7 @@ void main() {
       harness.pointerDown(down);
       harness.pointerMove(down);
 
-      expect(feature.bounds(), bounds);
+      expect(feature.localBounds(), bounds);
     });
 
     test('does not expose resize handles for multiple selections', () {
@@ -166,14 +166,14 @@ void main() {
       harness.context.selection.setSelection(
         features.map((feature) => feature.id),
       );
-      final bounds = features.first.bounds();
+      final bounds = features.first.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
 
       harness.pointerDown(down);
       harness.pointerMove(const Offset(150, 150));
       harness.pointerUp(const Offset(150, 150));
 
-      expect(features.first.bounds(), bounds);
+      expect(features.first.localBounds(), bounds);
     });
 
     test('resizing a polyline scales its points', () {
@@ -181,7 +181,7 @@ void main() {
       final feature = harness.context.document.features.first;
       harness.click(const Offset(50, 50));
       final endBefore = polylineWorldPoints(feature).last;
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
 
@@ -201,7 +201,7 @@ void main() {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
 
@@ -226,7 +226,7 @@ void main() {
       final feature = harness.context.document.features.first;
       harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.bottom);
       final grabOffset = down - bounds.bottomRight;
 

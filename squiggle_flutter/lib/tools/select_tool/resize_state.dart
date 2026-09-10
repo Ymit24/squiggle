@@ -17,11 +17,11 @@ class ResizeState extends InteractionState {
     required Offset pointerDownWorld,
   }) : _resizeOffset =
            pointerDownWorld -
-           _referenceFor(_handle.handle, _handle.node.bounds());
+           _referenceFor(_handle.handle, _handle.node.localBounds());
 
   final ResizeHandle _handle;
   final Offset _resizeOffset;
-  late final Rect _initialBounds = _handle.node.bounds();
+  late final Rect _initialBounds = _handle.node.localBounds();
 
   @override
   void onEnter(EditorContext context) {

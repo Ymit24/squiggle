@@ -18,7 +18,7 @@ void main() {
       ], const Offset(500, 400));
 
       expect(repositioned, hasLength(1));
-      expect(repositioned.first.bounds().center, const Offset(500, 400));
+      expect(repositioned.first.localBounds().center, const Offset(500, 400));
     });
 
     test('preserves relative offsets for multiple features', () {

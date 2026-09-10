@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'click_canvas_state.dart';
@@ -65,7 +66,7 @@ class IdleInteractionState extends InteractionState {
         break;
       case NodeTarget(node: var chaseNode):
         final selectedNodes = context.selection.selectedNodes.map(
-          (id) => context.document.featureById(id),
+          (id) => context.document.nodeById(id),
         );
         if (selectedNodes.any((f) => f == null)) {
           // TODO: Is this possible? What to do?
@@ -107,7 +108,7 @@ class IdleInteractionState extends InteractionState {
         EditTextEditSession(
           featureId: feature.id,
           initialContents: text.contents,
-          canvasLocalBounds: camera.worldToScreenBounds(feature.bounds()),
+          canvasLocalBounds: camera.worldToScreenBounds(feature.localBounds()),
         ),
       );
       return;
@@ -130,7 +131,11 @@ class IdleInteractionState extends InteractionState {
         if (!(keyboard.isControlPressed || keyboard.isMetaPressed)) {
           return false;
         }
-        _onCtrlCmdGPress(context);
+        if (keyboard.isShiftPressed) {
+          _onShiftCtrlCmdGPress(context);
+        } else {
+          _onCtrlCmdGPress(context);
+        }
         return true;
       default:
         return false;
@@ -163,11 +168,59 @@ class IdleInteractionState extends InteractionState {
     context.history.run('Group Selected Nodes', (transaction) {
       transaction.removeAll(context.selection.selectedNodes);
       final bounds = Node.boundsOfNodes(selectedNodes);
+
+      for (final node in selectedNodes) {
+        node.origin -= bounds.center;
+      }
       Group group = Group(
         children: selectedNodes.toList(),
         origin: bounds.center,
       );
       transaction.add(group);
+      context.selection.setSelection([group.id]);
     });
+  }
+
+  void _onShiftCtrlCmdGPress(EditorContext context) {
+    if (context.selection.selectedNodes.isEmpty) {
+      return;
+    }
+
+    final selectedNodes = context.selection.selectedNodes
+        .map((id) => context.document.nodeById(id))
+        .where((node) => node != null)
+        .whereType<Group>()
+        .map((node) => node!)
+        .toList();
+
+    if (selectedNodes.isEmpty) {
+      return;
+    }
+
+    final newSelection = <NodeId>[];
+    for (final node in selectedNodes) {
+      final group = node;
+
+      final container = group.parent!;
+      final index = container.children.indexOf(group);
+      final children = group.children.toList();
+      final groupOrigin = group.origin;
+
+      context.history.run('Ungroup Selected Nodes', (transaction) {
+        transaction.removeAll([node.id]);
+        node.removeAll(node.children.map((child) => child.id));
+        for (var i = 0; i < children.length; i++) {
+          final child = children[i];
+
+          // Convert from group space to the group's parent space.
+          child.origin += groupOrigin;
+
+          transaction.add(child, index: index + i);
+        }
+      }, container: container);
+
+      newSelection.addAll(children.map((child) => child.id));
+    }
+    context.selection.setSelection(newSelection);
   }
 }

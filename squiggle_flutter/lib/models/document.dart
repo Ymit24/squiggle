@@ -73,9 +73,9 @@ class Document extends NodeContainer {
   }
 
   /// Top-most feature whose bounds contain [worldPoint], if any.
-  Feature? featureAtPoint(Offset worldPoint) {
+  Node? nodeAtPoint(Offset worldPoint) {
     for (final node in _rootNodes.reversed) {
-      if (node is Feature && node.hitTest(worldPoint)) {
+      if (node.hitTest(worldPoint)) {
         return node;
       }
     }
@@ -163,4 +163,7 @@ class Document extends NodeContainer {
 
     // final group = Group(origin: groupOrigin, children: nodes);
   }
+
+  @override
+  Offset get globalOrigin => Offset.zero;
 }

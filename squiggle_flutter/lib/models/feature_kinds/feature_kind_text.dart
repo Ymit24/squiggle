@@ -193,7 +193,7 @@ final class FeatureKindText extends FeatureKind {
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     if (contents.isEmpty) return;
 
-    final worldBounds = feature.bounds();
+    final worldBounds = feature.localBounds();
     final paragraphStyle = _paragraphStyle(fontSize);
 
     final strokeParagraph = _layoutParagraph(

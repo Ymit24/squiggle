@@ -41,7 +41,7 @@ final class FeatureKindImage extends FeatureKind {
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    final bounds = feature.bounds();
+    final bounds = feature.localBounds();
     final image = imageRepository.getCached(imageId);
     if (image != null) {
       canvas.drawImageRect(

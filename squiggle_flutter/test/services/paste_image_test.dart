@@ -23,7 +23,7 @@ void main() {
       expect(imageKind.hasVisibleStroke, isFalse);
       expect(feature.size, const Size(1024, 512));
       expect(feature.origin, const Offset(500 - 512, 400 - 256));
-      expect(feature.bounds().center, const Offset(500, 400));
+      expect(feature.localBounds().center, const Offset(500, 400));
     });
   });
 }

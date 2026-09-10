@@ -18,7 +18,7 @@ class SelectionModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deselectFeature(NodeId nodeId) {
+  void deselectNode(NodeId nodeId) {
     if (_selectedNodes.remove(nodeId)) {
       notifyListeners();
     }

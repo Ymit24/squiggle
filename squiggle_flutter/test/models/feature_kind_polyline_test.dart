@@ -70,7 +70,7 @@ void main() {
         localPoints: const [Offset.zero, Offset(100, 100)],
       );
 
-      expect(feature.bounds(), const Rect.fromLTWH(2, 12, 116, 116));
+      expect(feature.localBounds(), const Rect.fromLTWH(2, 12, 116, 116));
     });
 
     test('hitTest hits on segment and misses off to the side', () {
@@ -128,7 +128,7 @@ void main() {
       );
       final doc = Document.fromFeatures([feature]);
 
-      final hit = doc.featureAtPoint(const Offset(50, 0));
+      final hit = doc.nodeAtPoint(const Offset(50, 0));
 
       expect(hit, same(feature));
     });
@@ -167,7 +167,7 @@ void main() {
       doc.features.first.resize(const Rect.fromLTWH(0, 0, 200, 50));
 
       final resized = doc.features.first;
-      expect(resized.bounds(), const Rect.fromLTWH(0, 0, 200, 50));
+      expect(resized.localBounds(), const Rect.fromLTWH(0, 0, 200, 50));
       expect(worldPoint(resized, 0), const Offset(8, 8));
       expect(worldPoint(resized, 1), const Offset(192, 42));
     });

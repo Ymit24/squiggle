@@ -34,7 +34,7 @@ void main() {
       expect(session.initialContents, 'hello world');
       expect(
         session.canvasLocalBounds,
-        harness.camera.worldToScreenBounds(feature.bounds()),
+        harness.camera.worldToScreenBounds(feature.localBounds()),
       );
       await subscription.cancel();
     });

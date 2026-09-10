@@ -19,7 +19,7 @@ class Group extends Node with NodeContainer {
   );
 
   @override
-  Rect bounds() => Node.boundsOfNodes(children);
+  Rect localBounds() => Node.boundsOfNodes(children).shift(origin);
 
   @override
   Group copyWith({NodeId? id, Offset? origin}) => Group(
@@ -53,14 +53,23 @@ class Group extends Node with NodeContainer {
 
   @override
   bool intersectsRect(Rect rect) {
-    return bounds().overlaps(rect);
+    return localBounds().overlaps(rect);
+  }
+
+  @override
+  bool hitTest(Offset worldPoint) {
+    return localBounds().contains(worldPoint);
   }
 
   @override
   void paint(Canvas canvas, ImageRepository imageRepository) {
+    print("D: painting group at ${origin}");
+    canvas.save();
+    canvas.translate(origin.dx, origin.dy);
     for (final child in children) {
       child.paint(canvas, imageRepository);
     }
+    canvas.restore();
   }
 
   @override

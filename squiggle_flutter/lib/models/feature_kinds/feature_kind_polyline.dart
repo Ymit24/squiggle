@@ -53,7 +53,7 @@ final class FeatureKindPolyline extends FeatureKind {
   }) {
     feature.origin = origin;
     feature.kind = copyWith(localPoints: List.of(localPoints));
-    feature.size = feature.bounds().size;
+    feature.size = feature.localBounds().size;
   }
 
   void setPoint(Feature feature, int pointIndex, Offset worldPosition) {

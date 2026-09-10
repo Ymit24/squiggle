@@ -22,7 +22,7 @@ class ResizeHandleUtil {
     const kSelectionBoxPadding = 8.0;
     const kSelectionHandleHitSize = 20.0;
 
-    final screenBounds = camera.worldToScreenBounds(node.bounds());
+    final screenBounds = camera.worldToScreenBounds(node.localBounds());
     final inflated = screenBounds.inflate(kSelectionBoxPadding / camera.zoom);
     final half = kSelectionHandleHitSize / 2;
     const cornerSize = Size.square(kSelectionHandleHitSize);

@@ -24,7 +24,7 @@ final class FeatureKindCircle extends FeatureKind {
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    final bounds = feature.bounds();
+    final bounds = feature.localBounds();
     canvas.drawOval(bounds, Paint()..color = fillColor);
     canvas.drawOval(
       bounds,

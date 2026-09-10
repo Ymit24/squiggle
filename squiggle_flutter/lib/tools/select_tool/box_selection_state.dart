@@ -45,6 +45,10 @@ class BoxSelectionState extends InteractionState {
         .map((node) => node.id)
         .toList();
 
+    print(
+      "D: $selectedNodeIds. Current selection: ${context.selection.selectedNodes}",
+    );
+
     if (isShiftPressed) {
       for (final id in selectedNodeIds) {
         context.selection.selectNode(id);

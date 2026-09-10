@@ -77,9 +77,9 @@ class _DocumentPreviewPainter extends CustomPainter {
       return _emptyView;
     }
 
-    var bounds = features.first.bounds();
+    var bounds = features.first.localBounds();
     for (var i = 1; i < features.length; i++) {
-      bounds = bounds.expandToInclude(features[i].bounds());
+      bounds = bounds.expandToInclude(features[i].localBounds());
     }
 
     final padding = _paddingFor(bounds);

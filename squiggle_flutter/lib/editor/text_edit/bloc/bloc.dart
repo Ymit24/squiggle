@@ -87,7 +87,7 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
     if (textKind is! FeatureKindText) return;
     context.history.run('Edit text', (transaction) {
       transaction.watch([feature]);
-      final bounds = feature.bounds();
+      final bounds = feature.localBounds();
       final newKind = FeatureKindText(
         contents,
         fontSize: textKind.fontSize,

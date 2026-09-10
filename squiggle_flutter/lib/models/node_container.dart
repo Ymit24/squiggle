@@ -8,6 +8,8 @@ abstract mixin class NodeContainer {
 
   Document? get document;
 
+  Offset get globalOrigin;
+
   /// Finds a direct child; use Document.nodeById for global lookup.
   Node? childById(NodeId id) {
     final owner = document;

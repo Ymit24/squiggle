@@ -29,9 +29,9 @@ abstract class Node {
     if (nodes.isEmpty) {
       return Rect.zero;
     }
-    var rect = nodes.first.bounds();
+    var rect = nodes.first.localBounds();
     for (final node in nodes.skip(1)) {
-      rect = rect.expandToInclude(node.bounds());
+      rect = rect.expandToInclude(node.localBounds());
     }
     return rect;
   }
@@ -42,10 +42,15 @@ abstract class Node {
   /// Relative to parent node.
   Offset origin;
 
+  Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
+
   Node({this.id = noId, required this.origin});
 
-  /// TODO: comment
-  Rect bounds();
+  Rect globalBounds() {
+    return localBounds().shift(parent?.globalOrigin ?? Offset.zero);
+  }
+
+  Rect localBounds();
 
   Node copyWith({NodeId? id, Offset? origin});
 
@@ -56,6 +61,8 @@ abstract class Node {
   void paint(Canvas canvas, ImageRepository imageRepository);
 
   bool intersectsRect(Rect rect);
+
+  bool hitTest(Offset worldPoint);
 
   void resize(Rect bounds);
 }

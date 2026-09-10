@@ -26,14 +26,14 @@ Map<NodeId, Offset> computeAlignmentOffsets(
   final features = ids.map(document.featureById).whereType<Feature>().toList();
   if (features.length < 2) return const {};
 
-  var union = features.first.bounds();
+  var union = features.first.localBounds();
   for (final feature in features.skip(1)) {
-    union = union.expandToInclude(feature.bounds());
+    union = union.expandToInclude(feature.localBounds());
   }
 
   final offsets = <NodeId, Offset>{};
   for (final feature in features) {
-    final bounds = feature.bounds();
+    final bounds = feature.localBounds();
     final delta = switch (alignment) {
       FeatureAlignment.left => Offset(union.left - bounds.left, 0),
       FeatureAlignment.right => Offset(union.right - bounds.right, 0),
@@ -66,7 +66,7 @@ Map<NodeId, Offset> computeDistributionOffsets(
   final entries = ids
       .map(document.featureById)
       .whereType<Feature>()
-      .map((feature) => (feature: feature, bounds: feature.bounds()))
+      .map((feature) => (feature: feature, bounds: feature.localBounds()))
       .toList();
   if (entries.length < 3) return const {};
 

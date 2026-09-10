@@ -161,7 +161,7 @@ class RenderDocumentCanvas extends RenderBox {
     );
 
     for (final node in document.nodes) {
-      final worldBounds = node.bounds();
+      final worldBounds = node.localBounds();
       if (!worldBounds.overlaps(visibleWorld)) continue;
 
       node.paint(canvas, _imageRepository);

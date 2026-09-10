@@ -24,7 +24,7 @@ final class FeatureKindRectangle extends FeatureKind {
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    final bounds = feature.bounds();
+    final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);
     canvas.drawRect(
       bounds,

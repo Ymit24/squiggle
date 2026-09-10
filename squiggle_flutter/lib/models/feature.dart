@@ -70,7 +70,7 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
-  Rect bounds() => kind.boundsFor(this);
+  Rect localBounds() => kind.boundsFor(this);
 
   @override
   void resize(Rect bounds) => kind.applyBounds(this, bounds);
@@ -80,12 +80,13 @@ class Feature extends Node {
     size = bounds.size;
   }
 
+  @override
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
 
   @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
 
-  Offset center() => bounds().center;
+  Offset center() => localBounds().center;
 
   void setKind(FeatureKind newKind, {Size? newSize}) {
     if (newSize != null) size = newSize;

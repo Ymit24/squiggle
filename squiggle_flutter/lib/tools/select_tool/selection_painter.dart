@@ -32,9 +32,9 @@ abstract final class SelectionPainter {
     EditorContext context,
   ) {
     for (final featureId in context.selection.selectedNodes) {
-      final feature = context.document.featureById(featureId);
-      if (feature != null) {
-        paintSelectionBox(canvas, camera, feature.bounds());
+      final node = context.document.nodeById(featureId);
+      if (node != null) {
+        paintSelectionBox(canvas, camera, node.localBounds());
       }
     }
   }
