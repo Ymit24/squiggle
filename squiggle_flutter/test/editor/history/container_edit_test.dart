@@ -12,7 +12,7 @@ void main() {
   test('duplicated subtrees receive fresh IDs and replay independently', () {
     final original = Group(origin: Offset.zero, children: [rect(12)]);
     final doc = Document()..insert(original);
-    final edit = DocumentEdit(document: doc, label: 'Duplicate');
+    final edit = DocumentTransaction(document: doc, label: 'Duplicate');
     final copy = edit.add(original.copyWith(id: noId));
     expect(copy.children.single.id, isNot(original.children.single.id));
     final copiedChildId = copy.children.single.id;
@@ -62,7 +62,7 @@ void main() {
     final b = rect(2)..origin = const Offset(40, 50);
     final untouched = rect(3);
     final doc = Document.fromFeatures([a, untouched, b]);
-    final grouping = DocumentEdit(document: doc, label: 'Group');
+    final grouping = DocumentTransaction(document: doc, label: 'Group');
     grouping.removeAll([a.id, b.id]);
     a.origin -= const Offset(10, 10);
     b.origin -= const Offset(10, 10);
@@ -71,10 +71,14 @@ void main() {
     );
     final grouped = grouping.commit()!;
 
-    final move = DocumentEdit(document: doc, container: group, label: 'Move');
+    final move = DocumentTransaction(
+      document: doc,
+      container: group,
+      label: 'Move',
+    );
     move.update(a, (node) => node.origin = const Offset(90, 90));
     final moved = move.commit()!;
-    final ungroup = DocumentEdit(document: doc, label: 'Ungroup');
+    final ungroup = DocumentTransaction(document: doc, label: 'Ungroup');
     ungroup.removeAll([group.id]);
     final children = group.children.toList();
     group.removeAll(children.map((node) => node.id));
@@ -110,7 +114,11 @@ void main() {
     final a = rect(1), b = rect(2);
     final parent = Group(origin: Offset.zero, children: [a, b]);
     final doc = Document()..insert(parent);
-    final edit = DocumentEdit(document: doc, container: parent, label: 'Group');
+    final edit = DocumentTransaction(
+      document: doc,
+      container: parent,
+      label: 'Group',
+    );
     edit.removeAll([a.id, b.id]);
     final added = edit.add(Group(origin: Offset.zero, children: [a, b]));
     edit.cancel();
@@ -124,7 +132,7 @@ void main() {
     final a = rect(1), b = rect(2), c = rect(3);
     final parent = Group(origin: Offset.zero, children: [a, b, c]);
     final doc = Document()..insert(parent);
-    final reorder = DocumentEdit(
+    final reorder = DocumentTransaction(
       document: doc,
       container: parent,
       label: 'Front',
@@ -135,7 +143,7 @@ void main() {
     order.undo(doc);
     expect(parent.children, [a, b, c]);
     order.redo(doc);
-    final delete = DocumentEdit(
+    final delete = DocumentTransaction(
       document: doc,
       container: parent,
       label: 'Delete',
@@ -153,7 +161,7 @@ void main() {
   test('failed capture leaves edit open and cancellable', () {
     final node = FailingFeature();
     final doc = Document()..insert(node);
-    final edit = DocumentEdit(document: doc, label: 'Move');
+    final edit = DocumentTransaction(document: doc, label: 'Move');
     edit.watch([node]);
     node.origin = const Offset(5, 5);
     node.fail = true;
@@ -167,7 +175,7 @@ void main() {
     final child = rect(9);
     final group = Group(origin: Offset.zero, children: [child]);
     final doc = Document()..insert(group);
-    final edit = DocumentEdit(document: doc, label: 'Root');
+    final edit = DocumentTransaction(document: doc, label: 'Root');
     expect(() => edit.watch([child]), throwsArgumentError);
     expect(() => doc.insert(child), throwsStateError);
     final duplicate = Group(origin: Offset.zero, children: [rect(9)]);

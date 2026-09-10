@@ -17,7 +17,7 @@ void main() {
       final moved = document.featureById(NodeId.newId(1))!;
       final untouched = document.featureById(NodeId.newId(2))!;
       final untouchedIdentity = untouched;
-      final edit = DocumentEdit(document: document, label: 'Move');
+      final edit = DocumentTransaction(document: document, label: 'Move');
 
       edit.watch([moved]);
       moved.origin = const Offset(40, 50);
@@ -38,7 +38,7 @@ void main() {
     test('returns null when a watched node is unchanged', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
       final feature = document.features.single;
-      final edit = DocumentEdit(document: document, label: 'Move');
+      final edit = DocumentTransaction(document: document, label: 'Move');
 
       edit.watch([feature]);
 
@@ -48,7 +48,7 @@ void main() {
     test('cancel restores updates and removes additions', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
       final original = document.features.single;
-      final edit = DocumentEdit(document: document, label: 'Duplicate');
+      final edit = DocumentTransaction(document: document, label: 'Duplicate');
 
       edit.watch([original]);
       original.origin = const Offset(30, 30);
@@ -66,7 +66,7 @@ void main() {
         _rectangle(2, Offset.zero),
         _rectangle(3, Offset.zero),
       ]);
-      final edit = DocumentEdit(document: document, label: 'Replace');
+      final edit = DocumentTransaction(document: document, label: 'Replace');
 
       edit.removeAll([NodeId.newId(2)]);
       final added = edit.add(_rectangle(0, Offset.zero));
@@ -90,7 +90,7 @@ void main() {
     test('update captures before invoking the mutation', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
       final feature = document.features.single;
-      final edit = DocumentEdit(document: document, label: 'Move');
+      final edit = DocumentTransaction(document: document, label: 'Move');
 
       edit.update(feature, (node) => node.origin = const Offset(5, 8));
       final change = edit.commit()!;
@@ -106,7 +106,7 @@ void main() {
         children: [_rectangle(2, Offset.zero)],
       );
       final document = Document()..addNode(group);
-      final edit = DocumentEdit(document: document, label: 'Move group');
+      final edit = DocumentTransaction(document: document, label: 'Move group');
 
       edit.update(group, (node) => node.origin = const Offset(40, 50));
       final change = edit.commit()!;
@@ -122,7 +122,7 @@ void main() {
 
     test('adds and replays groups', () {
       final document = Document();
-      final edit = DocumentEdit(document: document, label: 'Add group');
+      final edit = DocumentTransaction(document: document, label: 'Add group');
       final group = Group(
         origin: Offset.zero,
         children: [_rectangle(2, Offset.zero)],
@@ -139,7 +139,7 @@ void main() {
 
     test('closed edits reject further use', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
-      final edit = DocumentEdit(document: document, label: 'Move');
+      final edit = DocumentTransaction(document: document, label: 'Move');
       edit.commit();
 
       expect(() => edit.watch(document.nodes), throwsStateError);

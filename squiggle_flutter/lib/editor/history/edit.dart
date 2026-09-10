@@ -5,7 +5,7 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 /// One in-progress document edit.
-abstract interface class Edit {
+abstract interface class Transaction {
   String get label;
   bool get isOpen;
 
@@ -25,14 +25,14 @@ abstract interface class Edit {
   void reorder(Iterable<NodeId> ids);
 
   /// Closes the edit and returns its change, or null when nothing changed.
-  EditChange? commit();
+  Commit? commit();
 
   /// Restores the document to its state before this edit.
   void cancel();
 }
 
 /// An immutable, replayable document change.
-abstract interface class EditChange {
+abstract interface class Commit {
   String get label;
   int get affectedNodeCount;
   bool get changesOrder;
@@ -44,8 +44,8 @@ abstract interface class EditChange {
 /// Snapshots affected immediate children (including their subtrees) in one
 /// container. Group/ungroup within that scope; transfers between existing
 /// containers require separate edits. Do not mutate other containers directly.
-final class DocumentEdit implements Edit {
-  DocumentEdit({
+final class DocumentTransaction implements Transaction {
+  DocumentTransaction({
     required this.document,
     required this.label,
     NodeContainer? container,
@@ -117,7 +117,7 @@ final class DocumentEdit implements Edit {
   }
 
   @override
-  EditChange? commit() {
+  Commit? commit() {
     _ensureOpen();
     final before = <NodeId, data.Node?>{};
     final after = <NodeId, data.Node?>{};
@@ -136,7 +136,7 @@ final class DocumentEdit implements Edit {
     _isOpen = false;
     if (before.isEmpty && !orderChanged) return null;
 
-    return DocumentEditChange._(
+    return DocumentCommit._(
       label: label,
       containerId: _containerId,
       before: before,
@@ -165,8 +165,8 @@ final class DocumentEdit implements Edit {
   }
 }
 
-final class DocumentEditChange implements EditChange {
-  DocumentEditChange._({
+final class DocumentCommit implements Commit {
+  DocumentCommit._({
     required this.label,
     required this.containerId,
     required Map<NodeId, data.Node?> before,
