@@ -14,6 +14,11 @@ import 'package:squiggle_flutter/tools/select_tool/v3/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/v3/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/v3/interaction_state.dart';
 
+const kSelectionBoxPadding = 8.0;
+const kSelectionHandleHitSize = 20.0;
+const kSelectionHandlePaintSize = 12.0;
+const kDoubleClickInterval = Duration(milliseconds: 300);
+
 class SelectTool3 extends Tool {
   late InteractionState _activeInteractionState = IdleInteractionState(
     parent: this,

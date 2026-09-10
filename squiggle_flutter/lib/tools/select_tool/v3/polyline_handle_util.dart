@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
 
 import 'polyline_handle.dart';
 

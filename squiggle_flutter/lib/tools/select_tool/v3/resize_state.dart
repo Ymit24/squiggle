@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 import 'helpers.dart';
 import 'idle_interaction_state.dart';

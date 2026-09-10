@@ -7,14 +7,13 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart'
-    show
-        SelectTool,
-        kSelectionBoxPadding,
-        kSelectionHandleHitSize,
-        selectionBoxWorldBounds;
+import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
 
 enum _SelectionEdge { top, right, bottom, left }
+
+Rect selectionBoxWorldBounds(Rect featureBounds) {
+  return featureBounds.inflate(kSelectionBoxPadding);
+}
 
 void main() {
   group('SelectTool via EditorContext', () {
@@ -204,7 +203,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(repaints, isNotEmpty);
-      expect(context.tool.activeTool, isA<SelectTool>());
+      expect(context.tool.activeTool, isA<SelectTool3>());
       await subscription.cancel();
     });
 

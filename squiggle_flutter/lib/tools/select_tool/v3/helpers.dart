@@ -2,11 +2,21 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 import 'hit_target.dart';
 import 'polyline_handle_util.dart';
 import 'resize_handle_util.dart';
+
+enum SelectionResizeHandle {
+  topLeft,
+  top,
+  topRight,
+  right,
+  bottomRight,
+  bottom,
+  bottomLeft,
+  left,
+}
 
 HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
   if (context.selection.selectedFeatures.length == 1) {
