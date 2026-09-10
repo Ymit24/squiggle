@@ -60,22 +60,5 @@ void main() {
       expect(bloc.state.selectedFeatures.length, 1);
       await bloc.close();
     });
-
-    test('deletes selected features and clears selection', () async {
-      final featureId = context.document.features.first.id;
-      context.selection.selectFeature(featureId);
-
-      final bloc = EditorBloc(context: context);
-      bloc.add(const DeleteSelectedFeaturesEvent());
-      await Future<void>.delayed(Duration.zero);
-
-      expect(context.document.features, isEmpty);
-      expect(context.selection.selectedFeatures, isEmpty);
-      expect(context.history.canUndo, isTrue);
-
-      context.undo();
-      expect(context.document.features, hasLength(1));
-      await bloc.close();
-    });
   });
 }

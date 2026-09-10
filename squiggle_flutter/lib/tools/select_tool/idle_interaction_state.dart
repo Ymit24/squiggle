@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
@@ -109,5 +110,27 @@ class IdleInteractionState extends InteractionState {
       );
       return;
     }
+  }
+
+  @override
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    final isKey =
+        event.logicalKey == LogicalKeyboardKey.delete ||
+        event.logicalKey == LogicalKeyboardKey.backspace;
+    final hasSelection = context.selection.isNotEmpty;
+    if (!isKey || !hasSelection) {
+      return false;
+    }
+
+    final container = context.document
+        .nodeById(context.selection.selectedFeatures.first)
+        ?.parent;
+
+    context.history.run('Delete Selected Nodes', (transaction) {
+      transaction.removeAll(context.selection.selectedFeatures);
+    }, container: container);
+
+    context.selection.clearSelection();
+    return true;
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:squiggle_flutter/editor/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
@@ -133,15 +131,6 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                     return null;
                   },
                 ),
-            DeleteSelectedFeaturesIntent:
-                CallbackAction<DeleteSelectedFeaturesIntent>(
-                  onInvoke: (_) {
-                    context.read<EditorBloc>().add(
-                      const DeleteSelectedFeaturesEvent(),
-                    );
-                    return null;
-                  },
-                ),
             CopySelectedFeaturesIntent:
                 CallbackAction<CopySelectedFeaturesIntent>(
                   onInvoke: (_) {
@@ -210,9 +199,7 @@ Future<void> _pasteFromClipboard(BuildContext context) async {
     return;
   }
 
-  final pastedText = await pasteTextFromClipboard(
-    context: editorContext,
-  );
+  final pastedText = await pasteTextFromClipboard(context: editorContext);
   if (pastedText) {
     return;
   }
