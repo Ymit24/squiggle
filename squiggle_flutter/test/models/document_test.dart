@@ -4,10 +4,30 @@ import 'package:data_models/data_models.dart' as data;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 void main() {
-  group('Document.featureAtPoint', () {
+  group('Document.nodeAtPoint', () {
+    test('returns the top-most root node, including group interiors', () {
+      final child = Feature(
+        origin: const Offset(10, 20),
+        size: const Size(20, 20),
+        kind: const FeatureKindRectangle(),
+      );
+      final group = Group(origin: const Offset(100, 200), children: [child]);
+      final foreground = Feature(
+        origin: const Offset(120, 220),
+        size: const Size(20, 20),
+        kind: const FeatureKindRectangle(),
+      );
+      final doc = Document()..addNodes([group, foreground]);
+
+      expect(doc.nodeAtPoint(const Offset(115, 225)), same(group));
+      expect(doc.nodeAtPoint(const Offset(125, 225)), same(foreground));
+      expect(doc.nodeAtPoint(const Offset(15, 25)), isNull);
+    });
+
     test('returns top-most feature at point', () {
       final doc = Document.fromFeatures([
         Feature(
@@ -210,7 +230,10 @@ void main() {
 
       doc.featureById(id)!.resize(const Rect.fromLTWH(1, 2, 20, 30));
 
-      expect(doc.features.first.localBounds(), const Rect.fromLTWH(1, 2, 20, 30));
+      expect(
+        doc.features.first.localBounds(),
+        const Rect.fromLTWH(1, 2, 20, 30),
+      );
     });
 
     test('replaceFrom replaces contents and next id', () {

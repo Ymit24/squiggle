@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/group.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -12,6 +13,40 @@ void main() {
     late SelectToolTestHarness harness;
 
     setUp(() => harness = SelectToolTestHarness());
+
+    test('group drag scales children and restores them through undo/redo', () {
+      final document = harness.context.document;
+      final children = document.nodes.toList();
+      document.removeAll(children.map((node) => node.id));
+      final group = Group(origin: const Offset(100, 200), children: children);
+      document.addNode(group);
+      harness.context.selection.selectNode(group.id);
+      final before = document.toDataModel().nodes;
+      final down = harness.cornerHitWorldPoint(group.localBounds());
+      final up = down + const Offset(300, 100);
+
+      harness.pointerDown(down);
+      harness.pointerMove(down);
+      expect(document.toDataModel().nodes, before);
+      harness.pointerMove(up);
+      harness.pointerUp(up);
+
+      expect(group.localBounds(), const Rect.fromLTWH(100, 200, 600, 200));
+      expect(
+        group.children.first.globalBounds(),
+        const Rect.fromLTWH(100, 200, 200, 200),
+      );
+      expect(
+        group.children.last.globalBounds(),
+        const Rect.fromLTWH(500, 200, 200, 200),
+      );
+      final after = document.toDataModel().nodes;
+      harness.context.history.undo();
+      expect(document.toDataModel().nodes, before);
+      expect(harness.context.history.canUndo, isFalse);
+      harness.context.history.redo();
+      expect(document.toDataModel().nodes, after);
+    });
 
     test('does not snap on first move when corner grab is off-center', () {
       final feature = harness.context.document.features.first;
