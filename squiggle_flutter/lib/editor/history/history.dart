@@ -11,7 +11,7 @@ class History {
   final List<Commit> _undoStack = [];
   final List<Commit> _redoStack = [];
 
-  History(this._document);
+  History({required this._document});
 
   Transaction get active => _active!;
   bool get isActive => _active != null;

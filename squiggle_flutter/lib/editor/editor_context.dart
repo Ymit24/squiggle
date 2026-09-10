@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/tool_model.dart';
@@ -21,29 +22,34 @@ class EditorContext extends ChangeNotifier {
     required this.document,
     SelectionModel? selection,
     ToolModel? tool,
-    CommandHistory? history,
+    CommandHistory? historyOld,
+    History? history,
     TextEditModel? textEdit,
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
-       _history = history ?? CommandHistory(document: document),
+       _historyOld = historyOld ?? CommandHistory(document: document),
+       _history = history ?? History(document: document),
        _textEdit = textEdit ?? TextEditModel() {
     _selection.addListener(_forward);
     _tool.addListener(_forward);
-    _history.addListener(_forward);
+    _historyOld.addListener(_forward);
     _textEdit.addListener(_forward);
   }
 
   final Document document;
   final SelectionModel _selection;
   final ToolModel _tool;
-  final CommandHistory _history;
+  final CommandHistory _historyOld;
+  final History? _history;
   final TextEditModel _textEdit;
 
   SelectionModel get selection => _selection;
 
   ToolModel get tool => _tool;
 
-  CommandHistory get history => _history;
+  CommandHistory get historyOld => _historyOld;
+
+  History get history => _history!;
 
   TextEditModel get textEdit => _textEdit;
 
@@ -64,13 +70,13 @@ class EditorContext extends ChangeNotifier {
     return camera.screenToWorld(viewportSize.center(Offset.zero));
   }
 
-  void execute(Command command) => history.execute(command);
+  void execute(Command command) => historyOld.execute(command);
 
-  void record(Command command) => history.record(command);
+  void record(Command command) => historyOld.record(command);
 
-  void undo() => history.undo();
+  void undo() => historyOld.undo();
 
-  void redo() => history.redo();
+  void redo() => historyOld.redo();
 
   void setTool(Tool tool) => _tool.setTool(tool, this);
 
@@ -89,7 +95,7 @@ class EditorContext extends ChangeNotifier {
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
     document.replaceFrom(newDocument);
-    history.clear();
+    historyOld.clear();
     selection.clearSelection();
     endTextEdit();
   }
@@ -98,7 +104,7 @@ class EditorContext extends ChangeNotifier {
   void dispose() {
     _selection.removeListener(_forward);
     _tool.removeListener(_forward);
-    _history.removeListener(_forward);
+    _historyOld.removeListener(_forward);
     _textEdit.removeListener(_forward);
     super.dispose();
   }

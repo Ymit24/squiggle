@@ -34,7 +34,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     emit(_stateWithHistory(state));
 
     await emit.forEach(
-      notifierChangesStream(_context.history),
+      notifierChangesStream(_context.historyOld),
       onData: (_) => _stateWithHistory(state),
     );
   }
@@ -89,8 +89,8 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
 
   ToolbarState _stateWithHistory(ToolbarState state) {
     return state.copyWith(
-      canUndo: _context.history.canUndo,
-      canRedo: _context.history.canRedo,
+      canUndo: _context.historyOld.canUndo,
+      canRedo: _context.historyOld.canRedo,
     );
   }
 }

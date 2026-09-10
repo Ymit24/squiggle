@@ -270,11 +270,11 @@ void main() {
       pointerMove(const Offset(80, 80));
 
       expect(feature.origin, const Offset(30, 30));
-      expect(context.history.undoCount, 0);
+      expect(context.historyOld.undoCount, 0);
 
       pointerUp(const Offset(80, 80));
 
-      expect(context.history.undoCount, 1);
+      expect(context.historyOld.undoCount, 1);
       context.undo();
       expect(feature.origin, Offset.zero);
     });
@@ -289,7 +289,7 @@ void main() {
       pointerMove(const Offset(70, 70));
       pointerUp(const Offset(70, 70));
 
-      expect(context.history.undoCount, 1);
+      expect(context.historyOld.undoCount, 1);
       expect(features[0].origin, const Offset(20, 20));
       expect(features[1].origin, const Offset(220, 20));
 
@@ -360,11 +360,11 @@ void main() {
       pointerMove(const Offset(160, 160) + grabOffset);
 
       expect(feature.size, const Size(160, 160));
-      expect(context.history.undoCount, 0);
+      expect(context.historyOld.undoCount, 0);
 
       pointerUp(const Offset(160, 160) + grabOffset);
 
-      expect(context.history.undoCount, 1);
+      expect(context.historyOld.undoCount, 1);
       context.undo();
       expect(feature.bounds(), bounds);
     });
@@ -746,14 +746,14 @@ void main() {
       pointerDown(const Offset(100, 100));
       pointerMove(const Offset(150, 100));
       pointerMove(const Offset(175, 125));
-      expect(context.history.undoCount, 0);
+      expect(context.historyOld.undoCount, 0);
       pointerUp(const Offset(175, 125));
 
       final afterDrag = polylineWorldPoints(
         context.document.featureById(feature.id)!,
       );
       expect(afterDrag.last, const Offset(175, 125));
-      expect(context.history.undoCount, 1);
+      expect(context.historyOld.undoCount, 1);
 
       context.undo();
       final restored = context.document.featureById(feature.id)!;
