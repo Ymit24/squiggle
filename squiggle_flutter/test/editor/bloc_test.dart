@@ -31,7 +31,7 @@ void main() {
       await bloc.stream.first;
 
       var documentChanged = false;
-      final subscription = notifierChangesStream(context.historyOld).listen((_) {
+      final subscription = notifierChangesStream(context.history).listen((_) {
         documentChanged = true;
       });
 

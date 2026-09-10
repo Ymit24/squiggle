@@ -125,10 +125,7 @@ class SelectTool3 extends Tool {
       isAltPressed: isAltPressed,
     );
     if (_hasTransaction) {
-      if (context.history.commit()) {
-        // HACK: Use old history change stream
-        context.historyOld.notifyListeners();
-      }
+      context.history.commit();
       _hasTransaction = false;
     }
     // TODO: Update how change detection works to not be bool response based.

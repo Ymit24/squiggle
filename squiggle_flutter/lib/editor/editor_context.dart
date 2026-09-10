@@ -21,34 +21,29 @@ class EditorContext extends ChangeNotifier {
     required this.document,
     SelectionModel? selection,
     ToolModel? tool,
-    CommandHistory? historyOld,
     History? history,
     TextEditModel? textEdit,
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
-       _historyOld = historyOld ?? CommandHistory(document: document),
        _history = history ?? History(document: document),
        _textEdit = textEdit ?? TextEditModel() {
     _selection.addListener(_forward);
     _tool.addListener(_forward);
-    _historyOld.addListener(_forward);
+    _history.addListener(_forward);
     _textEdit.addListener(_forward);
   }
 
   final Document document;
   final SelectionModel _selection;
   final ToolModel _tool;
-  final CommandHistory _historyOld;
-  final History? _history;
+  final History _history;
   final TextEditModel _textEdit;
 
   SelectionModel get selection => _selection;
 
   ToolModel get tool => _tool;
 
-  CommandHistory get historyOld => _historyOld;
-
-  History get history => _history!;
+  History get history => _history;
 
   TextEditModel get textEdit => _textEdit;
 
@@ -69,24 +64,14 @@ class EditorContext extends ChangeNotifier {
     return camera.screenToWorld(viewportSize.center(Offset.zero));
   }
 
-  void execute(Command command) => historyOld.execute(command);
-
-  void record(Command command) => historyOld.record(command);
-
   void undo() {
     history.undo();
     _refreshSelectionAfterHistoryChange();
-
-    // HACK: Use old history change stream
-    historyOld.notifyListeners();
   }
 
   void redo() {
     history.redo();
     _refreshSelectionAfterHistoryChange();
-
-    // HACK: Use old history change stream
-    historyOld.notifyListeners();
   }
 
   void _refreshSelectionAfterHistoryChange() {
@@ -101,18 +86,19 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  /// Removes the selected features as one undoable edit.
-  void deleteSelection() {
-    final ids = List<NodeId>.of(selection.selectedFeatures);
-    if (ids.isEmpty) return;
-    execute(RemoveFeaturesCommand(ids));
-    selection.clearSelection();
-  }
+  // /// Removes the selected features as one undoable edit.
+  // TODO: move this code into select tool
+  // void deleteSelection() {
+  //   final ids = List<NodeId>.of(selection.selectedFeatures);
+  //   if (ids.isEmpty) return;
+  //   execute(RemoveFeaturesCommand(ids));
+  //   selection.clearSelection();
+  // }
 
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
     document.replaceFrom(newDocument);
-    historyOld.clear();
+    history.clear();
     selection.clearSelection();
     endTextEdit();
   }
@@ -121,7 +107,7 @@ class EditorContext extends ChangeNotifier {
   void dispose() {
     _selection.removeListener(_forward);
     _tool.removeListener(_forward);
-    _historyOld.removeListener(_forward);
+    _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
     super.dispose();
   }

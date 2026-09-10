@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/editor/history/edit.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/node.dart';
 
 export 'edit.dart';
 
-class History {
+class History extends ChangeNotifier {
   Transaction? _active;
   final Document _document;
 
@@ -38,6 +39,8 @@ class History {
     _active = null;
     _undoStack.clear();
     _redoStack.clear();
+
+    notifyListeners();
   }
 
   void undo() {
@@ -52,6 +55,8 @@ class History {
     commit.undo(_document);
     _undoStack.removeLast();
     _redoStack.add(commit);
+
+    notifyListeners();
   }
 
   void redo() {
@@ -66,22 +71,24 @@ class History {
     commit.redo(_document);
     _redoStack.removeLast();
     _undoStack.add(commit);
+
+    notifyListeners();
   }
 
-  bool commit() {
+  void commit() {
     if (_active == null) {
       throw StateError('No transaction is active');
     }
 
     final commit = _active!.commit();
     _active = null;
+
     if (commit != null) {
       _undoStack.add(commit);
       _redoStack.clear();
-      return true;
-    }
 
-    return false;
+      notifyListeners();
+    }
   }
 
   void cancel() {
@@ -91,6 +98,8 @@ class History {
 
     _active!.cancel();
     _active = null;
+
+    notifyListeners();
   }
 
   void run(

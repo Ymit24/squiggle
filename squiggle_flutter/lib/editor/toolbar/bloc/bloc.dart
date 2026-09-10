@@ -33,7 +33,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     emit(_stateWithHistory(state));
 
     await emit.forEach(
-      notifierChangesStream(_context.historyOld),
+      notifierChangesStream(_context.history),
       onData: (_) => _stateWithHistory(state),
     );
   }
