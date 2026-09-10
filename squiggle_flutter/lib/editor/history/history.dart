@@ -31,6 +31,15 @@ class History {
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 
+  void clear() {
+    if (_active != null) {
+      throw StateError('Cannot clear while a transaction is active');
+    }
+    _active = null;
+    _undoStack.clear();
+    _redoStack.clear();
+  }
+
   void undo() {
     if (_undoStack.isEmpty) {
       throw StateError('No commits to undo');
