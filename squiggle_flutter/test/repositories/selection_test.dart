@@ -7,39 +7,39 @@ void main() {
   group('SelectionModel', () {
     test('can select features', () {
       final selection = SelectionModel();
-      selection.selectFeature(NodeId.newId(0));
-      expect(selection.selectedFeatures.length, 1);
-      expect(selection.selectedFeatures[0], NodeId.newId(0));
+      selection.selectNode(NodeId.newId(0));
+      expect(selection.selectedNodes.length, 1);
+      expect(selection.selectedNodes[0], NodeId.newId(0));
     });
 
     test('can deselect features', () {
       final selection = SelectionModel();
-      selection.selectFeature(NodeId.newId(0));
+      selection.selectNode(NodeId.newId(0));
       selection.deselectFeature(NodeId.newId(0));
-      expect(selection.selectedFeatures.length, 0);
+      expect(selection.selectedNodes.length, 0);
     });
 
     test('can clear selection', () {
       final selection = SelectionModel();
-      selection.selectFeature(NodeId.newId(0));
-      selection.selectFeature(NodeId.newId(1));
+      selection.selectNode(NodeId.newId(0));
+      selection.selectNode(NodeId.newId(1));
       selection.clearSelection();
-      expect(selection.selectedFeatures, isEmpty);
+      expect(selection.selectedNodes, isEmpty);
     });
 
     test('does not duplicate on select', () {
       final selection = SelectionModel();
       final id = NodeId.newId(0);
-      selection.selectFeature(id);
-      selection.selectFeature(id);
-      expect(selection.selectedFeatures.length, 1);
+      selection.selectNode(id);
+      selection.selectNode(id);
+      expect(selection.selectedNodes.length, 1);
     });
 
     test('can check if a feature is selected', () {
       final selection = SelectionModel();
-      selection.selectFeature(NodeId.newId(0));
-      expect(selection.isFeatureSelected(NodeId.newId(0)), true);
-      expect(selection.isFeatureSelected(NodeId.newId(1)), false);
+      selection.selectNode(NodeId.newId(0));
+      expect(selection.isNodeSelected(NodeId.newId(0)), true);
+      expect(selection.isNodeSelected(NodeId.newId(1)), false);
     });
 
     test('emits on each mutation', () async {
@@ -48,12 +48,12 @@ void main() {
       final id1 = NodeId.newId(1);
       final events = <List<NodeId>>[];
       final subscription = notifierChangesStream(selection).listen((_) {
-        events.add(selection.selectedFeatures);
+        events.add(selection.selectedNodes);
       });
 
-      selection.selectFeature(id0);
+      selection.selectNode(id0);
       await Future<void>.delayed(Duration.zero);
-      selection.selectFeature(id1);
+      selection.selectNode(id1);
       await Future<void>.delayed(Duration.zero);
       selection.deselectFeature(id0);
       await Future<void>.delayed(Duration.zero);

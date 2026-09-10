@@ -82,7 +82,7 @@ class EditorContext extends ChangeNotifier {
 
   void _refreshSelectionAfterHistoryChange() {
     selection.setSelection(
-      selection.selectedFeatures.where((id) => document.nodeById(id) != null),
+      selection.selectedNodes.where((id) => document.nodeById(id) != null),
     );
   }
 

@@ -40,9 +40,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   StylePanelState _deriveState() {
-    final selectedFeatureIds = List<NodeId>.of(
-      context.selection.selectedFeatures,
-    );
+    final selectedFeatureIds = List<NodeId>.of(context.selection.selectedNodes);
     if (selectedFeatureIds.isEmpty) {
       return const StylePanelHiddenState();
     }

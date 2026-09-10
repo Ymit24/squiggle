@@ -15,7 +15,7 @@ void main() {
 
     test('does not snap on first move when corner grab is off-center', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.cornerHitWorldPoint(bounds);
 
@@ -27,7 +27,7 @@ void main() {
 
     test('resizes a single selection from the bottom-right corner', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
@@ -41,7 +41,7 @@ void main() {
 
     test('commits one undo entry for a resize drag', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
@@ -60,7 +60,7 @@ void main() {
 
     test('resizes from the top edge', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.top);
       final grabOffset = down - bounds.topLeft;
@@ -74,7 +74,7 @@ void main() {
 
     test('resizes from the right edge', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.right);
       final grabOffset = down - bounds.bottomRight;
@@ -88,7 +88,7 @@ void main() {
 
     test('alt-resize from a corner is symmetric around the center', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
@@ -103,7 +103,7 @@ void main() {
 
     test('shift-resize from a corner locks the aspect ratio', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
@@ -118,7 +118,7 @@ void main() {
 
     test('shift-resize from an edge locks the aspect ratio', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.bottom);
       final grabOffset = down - bounds.bottomRight;
@@ -134,7 +134,7 @@ void main() {
 
     test('alt-resize from an edge expands around the center', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.top);
       final grabOffset = down - bounds.topLeft;
@@ -149,7 +149,7 @@ void main() {
 
     test('does not snap on first move when edge grab is off-center', () {
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final bounds = feature.bounds();
       final down =
           harness.edgeHitWorldPoint(bounds, SelectionEdge.top) +
@@ -199,7 +199,7 @@ void main() {
         size: const Size(200, 80),
       );
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
       final bounds = feature.bounds();
       final down = harness.cornerHitWorldPoint(bounds);
@@ -224,7 +224,7 @@ void main() {
         size: const Size(200, 48),
       );
       final feature = harness.context.document.features.first;
-      harness.context.selection.selectFeature(feature.id);
+      harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
       final bounds = feature.bounds();
       final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.bottom);

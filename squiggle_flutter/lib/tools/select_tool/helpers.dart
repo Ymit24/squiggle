@@ -19,9 +19,9 @@ enum SelectionResizeHandle {
 }
 
 HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
-  if (context.selection.selectedFeatures.length == 1) {
+  if (context.selection.selectedNodes.length == 1) {
     final feature = context.document.featureById(
-      context.selection.selectedFeatures.first,
+      context.selection.selectedNodes.first,
     );
     if (feature != null) {
       final polyHandle = PolylineHandleUtil.hitTest(

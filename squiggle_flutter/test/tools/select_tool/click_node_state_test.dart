@@ -11,7 +11,7 @@ void main() {
     test('selects a node on click', () {
       harness.click(const Offset(50, 50));
 
-      expect(harness.context.selection.selectedFeatures, [
+      expect(harness.context.selection.selectedNodes, [
         harness.context.document.features.first.id,
       ]);
     });
@@ -20,7 +20,7 @@ void main() {
       harness.click(const Offset(50, 50));
       harness.click(const Offset(250, 50));
 
-      expect(harness.context.selection.selectedFeatures, [
+      expect(harness.context.selection.selectedNodes, [
         harness.context.document.features[1].id,
       ]);
     });
@@ -30,7 +30,7 @@ void main() {
       harness.click(const Offset(250, 50), shift: true);
       harness.click(const Offset(50, 50), shift: true);
 
-      expect(harness.context.selection.selectedFeatures, [
+      expect(harness.context.selection.selectedNodes, [
         harness.context.document.features[1].id,
       ]);
     });

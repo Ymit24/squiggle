@@ -47,7 +47,7 @@ class BoxSelectionState extends InteractionState {
 
     if (isShiftPressed) {
       for (final id in selectedNodeIds) {
-        context.selection.selectFeature(id);
+        context.selection.selectNode(id);
       }
     } else {
       context.selection.setSelection(selectedNodeIds);

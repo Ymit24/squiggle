@@ -8,7 +8,7 @@ void main() {
 
     setUp(() {
       harness = SelectToolTestHarness();
-      harness.context.selection.selectFeature(
+      harness.context.selection.selectNode(
         harness.context.document.features.first.id,
       );
     });
@@ -16,7 +16,7 @@ void main() {
     test('clears selection on an empty click', () {
       harness.click(const Offset(500, 500));
 
-      expect(harness.context.selection.selectedFeatures, isEmpty);
+      expect(harness.context.selection.selectedNodes, isEmpty);
     });
 
     test('shift-click on empty canvas preserves selection', () {
@@ -24,7 +24,7 @@ void main() {
 
       harness.click(const Offset(500, 500), shift: true);
 
-      expect(harness.context.selection.selectedFeatures, [selectedId]);
+      expect(harness.context.selection.selectedNodes, [selectedId]);
     });
   });
 }

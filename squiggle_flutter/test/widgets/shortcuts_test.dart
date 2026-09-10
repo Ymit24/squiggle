@@ -106,7 +106,7 @@ void main() {
       ]),
     );
     final featureId = context.document.features.first.id;
-    context.selection.selectFeature(featureId);
+    context.selection.selectNode(featureId);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -135,7 +135,7 @@ void main() {
     await tester.pump();
 
     expect(context.document.features, isEmpty);
-    expect(context.selection.selectedFeatures, isEmpty);
+    expect(context.selection.selectedNodes, isEmpty);
   });
 
   testWidgets('ToolShortcuts undoes and redoes document commands', (
@@ -204,7 +204,7 @@ void main() {
       ]),
     );
     final feature = context.document.features.first;
-    context.selection.selectFeature(feature.id);
+    context.selection.selectNode(feature.id);
     context.history.run('Move Feature', (transaction) {
       transaction.watch([feature]);
       feature.origin = const Offset(40, 40);
@@ -239,7 +239,7 @@ void main() {
     await tester.pump();
 
     expect(feature.origin, Offset.zero);
-    expect(context.selection.selectedFeatures, [feature.id]);
+    expect(context.selection.selectedNodes, [feature.id]);
   });
 
   testWidgets('ToolShortcuts restores focus after text edit closes', (

@@ -54,14 +54,14 @@ void main() {
           ),
         );
       });
-      context.selection.selectFeature(context.document.features.first.id);
+      context.selection.selectNode(context.document.features.first.id);
       expect(context.document.features, hasLength(1));
-      expect(context.selection.selectedFeatures, hasLength(1));
+      expect(context.selection.selectedNodes, hasLength(1));
 
       await library.createDocument(name: 'Two');
       expect(library.currentDocument?.name, 'Two');
       expect(context.document.features, isEmpty);
-      expect(context.selection.selectedFeatures, isEmpty);
+      expect(context.selection.selectedNodes, isEmpty);
 
       final one = library.documents.firstWhere((doc) => doc.name == 'One');
       await library.openDocument(one.id);

@@ -60,7 +60,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
+      context.selection.selectNode(context.document.features.first.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       );
@@ -78,7 +78,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
+      context.selection.selectNode(context.document.features.first.id);
       final showingState =
           await bloc.stream.firstWhere(
                 (state) => state is StylePanelShowingState,
@@ -100,7 +100,7 @@ void main() {
       await bloc.stream.first;
 
       for (final feature in context.document.features) {
-        context.selection.selectFeature(feature.id);
+        context.selection.selectNode(feature.id);
       }
       final showingState =
           await bloc.stream.firstWhere(
@@ -121,7 +121,7 @@ void main() {
       await bloc.stream.first;
 
       final featureId = context.document.features.first.id;
-      context.selection.selectFeature(featureId);
+      context.selection.selectNode(featureId);
 
       context.history.run('Set fill', (transaction) {
         transaction.update(context.document.featureById(featureId)!, (feature) {
@@ -145,7 +145,7 @@ void main() {
       await bloc.stream.first;
 
       final featureId = context.document.features.first.id;
-      context.selection.selectFeature(featureId);
+      context.selection.selectNode(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const ClearStrokeEvent());
@@ -163,7 +163,7 @@ void main() {
       await bloc.stream.first;
 
       final featureId = context.document.features.first.id;
-      context.selection.selectFeature(featureId);
+      context.selection.selectNode(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       context.history.run('Set fill', (transaction) {
@@ -202,7 +202,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
+      context.selection.selectNode(context.document.features.first.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const SetStrokePresetEvent(0));
@@ -221,7 +221,7 @@ void main() {
       await bloc.stream.first;
 
       final textFeature = context.document.features.last;
-      context.selection.selectFeature(textFeature.id);
+      context.selection.selectNode(textFeature.id);
       final showingState =
           await bloc.stream.firstWhere(
                 (state) => state is StylePanelShowingState,
@@ -241,7 +241,7 @@ void main() {
         bloc.add(const RequestWatchStylePanelStateEvent());
         await bloc.stream.first;
 
-        context.selection.selectFeature(context.document.features.first.id);
+        context.selection.selectNode(context.document.features.first.id);
         final showingState =
             await bloc.stream.firstWhere(
                   (state) => state is StylePanelShowingState,
@@ -260,8 +260,8 @@ void main() {
         bloc.add(const RequestWatchStylePanelStateEvent());
         await bloc.stream.first;
 
-        context.selection.selectFeature(context.document.features.first.id);
-        context.selection.selectFeature(context.document.features.last.id);
+        context.selection.selectNode(context.document.features.first.id);
+        context.selection.selectNode(context.document.features.last.id);
         final showingState =
             await bloc.stream.firstWhere(
                   (state) =>
@@ -281,8 +281,8 @@ void main() {
 
       final rect = context.document.features.first;
       final text = context.document.features.last;
-      context.selection.selectFeature(rect.id);
-      context.selection.selectFeature(text.id);
+      context.selection.selectNode(rect.id);
+      context.selection.selectNode(text.id);
       await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState && state.showFontSize,
       );
@@ -301,7 +301,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.last.id);
+      context.selection.selectNode(context.document.features.last.id);
       final showingState =
           await bloc.stream.firstWhere(
                 (state) => state is StylePanelShowingState,
@@ -326,7 +326,7 @@ void main() {
         await bloc.stream.first;
 
         final text = context.document.features.last;
-        context.selection.selectFeature(text.id);
+        context.selection.selectNode(text.id);
         await bloc.stream.firstWhere(
           (state) => state is StylePanelShowingState,
         );
@@ -350,7 +350,7 @@ void main() {
         await bloc.stream.first;
 
         final text = context.document.features.last;
-        context.selection.selectFeature(text.id);
+        context.selection.selectNode(text.id);
         await bloc.stream.firstWhere(
           (state) => state is StylePanelShowingState,
         );
@@ -373,8 +373,8 @@ void main() {
 
       final first = context.document.features[0];
       final second = context.document.features[1];
-      context.selection.selectFeature(first.id);
-      context.selection.selectFeature(second.id);
+      context.selection.selectNode(first.id);
+      context.selection.selectNode(second.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const AlignFeaturesEvent(FeatureAlignment.left));
@@ -398,9 +398,9 @@ void main() {
           (feature) => feature.origin = const Offset(40, 0),
         );
       });
-      context.selection.selectFeature(first.id);
-      context.selection.selectFeature(second.id);
-      context.selection.selectFeature(context.document.features[2].id);
+      context.selection.selectNode(first.id);
+      context.selection.selectNode(second.id);
+      context.selection.selectNode(context.document.features[2].id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const DistributeFeaturesEvent(FeatureDistribution.horizontal));

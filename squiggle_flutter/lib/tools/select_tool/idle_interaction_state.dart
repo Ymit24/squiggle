@@ -64,7 +64,7 @@ class IdleInteractionState extends InteractionState {
         );
         break;
       case NodeTarget(node: var chaseNode):
-        final selectedNodes = context.selection.selectedFeatures.map(
+        final selectedNodes = context.selection.selectedNodes.map(
           (id) => context.document.featureById(id),
         );
         if (selectedNodes.any((f) => f == null)) {
@@ -139,29 +139,29 @@ class IdleInteractionState extends InteractionState {
 
   void _onDeletePress(EditorContext context) {
     final container = context.document
-        .nodeById(context.selection.selectedFeatures.first)
+        .nodeById(context.selection.selectedNodes.first)
         ?.parent;
 
     context.history.run('Delete Selected Nodes', (transaction) {
-      transaction.removeAll(context.selection.selectedFeatures);
+      transaction.removeAll(context.selection.selectedNodes);
     }, container: container);
 
     context.selection.clearSelection();
   }
 
   void _onCtrlCmdGPress(EditorContext context) {
-    if (context.selection.selectedFeatures.length < 2) {
+    if (context.selection.selectedNodes.length < 2) {
       return;
     }
 
-    final selectedNodes = context.selection.selectedFeatures
+    final selectedNodes = context.selection.selectedNodes
         .map((id) => context.document.nodeById(id))
         .where((node) => node != null)
         .map((node) => node!)
         .toList();
 
     context.history.run('Group Selected Nodes', (transaction) {
-      transaction.removeAll(context.selection.selectedFeatures);
+      transaction.removeAll(context.selection.selectedNodes);
       final bounds = Node.boundsOfNodes(selectedNodes);
       Group group = Group(
         children: selectedNodes.toList(),

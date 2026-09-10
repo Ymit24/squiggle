@@ -54,7 +54,7 @@ void main() {
       bloc.add(const RequestWatchEditorStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
+      context.selection.selectNode(context.document.features.first.id);
       await bloc.stream.firstWhere((s) => s.selectedFeatures.isNotEmpty);
 
       expect(bloc.state.selectedFeatures.length, 1);

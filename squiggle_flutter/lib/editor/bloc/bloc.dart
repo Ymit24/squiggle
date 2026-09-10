@@ -18,7 +18,7 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   ) async {
     emit(
       state.copyWith(
-        selectedFeatures: List.of(context.selection.selectedFeatures),
+        selectedFeatures: List.of(context.selection.selectedNodes),
       ),
     );
 
@@ -26,7 +26,7 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
       notifierChangesStream(context),
       onData: (_) => EditorState(
         document: context.document,
-        selectedFeatures: List.of(context.selection.selectedFeatures),
+        selectedFeatures: List.of(context.selection.selectedNodes),
       ),
     );
   }

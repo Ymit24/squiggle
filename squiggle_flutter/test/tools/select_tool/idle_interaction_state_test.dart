@@ -27,7 +27,7 @@ void main() {
       harness.doubleClick(const Offset(50, 24));
       await Future<void>.delayed(Duration.zero);
 
-      expect(harness.context.selection.selectedFeatures, [feature.id]);
+      expect(harness.context.selection.selectedNodes, [feature.id]);
       expect(sessions, hasLength(1));
       final session = sessions.single as EditTextEditSession;
       expect(session.featureId, feature.id);
@@ -63,11 +63,11 @@ void main() {
     ]) {
       test('${key.keyLabel} deletes selected nodes as one undo entry', () {
         final feature = harness.context.document.features.first;
-        harness.context.selection.selectFeature(feature.id);
+        harness.context.selection.selectNode(feature.id);
 
         expect(harness.keyDown(key), isTrue);
         expect(harness.context.document.featureById(feature.id), isNull);
-        expect(harness.context.selection.selectedFeatures, isEmpty);
+        expect(harness.context.selection.selectedNodes, isEmpty);
 
         harness.context.history.undo();
         expect(harness.context.document.featureById(feature.id), isNotNull);
@@ -75,7 +75,7 @@ void main() {
     }
 
     test('ignores unrelated keys', () {
-      harness.context.selection.selectFeature(
+      harness.context.selection.selectNode(
         harness.context.document.features.first.id,
       );
 

@@ -30,7 +30,7 @@ Future<void> copySelectedFeaturesToClipboard({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
-  final selectedIds = context.selection.selectedFeatures;
+  final selectedIds = context.selection.selectedNodes;
   if (selectedIds.isEmpty) {
     return;
   }

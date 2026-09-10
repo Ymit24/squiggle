@@ -3,41 +3,41 @@ import 'package:squiggle_flutter/models/node_id.dart';
 
 /// Pure observable state of the current feature selection.
 class SelectionModel extends ChangeNotifier {
-  final List<NodeId> _selectedFeatures = [];
+  final List<NodeId> _selectedNodes = [];
 
   /// Selected feature ids, top-most selection last.
-  List<NodeId> get selectedFeatures => List.unmodifiable(_selectedFeatures);
+  List<NodeId> get selectedNodes => List.unmodifiable(_selectedNodes);
 
-  bool get isEmpty => _selectedFeatures.isEmpty;
+  bool get isEmpty => _selectedNodes.isEmpty;
 
-  bool get isNotEmpty => _selectedFeatures.isNotEmpty;
+  bool get isNotEmpty => _selectedNodes.isNotEmpty;
 
-  void selectFeature(NodeId featureId) {
-    _selectedFeatures.remove(featureId);
-    _selectedFeatures.add(featureId);
+  void selectNode(NodeId nodeId) {
+    _selectedNodes.remove(nodeId);
+    _selectedNodes.add(nodeId);
     notifyListeners();
   }
 
-  void deselectFeature(NodeId featureId) {
-    if (_selectedFeatures.remove(featureId)) {
+  void deselectFeature(NodeId nodeId) {
+    if (_selectedNodes.remove(nodeId)) {
       notifyListeners();
     }
   }
 
   void clearSelection() {
-    if (_selectedFeatures.isEmpty) return;
-    _selectedFeatures.clear();
+    if (_selectedNodes.isEmpty) return;
+    _selectedNodes.clear();
     notifyListeners();
   }
 
   void setSelection(Iterable<NodeId> ids) {
-    _selectedFeatures
+    _selectedNodes
       ..clear()
       ..addAll(ids);
     notifyListeners();
   }
 
-  bool isFeatureSelected(NodeId featureId) {
-    return _selectedFeatures.contains(featureId);
+  bool isNodeSelected(NodeId nodeId) {
+    return _selectedNodes.contains(nodeId);
   }
 }
