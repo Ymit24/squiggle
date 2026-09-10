@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:data_models/data_models.dart' as data;
 import 'package:flutter/widgets.dart';
 import 'package:super_clipboard/super_clipboard.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
@@ -75,7 +74,12 @@ Future<bool> pasteFeaturesFromClipboard({
   }
 
   final pasted = repositionFeaturesToCenter(features, center);
-  context.execute(AddFeaturesCommand(pasted));
+  context.cancelInteraction();
+  context.history.run('Paste', (transaction) {
+    for (final feature in pasted) {
+      transaction.add(feature);
+    }
+  });
   return true;
 }
 

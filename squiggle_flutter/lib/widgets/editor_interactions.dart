@@ -315,17 +315,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _onLeftPointerCancel(PointerCancelEvent event) {
     _isPrimaryDragging = false;
-
-    final world = _screenToWorld(event);
-    if (world == null) return;
-
-    widget.context.tool.onPointerUp(
-      widget.context,
-      world,
-      _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
-    );
+    widget.context.cancelInteraction();
   }
 
   void _onRightPointerDown(PointerDownEvent event) {

@@ -826,7 +826,7 @@ class SelectTool extends Tool {
       sourceIds: idsToDuplicate,
       originsAtDragStart: originsAtDragStart,
     );
-    context.execute(command);
+    // Legacy history disabled; use SelectTool3.
 
     final createdIds = command.createdIds;
     selection.setSelection(createdIds);
@@ -898,7 +898,7 @@ class SelectTool extends Tool {
     }
     if (finalOrigins.isEmpty) return;
 
-    context.record(MoveFeaturesCommand(initialOrigins, finalOrigins));
+    // Legacy history disabled; use SelectTool3.
   }
 
   void _resizeFeature(
@@ -949,13 +949,7 @@ class SelectTool extends Tool {
     final finalBounds = feature.bounds();
     if (finalBounds == initialBounds) return;
 
-    context.record(
-      ResizeFeatureCommand(
-        id: featureId,
-        initialBounds: initialBounds,
-        finalBounds: finalBounds,
-      ),
-    );
+    // Legacy history disabled; use SelectTool3.
   }
 
   void _movePolylinePoint(
@@ -1001,15 +995,7 @@ class SelectTool extends Tool {
       return;
     }
 
-    context.record(
-      MovePolylinePointCommand(
-        id: featureId,
-        pointIndex: pointIndex,
-        initialOrigin: initialOrigin,
-        initialLocalPoints: initialLocalPoints,
-        finalWorldPosition: finalPoints[pointIndex],
-      ),
-    );
+    // Legacy history disabled; use SelectTool3.
   }
 
   Rect _asymmetricBoundsForResize(

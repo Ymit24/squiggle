@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -45,7 +44,10 @@ class CreateFeatureTool extends Tool {
   }
 
   @override
-  void deactivate(EditorContext context) {
+  void deactivate(EditorContext context) => cancelInteraction(context);
+
+  @override
+  void cancelInteraction(EditorContext context) {
     _state = const _Idle();
   }
 
@@ -97,11 +99,11 @@ class CreateFeatureTool extends Tool {
     required bool isAltPressed,
   }) {
     if (_state case _Dragging(:final bounds)) {
-      context.execute(
-        AddFeatureCommand(
+      context.history.run('Create feature', (transaction) {
+        transaction.add(
           Feature(origin: bounds.topLeft, size: bounds.size, kind: kind),
-        ),
-      );
+        );
+      });
       _state = const _Idle();
     }
     return true;

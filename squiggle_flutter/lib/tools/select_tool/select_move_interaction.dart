@@ -137,7 +137,7 @@ class SelectMoveInteraction extends EditorInteraction {
           if (context.document.featureById(id) case final f?) id: f.origin,
       };
       if (finalOrigins.isNotEmpty) {
-        context.record(MoveFeaturesCommand(initial, finalOrigins));
+        // Legacy history disabled; use SelectTool3.
       }
     } else {
       final hovered = context.document.featureAtPoint(worldPosition);
@@ -199,10 +199,7 @@ class SelectMoveInteraction extends EditorInteraction {
     _lastTapTime = null;
   }
 
-  Map<NodeId, Offset> _captureOrigins(
-    Document document,
-    List<NodeId> ids,
-  ) => {
+  Map<NodeId, Offset> _captureOrigins(Document document, List<NodeId> ids) => {
     for (final id in ids)
       if (document.featureById(id) case final feature?) id: feature.origin,
   };
@@ -223,7 +220,7 @@ class SelectMoveInteraction extends EditorInteraction {
       sourceIds: ids,
       originsAtDragStart: originsAtDragStart,
     );
-    context.execute(command);
+    // Legacy history disabled; use SelectTool3.
     selection.setSelection(command.createdIds);
     final draggedIndex = ids.indexOf(draggedFeatureId);
     final clone = context.document.featureById(

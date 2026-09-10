@@ -24,6 +24,9 @@ abstract class Tool extends EditorInteraction {
     ImageRepository imageRepository,
   );
 
+  /// Cancels the current gesture without committing it.
+  void cancelInteraction(EditorContext context) {}
+
   @override
   void deactivate(EditorContext context) {}
 

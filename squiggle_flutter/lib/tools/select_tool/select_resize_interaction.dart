@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -100,13 +99,7 @@ class SelectResizeInteraction extends EditorInteraction {
     if (_didResize && id != null && initialBounds != null) {
       final feature = context.document.featureById(id);
       if (feature != null && feature.bounds() != initialBounds) {
-        context.record(
-          ResizeFeatureCommand(
-            id: id,
-            initialBounds: initialBounds,
-            finalBounds: feature.bounds(),
-          ),
-        );
+        // Legacy history disabled; use SelectTool3.
       }
     }
     _clear();

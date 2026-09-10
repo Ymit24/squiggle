@@ -62,12 +62,20 @@ class EditorContext extends ChangeNotifier {
     return camera.screenToWorld(viewportSize.center(Offset.zero));
   }
 
+  void cancelInteraction() {
+    tool.activeTool.cancelInteraction(this);
+  }
+
   void undo() {
+    cancelInteraction();
+    if (!history.canUndo) return;
     history.undo();
     _refreshSelectionAfterHistoryChange();
   }
 
   void redo() {
+    cancelInteraction();
+    if (!history.canRedo) return;
     history.redo();
     _refreshSelectionAfterHistoryChange();
   }
@@ -95,6 +103,7 @@ class EditorContext extends ChangeNotifier {
 
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
+    cancelInteraction();
     document.replaceFrom(newDocument);
     history.clear();
     selection.clearSelection();

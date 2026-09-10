@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -120,15 +119,7 @@ class SelectPolylinePointInteraction extends EditorInteraction {
       if (pointIndex < finalPoints.length &&
           pointIndex < initialPoints.length &&
           finalPoints[pointIndex] != initialPoints[pointIndex]) {
-        context.record(
-          MovePolylinePointCommand(
-            id: featureId!,
-            pointIndex: pointIndex,
-            initialOrigin: initialOrigin,
-            initialLocalPoints: initialLocalPoints,
-            finalWorldPosition: finalPoints[pointIndex],
-          ),
-        );
+        // Legacy history disabled; use SelectTool3.
       }
     }
 

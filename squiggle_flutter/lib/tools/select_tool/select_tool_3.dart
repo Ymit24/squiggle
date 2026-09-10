@@ -32,6 +32,7 @@ class SelectTool3 extends Tool {
     context.history.active.watch(nodes);
   }
 
+  @override
   void cancelInteraction(EditorContext context) {
     _activeInteractionState = IdleInteractionState(parent: this);
     if (_hasTransaction) {

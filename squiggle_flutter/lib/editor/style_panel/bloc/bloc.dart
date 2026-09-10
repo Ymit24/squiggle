@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/models/feature_layout.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
@@ -178,17 +178,42 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.isEmpty) return;
 
-    context.execute(
-      UpdateFeaturesStyleCommand(
-        ids: ids,
-        strokeColor: strokeColor,
-        fillColor: fillColor,
-        strokeWidth: strokeWidth,
-        fontSize: fontSize,
-        horizontalAlignment: horizontalAlignment,
-        verticalAlignment: verticalAlignment,
-      ),
-    );
+    final features = _featuresById(ids);
+    if (features.isEmpty) return;
+    final container = features.first.parent;
+    if (features.any((feature) => !identical(feature.parent, container))) {
+      throw StateError('Selected nodes must share a container');
+    }
+    context.history.run('Change style', (transaction) {
+      transaction.watch(features);
+      for (final feature in features) {
+        final newKind = switch (feature.kind) {
+          FeatureKindText() => feature.kind.copyWithStyle(
+            strokeColor: strokeColor,
+            fillColor: fillColor,
+            strokeWidth: strokeWidth,
+            fontSize: fontSize,
+            horizontalAlignment: horizontalAlignment,
+            verticalAlignment: verticalAlignment,
+          ),
+          _ => feature.kind.copyWithStyle(
+            strokeColor: strokeColor,
+            fillColor: fillColor,
+            strokeWidth: strokeWidth,
+          ),
+        };
+
+        if (fontSize != null && newKind is FeatureKindText) {
+          final size = newKind.measureContents(
+            width: feature.size.width,
+            fontSize: newKind.fontSize,
+          );
+          feature.setKind(newKind, newSize: size);
+        } else {
+          feature.setKind(newKind);
+        }
+      }
+    }, container: container);
   }
 
   void _onSetStrokePreset(
@@ -267,8 +292,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 2) return;
 
-    context.execute(
-      LayoutFeaturesCommand.align(ids: ids, alignment: event.alignment),
+    _applyOffsets(
+      computeAlignmentOffsets(context.document, ids, event.alignment),
     );
   }
 
@@ -279,11 +304,27 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 3) return;
 
-    context.execute(
-      LayoutFeaturesCommand.distribute(
-        ids: ids,
-        distribution: event.distribution,
-      ),
+    _applyOffsets(
+      computeDistributionOffsets(context.document, ids, event.distribution),
     );
+  }
+
+  List<Feature> _featuresById(Iterable<NodeId> ids) => [
+    for (final id in ids)
+      if (context.document.featureById(id) case final feature?) feature,
+  ];
+
+  void _applyOffsets(Map<NodeId, Offset> offsets) {
+    final features = _featuresById(offsets.keys);
+    if (features.isEmpty) return;
+    final container = features.first.parent;
+    if (features.any((feature) => !identical(feature.parent, container))) {
+      throw StateError('Selected nodes must share a container');
+    }
+    context.history.run('Layout selection', (transaction) {
+      for (final feature in features) {
+        transaction.update(feature, (node) => node.origin += offsets[node.id]!);
+      }
+    }, container: container);
   }
 }

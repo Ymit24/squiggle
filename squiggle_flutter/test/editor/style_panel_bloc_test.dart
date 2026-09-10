@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
@@ -39,10 +38,7 @@ void main() {
           Feature(
             origin: const Offset(240, 0),
             size: const Size(200, 48),
-            kind: const FeatureKindText(
-              'hello',
-              fillColor: Color(0xFFFFFFFF),
-            ),
+            kind: const FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
           ),
         ]),
       );
@@ -83,9 +79,11 @@ void main() {
       await bloc.stream.first;
 
       context.selection.selectFeature(context.document.features.first.id);
-      final showingState = await bloc.stream.firstWhere(
-        (state) => state is StylePanelShowingState,
-      ) as StylePanelShowingState;
+      final showingState =
+          await bloc.stream.firstWhere(
+                (state) => state is StylePanelShowingState,
+              )
+              as StylePanelShowingState;
 
       expect(showingState.activeStrokePresetIndex, 1);
       expect(showingState.activeFillPresetIndex, 1);
@@ -104,10 +102,11 @@ void main() {
       for (final feature in context.document.features) {
         context.selection.selectFeature(feature.id);
       }
-      final showingState = await bloc.stream.firstWhere(
-        (state) =>
-            state is StylePanelShowingState && state.strokeMixed,
-      ) as StylePanelShowingState;
+      final showingState =
+          await bloc.stream.firstWhere(
+                (state) => state is StylePanelShowingState && state.strokeMixed,
+              )
+              as StylePanelShowingState;
 
       expect(showingState.activeStrokePresetIndex, isNull);
       expect(showingState.activeFillPresetIndex, isNull);
@@ -124,12 +123,13 @@ void main() {
       final featureId = context.document.features.first.id;
       context.selection.selectFeature(featureId);
 
-      context.execute(
-        UpdateFeaturesStyleCommand(
-          ids: [featureId],
-          fillColor: transparentFillColor,
-        ),
-      );
+      context.history.run('Set fill', (transaction) {
+        transaction.update(context.document.featureById(featureId)!, (feature) {
+          feature.setKind(
+            feature.kind.copyWithStyle(fillColor: transparentFillColor),
+          );
+        });
+      });
       await Future<void>.delayed(Duration.zero);
 
       final showingState = bloc.state as StylePanelShowingState;
@@ -166,12 +166,13 @@ void main() {
       context.selection.selectFeature(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
-      context.execute(
-        UpdateFeaturesStyleCommand(
-          ids: [featureId],
-          fillColor: transparentFillColor,
-        ),
-      );
+      context.history.run('Set fill', (transaction) {
+        transaction.update(context.document.featureById(featureId)!, (feature) {
+          feature.setKind(
+            feature.kind.copyWithStyle(fillColor: transparentFillColor),
+          );
+        });
+      });
       await Future<void>.delayed(Duration.zero);
 
       bloc.add(const ClearStrokeEvent());
@@ -189,8 +190,10 @@ void main() {
       bloc.add(const SetStrokePresetEvent(0));
       await Future<void>.delayed(Duration.zero);
 
-      expect(context.document.features.first.kind.strokeColor,
-          stylePresets[1].strokeColor);
+      expect(
+        context.document.features.first.kind.strokeColor,
+        stylePresets[1].strokeColor,
+      );
       await bloc.close();
     });
 
@@ -219,9 +222,11 @@ void main() {
 
       final textFeature = context.document.features.last;
       context.selection.selectFeature(textFeature.id);
-      final showingState = await bloc.stream.firstWhere(
-        (state) => state is StylePanelShowingState,
-      ) as StylePanelShowingState;
+      final showingState =
+          await bloc.stream.firstWhere(
+                (state) => state is StylePanelShowingState,
+              )
+              as StylePanelShowingState;
 
       expect(showingState.showFontSize, isTrue);
       expect(showingState.activeFontSize, FontSizePreset.medium);
@@ -229,36 +234,45 @@ void main() {
       await bloc.close();
     });
 
-    test('hides font size controls when only non-text features are selected',
-        () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchStylePanelStateEvent());
-      await bloc.stream.first;
+    test(
+      'hides font size controls when only non-text features are selected',
+      () async {
+        final bloc = createBloc();
+        bloc.add(const RequestWatchStylePanelStateEvent());
+        await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
-      final showingState = await bloc.stream.firstWhere(
-        (state) => state is StylePanelShowingState,
-      ) as StylePanelShowingState;
+        context.selection.selectFeature(context.document.features.first.id);
+        final showingState =
+            await bloc.stream.firstWhere(
+                  (state) => state is StylePanelShowingState,
+                )
+                as StylePanelShowingState;
 
-      expect(showingState.showFontSize, isFalse);
-      await bloc.close();
-    });
+        expect(showingState.showFontSize, isFalse);
+        await bloc.close();
+      },
+    );
 
-    test('shows font size controls for mixed text and shape selection', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchStylePanelStateEvent());
-      await bloc.stream.first;
+    test(
+      'shows font size controls for mixed text and shape selection',
+      () async {
+        final bloc = createBloc();
+        bloc.add(const RequestWatchStylePanelStateEvent());
+        await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
-      context.selection.selectFeature(context.document.features.last.id);
-      final showingState = await bloc.stream.firstWhere(
-        (state) =>
-            state is StylePanelShowingState && state.showFontSize,
-      ) as StylePanelShowingState;
+        context.selection.selectFeature(context.document.features.first.id);
+        context.selection.selectFeature(context.document.features.last.id);
+        final showingState =
+            await bloc.stream.firstWhere(
+                  (state) =>
+                      state is StylePanelShowingState && state.showFontSize,
+                )
+                as StylePanelShowingState;
 
-      expect(showingState.showFontSize, isTrue);
-      await bloc.close();
-    });
+        expect(showingState.showFontSize, isTrue);
+        await bloc.close();
+      },
+    );
 
     test('SetFontSizeEvent updates only selected text features', () async {
       final bloc = createBloc();
@@ -270,8 +284,7 @@ void main() {
       context.selection.selectFeature(rect.id);
       context.selection.selectFeature(text.id);
       await bloc.stream.firstWhere(
-        (state) =>
-            state is StylePanelShowingState && state.showFontSize,
+        (state) => state is StylePanelShowingState && state.showFontSize,
       );
 
       bloc.add(const SetFontSizeEvent(FontSizePreset.large));
@@ -289,57 +302,69 @@ void main() {
       await bloc.stream.first;
 
       context.selection.selectFeature(context.document.features.last.id);
-      final showingState = await bloc.stream.firstWhere(
-        (state) => state is StylePanelShowingState,
-      ) as StylePanelShowingState;
+      final showingState =
+          await bloc.stream.firstWhere(
+                (state) => state is StylePanelShowingState,
+              )
+              as StylePanelShowingState;
 
-      expect(showingState.activeHorizontalAlignment,
-          TextHorizontalAlignment.left);
+      expect(
+        showingState.activeHorizontalAlignment,
+        TextHorizontalAlignment.left,
+      );
       expect(showingState.activeVerticalAlignment, TextVerticalAlignment.top);
       expect(showingState.horizontalAlignmentMixed, isFalse);
       expect(showingState.verticalAlignmentMixed, isFalse);
       await bloc.close();
     });
 
-    test('SetTextHorizontalAlignmentEvent updates selected text features',
-        () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchStylePanelStateEvent());
-      await bloc.stream.first;
+    test(
+      'SetTextHorizontalAlignmentEvent updates selected text features',
+      () async {
+        final bloc = createBloc();
+        bloc.add(const RequestWatchStylePanelStateEvent());
+        await bloc.stream.first;
 
-      final text = context.document.features.last;
-      context.selection.selectFeature(text.id);
-      await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
+        final text = context.document.features.last;
+        context.selection.selectFeature(text.id);
+        await bloc.stream.firstWhere(
+          (state) => state is StylePanelShowingState,
+        );
 
-      bloc.add(
-        const SetTextHorizontalAlignmentEvent(TextHorizontalAlignment.center),
-      );
-      await Future<void>.delayed(Duration.zero);
+        bloc.add(
+          const SetTextHorizontalAlignmentEvent(TextHorizontalAlignment.center),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      final textKind = text.kind as FeatureKindText;
-      expect(textKind.horizontalAlignment, TextHorizontalAlignment.center);
-      await bloc.close();
-    });
+        final textKind = text.kind as FeatureKindText;
+        expect(textKind.horizontalAlignment, TextHorizontalAlignment.center);
+        await bloc.close();
+      },
+    );
 
-    test('SetTextVerticalAlignmentEvent updates selected text features',
-        () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchStylePanelStateEvent());
-      await bloc.stream.first;
+    test(
+      'SetTextVerticalAlignmentEvent updates selected text features',
+      () async {
+        final bloc = createBloc();
+        bloc.add(const RequestWatchStylePanelStateEvent());
+        await bloc.stream.first;
 
-      final text = context.document.features.last;
-      context.selection.selectFeature(text.id);
-      await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
+        final text = context.document.features.last;
+        context.selection.selectFeature(text.id);
+        await bloc.stream.firstWhere(
+          (state) => state is StylePanelShowingState,
+        );
 
-      bloc.add(
-        const SetTextVerticalAlignmentEvent(TextVerticalAlignment.bottom),
-      );
-      await Future<void>.delayed(Duration.zero);
+        bloc.add(
+          const SetTextVerticalAlignmentEvent(TextVerticalAlignment.bottom),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      final textKind = text.kind as FeatureKindText;
-      expect(textKind.verticalAlignment, TextVerticalAlignment.bottom);
-      await bloc.close();
-    });
+        final textKind = text.kind as FeatureKindText;
+        expect(textKind.verticalAlignment, TextVerticalAlignment.bottom);
+        await bloc.close();
+      },
+    );
 
     test('AlignFeaturesEvent aligns selected features', () async {
       final bloc = createBloc();
@@ -367,9 +392,12 @@ void main() {
 
       final first = context.document.features[0];
       final second = context.document.features[1];
-      context.execute(
-        MoveFeatureCommand(second.id, const Offset(40, 0)),
-      );
+      context.history.run('Move', (transaction) {
+        transaction.update(
+          second,
+          (feature) => feature.origin = const Offset(40, 0),
+        );
+      });
       context.selection.selectFeature(first.id);
       context.selection.selectFeature(second.id);
       context.selection.selectFeature(context.document.features[2].id);
@@ -378,6 +406,10 @@ void main() {
       bloc.add(const DistributeFeaturesEvent(FeatureDistribution.horizontal));
       await Future<void>.delayed(Duration.zero);
 
+      expect(second.origin, const Offset(120, 0));
+      context.undo();
+      expect(second.origin, const Offset(40, 0));
+      context.redo();
       expect(second.origin, const Offset(120, 0));
       await bloc.close();
     });

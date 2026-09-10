@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -20,12 +19,14 @@ Future<void> pasteImageFromClipboard({
     return;
   }
 
-  final feature = repositionFeaturesToCenter(
-    [createImageFeatureAtCenter(imported: imported, center: center)],
-    center,
-  ).first;
+  final feature = repositionFeaturesToCenter([
+    createImageFeatureAtCenter(imported: imported, center: center),
+  ], center).first;
 
-  context.execute(AddFeatureCommand(feature));
+  context.cancelInteraction();
+  context.history.run('Create feature', (transaction) {
+    transaction.add(feature);
+  });
 }
 
 /// Testable helper for placing an imported image feature on the canvas.
