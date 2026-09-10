@@ -5,11 +5,11 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import '../select_tool_3.dart';
+import 'select_tool.dart';
 import 'hit_target.dart';
 
 abstract class InteractionState {
-  final SelectTool3 parent;
+  final SelectTool parent;
 
   InteractionState({required this.parent});
 

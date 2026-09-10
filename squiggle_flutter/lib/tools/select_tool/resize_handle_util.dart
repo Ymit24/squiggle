@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/tools/select_tool/v3/helpers.dart';
+import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 
 import 'resize_handle.dart';
 

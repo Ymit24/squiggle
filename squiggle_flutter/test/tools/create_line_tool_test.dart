@@ -6,7 +6,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
   group('CreateLineTool via EditorContext', () {
@@ -205,7 +205,7 @@ void main() {
       pointerDown(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      context.setTool(SelectTool3());
+      context.setTool(SelectTool());
 
       expect(context.document.features, isEmpty);
     });

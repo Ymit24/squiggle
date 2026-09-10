@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool_3.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 enum _SelectionEdge { top, right, bottom, left }
 
@@ -202,7 +202,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(repaints, isNotEmpty);
-      expect(context.tool.activeTool, isA<SelectTool3>());
+      expect(context.tool.activeTool, isA<SelectTool>());
       await subscription.cancel();
     });
 
