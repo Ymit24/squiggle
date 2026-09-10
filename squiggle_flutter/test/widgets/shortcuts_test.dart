@@ -143,15 +143,15 @@ void main() {
   ) async {
     final context = EditorContext(document: Document());
 
-    context.execute(
-      AddFeatureCommand(
+    context.history.run('Add feature', (transaction) {
+      transaction.add(
         Feature(
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: const FeatureKindRectangle(),
         ),
-      ),
-    );
+      );
+    });
 
     await tester.pumpWidget(
       MaterialApp(

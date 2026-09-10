@@ -37,7 +37,6 @@ class BoxSelectionState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: box state move");
     _current = cursorWorldPosition;
 
     final selectionBounds = Rect.fromPoints(_start, _current);
@@ -63,7 +62,6 @@ class BoxSelectionState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: box state up");
     parent.transition(IdleInteractionState(parent: parent), context);
   }
 
@@ -74,7 +72,6 @@ class BoxSelectionState extends InteractionState {
     EditorContext context,
     ImageRepository imageRepository,
   ) {
-    print("Box selection paint");
     final screenBounds = Rect.fromPoints(
       camera.worldToScreen(_start),
       camera.worldToScreen(_current),

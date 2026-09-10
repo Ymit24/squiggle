@@ -45,8 +45,6 @@ class ResizeState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: on pointer move");
-
     final newBounds = getNewBounds(
       cursorWorldPosition - _resizeOffset,
       lockAspectRatio: isShiftPressed,

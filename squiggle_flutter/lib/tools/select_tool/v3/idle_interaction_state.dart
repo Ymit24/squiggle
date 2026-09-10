@@ -43,10 +43,8 @@ class IdleInteractionState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: idle state down. Hit target: $target");
     switch (target) {
       case ResizeHandleTarget(handle: var handle):
-        print("D: Clicked on handle: ${target.handle}");
         parent.transition(
           ResizeState(
             parent: parent,
@@ -57,7 +55,6 @@ class IdleInteractionState extends InteractionState {
         );
         break;
       case PolylineHandleTarget(handle: var handle):
-        print("D: Clicked on polyline handle: ${target.handle}");
         parent.transition(
           DragPolylineHandleState(parent: parent, handle: handle),
           context,
@@ -98,7 +95,6 @@ class IdleInteractionState extends InteractionState {
     Offset worldPosition,
     Camera camera,
   ) {
-    print("D: Idle double click on target: $target!");
     if (target case NodeTarget(
       node: final Feature feature,
     ) when feature.kind is FeatureKindText) {

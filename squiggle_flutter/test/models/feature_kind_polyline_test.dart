@@ -134,7 +134,7 @@ void main() {
     });
   });
 
-  group('MoveFeatureCommand with polyline', () {
+  group('FeatureKindPolyline translation', () {
     test('translates world points and preserves local points', () {
       final doc = Document.fromFeatures([
         polylineFeature(
@@ -143,12 +143,9 @@ void main() {
           localPoints: const [Offset.zero, Offset(100, 100)],
         ),
       ]);
-      final id = doc.features.first.id;
       final beforeEnd = worldPoint(doc.features.first, 1);
 
-      CommandHistory(
-        document: doc,
-      ).execute(MoveFeatureCommand(id, const Offset(20, 30)));
+      doc.features.first.origin = const Offset(20, 30);
 
       final moved = doc.features.first;
       final kind = moved.kind as FeatureKindPolyline;
@@ -158,7 +155,7 @@ void main() {
     });
   });
 
-  group('ResizeFeatureCommand with polyline', () {
+  group('FeatureKindPolyline resize', () {
     test('scales world points proportionally', () {
       final doc = Document.fromFeatures([
         polylineFeature(
@@ -167,15 +164,7 @@ void main() {
           localPoints: const [Offset.zero, Offset(100, 100)],
         ),
       ]);
-      final id = doc.features.first.id;
-
-      CommandHistory(document: doc).execute(
-        ResizeFeatureCommand(
-          id: id,
-          initialBounds: doc.features.first.bounds(),
-          finalBounds: const Rect.fromLTWH(0, 0, 200, 50),
-        ),
-      );
+      doc.features.first.resize(const Rect.fromLTWH(0, 0, 200, 50));
 
       final resized = doc.features.first;
       expect(resized.bounds(), const Rect.fromLTWH(0, 0, 200, 50));

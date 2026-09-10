@@ -61,7 +61,6 @@ class ClickNodeState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: click state move");
     if (selectedNodes.isNotEmpty) {
       parent.beginTransaction(
         context,
@@ -102,7 +101,6 @@ class ClickNodeState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    print("D: click state up");
     if (isShiftPressed) {
       if (_wasSelected) {
         context.selection.deselectFeature(_chase.id);

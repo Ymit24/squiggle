@@ -45,15 +45,15 @@ void main() {
 
     test('switches documents and clears selection', () async {
       await library.createDocument(name: 'One');
-      context.execute(
-        AddFeatureCommand(
+      context.history.run('Add feature', (transaction) {
+        transaction.add(
           Feature(
             origin: const Offset(0, 0),
             size: const Size(10, 10),
             kind: const FeatureKindRectangle(),
           ),
-        ),
-      );
+        );
+      });
       context.selection.selectFeature(context.document.features.first.id);
       expect(context.document.features, hasLength(1));
       expect(context.selection.selectedFeatures, hasLength(1));

@@ -92,15 +92,6 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  // /// Removes the selected features as one undoable edit.
-  // TODO: move this code into select tool
-  // void deleteSelection() {
-  //   final ids = List<NodeId>.of(selection.selectedFeatures);
-  //   if (ids.isEmpty) return;
-  //   execute(RemoveFeaturesCommand(ids));
-  //   selection.clearSelection();
-  // }
-
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
     cancelInteraction();

@@ -71,8 +71,7 @@ void main() {
     void doubleClick(Offset world, {bool shift = false}) {
       pointerDown(world, shift: shift);
       pointerUp(world, shift: shift);
-      pointerDown(world, shift: shift);
-      pointerUp(world, shift: shift);
+      context.tool.onDoubleClick(context, world, camera);
     }
 
     bool keyDown(LogicalKeyboardKey key) {

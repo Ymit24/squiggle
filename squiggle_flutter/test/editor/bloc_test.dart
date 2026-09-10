@@ -34,12 +34,13 @@ void main() {
         documentChanged = true;
       });
 
-      context.execute(
-        MoveFeatureCommand(
-          context.document.features.first.id,
-          const Offset(10, 10),
-        ),
-      );
+      final feature = context.document.features.first;
+      context.history.run('Move feature', (transaction) {
+        transaction.update(
+          feature,
+          (feature) => feature.origin = const Offset(10, 10),
+        );
+      });
       await Future<void>.delayed(Duration.zero);
 
       expect(documentChanged, isTrue);
@@ -70,6 +71,10 @@ void main() {
 
       expect(context.document.features, isEmpty);
       expect(context.selection.selectedFeatures, isEmpty);
+      expect(context.history.canUndo, isTrue);
+
+      context.undo();
+      expect(context.document.features, hasLength(1));
       await bloc.close();
     });
   });

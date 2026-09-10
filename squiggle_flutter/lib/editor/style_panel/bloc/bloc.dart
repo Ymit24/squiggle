@@ -310,8 +310,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   List<Feature> _featuresById(Iterable<NodeId> ids) => [
-    for (final id in ids)
-      if (context.document.featureById(id) case final feature?) feature,
+    for (final id in ids) ?context.document.featureById(id),
   ];
 
   void _applyOffsets(Map<NodeId, Offset> offsets) {
