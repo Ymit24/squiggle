@@ -60,7 +60,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectNode(context.document.features.first.id);
+      context.selection.selectNode(context.document.nodes.first.id);
       final showingState = await bloc.stream.firstWhere(
         (state) => state is StylePanelShowingState,
       );
@@ -78,7 +78,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectNode(context.document.features.first.id);
+      context.selection.selectNode(context.document.nodes.first.id);
       final showingState =
           await bloc.stream.firstWhere(
                 (state) => state is StylePanelShowingState,
@@ -99,7 +99,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      for (final feature in context.document.features) {
+      for (final feature in context.document.nodes) {
         context.selection.selectNode(feature.id);
       }
       final showingState =
@@ -120,7 +120,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final featureId = context.document.features.first.id;
+      final featureId = context.document.nodes.first.id;
       context.selection.selectNode(featureId);
 
       context.history.run('Set fill', (transaction) {
@@ -144,14 +144,14 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final featureId = context.document.features.first.id;
+      final featureId = context.document.nodes.first.id;
       context.selection.selectNode(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const ClearStrokeEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final kind = context.document.features.first.kind;
+      final kind = (context.document.nodes.first as Feature).kind;
       expect(kind.hasVisibleStroke, isFalse);
       expect(kind.strokeWidth, StrokeWidthPreset.medium.width);
       await bloc.close();
@@ -162,7 +162,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final featureId = context.document.features.first.id;
+      final featureId = context.document.nodes.first.id;
       context.selection.selectNode(featureId);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
@@ -178,7 +178,7 @@ void main() {
       bloc.add(const ClearStrokeEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final kind = context.document.features.first.kind;
+      final kind = (context.document.nodes.first as Feature).kind;
       expect(kind.hasVisibleStroke, isFalse);
       expect(kind.hasVisibleFill, isFalse);
       expect(kind.strokeWidth, StrokeWidthPreset.medium.width);
@@ -191,7 +191,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(
-        context.document.features.first.kind.strokeColor,
+        (context.document.nodes.first as Feature).kind.strokeColor,
         stylePresets[1].strokeColor,
       );
       await bloc.close();
@@ -202,14 +202,14 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectNode(context.document.features.first.id);
+      context.selection.selectNode(context.document.nodes.first.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const SetStrokePresetEvent(0));
       await Future<void>.delayed(Duration.zero);
 
       expect(
-        context.document.features.first.kind.strokeColor,
+        (context.document.nodes.first as Feature).kind.strokeColor,
         stylePresets[0].strokeColor,
       );
       await bloc.close();
@@ -220,7 +220,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final textFeature = context.document.features.last;
+      final textFeature = (context.document.nodes.last as Feature);
       context.selection.selectNode(textFeature.id);
       final showingState =
           await bloc.stream.firstWhere(
@@ -241,7 +241,7 @@ void main() {
         bloc.add(const RequestWatchStylePanelStateEvent());
         await bloc.stream.first;
 
-        context.selection.selectNode(context.document.features.first.id);
+        context.selection.selectNode(context.document.nodes.first.id);
         final showingState =
             await bloc.stream.firstWhere(
                   (state) => state is StylePanelShowingState,
@@ -260,8 +260,8 @@ void main() {
         bloc.add(const RequestWatchStylePanelStateEvent());
         await bloc.stream.first;
 
-        context.selection.selectNode(context.document.features.first.id);
-        context.selection.selectNode(context.document.features.last.id);
+        context.selection.selectNode(context.document.nodes.first.id);
+        context.selection.selectNode(context.document.nodes.last.id);
         final showingState =
             await bloc.stream.firstWhere(
                   (state) =>
@@ -279,8 +279,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final rect = context.document.features.first;
-      final text = context.document.features.last;
+      final rect = (context.document.nodes.first as Feature);
+      final text = (context.document.nodes.last as Feature);
       context.selection.selectNode(rect.id);
       context.selection.selectNode(text.id);
       await bloc.stream.firstWhere(
@@ -301,7 +301,7 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectNode(context.document.features.last.id);
+      context.selection.selectNode(context.document.nodes.last.id);
       final showingState =
           await bloc.stream.firstWhere(
                 (state) => state is StylePanelShowingState,
@@ -325,7 +325,7 @@ void main() {
         bloc.add(const RequestWatchStylePanelStateEvent());
         await bloc.stream.first;
 
-        final text = context.document.features.last;
+        final text = (context.document.nodes.last as Feature);
         context.selection.selectNode(text.id);
         await bloc.stream.firstWhere(
           (state) => state is StylePanelShowingState,
@@ -349,7 +349,7 @@ void main() {
         bloc.add(const RequestWatchStylePanelStateEvent());
         await bloc.stream.first;
 
-        final text = context.document.features.last;
+        final text = (context.document.nodes.last as Feature);
         context.selection.selectNode(text.id);
         await bloc.stream.firstWhere(
           (state) => state is StylePanelShowingState,
@@ -371,8 +371,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final first = context.document.features[0];
-      final second = context.document.features[1];
+      final first = (context.document.nodes[0] as Feature);
+      final second = (context.document.nodes[1] as Feature);
       context.selection.selectNode(first.id);
       context.selection.selectNode(second.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
@@ -390,8 +390,8 @@ void main() {
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
 
-      final first = context.document.features[0];
-      final second = context.document.features[1];
+      final first = (context.document.nodes[0] as Feature);
+      final second = (context.document.nodes[1] as Feature);
       context.history.run('Move', (transaction) {
         transaction.update(
           second,
@@ -400,7 +400,7 @@ void main() {
       });
       context.selection.selectNode(first.id);
       context.selection.selectNode(second.id);
-      context.selection.selectNode(context.document.features[2].id);
+      context.selection.selectNode(context.document.nodes[2].id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
       bloc.add(const DistributeFeaturesEvent(FeatureDistribution.horizontal));

@@ -9,13 +9,13 @@ void main() {
     setUp(() => harness = SelectToolTestHarness());
 
     test('alt-drag duplicates a node and leaves the original in place', () {
-      final original = harness.context.document.features.first;
+      final original = harness.context.document.nodes.first;
 
       harness.pointerDown(const Offset(50, 50), alt: true);
       harness.pointerMove(const Offset(70, 80), alt: true);
       harness.pointerUp(const Offset(70, 80), alt: true);
 
-      expect(harness.context.document.features, hasLength(3));
+      expect(harness.context.document.nodes, hasLength(3));
       expect(original.origin, Offset.zero);
       final duplicate = harness.context.document.featureById(
         harness.context.selection.selectedNodes.single,
@@ -25,7 +25,7 @@ void main() {
     });
 
     test('alt-drag duplicates all selected nodes', () {
-      final features = harness.context.document.features;
+      final features = harness.context.document.nodes;
       harness.click(const Offset(50, 50));
       harness.click(const Offset(250, 50), shift: true);
 
@@ -33,7 +33,7 @@ void main() {
       harness.pointerMove(const Offset(60, 60), alt: true);
       harness.pointerUp(const Offset(60, 60), alt: true);
 
-      expect(harness.context.document.features, hasLength(4));
+      expect(harness.context.document.nodes, hasLength(4));
       expect(features[0].origin, Offset.zero);
       expect(features[1].origin, const Offset(200, 0));
       expect(
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('pressing alt during a drag duplicates at the current position', () {
-      final original = harness.context.document.features.first;
+      final original = harness.context.document.nodes.first;
       harness.pointerDown(const Offset(50, 50));
       harness.pointerMove(const Offset(70, 60));
       harness.pointerMove(const Offset(70, 60), alt: true);
@@ -62,7 +62,7 @@ void main() {
     });
 
     test('duplicate drag replays as one history entry', () {
-      final original = harness.context.document.features.first;
+      final original = harness.context.document.nodes.first;
       harness.pointerDown(const Offset(50, 50));
       harness.pointerMove(const Offset(70, 80), alt: true);
       harness.pointerMove(const Offset(90, 100), alt: true);

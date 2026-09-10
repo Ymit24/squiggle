@@ -9,7 +9,7 @@ void main() {
     setUp(() {
       harness = SelectToolTestHarness();
       harness.context.selection.selectNode(
-        harness.context.document.features.first.id,
+        harness.context.document.nodes.first.id,
       );
     });
 
@@ -20,7 +20,7 @@ void main() {
     });
 
     test('shift-click on empty canvas preserves selection', () {
-      final selectedId = harness.context.document.features.first.id;
+      final selectedId = harness.context.document.nodes.first.id;
 
       harness.click(const Offset(500, 500), shift: true);
 

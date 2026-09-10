@@ -37,7 +37,7 @@ void main() {
 
     test('returns null when a watched node is unchanged', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
-      final feature = document.features.single;
+      final feature = document.nodes.single;
       final edit = DocumentTransaction(document: document, label: 'Move');
 
       edit.watch([feature]);
@@ -47,7 +47,7 @@ void main() {
 
     test('cancel restores updates and removes additions', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
-      final original = document.features.single;
+      final original = document.nodes.single;
       final edit = DocumentTransaction(document: document, label: 'Duplicate');
 
       edit.watch([original]);
@@ -55,9 +55,9 @@ void main() {
       edit.add(_rectangle(0, const Offset(50, 50)));
       edit.cancel();
 
-      expect(document.features, hasLength(1));
-      expect(document.features.single.id, NodeId.newId(1));
-      expect(document.features.single.origin, Offset.zero);
+      expect(document.nodes, hasLength(1));
+      expect(document.nodes.single.id, NodeId.newId(1));
+      expect(document.nodes.single.origin, Offset.zero);
     });
 
     test('undo and redo structural edits preserve order and ids', () {
@@ -89,7 +89,7 @@ void main() {
 
     test('update captures before invoking the mutation', () {
       final document = Document.fromFeatures([_rectangle(1, Offset.zero)]);
-      final feature = document.features.single;
+      final feature = document.nodes.single;
       final edit = DocumentTransaction(document: document, label: 'Move');
 
       edit.update(feature, (node) => node.origin = const Offset(5, 8));

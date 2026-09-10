@@ -16,7 +16,7 @@ void main() {
 
     test('double-clicking text starts a text edit session', () async {
       harness.context = _textContext();
-      final feature = harness.context.document.features.first;
+      final feature = harness.context.document.nodes.first;
       final sessions = <TextEditSession>[];
       final subscription = notifierChangesStream(harness.context.textEdit)
           .map((_) => harness.context.textEdit.session)
@@ -62,7 +62,7 @@ void main() {
       LogicalKeyboardKey.backspace,
     ]) {
       test('${key.keyLabel} deletes selected nodes as one undo entry', () {
-        final feature = harness.context.document.features.first;
+        final feature = harness.context.document.nodes.first;
         harness.context.selection.selectNode(feature.id);
 
         expect(harness.keyDown(key), isTrue);
@@ -76,11 +76,11 @@ void main() {
 
     test('ignores unrelated keys', () {
       harness.context.selection.selectNode(
-        harness.context.document.features.first.id,
+        harness.context.document.nodes.first.id,
       );
 
       expect(harness.keyDown(LogicalKeyboardKey.enter), isFalse);
-      expect(harness.context.document.features, hasLength(2));
+      expect(harness.context.document.nodes, hasLength(2));
     });
   });
 }

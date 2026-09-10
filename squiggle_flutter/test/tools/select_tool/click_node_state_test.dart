@@ -12,7 +12,7 @@ void main() {
       harness.click(const Offset(50, 50));
 
       expect(harness.context.selection.selectedNodes, [
-        harness.context.document.features.first.id,
+        harness.context.document.nodes.first.id,
       ]);
     });
 
@@ -21,7 +21,7 @@ void main() {
       harness.click(const Offset(250, 50));
 
       expect(harness.context.selection.selectedNodes, [
-        harness.context.document.features[1].id,
+        harness.context.document.nodes[1].id,
       ]);
     });
 
@@ -31,14 +31,14 @@ void main() {
       harness.click(const Offset(50, 50), shift: true);
 
       expect(harness.context.selection.selectedNodes, [
-        harness.context.document.features[1].id,
+        harness.context.document.nodes[1].id,
       ]);
     });
 
     test('alt-click without a drag does not duplicate', () {
       harness.click(const Offset(50, 50), alt: true);
 
-      expect(harness.context.document.features, hasLength(2));
+      expect(harness.context.document.nodes, hasLength(2));
     });
   });
 }

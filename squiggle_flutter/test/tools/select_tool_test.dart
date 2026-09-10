@@ -14,7 +14,7 @@ void main() {
     });
 
     test('deactivation cancels an interaction and clears selection', () {
-      final feature = harness.context.document.features.first;
+      final feature = harness.context.document.nodes.first;
       harness.pointerDown(const Offset(50, 50));
       harness.pointerMove(const Offset(70, 80));
       expect(feature.origin, const Offset(20, 30));

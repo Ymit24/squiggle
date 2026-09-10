@@ -19,7 +19,7 @@ void main() {
     });
 
     test('drags a selected polyline vertex', () {
-      final feature = harness.context.document.features.first;
+      final feature = (harness.context.document.nodes.first as Feature);
 
       harness.pointerDown(const Offset(100, 100));
       harness.pointerMove(const Offset(150, 100));
@@ -29,7 +29,7 @@ void main() {
     });
 
     test('shift-drag snaps a vertex to a 45 degree angle', () {
-      final feature = harness.context.document.features.first;
+      final feature = (harness.context.document.nodes.first as Feature);
 
       harness.pointerDown(const Offset(100, 100));
       harness.pointerMove(const Offset(140, 120), shift: true);
@@ -40,7 +40,7 @@ void main() {
     });
 
     test('commits one undo entry for a vertex drag', () {
-      final feature = harness.context.document.features.first;
+      final feature = (harness.context.document.nodes.first as Feature);
 
       harness.pointerDown(const Offset(100, 100));
       harness.pointerMove(const Offset(150, 100));
@@ -68,7 +68,7 @@ void main() {
             ),
         ]),
       );
-      final features = harness.context.document.features;
+      final features = harness.context.document.nodes.cast<Feature>();
       harness.context.selection.setSelection(
         features.map((feature) => feature.id),
       );

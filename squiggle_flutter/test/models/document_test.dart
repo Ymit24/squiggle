@@ -68,7 +68,7 @@ void main() {
           const data.Document(name: 'Named document'),
         );
 
-        expect(document.features, isEmpty);
+        expect(document.nodes, isEmpty);
         expect(document.nextId, 1);
         expect(document.name, 'Named document');
       });
@@ -82,10 +82,13 @@ void main() {
 
         final document = Document.fromDataModel(raw);
 
-        expect(document.features[0].id.value, 1);
-        expect(document.features[0].kind, isA<FeatureKindRectangle>());
-        expect(document.features[1].id.value, 2);
-        expect(document.features[1].kind, isA<FeatureKindCircle>());
+        expect(document.nodes[0].id.value, 1);
+        expect(
+          (document.nodes[0] as Feature).kind,
+          isA<FeatureKindRectangle>(),
+        );
+        expect(document.nodes[1].id.value, 2);
+        expect((document.nodes[1] as Feature).kind, isA<FeatureKindCircle>());
       });
       test(
         'Factory fromDataModel with non-empty document has correct nextFeatureId',
@@ -164,7 +167,7 @@ void main() {
       doc.addNode(feature);
 
       expect(feature.id, isNot(noId));
-      expect(doc.features, [feature]);
+      expect(doc.nodes, [feature]);
     });
 
     test('addFeatures adds multiple features in one change', () {
@@ -184,8 +187,8 @@ void main() {
 
       doc.addNodes(features);
 
-      expect(doc.features, hasLength(2));
-      expect(doc.features.every((feature) => feature.id != noId), isTrue);
+      expect(doc.nodes, hasLength(2));
+      expect(doc.nodes.every((feature) => feature.id != noId), isTrue);
     });
 
     test('removeFeature removes by id', () {
@@ -196,11 +199,11 @@ void main() {
           kind: const FeatureKindRectangle(),
         ),
       ]);
-      final id = doc.features.first.id;
+      final id = doc.nodes.first.id;
 
       doc.removeFeature(id);
 
-      expect(doc.features, isEmpty);
+      expect(doc.nodes, isEmpty);
     });
 
     test('moveFeature updates origin', () {
@@ -211,11 +214,11 @@ void main() {
           kind: const FeatureKindRectangle(),
         ),
       ]);
-      final id = doc.features.first.id;
+      final id = doc.nodes.first.id;
 
       doc.featureById(id)!.origin = const Offset(5, 5);
 
-      expect(doc.features.first.origin, const Offset(5, 5));
+      expect(doc.nodes.first.origin, const Offset(5, 5));
     });
 
     test('setFeatureBounds updates bounds', () {
@@ -226,14 +229,11 @@ void main() {
           kind: const FeatureKindRectangle(),
         ),
       ]);
-      final id = doc.features.first.id;
+      final id = doc.nodes.first.id;
 
       doc.featureById(id)!.resize(const Rect.fromLTWH(1, 2, 20, 30));
 
-      expect(
-        doc.features.first.localBounds(),
-        const Rect.fromLTWH(1, 2, 20, 30),
-      );
+      expect(doc.nodes.first.localBounds(), const Rect.fromLTWH(1, 2, 20, 30));
     });
 
     test('replaceFrom replaces contents and next id', () {
@@ -260,9 +260,9 @@ void main() {
 
       doc.replaceFrom(replacement);
 
-      expect(doc.features, hasLength(2));
+      expect(doc.nodes, hasLength(2));
       expect(doc.name, 'Replacement');
-      expect(doc.features.first.origin, const Offset(5, 5));
+      expect(doc.nodes.first.origin, const Offset(5, 5));
       expect(doc.nextId, greaterThanOrEqualTo(2));
     });
   });

@@ -16,7 +16,7 @@ void main() {
       harness.pointerUp(const Offset(120, 120));
 
       expect(harness.context.selection.selectedNodes, [
-        harness.context.document.features.first.id,
+        harness.context.document.nodes.first.id,
       ]);
     });
 
@@ -28,12 +28,12 @@ void main() {
       harness.pointerMove(const Offset(120, 120));
 
       expect(harness.context.selection.selectedNodes, [
-        harness.context.document.features.first.id,
+        harness.context.document.nodes.first.id,
       ]);
     });
 
     test('shift-marquee adds to the existing selection', () {
-      final features = harness.context.document.features;
+      final features = harness.context.document.nodes;
       harness.context.selection.selectNode(features.first.id);
 
       harness.pointerDown(const Offset(180, -20), shift: true);

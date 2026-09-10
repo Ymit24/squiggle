@@ -36,7 +36,7 @@ void main() {
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final feature = context.document.features.first;
+      final feature = (context.document.nodes.first as Feature);
       const bounds = Rect.fromLTWH(10, 20, 200, 48);
       context.startTextEdit(
         EditTextEditSession(
@@ -46,9 +46,9 @@ void main() {
         ),
       );
 
-      final openState = await bloc.stream.firstWhere(
-        (state) => state is EditTextEditOpen,
-      ) as EditTextEditOpen;
+      final openState =
+          await bloc.stream.firstWhere((state) => state is EditTextEditOpen)
+              as EditTextEditOpen;
 
       expect(openState.featureId, feature.id);
       expect(openState.initialContents, 'initial text');
@@ -56,40 +56,44 @@ void main() {
       await bloc.close();
     });
 
-    test('TextEditSubmitted applies command and emits TextEditClosed', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchTextEditStateEvent());
-      await Future<void>.delayed(Duration.zero);
+    test(
+      'TextEditSubmitted applies command and emits TextEditClosed',
+      () async {
+        final bloc = createBloc();
+        bloc.add(const RequestWatchTextEditStateEvent());
+        await Future<void>.delayed(Duration.zero);
 
-      final feature = context.document.features.first;
-      context.startTextEdit(
-        EditTextEditSession(
-          featureId: feature.id,
-          initialContents: 'initial text',
-          canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 48),
-        ),
-      );
-      await bloc.stream.firstWhere((state) => state is EditTextEditOpen);
+        final feature = (context.document.nodes.first as Feature);
+        context.startTextEdit(
+          EditTextEditSession(
+            featureId: feature.id,
+            initialContents: 'initial text',
+            canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 48),
+          ),
+        );
+        await bloc.stream.firstWhere((state) => state is EditTextEditOpen);
 
-      bloc.add(const TextEditSubmitted('updated text'));
-      final closedState = await bloc.stream.firstWhere(
-        (state) => state is TextEditClosed,
-      );
+        bloc.add(const TextEditSubmitted('updated text'));
+        final closedState = await bloc.stream.firstWhere(
+          (state) => state is TextEditClosed,
+        );
 
-      expect(closedState, isA<TextEditClosed>());
-      expect(
-        (context.document.features.first.kind as FeatureKindText).contents,
-        'updated text',
-      );
-      await bloc.close();
-    });
+        expect(closedState, isA<TextEditClosed>());
+        expect(
+          ((context.document.nodes.first as Feature).kind as FeatureKindText)
+              .contents,
+          'updated text',
+        );
+        await bloc.close();
+      },
+    );
 
     test('TextEditCancelled emits TextEditClosed without command', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final feature = context.document.features.first;
+      final feature = (context.document.nodes.first as Feature);
       context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
@@ -106,7 +110,8 @@ void main() {
 
       expect(closedState, isA<TextEditClosed>());
       expect(
-        (context.document.features.first.kind as FeatureKindText).contents,
+        ((context.document.nodes.first as Feature).kind as FeatureKindText)
+            .contents,
         'initial text',
       );
       await bloc.close();
@@ -127,13 +132,13 @@ void main() {
       );
       await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-      expect(context.document.features, hasLength(1));
+      expect(context.document.nodes, hasLength(1));
 
       bloc.add(const TextEditSubmitted('new text'));
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(context.document.features, hasLength(2));
-      final created = context.document.features.last;
+      expect(context.document.nodes, hasLength(2));
+      final created = (context.document.nodes.last as Feature);
       expect(created.origin, origin);
       expect((created.kind as FeatureKindText).contents, 'new text');
       expect(created.size.width, defaultNewTextWidth);
@@ -157,29 +162,32 @@ void main() {
       bloc.add(const TextEditCancelled());
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(context.document.features, hasLength(1));
+      expect(context.document.nodes, hasLength(1));
       await bloc.close();
     });
 
-    test('CreateTextEditSession empty submit leaves document unchanged', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchTextEditStateEvent());
-      await Future<void>.delayed(Duration.zero);
+    test(
+      'CreateTextEditSession empty submit leaves document unchanged',
+      () async {
+        final bloc = createBloc();
+        bloc.add(const RequestWatchTextEditStateEvent());
+        await Future<void>.delayed(Duration.zero);
 
-      context.startTextEdit(
-        CreateTextEditSession(
-          worldOrigin: const Offset(100, 200),
-          initialContents: '',
-          canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 24),
-        ),
-      );
-      await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
+        context.startTextEdit(
+          CreateTextEditSession(
+            worldOrigin: const Offset(100, 200),
+            initialContents: '',
+            canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 24),
+          ),
+        );
+        await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-      bloc.add(const TextEditSubmitted(''));
-      await bloc.stream.firstWhere((state) => state is TextEditClosed);
+        bloc.add(const TextEditSubmitted(''));
+        await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(context.document.features, hasLength(1));
-      await bloc.close();
-    });
+        expect(context.document.nodes, hasLength(1));
+        await bloc.close();
+      },
+    );
   });
 }

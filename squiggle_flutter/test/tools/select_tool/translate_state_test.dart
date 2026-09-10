@@ -24,7 +24,7 @@ void main() {
             ),
         ]),
       );
-      final features = harness.context.document.features;
+      final features = harness.context.document.nodes;
       for (final point in const [
         Offset(25, 25),
         Offset(125, 25),
@@ -58,7 +58,7 @@ void main() {
     });
 
     test('commits one undo entry for a drag', () {
-      final feature = harness.context.document.features.first;
+      final feature = harness.context.document.nodes.first;
 
       harness.pointerDown(const Offset(50, 50));
       harness.pointerMove(const Offset(60, 60));
@@ -76,7 +76,7 @@ void main() {
     });
 
     test('commits one undo entry for a multi-node drag', () {
-      final features = harness.context.document.features;
+      final features = harness.context.document.nodes;
       harness.context.selection.setSelection(
         features.map((feature) => feature.id),
       );
@@ -97,14 +97,11 @@ void main() {
       harness.pointerDown(const Offset(50, 50));
       harness.pointerMove(const Offset(80, 55), shift: true);
 
-      expect(
-        harness.context.document.features.first.origin,
-        const Offset(30, 0),
-      );
+      expect(harness.context.document.nodes.first.origin, const Offset(30, 0));
     });
 
     test('escape cancels movement without recording history', () {
-      final feature = harness.context.document.features.first;
+      final feature = harness.context.document.nodes.first;
       harness.pointerDown(const Offset(50, 50));
       harness.pointerMove(const Offset(70, 80));
 

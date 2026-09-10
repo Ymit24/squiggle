@@ -54,19 +54,19 @@ void main() {
           ),
         );
       });
-      context.selection.selectNode(context.document.features.first.id);
-      expect(context.document.features, hasLength(1));
+      context.selection.selectNode(context.document.nodes.first.id);
+      expect(context.document.nodes, hasLength(1));
       expect(context.selection.selectedNodes, hasLength(1));
 
       await library.createDocument(name: 'Two');
       expect(library.currentDocument?.name, 'Two');
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
       expect(context.selection.selectedNodes, isEmpty);
 
       final one = library.documents.firstWhere((doc) => doc.name == 'One');
       await library.openDocument(one.id);
       expect(library.currentDocument?.name, 'One');
-      expect(context.document.features, hasLength(1));
+      expect(context.document.nodes, hasLength(1));
     });
 
     test('does not delete the last remaining document', () async {

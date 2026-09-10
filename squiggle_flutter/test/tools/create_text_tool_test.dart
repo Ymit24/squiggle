@@ -37,31 +37,36 @@ void main() {
       );
     });
 
-    test('click opens create text edit session without adding feature', () async {
-      context.setTool(CreateTextTool());
-      const click = Offset(50, 75);
+    test(
+      'click opens create text edit session without adding feature',
+      () async {
+        context.setTool(CreateTextTool());
+        const click = Offset(50, 75);
 
-      context.tool.onPointerUp(
-        context,
-        click,
-        camera,
-        isShiftPressed: false,
-        isAltPressed: false,
-      );
+        context.tool.onPointerUp(
+          context,
+          click,
+          camera,
+          isShiftPressed: false,
+          isAltPressed: false,
+        );
 
-      expect(context.document.features, isEmpty);
+        expect(context.document.nodes, isEmpty);
 
-      final openState = await textEditBloc.stream.firstWhere(
-        (state) => state is CreateTextEditOpen,
-      ) as CreateTextEditOpen;
+        final openState =
+            await textEditBloc.stream.firstWhere(
+                  (state) => state is CreateTextEditOpen,
+                )
+                as CreateTextEditOpen;
 
-      expect(openState.worldOrigin, click);
-      expect(openState.initialContents, '');
-      expect(
-        openState.canvasLocalBounds,
-        camera.worldToScreenBounds(newTextBoundsAt(click)),
-      );
-    });
+        expect(openState.worldOrigin, click);
+        expect(openState.initialContents, '');
+        expect(
+          openState.canvasLocalBounds,
+          camera.worldToScreenBounds(newTextBoundsAt(click)),
+        );
+      },
+    );
 
     test('document unchanged until modal submit', () async {
       context.setTool(CreateTextTool());
@@ -73,16 +78,19 @@ void main() {
         isShiftPressed: false,
         isAltPressed: false,
       );
-      await textEditBloc.stream.firstWhere((state) => state is CreateTextEditOpen);
+      await textEditBloc.stream.firstWhere(
+        (state) => state is CreateTextEditOpen,
+      );
 
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
 
       textEditBloc.add(const TextEditSubmitted('hello'));
       await textEditBloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(context.document.features, hasLength(1));
+      expect(context.document.nodes, hasLength(1));
       expect(
-        (context.document.features.first.kind as FeatureKindText).contents,
+        ((context.document.nodes.first as Feature).kind as FeatureKindText)
+            .contents,
         'hello',
       );
     });

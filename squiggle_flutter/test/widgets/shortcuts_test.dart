@@ -105,7 +105,7 @@ void main() {
         ),
       ]),
     );
-    final featureId = context.document.features.first.id;
+    final featureId = context.document.nodes.first.id;
     context.selection.selectNode(featureId);
 
     await tester.pumpWidget(
@@ -134,7 +134,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.backspace, platform: 'macos');
     await tester.pump();
 
-    expect(context.document.features, isEmpty);
+    expect(context.document.nodes, isEmpty);
     expect(context.selection.selectedNodes, isEmpty);
   });
 
@@ -180,7 +180,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyZ, platform: 'macos');
     await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
     await tester.pump();
-    expect(context.document.features, isEmpty);
+    expect(context.document.nodes, isEmpty);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
     await tester.sendKeyDownEvent(LogicalKeyboardKey.shift, platform: 'macos');
@@ -188,7 +188,7 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shift, platform: 'macos');
     await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
     await tester.pump();
-    expect(context.document.features, hasLength(1));
+    expect(context.document.nodes, hasLength(1));
   });
 
   testWidgets('ToolShortcuts preserves selection when undoing a move', (
@@ -203,7 +203,7 @@ void main() {
         ),
       ]),
     );
-    final feature = context.document.features.first;
+    final feature = context.document.nodes.first;
     context.selection.selectNode(feature.id);
     context.history.run('Move Feature', (transaction) {
       transaction.watch([feature]);

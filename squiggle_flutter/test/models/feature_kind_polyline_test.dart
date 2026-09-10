@@ -143,11 +143,11 @@ void main() {
           localPoints: const [Offset.zero, Offset(100, 100)],
         ),
       ]);
-      final beforeEnd = worldPoint(doc.features.first, 1);
+      final beforeEnd = worldPoint((doc.nodes.first as Feature), 1);
 
-      doc.features.first.origin = const Offset(20, 30);
+      doc.nodes.first.origin = const Offset(20, 30);
 
-      final moved = doc.features.first;
+      final moved = (doc.nodes.first as Feature);
       final kind = moved.kind as FeatureKindPolyline;
       expect(moved.origin, const Offset(20, 30));
       expect(kind.localPoints, const [Offset.zero, Offset(100, 100)]);
@@ -164,9 +164,9 @@ void main() {
           localPoints: const [Offset.zero, Offset(100, 100)],
         ),
       ]);
-      doc.features.first.resize(const Rect.fromLTWH(0, 0, 200, 50));
+      (doc.nodes.first as Feature).resize(const Rect.fromLTWH(0, 0, 200, 50));
 
-      final resized = doc.features.first;
+      final resized = (doc.nodes.first as Feature);
       expect(resized.localBounds(), const Rect.fromLTWH(0, 0, 200, 50));
       expect(worldPoint(resized, 0), const Offset(8, 8));
       expect(worldPoint(resized, 1), const Offset(192, 42));

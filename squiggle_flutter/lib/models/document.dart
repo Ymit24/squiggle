@@ -43,8 +43,6 @@ class Document extends NodeContainer {
     );
   }
 
-  List<Feature> get _features => _rootNodes.whereType<Feature>().toList();
-
   /// Root nodes in paint order; descendants live in their owners' child lists.
   List<Node> get _rootNodes => children;
 
@@ -52,9 +50,6 @@ class Document extends NodeContainer {
   final Map<NodeId, Node> _nodesById = {};
 
   List<Node> get nodes => _rootNodes;
-
-  /// Live view of the features in document order.
-  List<Feature> get features => List.unmodifiable(_features);
 
   NodeId _nextId;
   int get nextId => _nextId.value;

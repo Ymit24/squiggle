@@ -41,7 +41,7 @@ void main() {
 
       final loaded = await storage.loadDocument(created.id);
       expect(loaded, isNotNull);
-      expect(loaded!.document.features, isEmpty);
+      expect(loaded!.document.nodes, isEmpty);
       expect(loaded.name, 'First');
 
       await storage.renameDocument(created.id, 'Renamed');

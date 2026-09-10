@@ -34,7 +34,7 @@ void main() {
         documentChanged = true;
       });
 
-      final feature = context.document.features.first;
+      final feature = context.document.nodes.first;
       context.history.run('Move feature', (transaction) {
         transaction.update(
           feature,
@@ -44,7 +44,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(documentChanged, isTrue);
-      expect(context.document.features.first.origin, const Offset(10, 10));
+      expect(context.document.nodes.first.origin, const Offset(10, 10));
       await subscription.cancel();
       await bloc.close();
     });
@@ -54,7 +54,7 @@ void main() {
       bloc.add(const RequestWatchEditorStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectNode(context.document.features.first.id);
+      context.selection.selectNode(context.document.nodes.first.id);
       await bloc.stream.firstWhere((s) => s.selectedFeatures.isNotEmpty);
 
       expect(bloc.state.selectedFeatures.length, 1);
