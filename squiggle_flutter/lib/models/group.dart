@@ -53,13 +53,14 @@ class Group extends Node with NodeContainer {
 
   @override
   bool intersectsRect(Rect rect) {
-    // TODO: implement intersectsRect
-    throw UnimplementedError();
+    return bounds().overlaps(rect);
   }
 
   @override
   void paint(Canvas canvas, ImageRepository imageRepository) {
-    // TODO: implement paint
+    for (final child in children) {
+      child.paint(canvas, imageRepository);
+    }
   }
 
   @override

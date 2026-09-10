@@ -5,6 +5,8 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/group.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'click_canvas_state.dart';
@@ -114,14 +116,28 @@ class IdleInteractionState extends InteractionState {
 
   @override
   bool onKeyEvent(EditorContext context, KeyDownEvent event) {
-    final isKey =
-        event.logicalKey == LogicalKeyboardKey.delete ||
-        event.logicalKey == LogicalKeyboardKey.backspace;
-    final hasSelection = context.selection.isNotEmpty;
-    if (!isKey || !hasSelection) {
+    if (context.selection.isEmpty) {
       return false;
     }
 
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.delete:
+      case LogicalKeyboardKey.backspace:
+        _onDeletePress(context);
+        return true;
+      case LogicalKeyboardKey.keyG:
+        final keyboard = HardwareKeyboard.instance;
+        if (!(keyboard.isControlPressed || keyboard.isMetaPressed)) {
+          return false;
+        }
+        _onCtrlCmdGPress(context);
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  void _onDeletePress(EditorContext context) {
     final container = context.document
         .nodeById(context.selection.selectedFeatures.first)
         ?.parent;
@@ -131,6 +147,27 @@ class IdleInteractionState extends InteractionState {
     }, container: container);
 
     context.selection.clearSelection();
-    return true;
+  }
+
+  void _onCtrlCmdGPress(EditorContext context) {
+    if (context.selection.selectedFeatures.length < 2) {
+      return;
+    }
+
+    final selectedNodes = context.selection.selectedFeatures
+        .map((id) => context.document.nodeById(id))
+        .where((node) => node != null)
+        .map((node) => node!)
+        .toList();
+
+    context.history.run('Group Selected Nodes', (transaction) {
+      transaction.removeAll(context.selection.selectedFeatures);
+      final bounds = Node.boundsOfNodes(selectedNodes);
+      Group group = Group(
+        children: selectedNodes.toList(),
+        origin: bounds.center,
+      );
+      transaction.add(group);
+    });
   }
 }
