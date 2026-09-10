@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
@@ -109,5 +110,10 @@ class IdleInteractionState extends InteractionState {
       );
       return;
     }
+  }
+
+  @override
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    return false;
   }
 }

@@ -56,12 +56,7 @@ class SelectTool extends Tool {
 
   @override
   bool onKeyEvent(EditorContext context, KeyDownEvent event) {
-    if (event.logicalKey != LogicalKeyboardKey.escape ||
-        _activeInteractionState is IdleInteractionState) {
-      return false;
-    }
-    cancelInteraction(context);
-    return true;
+    return _activeInteractionState.onKeyEvent(context, event);
   }
 
   void transition(InteractionState state, EditorContext context) {

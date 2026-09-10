@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -60,5 +61,14 @@ abstract class InteractionState {
     Camera camera,
   ) {
     return EditorCursor.basic;
+  }
+
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      parent.cancelInteraction(context);
+      return true;
+    }
+
+    return false;
   }
 }
