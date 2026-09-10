@@ -148,17 +148,6 @@ class Document extends NodeContainer {
     name = other.name;
   }
 
-  void groupNodes(List<Node> nodes) {
-    final groupOrigin = Node.localBoundsOfNodes(nodes).center;
-
-    for (var child in nodes) {
-      child.origin -= groupOrigin;
-      removeFeature(child.id);
-    }
-
-    // final group = Group(origin: groupOrigin, children: nodes);
-  }
-
   @override
   Offset get globalOrigin => Offset.zero;
 }
