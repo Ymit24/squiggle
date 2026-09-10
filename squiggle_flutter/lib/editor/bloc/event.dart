@@ -5,7 +5,3 @@ abstract class EditorEvent {
 class RequestWatchEditorStateEvent extends EditorEvent {
   const RequestWatchEditorStateEvent();
 }
-
-class DeleteSelectedFeaturesEvent extends EditorEvent {
-  const DeleteSelectedFeaturesEvent();
-}
