@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/history/edit.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/node.dart';
