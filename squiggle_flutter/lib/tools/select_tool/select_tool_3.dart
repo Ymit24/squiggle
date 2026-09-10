@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -17,6 +19,42 @@ class SelectTool3 extends Tool {
     parent: this,
   );
 
+  bool _hasTransaction = false;
+
+  void beginTransaction(EditorContext context, String label, List<Node> nodes) {
+    final container = nodes.first.parent;
+    if (container == null ||
+        nodes.any((node) => !identical(node.parent, container))) {
+      throw StateError('Selected nodes must share a container');
+    }
+    context.history.begin(label, container: container);
+    _hasTransaction = true;
+    context.history.active.watch(nodes);
+  }
+
+  void cancelInteraction(EditorContext context) {
+    _activeInteractionState = IdleInteractionState(parent: this);
+    if (_hasTransaction) {
+      context.history.cancel();
+      _hasTransaction = false;
+      context.selection.setSelection(
+        context.selection.selectedFeatures.where(
+          (id) => context.document.nodeById(id) != null,
+        ),
+      );
+    }
+  }
+
+  @override
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    if (event.logicalKey != LogicalKeyboardKey.escape ||
+        _activeInteractionState is IdleInteractionState) {
+      return false;
+    }
+    cancelInteraction(context);
+    return true;
+  }
+
   void transition(InteractionState state, EditorContext context) {
     _activeInteractionState = state;
     _activeInteractionState.onEnter(context);
@@ -24,7 +62,7 @@ class SelectTool3 extends Tool {
 
   @override
   void deactivate(EditorContext context) {
-    _activeInteractionState = IdleInteractionState(parent: this);
+    cancelInteraction(context);
     context.selection.clearSelection();
   }
 
@@ -83,6 +121,10 @@ class SelectTool3 extends Tool {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
+    if (_hasTransaction) {
+      context.history.commit();
+      _hasTransaction = false;
+    }
     // TODO: Update how change detection works to not be bool response based.
     return true;
   }

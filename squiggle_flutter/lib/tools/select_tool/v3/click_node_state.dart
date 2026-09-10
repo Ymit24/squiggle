@@ -63,6 +63,11 @@ class ClickNodeState extends InteractionState {
   }) {
     print("D: click state move");
     if (selectedNodes.isNotEmpty) {
+      parent.beginTransaction(
+        context,
+        isAltPressed ? 'Duplicate selection' : 'Move selection',
+        selectedNodes,
+      );
       final state = isAltPressed
           ? DuplicateState(
               parent: parent,

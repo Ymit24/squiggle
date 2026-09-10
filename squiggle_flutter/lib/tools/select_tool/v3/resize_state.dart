@@ -25,6 +25,11 @@ class ResizeState extends InteractionState {
   late final Rect _initialBounds = _handle.node.bounds();
 
   @override
+  void onEnter(EditorContext context) {
+    parent.beginTransaction(context, 'Resize', [_handle.node]);
+  }
+
+  @override
   EditorCursor resolveCursor(
     EditorContext context,
     Offset worldPosition,

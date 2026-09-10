@@ -15,6 +15,11 @@ class DragPolylineHandleState extends InteractionState {
 
   final PolylineHandle _handle;
   @override
+  void onEnter(EditorContext context) {
+    parent.beginTransaction(context, 'Move point', [_handle.feature]);
+  }
+
+  @override
   EditorCursor resolveCursor(
     EditorContext context,
     Offset worldPosition,
