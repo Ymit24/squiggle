@@ -190,7 +190,6 @@ class IdleInteractionState extends InteractionState {
         .map((id) => context.document.nodeById(id))
         .where((node) => node != null)
         .whereType<Group>()
-        .map((node) => node!)
         .toList();
 
     if (selectedNodes.isEmpty) {

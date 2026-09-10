@@ -63,7 +63,6 @@ class Group extends Node with NodeContainer {
 
   @override
   void paint(Canvas canvas, ImageRepository imageRepository) {
-    print("D: painting group at ${origin}");
     canvas.save();
     canvas.translate(origin.dx, origin.dy);
     for (final child in children) {
@@ -73,5 +72,26 @@ class Group extends Node with NodeContainer {
   }
 
   @override
-  void resize(Rect bounds) {}
+  void resize(Rect bounds) {
+    final childBounds = Node.boundsOfNodes(children);
+    final scaleX = childBounds.width == 0
+        ? 1.0
+        : bounds.width / childBounds.width;
+    final scaleY = childBounds.height == 0
+        ? 1.0
+        : bounds.height / childBounds.height;
+
+    for (final child in children) {
+      final current = child.localBounds();
+      child.resize(
+        Rect.fromLTWH(
+          (current.left - childBounds.left) * scaleX,
+          (current.top - childBounds.top) * scaleY,
+          current.width * scaleX,
+          current.height * scaleY,
+        ),
+      );
+    }
+    origin = bounds.topLeft;
+  }
 }
