@@ -21,6 +21,38 @@ void main() {
     transaction.update(node, (node) => node.origin = Offset(x, 0));
   });
 
+  test('clears undo and redo stacks', () {
+    expect(history.canUndo, isFalse);
+    expect(history.canRedo, isFalse);
+    move(10);
+    move(20);
+    history.undo();
+    expect(history.canUndo, isTrue);
+    expect(history.canRedo, isTrue);
+    history.clear();
+    expect(history.canUndo, isFalse);
+    expect(history.canRedo, isFalse);
+  });
+
+  test('clear fails when active transaction', () {
+    move(10);
+    move(20);
+    history.undo();
+    history.begin('Pending');
+    final transaction = history.active;
+    transaction.update(node, (node) => node.origin = const Offset(30, 0));
+
+    expect(history.clear, throwsStateError);
+    expect(history.active, same(transaction));
+    expect(transaction.isOpen, isTrue);
+    expect(node.origin, const Offset(30, 0));
+
+    history.cancel();
+    expect(node.origin, const Offset(10, 0));
+    expect(history.canUndo, isTrue);
+    expect(history.canRedo, isTrue);
+  });
+
   test('commits multiple actions and replays them in order', () {
     expect(history.canUndo, isFalse);
     expect(history.canRedo, isFalse);
