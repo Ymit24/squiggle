@@ -6,7 +6,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
-import 'package:squiggle_flutter/tools/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
   group('CreateLineTool via EditorContext', () {
@@ -78,14 +78,17 @@ void main() {
       return worldPoints(feature.origin, kind.localPoints);
     }
 
-    test('click without drag from idle enters placing without creating feature', () {
-      activateLineTool();
+    test(
+      'click without drag from idle enters placing without creating feature',
+      () {
+        activateLineTool();
 
-      pointerDown(const Offset(0, 0));
-      pointerUp(const Offset(0, 0));
+        pointerDown(const Offset(0, 0));
+        pointerUp(const Offset(0, 0));
 
-      expect(context.document.features, isEmpty);
-    });
+        expect(context.document.nodes, isEmpty);
+      },
+    );
 
     test('two clicks then Enter commits polyline with 2 points', () {
       activateLineTool();
@@ -95,17 +98,17 @@ void main() {
       pointerDown(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
-      final features = context.document.features;
+      final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindPolyline>());
-      expect(
-        worldPointsFor(features.first),
-        [const Offset(0, 0), const Offset(100, 100)],
-      );
+      expect(worldPointsFor(features.first), [
+        const Offset(0, 0),
+        const Offset(100, 100),
+      ]);
     });
 
     test('three clicks then Enter commits polyline with 3 points', () {
@@ -120,14 +123,11 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
-      expect(
-        worldPointsFor(context.document.features.first),
-        [
-          const Offset(0, 0),
-          const Offset(100, 0),
-          const Offset(100, 100),
-        ],
-      );
+      expect(worldPointsFor((context.document.nodes.first as Feature)), [
+        const Offset(0, 0),
+        const Offset(100, 0),
+        const Offset(100, 100),
+      ]);
     });
 
     test('three clicks then Escape commits polyline with 3 points', () {
@@ -142,7 +142,7 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.escape), isTrue);
 
-      expect(context.document.features, hasLength(1));
+      expect(context.document.nodes, hasLength(1));
     });
 
     test('Enter or Escape with 1 point discards without creating feature', () {
@@ -152,13 +152,13 @@ void main() {
       pointerUp(const Offset(0, 0));
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
 
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
 
       expect(finishWithKey(LogicalKeyboardKey.escape), isTrue);
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
     });
 
     test('drag from idle commits 2-point line on pointer up', () {
@@ -168,13 +168,13 @@ void main() {
       pointerMove(const Offset(50, 50));
       pointerUp(const Offset(50, 50));
 
-      final features = context.document.features;
+      final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindPolyline>());
-      expect(
-        worldPointsFor(features.first),
-        [const Offset(0, 0), const Offset(50, 50)],
-      );
+      expect(worldPointsFor(features.first), [
+        const Offset(0, 0),
+        const Offset(50, 50),
+      ]);
     });
 
     test('click then drag in placing mode adds point at release position', () {
@@ -187,14 +187,14 @@ void main() {
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
-      expect(
-        worldPointsFor(context.document.features.first),
-        [const Offset(0, 0), const Offset(100, 100)],
-      );
+      expect(worldPointsFor((context.document.nodes.first as Feature)), [
+        const Offset(0, 0),
+        const Offset(100, 100),
+      ]);
     });
 
     test('deactivate mid-placement discards partial line', () {
@@ -207,7 +207,7 @@ void main() {
 
       context.setTool(SelectTool());
 
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
     });
 
     test('hover updates preview while placing', () {
@@ -226,7 +226,7 @@ void main() {
       pointerMove(const Offset(100, 95), shift: true);
       pointerUp(const Offset(100, 95), shift: true);
 
-      final points = worldPointsFor(context.document.features.first);
+      final points = worldPointsFor((context.document.nodes.first as Feature));
       expect(points.first, const Offset(0, 0));
       expect(points.last.dx, closeTo(points.last.dy, 0.001));
     });
@@ -241,7 +241,7 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
 
-      final points = worldPointsFor(context.document.features.first);
+      final points = worldPointsFor((context.document.nodes.first as Feature));
       expect(points.last.dx, closeTo(points.last.dy, 0.001));
     });
   });
@@ -253,10 +253,10 @@ void main() {
 
     test('converts world points relative to reference', () {
       expect(
-        localPointsFromWorld(
-          [const Offset(10, 20), const Offset(110, 120)],
+        localPointsFromWorld([
           const Offset(10, 20),
-        ),
+          const Offset(110, 120),
+        ], const Offset(10, 20)),
         [Offset.zero, const Offset(100, 100)],
       );
     });

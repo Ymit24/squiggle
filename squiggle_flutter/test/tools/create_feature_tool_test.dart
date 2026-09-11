@@ -53,7 +53,7 @@ void main() {
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
 
-      expect(context.document.features, isEmpty);
+      expect(context.document.nodes, isEmpty);
     });
 
     test('drag creates rectangle feature', () {
@@ -64,10 +64,10 @@ void main() {
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      final features = context.document.features;
+      final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindRectangle>());
-      expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
+      expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
     test('drag creates circle feature', () {
@@ -78,10 +78,10 @@ void main() {
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      final features = context.document.features;
+      final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindCircle>());
-      expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
+      expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
     test('shift-drag creates square rectangle from non-square drag', () {
@@ -92,10 +92,13 @@ void main() {
       pointerMove(const Offset(100, 50), shift: true);
       pointerUp(const Offset(100, 50), shift: true);
 
-      final features = context.document.features;
+      final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
-      expect(features.first.bounds().width, features.first.bounds().height);
-      expect(features.first.bounds(), const Rect.fromLTWH(0, 0, 100, 100));
+      expect(
+        features.first.localBounds().width,
+        features.first.localBounds().height,
+      );
+      expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
     test('shift-drag creates square circle bounds from non-square drag', () {
@@ -106,9 +109,12 @@ void main() {
       pointerMove(const Offset(80, 140), shift: true);
       pointerUp(const Offset(80, 140), shift: true);
 
-      final features = context.document.features;
-      expect(features.first.bounds().width, features.first.bounds().height);
-      expect(features.first.bounds().width, closeTo(140, 0.001));
+      final features = context.document.nodes.cast<Feature>();
+      expect(
+        features.first.localBounds().width,
+        features.first.localBounds().height,
+      );
+      expect(features.first.localBounds().width, closeTo(140, 0.001));
     });
 
     test('alt-drag creates rectangle from center', () {
@@ -120,7 +126,7 @@ void main() {
       pointerUp(const Offset(100, 80), alt: true);
 
       expect(
-        context.document.features.first.bounds(),
+        context.document.nodes.first.localBounds(),
         const Rect.fromLTWH(0, 20, 100, 60),
       );
     });
@@ -133,7 +139,7 @@ void main() {
       pointerMove(const Offset(100, 80), shift: true, alt: true);
       pointerUp(const Offset(100, 80), shift: true, alt: true);
 
-      final bounds = context.document.features.first.bounds();
+      final bounds = context.document.nodes.first.localBounds();
       expect(bounds.width, bounds.height);
       expect(bounds, const Rect.fromLTWH(0, 0, 100, 100));
     });

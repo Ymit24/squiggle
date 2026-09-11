@@ -83,6 +83,30 @@ void main() {
     });
   });
 
+  group('constrainedMoveDelta', () {
+    test('returns unconstrained movement', () {
+      expect(
+        constrainedMoveDelta(
+          const Offset(10, 20),
+          const Offset(40, 60),
+          constrainToAxis: false,
+        ),
+        const Offset(30, 40),
+      );
+    });
+
+    test('returns axis-constrained movement', () {
+      expect(
+        constrainedMoveDelta(
+          const Offset(10, 20),
+          const Offset(40, 30),
+          constrainToAxis: true,
+        ),
+        const Offset(30, 0),
+      );
+    });
+  });
+
   group('rectFromAnchorWithAspectRatio', () {
     test('locks corner resize to initial ratio', () {
       final rect = rectFromAnchorWithAspectRatio(

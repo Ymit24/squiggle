@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -22,8 +21,7 @@ class CreateLineTool extends Tool {
     EditorContext context,
     Offset worldPosition,
     Camera camera,
-  ) =>
-      EditorCursor.crosshair;
+  ) => EditorCursor.crosshair;
 
   @override
   void paint(
@@ -51,12 +49,15 @@ class CreateLineTool extends Tool {
   }
 
   @override
-  void deactivate(EditorContext context) {
+  void deactivate(EditorContext context) => cancelInteraction(context);
+
+  @override
+  void cancelInteraction(EditorContext context) {
     _state = const _Idle();
   }
 
   @override
-  void onPointerDown(
+  bool onPointerDown(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -72,10 +73,11 @@ class CreateLineTool extends Tool {
       placedPoints: placedPoints,
       previewTip: worldPosition,
     );
+    return true;
   }
 
   @override
-  void onPointerMove(
+  bool onPointerMove(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -83,11 +85,7 @@ class CreateLineTool extends Tool {
     required bool isAltPressed,
   }) {
     switch (_state) {
-      case _PendingPointer(
-        :final start,
-        :final placedPoints,
-        :final didDrag,
-      ):
+      case _PendingPointer(:final start, :final placedPoints, :final didDrag):
         if (placedPoints.isNotEmpty) {
           final origin = placedPoints.last;
           final preview = _constrainedPoint(
@@ -103,11 +101,11 @@ class CreateLineTool extends Tool {
           );
         }
         if (didDrag) {
-          return;
+          return true;
         }
         final threshold = camera.screenLengthToWorldLength(kTouchSlop);
         if ((worldPosition - start).distance <= threshold) {
-          return;
+          return true;
         }
         if (placedPoints.isEmpty) {
           final end = _constrainedPoint(
@@ -140,10 +138,11 @@ class CreateLineTool extends Tool {
       case _Idle() || _Placing():
         break;
     }
+    return true;
   }
 
   @override
-  void onPointerUp(
+  bool onPointerUp(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -171,7 +170,7 @@ class CreateLineTool extends Tool {
             points: [...placedPoints, point],
             previewTip: worldPosition,
           );
-          return;
+          return true;
         }
         final point = placedPoints.isEmpty
             ? start
@@ -187,10 +186,11 @@ class CreateLineTool extends Tool {
       case _Idle() || _Placing():
         break;
     }
+    return true;
   }
 
   @override
-  void onPointerHover(
+  bool onPointerHover(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
@@ -206,6 +206,7 @@ class CreateLineTool extends Tool {
       );
       _state = _Placing(points: points, previewTip: preview);
     }
+    return true;
   }
 
   @override
@@ -236,7 +237,9 @@ class CreateLineTool extends Tool {
   }
 
   void _commit(EditorContext context, List<Offset> worldPoints) {
-    context.execute(AddFeatureCommand(_buildFeature(worldPoints)));
+    context.history.run('Create feature', (transaction) {
+      transaction.add(_buildFeature(worldPoints));
+    });
   }
 
   Feature _buildFeature(List<Offset> worldPoints) {

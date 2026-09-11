@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:data_models/data_models.dart' as data;
+import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
-import 'feature_id.dart';
+import 'node_id.dart';
 import 'feature_kinds/feature_kind.dart';
 
 export 'feature_kinds/feature_kind.dart';
@@ -10,16 +12,56 @@ export 'stroke_width_preset.dart';
 export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.
-class Feature {
+class Feature extends Node {
   Feature({
-    this.id = noId,
-    required this.origin,
+    super.id,
+    required super.origin,
     required this.size,
     required this.kind,
   });
 
-  FeatureId id;
-  Offset origin;
+  factory Feature.fromDataModel(data.Feature raw) {
+    final content = raw.content;
+    final kind = switch (content['type']) {
+      'rectangle' => FeatureKindRectangle.fromDataModel(content),
+      'circle' => FeatureKindCircle.fromDataModel(content),
+      'text' => FeatureKindText.fromDataModel(content),
+      'polyline' => FeatureKindPolyline.fromDataModel(content),
+      'image' => FeatureKindImage.fromDataModel(content),
+      _ => throw FormatException('Unknown feature kind: ${content['type']}'),
+    };
+
+    return Feature(
+      id: NodeId.newId(raw.id),
+      origin: Offset(raw.originX, raw.originY),
+      size: Size(raw.width, raw.height),
+      kind: kind,
+    );
+  }
+
+  @override
+  data.Feature toDataModel() {
+    return data.Feature(
+      id: id.value,
+      originX: origin.dx,
+      originY: origin.dy,
+      width: size.width,
+      height: size.height,
+      content: kind.toDataModel(),
+    );
+  }
+
+  @override
+  void restoreFromDataModel(data.Node raw) {
+    if (raw is! data.Feature || raw.id != id.value) {
+      throw ArgumentError.value(raw, 'raw', 'Feature snapshot does not match');
+    }
+    final restored = Feature.fromDataModel(raw);
+    origin = restored.origin;
+    size = restored.size;
+    kind = restored.kind;
+  }
+
   Size size;
   FeatureKind kind;
 
@@ -27,27 +69,33 @@ class Feature {
 
   double get height => size.height;
 
-  Rect bounds() => kind.boundsFor(this);
+  @override
+  Rect localBounds() => kind.boundsFor(this);
 
-  void setBounds(Rect bounds) => kind.applyBounds(this, bounds);
+  @override
+  void resize(Rect bounds) => kind.applyBounds(this, bounds);
 
-  void setBoundsDirect(Rect bounds) {
+  void setBounds(Rect bounds) {
     origin = bounds.topLeft;
     size = bounds.size;
   }
 
+  @override
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
 
+  @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
 
-  Offset center() => bounds().center;
+  Offset center() => localBounds().center;
 
-  void moveTo(Offset newOrigin) {
-    origin = newOrigin;
+  void setKind(FeatureKind newKind, {Size? newSize}) {
+    if (newSize != null) size = newSize;
+    kind = newKind;
   }
 
+  @override
   Feature copyWith({
-    FeatureId? id,
+    NodeId? id,
     Offset? origin,
     Size? size,
     FeatureKind? kind,
@@ -58,6 +106,7 @@ class Feature {
     kind: kind ?? this.kind,
   );
 
+  @override
   void paint(Canvas canvas, ImageRepository imageRepository) =>
       kind.paint(this, canvas, imageRepository);
 }

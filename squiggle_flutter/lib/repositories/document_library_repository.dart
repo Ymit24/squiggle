@@ -30,7 +30,8 @@ class DocumentLibraryRepository {
     _documents = await documentStorage.listDocuments();
 
     final activeId = await documentStorage.loadActiveDocumentId();
-    if (activeId != null && _documents.any((document) => document.id == activeId)) {
+    if (activeId != null &&
+        _documents.any((document) => document.id == activeId)) {
       await _openDocument(activeId, saveCurrent: false);
     } else if (_documents.isNotEmpty) {
       await _openDocument(_documents.first.id, saveCurrent: false);
@@ -156,11 +157,7 @@ class DocumentLibraryRepository {
     }
 
     unawaited(
-      documentStorage.saveDocument(
-        current.id,
-        context.document,
-        current.name,
-      ),
+      documentStorage.saveDocument(current.id, context.document, current.name),
     );
     unawaited(_refreshDocumentInfo(current.id));
   }

@@ -1,16 +1,18 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
-  StylePanelBloc({required this.context}) : super(const StylePanelHiddenState()) {
+  StylePanelBloc({required this.context})
+    : super(const StylePanelHiddenState()) {
     on<RequestWatchStylePanelStateEvent>(_onRequestWatchStylePanelState);
     on<SetStrokePresetEvent>(_onSetStrokePreset);
     on<ClearStrokeEvent>(_onClearStroke);
@@ -20,8 +22,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     on<SetFontSizeEvent>(_onSetFontSize);
     on<SetTextHorizontalAlignmentEvent>(_onSetTextHorizontalAlignment);
     on<SetTextVerticalAlignmentEvent>(_onSetTextVerticalAlignment);
-    on<AlignFeaturesEvent>(_onAlignFeatures);
-    on<DistributeFeaturesEvent>(_onDistributeFeatures);
+    on<AlignNodesEvent>(_onAlignNodes);
+    on<DistributeNodesEvent>(_onDistributeNodes);
   }
 
   final EditorContext context;
@@ -32,32 +34,25 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   ) async {
     emit(_deriveState());
 
-    await Future.wait([
-      emit.forEach(
-        notifierChangesStream(context.selection),
-        onData: (_) => _deriveState(),
-      ),
-      emit.forEach(
-        notifierChangesStream(context.document),
-        onData: (_) => _deriveState(),
-      ),
-    ]);
+    await emit.forEach(
+      notifierChangesStream(context),
+      onData: (_) => _deriveState(),
+    );
   }
 
   StylePanelState _deriveState() {
-    final selectedFeatureIds = List<FeatureId>.of(
-      context.selection.selectedFeatures,
-    );
-    if (selectedFeatureIds.isEmpty) {
+    final selectedNodeIds = List<NodeId>.of(context.selection.selectedNodes);
+    if (selectedNodeIds.isEmpty) {
       return const StylePanelHiddenState();
     }
 
-    final kinds = selectedFeatureIds
+    final kinds = selectedNodeIds
         .map(context.document.featureById)
         .whereType<Feature>()
         .map((feature) => feature.kind)
         .toList();
-    if (kinds.isEmpty) {
+    final showStyleControls = kinds.isNotEmpty;
+    if (!showStyleControls && selectedNodeIds.length < 2) {
       return const StylePanelHiddenState();
     }
 
@@ -73,7 +68,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final fillMixed = fillStates.length > 1;
 
     int? activeStrokePresetIndex;
-    if (!strokeMixed && !isStrokeNone) {
+    if (showStyleControls && !strokeMixed && !isStrokeNone) {
       activeStrokePresetIndex = strokePresetIndexForColor(
         kinds.first.strokeColor,
       );
@@ -85,7 +80,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     }
 
     StrokeWidthPreset? activeStrokeWidth;
-    if (!strokeWidthMixed) {
+    if (showStyleControls && !strokeWidthMixed) {
       activeStrokeWidth = StrokeWidthPreset.fromWidth(kinds.first.strokeWidth);
     }
 
@@ -107,15 +102,17 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     var verticalAlignmentMixed = false;
     TextVerticalAlignment? activeVerticalAlignment;
     if (showFontSize) {
-      final horizontalStates =
-          textKinds.map((kind) => kind.horizontalAlignment).toSet();
+      final horizontalStates = textKinds
+          .map((kind) => kind.horizontalAlignment)
+          .toSet();
       horizontalAlignmentMixed = horizontalStates.length > 1;
       if (!horizontalAlignmentMixed) {
         activeHorizontalAlignment = textKinds.first.horizontalAlignment;
       }
 
-      final verticalStates =
-          textKinds.map((kind) => kind.verticalAlignment).toSet();
+      final verticalStates = textKinds
+          .map((kind) => kind.verticalAlignment)
+          .toSet();
       verticalAlignmentMixed = verticalStates.length > 1;
       if (!verticalAlignmentMixed) {
         activeVerticalAlignment = textKinds.first.verticalAlignment;
@@ -123,7 +120,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     }
 
     return StylePanelShowingState(
-      selectedFeatureIds: selectedFeatureIds,
+      selectedNodeIds: selectedNodeIds,
+      showStyleControls: showStyleControls,
       activeStrokePresetIndex: activeStrokePresetIndex,
       isStrokeNone: isStrokeNone,
       strokeMixed: strokeMixed,
@@ -162,12 +160,12 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     return 'fill:${kind.fillColor.toARGB32()}';
   }
 
-  List<FeatureId> _selectedIdsOrEmpty() {
+  List<NodeId> _selectedIdsOrEmpty() {
     final current = state;
     if (current is! StylePanelShowingState) {
       return const [];
     }
-    return current.selectedFeatureIds;
+    return current.selectedNodeIds;
   }
 
   void _applyStyleUpdate({
@@ -181,17 +179,42 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final ids = _selectedIdsOrEmpty();
     if (ids.isEmpty) return;
 
-    context.execute(
-      UpdateFeaturesStyleCommand(
-        ids: ids,
-        strokeColor: strokeColor,
-        fillColor: fillColor,
-        strokeWidth: strokeWidth,
-        fontSize: fontSize,
-        horizontalAlignment: horizontalAlignment,
-        verticalAlignment: verticalAlignment,
-      ),
-    );
+    final features = _nodesById(ids).whereType<Feature>();
+    if (features.isEmpty) return;
+    final container = features.first.parent;
+    if (features.any((feature) => !identical(feature.parent, container))) {
+      throw StateError('Selected nodes must share a container');
+    }
+    context.history.run('Change style', (transaction) {
+      transaction.watch(features);
+      for (final feature in features) {
+        final newKind = switch (feature.kind) {
+          FeatureKindText() => feature.kind.copyWithStyle(
+            strokeColor: strokeColor,
+            fillColor: fillColor,
+            strokeWidth: strokeWidth,
+            fontSize: fontSize,
+            horizontalAlignment: horizontalAlignment,
+            verticalAlignment: verticalAlignment,
+          ),
+          _ => feature.kind.copyWithStyle(
+            strokeColor: strokeColor,
+            fillColor: fillColor,
+            strokeWidth: strokeWidth,
+          ),
+        };
+
+        if (fontSize != null && newKind is FeatureKindText) {
+          final size = newKind.measureContents(
+            width: feature.size.width,
+            fontSize: newKind.fontSize,
+          );
+          feature.setKind(newKind, newSize: size);
+        } else {
+          feature.setKind(newKind);
+        }
+      }
+    }, container: container);
   }
 
   void _onSetStrokePreset(
@@ -205,10 +228,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(strokeColor: preset.strokeColor);
   }
 
-  void _onClearStroke(
-    ClearStrokeEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onClearStroke(ClearStrokeEvent event, Emitter<StylePanelState> emit) {
     final current = state;
     if (current is! StylePanelShowingState || !current.canClearStroke) return;
 
@@ -226,10 +246,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(fillColor: preset.fillColor);
   }
 
-  void _onClearFill(
-    ClearFillEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onClearFill(ClearFillEvent event, Emitter<StylePanelState> emit) {
     final current = state;
     if (current is! StylePanelShowingState || !current.canClearFill) return;
 
@@ -245,10 +262,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(strokeWidth: event.preset.width);
   }
 
-  void _onSetFontSize(
-    SetFontSizeEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onSetFontSize(SetFontSizeEvent event, Emitter<StylePanelState> emit) {
     if (state is! StylePanelShowingState) return;
 
     _applyStyleUpdate(fontSize: event.preset.size);
@@ -272,30 +286,42 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(verticalAlignment: event.alignment);
   }
 
-  void _onAlignFeatures(
-    AlignFeaturesEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onAlignNodes(AlignNodesEvent event, Emitter<StylePanelState> emit) {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 2) return;
 
-    context.execute(
-      LayoutFeaturesCommand.align(ids: ids, alignment: event.alignment),
+    _applyOffsets(
+      computeAlignmentOffsets(context.document, ids, event.alignment),
     );
   }
 
-  void _onDistributeFeatures(
-    DistributeFeaturesEvent event,
+  void _onDistributeNodes(
+    DistributeNodesEvent event,
     Emitter<StylePanelState> emit,
   ) {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 3) return;
 
-    context.execute(
-      LayoutFeaturesCommand.distribute(
-        ids: ids,
-        distribution: event.distribution,
-      ),
+    _applyOffsets(
+      computeDistributionOffsets(context.document, ids, event.distribution),
     );
+  }
+
+  List<Node> _nodesById(Iterable<NodeId> ids) => [
+    for (final id in ids) ?context.document.nodeById(id),
+  ];
+
+  void _applyOffsets(Map<NodeId, Offset> offsets) {
+    final nodes = _nodesById(offsets.keys);
+    if (nodes.isEmpty) return;
+    final container = nodes.first.parent;
+    if (nodes.any((node) => !identical(node.parent, container))) {
+      throw StateError('Selected nodes must share a container');
+    }
+    context.history.run('Layout selection', (transaction) {
+      for (final node in nodes) {
+        transaction.update(node, (node) => node.origin += offsets[node.id]!);
+      }
+    }, container: container);
   }
 }

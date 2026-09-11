@@ -14,6 +14,35 @@ final class FeatureKindText extends FeatureKind {
     super.strokeWidth,
   });
 
+  factory FeatureKindText.fromDataModel(Map<String, dynamic> content) =>
+      FeatureKindText(
+        content['contents'] as String,
+        fontSize: _doubleFromDataModel(content, 'fontSize'),
+        horizontalAlignment: TextHorizontalAlignment.values.byName(
+          content['horizontalAlignment'] as String,
+        ),
+        verticalAlignment: TextVerticalAlignment.values.byName(
+          content['verticalAlignment'] as String,
+        ),
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        fillColor: _colorFromDataModel(content, 'fillColor'),
+        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+      );
+
+  @override
+  Map<String, dynamic> toDataModel() {
+    return {
+      'type': 'text',
+      'contents': contents,
+      'fontSize': fontSize,
+      'horizontalAlignment': horizontalAlignment.name,
+      'verticalAlignment': verticalAlignment.name,
+      'strokeColor': strokeColor.toARGB32(),
+      'fillColor': fillColor.toARGB32(),
+      'strokeWidth': strokeWidth,
+    };
+  }
+
   final String contents;
   final double fontSize;
   final TextHorizontalAlignment horizontalAlignment;
@@ -61,16 +90,16 @@ final class FeatureKindText extends FeatureKind {
     }
 
     if (measureContents(
-      width: clampedWidth,
-      fontSize: kMinTextFontSize,
-    ).height > clampedHeight) {
+          width: clampedWidth,
+          fontSize: kMinTextFontSize,
+        ).height >
+        clampedHeight) {
       return kMinTextFontSize;
     }
 
     var lo = kMinTextFontSize;
     var hi = clampedHeight;
-    while (
-        measureContents(width: clampedWidth, fontSize: hi).height <=
+    while (measureContents(width: clampedWidth, fontSize: hi).height <=
             clampedHeight &&
         hi < kMaxTextFontSize) {
       hi *= 2;
@@ -164,7 +193,7 @@ final class FeatureKindText extends FeatureKind {
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     if (contents.isEmpty) return;
 
-    final worldBounds = feature.bounds();
+    final worldBounds = feature.localBounds();
     final paragraphStyle = _paragraphStyle(fontSize);
 
     final strokeParagraph = _layoutParagraph(

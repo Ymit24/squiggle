@@ -8,7 +8,6 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   EditorBloc({required this.context})
     : super(EditorState.empty(context.document)) {
     on<RequestWatchEditorStateEvent>(_onRequestWatchEditorState);
-    on<DeleteSelectedFeaturesEvent>(_onDeleteSelectedFeatures);
   }
 
   final EditorContext context;
@@ -18,29 +17,15 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     Emitter<EditorState> emit,
   ) async {
     emit(
-      state.copyWith(
-        selectedFeatures: List.of(context.selection.selectedFeatures),
-      ),
+      state.copyWith(selectedNodes: List.of(context.selection.selectedNodes)),
     );
 
-    await Future.wait([
-      emit.forEach(
-        notifierChangesStream(context.selection),
-        onData: (_) => state.copyWith(
-          selectedFeatures: List.of(context.selection.selectedFeatures),
-        ),
+    await emit.forEach(
+      notifierChangesStream(context),
+      onData: (_) => EditorState(
+        document: context.document,
+        selectedNodes: List.of(context.selection.selectedNodes),
       ),
-      emit.forEach(
-        notifierChangesStream(context.document),
-        onData: (_) => state.copyWith(document: context.document),
-      ),
-    ]);
-  }
-
-  void _onDeleteSelectedFeatures(
-    DeleteSelectedFeaturesEvent event,
-    Emitter<EditorState> emit,
-  ) {
-    context.deleteSelection();
+    );
   }
 }

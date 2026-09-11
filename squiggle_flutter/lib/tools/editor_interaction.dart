@@ -1,0 +1,67 @@
+import 'dart:ui';
+
+import 'package:flutter/services.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
+
+/// An optional capability for interactions that draw transient visuals.
+abstract interface class PaintableEditorInteraction {
+  void paint(
+    Canvas canvas,
+    Camera camera,
+    EditorContext context,
+    ImageRepository imageRepository,
+  );
+}
+
+/// A focused piece of editor input behavior.
+///
+/// Returning `true` means that the interaction handled the event. Pointer
+/// routers can use a `true` result from pointer-down to capture the rest of
+/// the gesture for this interaction.
+abstract class EditorInteraction {
+  const EditorInteraction();
+
+  bool onPointerDown(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) => false;
+
+  bool onPointerMove(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) => false;
+
+  bool onPointerUp(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) => false;
+
+  bool onPointerHover(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) => false;
+
+  bool onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) => false;
+
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) => false;
+
+  void deactivate(EditorContext context) {}
+}

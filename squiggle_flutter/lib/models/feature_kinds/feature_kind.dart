@@ -21,6 +21,8 @@ sealed class FeatureKind {
     this.strokeWidth = defaultStrokeWidth,
   });
 
+  Map<String, dynamic> toDataModel();
+
   final Color strokeColor;
   final Color fillColor;
   final double strokeWidth;
@@ -78,8 +80,12 @@ sealed class FeatureKind {
     };
   }
 
-  Rect boundsFor(Feature feature) =>
-      Rect.fromLTWH(feature.origin.dx, feature.origin.dy, feature.size.width, feature.size.height);
+  Rect boundsFor(Feature feature) => Rect.fromLTWH(
+    feature.origin.dx,
+    feature.origin.dy,
+    feature.size.width,
+    feature.size.height,
+  );
 
   bool hitTest(Feature feature, Offset worldPoint) =>
       boundsFor(feature).contains(worldPoint);
@@ -87,7 +93,20 @@ sealed class FeatureKind {
   bool intersectsRect(Feature feature, Rect rect) =>
       boundsFor(feature).overlaps(rect);
 
-  void applyBounds(Feature feature, Rect bounds) => feature.setBoundsDirect(bounds);
+  void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
+}
+
+double _doubleFromDataModel(Map<String, dynamic> content, String key) {
+  return (content[key] as num).toDouble();
+}
+
+Color _colorFromDataModel(Map<String, dynamic> content, String key) {
+  return Color((content[key] as num).toInt());
+}
+
+Offset _offsetFromDataModel(Object value) {
+  final point = value as Map;
+  return Offset((point['x'] as num).toDouble(), (point['y'] as num).toDouble());
 }

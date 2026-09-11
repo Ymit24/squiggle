@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -46,28 +45,28 @@ void main() {
 
     test('switches documents and clears selection', () async {
       await library.createDocument(name: 'One');
-      context.execute(
-        AddFeatureCommand(
+      context.history.run('Add feature', (transaction) {
+        transaction.add(
           Feature(
             origin: const Offset(0, 0),
             size: const Size(10, 10),
             kind: const FeatureKindRectangle(),
           ),
-        ),
-      );
-      context.selection.selectFeature(context.document.features.first.id);
-      expect(context.document.features, hasLength(1));
-      expect(context.selection.selectedFeatures, hasLength(1));
+        );
+      });
+      context.selection.selectNode(context.document.nodes.first.id);
+      expect(context.document.nodes, hasLength(1));
+      expect(context.selection.selectedNodes, hasLength(1));
 
       await library.createDocument(name: 'Two');
       expect(library.currentDocument?.name, 'Two');
-      expect(context.document.features, isEmpty);
-      expect(context.selection.selectedFeatures, isEmpty);
+      expect(context.document.nodes, isEmpty);
+      expect(context.selection.selectedNodes, isEmpty);
 
       final one = library.documents.firstWhere((doc) => doc.name == 'One');
       await library.openDocument(one.id);
       expect(library.currentDocument?.name, 'One');
-      expect(context.document.features, hasLength(1));
+      expect(context.document.nodes, hasLength(1));
     });
 
     test('does not delete the last remaining document', () async {

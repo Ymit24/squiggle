@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
@@ -37,7 +36,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -104,8 +105,8 @@ void main() {
         ),
       ]),
     );
-    final featureId = context.document.features.first.id;
-    context.selection.selectFeature(featureId);
+    final featureId = context.document.nodes.first.id;
+    context.selection.selectNode(featureId);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -113,7 +114,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -131,8 +134,8 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.backspace, platform: 'macos');
     await tester.pump();
 
-    expect(context.document.features, isEmpty);
-    expect(context.selection.selectedFeatures, isEmpty);
+    expect(context.document.nodes, isEmpty);
+    expect(context.selection.selectedNodes, isEmpty);
   });
 
   testWidgets('ToolShortcuts undoes and redoes document commands', (
@@ -140,15 +143,15 @@ void main() {
   ) async {
     final context = EditorContext(document: Document());
 
-    context.execute(
-      AddFeatureCommand(
+    context.history.run('Add feature', (transaction) {
+      transaction.add(
         Feature(
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: const FeatureKindRectangle(),
         ),
-      ),
-    );
+      );
+    });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -156,7 +159,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -175,7 +180,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyZ, platform: 'macos');
     await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
     await tester.pump();
-    expect(context.document.features, isEmpty);
+    expect(context.document.nodes, isEmpty);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
     await tester.sendKeyDownEvent(LogicalKeyboardKey.shift, platform: 'macos');
@@ -183,7 +188,7 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shift, platform: 'macos');
     await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
     await tester.pump();
-    expect(context.document.features, hasLength(1));
+    expect(context.document.nodes, hasLength(1));
   });
 
   testWidgets('ToolShortcuts preserves selection when undoing a move', (
@@ -198,15 +203,12 @@ void main() {
         ),
       ]),
     );
-    final feature = context.document.features.first;
-    context.selection.selectFeature(feature.id);
-    context.execute(
-      MoveFeatureCommand(
-        feature.id,
-        const Offset(40, 40),
-        previousOrigin: Offset.zero,
-      ),
-    );
+    final feature = context.document.nodes.first;
+    context.selection.selectNode(feature.id);
+    context.history.run('Move Feature', (transaction) {
+      transaction.watch([feature]);
+      feature.origin = const Offset(40, 40);
+    });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -214,7 +216,9 @@ void main() {
           body: MultiRepositoryProvider(
             providers: [
               RepositoryProvider<EditorContext>.value(value: context),
-              RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+              RepositoryProvider<ImageRepository>.value(
+                value: ImageRepository(),
+              ),
             ],
             child: MultiBlocProvider(
               providers: [
@@ -235,7 +239,7 @@ void main() {
     await tester.pump();
 
     expect(feature.origin, Offset.zero);
-    expect(context.selection.selectedFeatures, [feature.id]);
+    expect(context.selection.selectedNodes, [feature.id]);
   });
 
   testWidgets('ToolShortcuts restores focus after text edit closes', (
@@ -259,7 +263,9 @@ void main() {
             body: MultiRepositoryProvider(
               providers: [
                 RepositoryProvider<EditorContext>.value(value: context),
-                RepositoryProvider<ImageRepository>.value(value: ImageRepository()),
+                RepositoryProvider<ImageRepository>.value(
+                  value: ImageRepository(),
+                ),
               ],
               child: MultiBlocProvider(
                 providers: [

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
@@ -59,19 +60,12 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
 
     switch (current) {
       case EditTextEditOpen(:final featureId):
-        context.execute(
-          UpdateTextContentsCommand(
-            featureId: featureId,
-            contents: event.contents,
-          ),
-        );
+        _updateText(featureId, event.contents);
       case CreateTextEditOpen(:final worldOrigin):
         if (event.contents.isNotEmpty) {
-          context.execute(
-            AddFeatureCommand(
-              newTextFeatureAt(worldOrigin, event.contents),
-            ),
-          );
+          context.history.run('Create text', (transaction) {
+            transaction.add(newTextFeatureAt(worldOrigin, event.contents));
+          });
         }
     }
     context.endTextEdit();
@@ -84,5 +78,26 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
   ) {
     context.endTextEdit();
     emit(const TextEditClosed());
+  }
+
+  void _updateText(NodeId id, String contents) {
+    final feature = context.document.featureById(id);
+    if (feature == null) return;
+    final textKind = feature.kind;
+    if (textKind is! FeatureKindText) return;
+    context.history.run('Edit text', (transaction) {
+      transaction.watch([feature]);
+      final bounds = feature.localBounds();
+      final newKind = FeatureKindText(
+        contents,
+        fontSize: textKind.fontSize,
+        horizontalAlignment: textKind.horizontalAlignment,
+        verticalAlignment: textKind.verticalAlignment,
+        strokeColor: textKind.strokeColor,
+        fillColor: textKind.fillColor,
+        strokeWidth: textKind.strokeWidth,
+      ).fittedToBounds(width: bounds.width, height: bounds.height);
+      feature.setKind(newKind);
+    }, container: feature.parent);
   }
 }

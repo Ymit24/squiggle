@@ -6,14 +6,14 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
-import 'package:squiggle_flutter/tools/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
   ToolbarBloc({required EditorContext context})
     : // Public named parameters keep call sites readable while fields stay private.
-       // ignore: prefer_initializing_formals
-       _context = context,
-       super(const ToolbarState(activeTool: ActiveToolKind.select)) {
+      // ignore: prefer_initializing_formals
+      _context = context,
+      super(const ToolbarState(activeTool: ActiveToolKind.select)) {
     on<RequestWatchToolbarStateEvent>(_onRequestWatchToolbarState);
     on<ActivateSelectToolEvent>(_onActivateSelectTool);
     on<ActivateCreateRectToolEvent>(_onActivateCreateRectTool);

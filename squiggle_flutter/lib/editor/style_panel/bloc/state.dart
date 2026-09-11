@@ -1,5 +1,5 @@
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 sealed class StylePanelState {
   const StylePanelState();
@@ -10,10 +10,11 @@ final class StylePanelHiddenState extends StylePanelState {
   const StylePanelHiddenState();
 }
 
-/// One or more features selected — panel is visible with active-style indicators.
+/// One or more nodes selected — panel is visible with relevant controls.
 final class StylePanelShowingState extends StylePanelState {
   const StylePanelShowingState({
-    required this.selectedFeatureIds,
+    required this.selectedNodeIds,
+    required this.showStyleControls,
     required this.activeStrokePresetIndex,
     required this.isStrokeNone,
     required this.strokeMixed,
@@ -33,7 +34,8 @@ final class StylePanelShowingState extends StylePanelState {
     required this.activeVerticalAlignment,
   });
 
-  final List<FeatureId> selectedFeatureIds;
+  final List<NodeId> selectedNodeIds;
+  final bool showStyleControls;
   final int? activeStrokePresetIndex;
   final bool isStrokeNone;
   final bool strokeMixed;

@@ -10,7 +10,22 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'fling_controller.dart';
+
+class PointerRecord {
+  final int pointer;
+  final int buttons;
+  final Offset screenPosition;
+  final Duration timeStamp;
+
+  PointerRecord({
+    required this.pointer,
+    required this.buttons,
+    required this.screenPosition,
+    required this.timeStamp,
+  });
+}
 
 class EditorInteractions extends StatefulWidget {
   const EditorInteractions({
@@ -38,6 +53,8 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   Camera get _camera => widget.context.camera;
 
+  PointerRecord? lastPointerRecord;
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +74,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _resetPointerState() {
     _isPrimaryDragging = false;
+    _pointerDownButtons = null;
     _pointerInCanvas = null;
     _flingController.stop();
   }
@@ -66,6 +84,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
   double _initialZoom = 1.0;
   Offset _initialLocation = Offset.zero;
   Offset? _pointerInCanvas;
+  int? _pointerDownButtons;
   bool _isPrimaryDragging = false;
   bool _isSecondaryDragging = false;
   bool _panZoomHadSignificantPinch = false;
@@ -84,6 +103,8 @@ class _EditorInteractionsState extends State<EditorInteractions>
         behavior: HitTestBehavior.opaque,
         onPointerDown: (event) {
           if (!widget.canvasInteractionsEnabled) return;
+
+          _pointerDownButtons = event.buttons;
 
           if (event.buttons == kPrimaryButton) {
             _onLeftPointerDown(event);
@@ -123,10 +144,36 @@ class _EditorInteractionsState extends State<EditorInteractions>
           } else if (_isSecondaryDragging) {
             _onRightPointerUp(event);
           }
+
+          final pointerDownButtons = _pointerDownButtons;
+          if (pointerDownButtons != null && lastPointerRecord != null) {
+            final recentEnough =
+                event.timeStamp - lastPointerRecord!.timeStamp <=
+                kDoubleClickInterval;
+            final sameButton = pointerDownButtons == lastPointerRecord!.buttons;
+            final closeEnough =
+                (event.position - lastPointerRecord!.screenPosition).distance <
+                10;
+            final isLeftClick = pointerDownButtons == kPrimaryButton;
+
+            if (recentEnough && sameButton && closeEnough && isLeftClick) {
+              _onLeftPointerDouble(event);
+            }
+          }
+          if (pointerDownButtons != null) {
+            lastPointerRecord = PointerRecord(
+              pointer: event.pointer,
+              buttons: pointerDownButtons,
+              screenPosition: event.position,
+              timeStamp: event.timeStamp,
+            );
+          }
+          _pointerDownButtons = null;
         },
         onPointerCancel: (event) {
           if (!widget.canvasInteractionsEnabled) return;
           // TODO: This sucks for state machine
+          _pointerDownButtons = null;
           if (_isPrimaryDragging) {
             _onLeftPointerCancel(event);
           } else if (_isSecondaryDragging) {
@@ -226,6 +273,16 @@ class _EditorInteractionsState extends State<EditorInteractions>
     );
   }
 
+  void _onLeftPointerDouble(PointerUpEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onDoubleClick(widget.context, world, _camera);
+  }
+
   void _onLeftPointerUpdate(PointerMoveEvent event) {
     _pointerInCanvas = _canvasLocal(event);
 
@@ -258,17 +315,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _onLeftPointerCancel(PointerCancelEvent event) {
     _isPrimaryDragging = false;
-
-    final world = _screenToWorld(event);
-    if (world == null) return;
-
-    widget.context.tool.onPointerUp(
-      widget.context,
-      world,
-      _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
-    );
+    widget.context.cancelInteraction();
   }
 
   void _onRightPointerDown(PointerDownEvent event) {

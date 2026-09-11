@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -16,7 +15,11 @@ void main() {
     setUp(() {
       context = EditorContext(
         document: Document.fromFeatures([
-          Feature(origin: const Offset(0, 0), size: const Size(100, 100), kind: const FeatureKindRectangle()),
+          Feature(
+            origin: const Offset(0, 0),
+            size: const Size(100, 100),
+            kind: const FeatureKindRectangle(),
+          ),
         ]),
       );
     });
@@ -27,23 +30,21 @@ void main() {
       await bloc.stream.first;
 
       var documentChanged = false;
-      final subscription = notifierChangesStream(context.document).listen((_) {
+      final subscription = notifierChangesStream(context.history).listen((_) {
         documentChanged = true;
       });
 
-      context.execute(
-        MoveFeatureCommand(
-          context.document.features.first.id,
-          const Offset(10, 10),
-        ),
-      );
+      final feature = context.document.nodes.first;
+      context.history.run('Move feature', (transaction) {
+        transaction.update(
+          feature,
+          (feature) => feature.origin = const Offset(10, 10),
+        );
+      });
       await Future<void>.delayed(Duration.zero);
 
       expect(documentChanged, isTrue);
-      expect(
-        context.document.features.first.origin,
-        const Offset(10, 10),
-      );
+      expect(context.document.nodes.first.origin, const Offset(10, 10));
       await subscription.cancel();
       await bloc.close();
     });
@@ -53,23 +54,10 @@ void main() {
       bloc.add(const RequestWatchEditorStateEvent());
       await bloc.stream.first;
 
-      context.selection.selectFeature(context.document.features.first.id);
-      await bloc.stream.firstWhere((s) => s.selectedFeatures.isNotEmpty);
+      context.selection.selectNode(context.document.nodes.first.id);
+      await bloc.stream.firstWhere((s) => s.selectedNodes.isNotEmpty);
 
-      expect(bloc.state.selectedFeatures.length, 1);
-      await bloc.close();
-    });
-
-    test('deletes selected features and clears selection', () async {
-      final featureId = context.document.features.first.id;
-      context.selection.selectFeature(featureId);
-
-      final bloc = EditorBloc(context: context);
-      bloc.add(const DeleteSelectedFeaturesEvent());
-      await Future<void>.delayed(Duration.zero);
-
-      expect(context.document.features, isEmpty);
-      expect(context.selection.selectedFeatures, isEmpty);
+      expect(bloc.state.selectedNodes.length, 1);
       await bloc.close();
     });
   });

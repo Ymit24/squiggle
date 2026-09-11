@@ -1,13 +1,12 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:squiggle_flutter/editor/commands/commands.dart';
+import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/tool_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
@@ -20,13 +19,12 @@ class EditorContext extends ChangeNotifier {
     required this.document,
     SelectionModel? selection,
     ToolModel? tool,
-    CommandHistory? history,
+    History? history,
     TextEditModel? textEdit,
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
-       _history = history ?? CommandHistory(document: document),
+       _history = history ?? History(document: document),
        _textEdit = textEdit ?? TextEditModel() {
-    document.addListener(_forward);
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -36,14 +34,14 @@ class EditorContext extends ChangeNotifier {
   final Document document;
   final SelectionModel _selection;
   final ToolModel _tool;
-  final CommandHistory _history;
+  final History _history;
   final TextEditModel _textEdit;
 
   SelectionModel get selection => _selection;
 
   ToolModel get tool => _tool;
 
-  CommandHistory get history => _history;
+  History get history => _history;
 
   TextEditModel get textEdit => _textEdit;
 
@@ -64,13 +62,29 @@ class EditorContext extends ChangeNotifier {
     return camera.screenToWorld(viewportSize.center(Offset.zero));
   }
 
-  void execute(Command command) => history.execute(command);
+  void cancelInteraction() {
+    tool.activeTool.cancelInteraction(this);
+  }
 
-  void record(Command command) => history.record(command);
+  void undo() {
+    cancelInteraction();
+    if (!history.canUndo) return;
+    history.undo();
+    _refreshSelectionAfterHistoryChange();
+  }
 
-  void undo() => history.undo();
+  void redo() {
+    cancelInteraction();
+    if (!history.canRedo) return;
+    history.redo();
+    _refreshSelectionAfterHistoryChange();
+  }
 
-  void redo() => history.redo();
+  void _refreshSelectionAfterHistoryChange() {
+    selection.setSelection(
+      selection.selectedNodes.where((id) => document.nodeById(id) != null),
+    );
+  }
 
   void setTool(Tool tool) => _tool.setTool(tool, this);
 
@@ -78,16 +92,9 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  /// Removes the selected features as one undoable edit.
-  void deleteSelection() {
-    final ids = List<FeatureId>.of(selection.selectedFeatures);
-    if (ids.isEmpty) return;
-    execute(RemoveFeaturesCommand(ids));
-    selection.clearSelection();
-  }
-
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
+    cancelInteraction();
     document.replaceFrom(newDocument);
     history.clear();
     selection.clearSelection();
@@ -96,7 +103,6 @@ class EditorContext extends ChangeNotifier {
 
   @override
   void dispose() {
-    document.removeListener(_forward);
     _selection.removeListener(_forward);
     _tool.removeListener(_forward);
     _history.removeListener(_forward);

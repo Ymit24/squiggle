@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -41,7 +42,7 @@ void main() {
 
       final loaded = await storage.loadDocument(created.id);
       expect(loaded, isNotNull);
-      expect(loaded!.document.features, isEmpty);
+      expect(loaded!.document.nodes, isEmpty);
       expect(loaded.name, 'First');
 
       await storage.renameDocument(created.id, 'Renamed');
@@ -56,36 +57,26 @@ void main() {
       expect(await storage.loadDocument(second.id), isNull);
     });
 
-    test('migrates legacy document.json into documents directory', () async {
-      final legacyDir = await Directory.systemTemp.createTemp('squiggle_legacy_');
-      addTearDown(() => legacyDir.delete(recursive: true));
-
-      final legacyImageRepository = ImageRepository(
-        imagesDirectory: Directory('${legacyDir.path}/images'),
-      );
-      await legacyImageRepository.initialize();
-
-      final legacy = File('${legacyDir.path}/document.json');
-      await legacy.writeAsString(
-        '{"version":1,"name":"Legacy","nextId":1,"features":[]}',
-      );
-
-      final migratedStorage = DocumentStorage(
-        imageRepository: legacyImageRepository,
-        storageDirectory: legacyDir,
-      );
-      await migratedStorage.initialize();
-
-      final documents = await migratedStorage.listDocuments();
-      expect(documents, hasLength(1));
-      expect(documents.first.name, 'Legacy');
-      expect(await legacy.exists(), isFalse);
-    });
-
     test('persists and restores active document id', () async {
       final created = await storage.createDocument(name: 'Active');
       await storage.saveActiveDocumentId(created.id);
       expect(await storage.loadActiveDocumentId(), created.id);
+    });
+
+    test('writes version 2 and rejects older document versions', () async {
+      final created = await storage.createDocument(name: 'Current');
+      final currentFile = File('${tempDir.path}/documents/${created.id}.json');
+      final currentJson = jsonDecode(await currentFile.readAsString()) as Map;
+      expect(currentJson['version'], 2);
+
+      await File(
+        '${tempDir.path}/documents/old.json',
+      ).writeAsString('{"version":1,"name":"Old","nodes":[]}');
+      expect(await storage.loadDocument('old'), isNull);
+      expect(
+        (await storage.listDocuments()).map((document) => document.id),
+        isNot(contains('old')),
+      );
     });
   });
 }

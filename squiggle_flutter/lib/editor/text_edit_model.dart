@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:squiggle_flutter/models/feature_id.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 sealed class TextEditSession {
   const TextEditSession({
@@ -20,7 +20,7 @@ final class EditTextEditSession extends TextEditSession {
     required super.canvasLocalBounds,
   });
 
-  final FeatureId featureId;
+  final NodeId featureId;
 }
 
 final class CreateTextEditSession extends TextEditSession {

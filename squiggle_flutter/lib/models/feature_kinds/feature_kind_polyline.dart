@@ -8,6 +8,28 @@ final class FeatureKindPolyline extends FeatureKind {
     super.strokeWidth,
   });
 
+  factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
+      FeatureKindPolyline(
+        [
+          for (final point in content['localPoints'] as List<dynamic>)
+            _offsetFromDataModel(point),
+        ],
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        fillColor: _colorFromDataModel(content, 'fillColor'),
+        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+      );
+
+  @override
+  Map<String, dynamic> toDataModel() => {
+    'type': 'polyline',
+    'localPoints': [
+      for (final point in localPoints) {'x': point.dx, 'y': point.dy},
+    ],
+    'strokeColor': strokeColor.toARGB32(),
+    'fillColor': fillColor.toARGB32(),
+    'strokeWidth': strokeWidth,
+  };
+
   final List<Offset> localPoints;
 
   FeatureKindPolyline copyWith({
@@ -21,6 +43,28 @@ final class FeatureKindPolyline extends FeatureKind {
       strokeColor: strokeColor ?? this.strokeColor,
       fillColor: fillColor ?? this.fillColor,
       strokeWidth: strokeWidth ?? this.strokeWidth,
+    );
+  }
+
+  void setGeometry(
+    Feature feature, {
+    required Offset origin,
+    required List<Offset> localPoints,
+  }) {
+    feature.origin = origin;
+    feature.kind = copyWith(localPoints: List.of(localPoints));
+    feature.size = feature.localBounds().size;
+  }
+
+  void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
+    final points = worldPoints(feature.origin, localPoints);
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+
+    points[pointIndex] = worldPosition;
+    setGeometry(
+      feature,
+      origin: points.first,
+      localPoints: localPointsFromWorld(points, points.first),
     );
   }
 
@@ -69,7 +113,8 @@ final class FeatureKindPolyline extends FeatureKind {
     final threshold = _selectionTolerance;
     final points = worldPoints(feature.origin, localPoints);
     for (var i = 0; i < points.length - 1; i++) {
-      if (distanceToSegment(worldPoint, points[i], points[i + 1]) <= threshold) {
+      if (distanceToSegment(worldPoint, points[i], points[i + 1]) <=
+          threshold) {
         return true;
       }
     }
@@ -112,7 +157,7 @@ final class FeatureKindPolyline extends FeatureKind {
       return newWorld - bounds.topLeft;
     }).toList();
 
-    feature.setBoundsDirect(bounds);
+    feature.setBounds(bounds);
     feature.kind = copyWith(localPoints: scaledLocalPoints);
   }
 
