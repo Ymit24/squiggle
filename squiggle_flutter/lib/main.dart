@@ -21,12 +21,12 @@ String get _buildMode {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+  await windowManager.hide();
+
   final packageInfo = await PackageInfo.fromPlatform();
   final appTitle =
       'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
-
-  await windowManager.ensureInitialized();
-  await windowManager.setTitle(appTitle);
 
   final imageRepository = ImageRepository();
   await imageRepository.initialize();
@@ -48,6 +48,10 @@ void main() async {
       appTitle: appTitle,
     ),
   );
+
+  await windowManager.waitUntilReadyToShow(WindowOptions(title: appTitle));
+  await windowManager.show();
+  await windowManager.focus();
 }
 
 class SquiggleApp extends StatelessWidget {
