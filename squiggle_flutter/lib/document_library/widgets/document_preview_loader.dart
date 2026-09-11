@@ -17,7 +17,7 @@ class DocumentPreviewLoader extends StatelessWidget {
     final storage = context.read<DocumentStorage>();
     final imageRepository = context.read<ImageRepository>();
     final cacheKey =
-        '${document.id}-${document.updatedAt.millisecondsSinceEpoch}-${document.featureCount}';
+        '${document.id}-${document.updatedAt.millisecondsSinceEpoch}';
 
     return FutureBuilder<List<Node>>(
       key: ValueKey(cacheKey),

@@ -40,45 +40,48 @@ class StylePanelContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SectionLabel('Stroke'),
-                ColorRow(
-                  presets: stylePresets
-                      .map((preset) => preset.strokeColor)
-                      .toList(),
-                  activePresetIndex: state.strokeMixed
-                      ? null
-                      : state.activeStrokePresetIndex,
-                  isNoneActive: state.isStrokeNone,
-                  noneEnabled: state.canClearStroke,
-                  onPresetSelected: (index) =>
-                      bloc.add(SetStrokePresetEvent(index)),
-                  onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
-                ),
-                SizedBox(height: spacing.panelSectionSpacing),
-                SectionLabel('Fill'),
-                ColorRow(
-                  presets: stylePresets
-                      .map((preset) => preset.fillColor)
-                      .toList(),
-                  activePresetIndex: state.fillMixed
-                      ? null
-                      : state.activeFillPresetIndex,
-                  isNoneActive: state.isFillNone,
-                  noneEnabled: state.canClearFill,
-                  onPresetSelected: (index) =>
-                      bloc.add(SetFillPresetEvent(index)),
-                  onNoneSelected: () => bloc.add(const ClearFillEvent()),
-                ),
-                SizedBox(height: spacing.panelSectionSpacing),
-                SectionLabel('Width'),
-                StrokeWidthSelector(
-                  activePreset: state.activeStrokeWidth,
-                  isMixed: state.strokeWidthMixed,
-                  onPresetSelected: (preset) =>
-                      bloc.add(SetStrokeWidthEvent(preset)),
-                ),
-                if (state.selectedFeatureIds.length >= 2) ...[
+                if (state.showStyleControls) ...[
+                  SectionLabel('Stroke'),
+                  ColorRow(
+                    presets: stylePresets
+                        .map((preset) => preset.strokeColor)
+                        .toList(),
+                    activePresetIndex: state.strokeMixed
+                        ? null
+                        : state.activeStrokePresetIndex,
+                    isNoneActive: state.isStrokeNone,
+                    noneEnabled: state.canClearStroke,
+                    onPresetSelected: (index) =>
+                        bloc.add(SetStrokePresetEvent(index)),
+                    onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
+                  ),
                   SizedBox(height: spacing.panelSectionSpacing),
+                  SectionLabel('Fill'),
+                  ColorRow(
+                    presets: stylePresets
+                        .map((preset) => preset.fillColor)
+                        .toList(),
+                    activePresetIndex: state.fillMixed
+                        ? null
+                        : state.activeFillPresetIndex,
+                    isNoneActive: state.isFillNone,
+                    noneEnabled: state.canClearFill,
+                    onPresetSelected: (index) =>
+                        bloc.add(SetFillPresetEvent(index)),
+                    onNoneSelected: () => bloc.add(const ClearFillEvent()),
+                  ),
+                  SizedBox(height: spacing.panelSectionSpacing),
+                  SectionLabel('Width'),
+                  StrokeWidthSelector(
+                    activePreset: state.activeStrokeWidth,
+                    isMixed: state.strokeWidthMixed,
+                    onPresetSelected: (preset) =>
+                        bloc.add(SetStrokeWidthEvent(preset)),
+                  ),
+                ],
+                if (state.selectedFeatureIds.length >= 2) ...[
+                  if (state.showStyleControls)
+                    SizedBox(height: spacing.panelSectionSpacing),
                   SectionLabel('Align'),
                   FeatureAlignSelector(
                     onAlign: (alignment) =>
@@ -107,18 +110,16 @@ class StylePanelContent extends StatelessWidget {
                   TextHorizontalAlignmentSelector(
                     activeAlignment: state.activeHorizontalAlignment,
                     isMixed: state.horizontalAlignmentMixed,
-                    onAlignmentSelected: (alignment) => bloc.add(
-                      SetTextHorizontalAlignmentEvent(alignment),
-                    ),
+                    onAlignmentSelected: (alignment) =>
+                        bloc.add(SetTextHorizontalAlignmentEvent(alignment)),
                   ),
                   SizedBox(height: spacing.panelSectionSpacing),
                   SectionLabel('Align vertical'),
                   TextVerticalAlignmentSelector(
                     activeAlignment: state.activeVerticalAlignment,
                     isMixed: state.verticalAlignmentMixed,
-                    onAlignmentSelected: (alignment) => bloc.add(
-                      SetTextVerticalAlignmentEvent(alignment),
-                    ),
+                    onAlignmentSelected: (alignment) =>
+                        bloc.add(SetTextVerticalAlignmentEvent(alignment)),
                   ),
                 ],
               ],
@@ -129,4 +130,3 @@ class StylePanelContent extends StatelessWidget {
     );
   }
 }
-

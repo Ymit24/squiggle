@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
@@ -159,26 +157,36 @@ class IdleInteractionState extends InteractionState {
       return;
     }
 
-    final selectedNodes = context.selection.selectedNodes
-        .map((id) => context.document.nodeById(id))
-        .where((node) => node != null)
-        .map((node) => node!)
+    final selectedIds = context.selection.selectedNodes.toSet();
+    final container = context.document.nodeById(selectedIds.first)?.parent;
+    if (container == null) return;
+    final siblings = container.children.toList();
+    final selectedNodes = siblings
+        .where((node) => selectedIds.contains(node.id))
         .toList();
+    if (selectedNodes.length != selectedIds.length) return;
+    final topmostSelectedIndex = siblings.lastIndexWhere(
+      (node) => selectedIds.contains(node.id),
+    );
+    final insertionIndex = siblings
+        .take(topmostSelectedIndex)
+        .where((node) => !selectedIds.contains(node.id))
+        .length;
 
     context.history.run('Group Selected Nodes', (transaction) {
-      transaction.removeAll(context.selection.selectedNodes);
+      transaction.removeAll(selectedIds);
       final bounds = Node.localBoundsOfNodes(selectedNodes);
 
       for (final node in selectedNodes) {
         node.origin -= bounds.center;
       }
-      Group group = Group(
+      final group = Group(
         children: selectedNodes.toList(),
         origin: bounds.center,
       );
-      transaction.add(group);
+      transaction.add(group, index: insertionIndex);
       context.selection.setSelection([group.id]);
-    });
+    }, container: container);
   }
 
   void _onShiftCtrlCmdGPress(EditorContext context) {
@@ -196,30 +204,35 @@ class IdleInteractionState extends InteractionState {
       return;
     }
 
-    final newSelection = <NodeId>[];
-    for (final node in selectedNodes) {
-      final group = node;
-
-      final container = group.parent!;
-      final index = container.children.indexOf(group);
-      final children = group.children.toList();
-      final groupOrigin = group.origin;
-
-      context.history.run('Ungroup Selected Nodes', (transaction) {
-        transaction.removeAll([node.id]);
-        node.removeAll(node.children.map((child) => child.id));
-        for (var i = 0; i < children.length; i++) {
-          final child = children[i];
-
-          // Convert from group space to the group's parent space.
-          child.origin += groupOrigin;
-
-          transaction.add(child, index: index + i);
-        }
-      }, container: container);
-
-      newSelection.addAll(children.map((child) => child.id));
+    final container = selectedNodes.first.parent;
+    if (container == null ||
+        selectedNodes.any((group) => !identical(group.parent, container))) {
+      return;
     }
+    final selectedIds = selectedNodes.map((group) => group.id).toSet();
+    final originalOrder = container.children.toList();
+    final newSelection = <NodeId>[];
+    context.history.run('Ungroup Selected Nodes', (transaction) {
+      transaction.removeAll(selectedIds);
+      final replacementIds = <NodeId, List<NodeId>>{};
+      for (final group in selectedNodes) {
+        final children = group.children.toList();
+        group.removeAll(children.map((child) => child.id));
+        for (final child in children) {
+          child.origin += group.origin;
+          transaction.add(child);
+        }
+        replacementIds[group.id] = children.map((child) => child.id).toList();
+        newSelection.addAll(children.map((child) => child.id));
+      }
+      transaction.reorder([
+        for (final node in originalOrder)
+          if (replacementIds[node.id] case final children?)
+            ...children
+          else
+            node.id,
+      ]);
+    }, container: container);
     context.selection.setSelection(newSelection);
   }
 }

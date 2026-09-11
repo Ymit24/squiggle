@@ -14,6 +14,7 @@ final class StylePanelHiddenState extends StylePanelState {
 final class StylePanelShowingState extends StylePanelState {
   const StylePanelShowingState({
     required this.selectedFeatureIds,
+    required this.showStyleControls,
     required this.activeStrokePresetIndex,
     required this.isStrokeNone,
     required this.strokeMixed,
@@ -34,6 +35,7 @@ final class StylePanelShowingState extends StylePanelState {
   });
 
   final List<NodeId> selectedFeatureIds;
+  final bool showStyleControls;
   final int? activeStrokePresetIndex;
   final bool isStrokeNone;
   final bool strokeMixed;

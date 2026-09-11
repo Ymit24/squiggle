@@ -131,7 +131,7 @@ class _DocumentCardState extends State<DocumentCard> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _subtitle(widget.document),
+                      _formatUpdatedAt(widget.document.updatedAt),
                       style: theme.typography.hotkey.copyWith(fontSize: 11),
                     ),
                   ],
@@ -155,13 +155,6 @@ class _DocumentCardState extends State<DocumentCard> {
           PopupMenuItem(onTap: widget.onDelete, child: const Text('Delete')),
       ],
     );
-  }
-
-  String _subtitle(DocumentInfo document) {
-    final featureLabel = document.featureCount == 1
-        ? '1 shape'
-        : '${document.featureCount} shapes';
-    return '$featureLabel · ${_formatUpdatedAt(document.updatedAt)}';
   }
 
   String _formatUpdatedAt(DateTime updatedAt) {

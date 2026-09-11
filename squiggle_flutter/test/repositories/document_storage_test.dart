@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -60,6 +61,22 @@ void main() {
       final created = await storage.createDocument(name: 'Active');
       await storage.saveActiveDocumentId(created.id);
       expect(await storage.loadActiveDocumentId(), created.id);
+    });
+
+    test('writes version 2 and rejects older document versions', () async {
+      final created = await storage.createDocument(name: 'Current');
+      final currentFile = File('${tempDir.path}/documents/${created.id}.json');
+      final currentJson = jsonDecode(await currentFile.readAsString()) as Map;
+      expect(currentJson['version'], 2);
+
+      await File(
+        '${tempDir.path}/documents/old.json',
+      ).writeAsString('{"version":1,"name":"Old","nodes":[]}');
+      expect(await storage.loadDocument('old'), isNull);
+      expect(
+        (await storage.listDocuments()).map((document) => document.id),
+        isNot(contains('old')),
+      );
     });
   });
 }
