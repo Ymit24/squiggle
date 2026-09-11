@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
@@ -9,9 +11,23 @@ import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:window_manager/window_manager.dart';
+
+String get _buildMode {
+  if (kDebugMode) return 'DEBUG';
+  if (kProfileMode) return 'PROFILE';
+  return 'RELEASE';
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+
+  final packageInfo = await PackageInfo.fromPlatform();
+  final appTitle =
+      'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
+  await windowManager.setTitle(appTitle);
+
   final imageRepository = ImageRepository();
   await imageRepository.initialize();
 
@@ -52,7 +68,7 @@ class SquiggleApp extends StatelessWidget {
     return MaterialApp(
       title: 'Squiggle',
       theme: SquiggleThemeData.dark(),
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       home: SquiggleHomePage(
         imageRepository: imageRepository,
         context: this.context,
