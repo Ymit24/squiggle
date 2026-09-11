@@ -45,7 +45,6 @@ void main() async {
       context: context,
       documentStorage: documentStorage,
       documentLibraryRepository: documentLibraryRepository,
-      appTitle: appTitle,
     ),
   );
 }
@@ -57,19 +56,17 @@ class SquiggleApp extends StatelessWidget {
     required this.context,
     required this.documentStorage,
     required this.documentLibraryRepository,
-    required this.appTitle,
   });
 
   final ImageRepository imageRepository;
   final EditorContext context;
   final DocumentStorage documentStorage;
   final DocumentLibraryRepository documentLibraryRepository;
-  final String appTitle;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: appTitle,
+      title: 'Squiggle',
       theme: SquiggleThemeData.dark(),
       debugShowCheckedModeBanner: false,
       home: SquiggleHomePage(
