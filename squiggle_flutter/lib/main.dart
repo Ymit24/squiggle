@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -12,9 +15,24 @@ import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
+const _windowChannel = MethodChannel('squiggle/window');
+
+String get _buildMode {
+  if (kDebugMode) return 'DEBUG';
+  if (kProfileMode) return 'PROFILE';
+  return 'RELEASE';
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final packageInfo = await PackageInfo.fromPlatform();
+  final appTitle =
+      'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
+
+  if (Platform.isMacOS) {
+    await _windowChannel.invokeMethod<void>('setTitle', {'title': appTitle});
+  }
+
   final imageRepository = ImageRepository();
   await imageRepository.initialize();
 
@@ -32,7 +50,7 @@ void main() async {
       context: context,
       documentStorage: documentStorage,
       documentLibraryRepository: documentLibraryRepository,
-      appVersion: '${packageInfo.version}+${packageInfo.buildNumber}',
+      appTitle: appTitle,
     ),
   );
 }
@@ -44,25 +62,19 @@ class SquiggleApp extends StatelessWidget {
     required this.context,
     required this.documentStorage,
     required this.documentLibraryRepository,
-    required this.appVersion,
+    required this.appTitle,
   });
 
   final ImageRepository imageRepository;
   final EditorContext context;
   final DocumentStorage documentStorage;
   final DocumentLibraryRepository documentLibraryRepository;
-  final String appVersion;
-
-  String get _buildMode {
-    if (kDebugMode) return 'DEBUG';
-    if (kProfileMode) return 'PROFILE';
-    return 'RELEASE';
-  }
+  final String appTitle;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Squiggle - v$appVersion $_buildMode',
+      title: appTitle,
       theme: SquiggleThemeData.dark(),
       debugShowCheckedModeBanner: false,
       home: SquiggleHomePage(
