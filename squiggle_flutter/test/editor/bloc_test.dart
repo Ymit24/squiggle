@@ -55,9 +55,9 @@ void main() {
       await bloc.stream.first;
 
       context.selection.selectNode(context.document.nodes.first.id);
-      await bloc.stream.firstWhere((s) => s.selectedFeatures.isNotEmpty);
+      await bloc.stream.firstWhere((s) => s.selectedNodes.isNotEmpty);
 
-      expect(bloc.state.selectedFeatures.length, 1);
+      expect(bloc.state.selectedNodes.length, 1);
       await bloc.close();
     });
   });

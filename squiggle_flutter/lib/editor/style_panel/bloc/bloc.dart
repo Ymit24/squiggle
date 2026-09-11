@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
-import 'package:squiggle_flutter/models/feature_layout.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
@@ -22,8 +22,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     on<SetFontSizeEvent>(_onSetFontSize);
     on<SetTextHorizontalAlignmentEvent>(_onSetTextHorizontalAlignment);
     on<SetTextVerticalAlignmentEvent>(_onSetTextVerticalAlignment);
-    on<AlignFeaturesEvent>(_onAlignFeatures);
-    on<DistributeFeaturesEvent>(_onDistributeFeatures);
+    on<AlignNodesEvent>(_onAlignNodes);
+    on<DistributeNodesEvent>(_onDistributeNodes);
   }
 
   final EditorContext context;
@@ -41,18 +41,18 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   StylePanelState _deriveState() {
-    final selectedFeatureIds = List<NodeId>.of(context.selection.selectedNodes);
-    if (selectedFeatureIds.isEmpty) {
+    final selectedNodeIds = List<NodeId>.of(context.selection.selectedNodes);
+    if (selectedNodeIds.isEmpty) {
       return const StylePanelHiddenState();
     }
 
-    final kinds = selectedFeatureIds
+    final kinds = selectedNodeIds
         .map(context.document.featureById)
         .whereType<Feature>()
         .map((feature) => feature.kind)
         .toList();
     final showStyleControls = kinds.isNotEmpty;
-    if (!showStyleControls && selectedFeatureIds.length < 2) {
+    if (!showStyleControls && selectedNodeIds.length < 2) {
       return const StylePanelHiddenState();
     }
 
@@ -120,7 +120,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     }
 
     return StylePanelShowingState(
-      selectedFeatureIds: selectedFeatureIds,
+      selectedNodeIds: selectedNodeIds,
       showStyleControls: showStyleControls,
       activeStrokePresetIndex: activeStrokePresetIndex,
       isStrokeNone: isStrokeNone,
@@ -165,7 +165,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     if (current is! StylePanelShowingState) {
       return const [];
     }
-    return current.selectedFeatureIds;
+    return current.selectedNodeIds;
   }
 
   void _applyStyleUpdate({
@@ -286,10 +286,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _applyStyleUpdate(verticalAlignment: event.alignment);
   }
 
-  void _onAlignFeatures(
-    AlignFeaturesEvent event,
-    Emitter<StylePanelState> emit,
-  ) {
+  void _onAlignNodes(AlignNodesEvent event, Emitter<StylePanelState> emit) {
     final ids = _selectedIdsOrEmpty();
     if (ids.length < 2) return;
 
@@ -298,8 +295,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     );
   }
 
-  void _onDistributeFeatures(
-    DistributeFeaturesEvent event,
+  void _onDistributeNodes(
+    DistributeNodesEvent event,
     Emitter<StylePanelState> emit,
   ) {
     final ids = _selectedIdsOrEmpty();

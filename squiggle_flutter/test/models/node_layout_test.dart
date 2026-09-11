@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_layout.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 
 void main() {
   Document docWithRectangles(
@@ -21,10 +21,7 @@ void main() {
       final doc = docWithRectangles([Offset.zero]);
       final id = doc.nodes.first.id;
 
-      expect(
-        computeAlignmentOffsets(doc, [id], FeatureAlignment.left),
-        isEmpty,
-      );
+      expect(computeAlignmentOffsets(doc, [id], NodeAlignment.left), isEmpty);
     });
 
     test('aligns left edges to selection bounds', () {
@@ -35,7 +32,7 @@ void main() {
       ]);
       final ids = doc.nodes.map((feature) => feature.id).toList();
 
-      final offsets = computeAlignmentOffsets(doc, ids, FeatureAlignment.left);
+      final offsets = computeAlignmentOffsets(doc, ids, NodeAlignment.left);
 
       expect(offsets[ids[0]], isNull);
       expect(offsets[ids[1]], const Offset(-30, 0));
@@ -49,7 +46,7 @@ void main() {
       final offsets = computeAlignmentOffsets(
         doc,
         ids,
-        FeatureAlignment.centerHorizontal,
+        NodeAlignment.centerHorizontal,
       );
 
       expect(offsets[ids[0]], const Offset(20, 0));
@@ -63,7 +60,7 @@ void main() {
       final ids = doc.nodes.map((feature) => feature.id).toList();
 
       expect(
-        computeDistributionOffsets(doc, ids, FeatureDistribution.horizontal),
+        computeDistributionOffsets(doc, ids, NodeDistribution.horizontal),
         isEmpty,
       );
     });
@@ -79,7 +76,7 @@ void main() {
       final offsets = computeDistributionOffsets(
         doc,
         ids,
-        FeatureDistribution.horizontal,
+        NodeDistribution.horizontal,
       );
 
       expect(offsets[ids[0]], isNull);
@@ -98,7 +95,7 @@ void main() {
       final offsets = computeDistributionOffsets(
         doc,
         ids,
-        FeatureDistribution.vertical,
+        NodeDistribution.vertical,
       );
 
       expect(offsets[ids[0]], isNull);

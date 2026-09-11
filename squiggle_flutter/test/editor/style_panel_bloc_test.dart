@@ -8,7 +8,7 @@ import 'package:squiggle_flutter/editor/style_panel/bloc/state.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_layout.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/models/group.dart';
 
 void main() {
@@ -68,7 +68,7 @@ void main() {
 
       expect(showingState, isA<StylePanelShowingState>());
       expect(
-        (showingState as StylePanelShowingState).selectedFeatureIds,
+        (showingState as StylePanelShowingState).selectedNodeIds,
         hasLength(1),
       );
       await bloc.close();
@@ -92,9 +92,9 @@ void main() {
               )
               as StylePanelShowingState;
       expect(showing.showStyleControls, isFalse);
-      expect(showing.selectedFeatureIds, hasLength(2));
+      expect(showing.selectedNodeIds, hasLength(2));
 
-      bloc.add(const AlignFeaturesEvent(FeatureAlignment.left));
+      bloc.add(const AlignNodesEvent(NodeAlignment.left));
       await Future<void>.delayed(Duration.zero);
       expect(second.localBounds().left, first.localBounds().left);
       await bloc.close();
@@ -393,7 +393,7 @@ void main() {
       },
     );
 
-    test('AlignFeaturesEvent aligns selected features', () async {
+    test('AlignNodesEvent aligns selected nodes', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
@@ -404,7 +404,7 @@ void main() {
       context.selection.selectNode(second.id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
-      bloc.add(const AlignFeaturesEvent(FeatureAlignment.left));
+      bloc.add(const AlignNodesEvent(NodeAlignment.left));
       await Future<void>.delayed(Duration.zero);
 
       expect(first.origin, const Offset(0, 0));
@@ -412,7 +412,7 @@ void main() {
       await bloc.close();
     });
 
-    test('DistributeFeaturesEvent distributes selected features', () async {
+    test('DistributeNodesEvent distributes selected nodes', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchStylePanelStateEvent());
       await bloc.stream.first;
@@ -430,7 +430,7 @@ void main() {
       context.selection.selectNode(context.document.nodes[2].id);
       await bloc.stream.firstWhere((state) => state is StylePanelShowingState);
 
-      bloc.add(const DistributeFeaturesEvent(FeatureDistribution.horizontal));
+      bloc.add(const DistributeNodesEvent(NodeDistribution.horizontal));
       await Future<void>.delayed(Duration.zero);
 
       expect(second.origin, const Offset(120, 0));

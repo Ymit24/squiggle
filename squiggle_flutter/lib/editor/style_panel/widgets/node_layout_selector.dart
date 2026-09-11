@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_swatch.dart';
-import 'package:squiggle_flutter/models/feature_layout.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-class FeatureAlignSelector extends StatelessWidget {
-  const FeatureAlignSelector({
-    super.key,
-    required this.onAlign,
-  });
+class NodeAlignSelector extends StatelessWidget {
+  const NodeAlignSelector({super.key, required this.onAlign});
 
-  final ValueChanged<FeatureAlignment> onAlign;
+  final ValueChanged<NodeAlignment> onAlign;
 
   @override
   Widget build(BuildContext context) {
@@ -24,23 +21,22 @@ class FeatureAlignSelector extends StatelessWidget {
           spacing: theme.spacing.swatchGap,
           children: [
             for (final alignment in [
-              FeatureAlignment.left,
-              FeatureAlignment.centerHorizontal,
-              FeatureAlignment.right,
+              NodeAlignment.left,
+              NodeAlignment.centerHorizontal,
+              NodeAlignment.right,
             ])
               _LayoutSwatch(
                 icon: switch (alignment) {
-                  FeatureAlignment.left => Icons.align_horizontal_left,
-                  FeatureAlignment.centerHorizontal =>
+                  NodeAlignment.left => Icons.align_horizontal_left,
+                  NodeAlignment.centerHorizontal =>
                     Icons.align_horizontal_center,
-                  FeatureAlignment.right => Icons.align_horizontal_right,
+                  NodeAlignment.right => Icons.align_horizontal_right,
                   _ => Icons.align_horizontal_left,
                 },
                 tooltip: switch (alignment) {
-                  FeatureAlignment.left => 'Align left',
-                  FeatureAlignment.centerHorizontal =>
-                    'Align center horizontally',
-                  FeatureAlignment.right => 'Align right',
+                  NodeAlignment.left => 'Align left',
+                  NodeAlignment.centerHorizontal => 'Align center horizontally',
+                  NodeAlignment.right => 'Align right',
                   _ => '',
                 },
                 onPressed: () => onAlign(alignment),
@@ -53,22 +49,21 @@ class FeatureAlignSelector extends StatelessWidget {
           spacing: theme.spacing.swatchGap,
           children: [
             for (final alignment in [
-              FeatureAlignment.top,
-              FeatureAlignment.centerVertical,
-              FeatureAlignment.bottom,
+              NodeAlignment.top,
+              NodeAlignment.centerVertical,
+              NodeAlignment.bottom,
             ])
               _LayoutSwatch(
                 icon: switch (alignment) {
-                  FeatureAlignment.top => Icons.align_vertical_top,
-                  FeatureAlignment.centerVertical =>
-                    Icons.align_vertical_center,
-                  FeatureAlignment.bottom => Icons.align_vertical_bottom,
+                  NodeAlignment.top => Icons.align_vertical_top,
+                  NodeAlignment.centerVertical => Icons.align_vertical_center,
+                  NodeAlignment.bottom => Icons.align_vertical_bottom,
                   _ => Icons.align_vertical_top,
                 },
                 tooltip: switch (alignment) {
-                  FeatureAlignment.top => 'Align top',
-                  FeatureAlignment.centerVertical => 'Align center vertically',
-                  FeatureAlignment.bottom => 'Align bottom',
+                  NodeAlignment.top => 'Align top',
+                  NodeAlignment.centerVertical => 'Align center vertically',
+                  NodeAlignment.bottom => 'Align bottom',
                   _ => '',
                 },
                 onPressed: () => onAlign(alignment),
@@ -80,13 +75,10 @@ class FeatureAlignSelector extends StatelessWidget {
   }
 }
 
-class FeatureDistributeSelector extends StatelessWidget {
-  const FeatureDistributeSelector({
-    super.key,
-    required this.onDistribute,
-  });
+class NodeDistributeSelector extends StatelessWidget {
+  const NodeDistributeSelector({super.key, required this.onDistribute});
 
-  final ValueChanged<FeatureDistribution> onDistribute;
+  final ValueChanged<NodeDistribution> onDistribute;
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +88,15 @@ class FeatureDistributeSelector extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: theme.spacing.swatchGap,
       children: [
-        for (final distribution in FeatureDistribution.values)
+        for (final distribution in NodeDistribution.values)
           _LayoutSwatch(
             icon: switch (distribution) {
-              FeatureDistribution.horizontal => Icons.horizontal_distribute,
-              FeatureDistribution.vertical => Icons.vertical_distribute,
+              NodeDistribution.horizontal => Icons.horizontal_distribute,
+              NodeDistribution.vertical => Icons.vertical_distribute,
             },
             tooltip: switch (distribution) {
-              FeatureDistribution.horizontal => 'Distribute horizontally',
-              FeatureDistribution.vertical => 'Distribute vertically',
+              NodeDistribution.horizontal => 'Distribute horizontally',
+              NodeDistribution.vertical => 'Distribute vertically',
             },
             onPressed: () => onDistribute(distribution),
           ),

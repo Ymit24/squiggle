@@ -13,28 +13,16 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 const _clipboardPrefix = 'squiggle-nodes:2:';
 
-/// Offsets [features] so their combined bounds center at [targetCenter].
-List<Feature> repositionFeaturesToCenter(
-  List<Feature> features,
+/// Offsets root [nodes] so their combined bounds center at [targetCenter].
+List<T> repositionNodesToCenter<T extends Node>(
+  List<T> nodes,
   Offset targetCenter,
 ) {
-  if (features.isEmpty) {
-    return features;
-  }
-  final offset = targetCenter - Node.localBoundsOfNodes(features).center;
-  return [
-    for (final feature in features)
-      feature.copyWith(id: noId, origin: feature.origin + offset),
-  ];
-}
-
-/// Offsets root [nodes] so their combined bounds center at [targetCenter].
-List<Node> repositionNodesToCenter(List<Node> nodes, Offset targetCenter) {
   if (nodes.isEmpty) return nodes;
   final offset = targetCenter - Node.localBoundsOfNodes(nodes).center;
   return [
     for (final node in nodes)
-      node.copyWith(id: noId, origin: node.origin + offset),
+      node.copyWith(id: noId, origin: node.origin + offset) as T,
   ];
 }
 
@@ -65,7 +53,7 @@ Future<List<Node>?> decodeNodesFromClipboard(
   }
 }
 
-Future<void> copySelectedFeaturesToClipboard({
+Future<void> copySelectedNodesToClipboard({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
@@ -84,7 +72,7 @@ Future<void> copySelectedFeaturesToClipboard({
   await _writePlainText('$_clipboardPrefix$payload');
 }
 
-Future<bool> pasteFeaturesFromClipboard({
+Future<bool> pasteNodesFromClipboard({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
@@ -167,7 +155,7 @@ Future<Node> _decodeNode(
 
 Future<String?> readClipboardPlainText() => _readPlainText();
 
-bool isSquiggleFeaturesClipboardText(String text) =>
+bool isSquiggleNodesClipboardText(String text) =>
     text.startsWith(_clipboardPrefix);
 
 Future<void> _writePlainText(String text) async {
@@ -176,7 +164,7 @@ Future<void> _writePlainText(String text) async {
     return;
   }
 
-  final item = DataWriterItem(suggestedName: 'squiggle-features');
+  final item = DataWriterItem(suggestedName: 'squiggle-nodes');
   item.add(Formats.plainText(text));
   await clipboard.write([item]);
 }

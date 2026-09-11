@@ -2,13 +2,13 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
-import 'package:squiggle_flutter/services/feature_clipboard.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
 
 /// Creates a text feature from clipboard plain text at the viewport center.
 Future<bool> pasteTextFromClipboard({required EditorContext context}) async {
   final text = await readClipboardPlainText();
   if (text == null ||
-      isSquiggleFeaturesClipboardText(text) ||
+      isSquiggleNodesClipboardText(text) ||
       text.trim().isEmpty) {
     return false;
   }
@@ -31,7 +31,7 @@ Feature createTextFeatureAtCenter({
   required String contents,
   required Offset center,
 }) {
-  return repositionFeaturesToCenter([
+  return repositionNodesToCenter([
     newTextFeatureAt(Offset.zero, contents),
   ], center).first;
 }

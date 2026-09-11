@@ -6,7 +6,7 @@ import 'document.dart';
 
 import 'node_id.dart';
 
-enum FeatureAlignment {
+enum NodeAlignment {
   left,
   centerHorizontal,
   right,
@@ -15,13 +15,13 @@ enum FeatureAlignment {
   bottom,
 }
 
-enum FeatureDistribution { horizontal, vertical }
+enum NodeDistribution { horizontal, vertical }
 
 /// Computes origin deltas to align [ids] within their selection bounds.
 Map<NodeId, Offset> computeAlignmentOffsets(
   Document document,
   List<NodeId> ids,
-  FeatureAlignment alignment,
+  NodeAlignment alignment,
 ) {
   if (ids.length < 2) return const {};
 
@@ -31,24 +31,24 @@ Map<NodeId, Offset> computeAlignmentOffsets(
   var union = Node.localBoundsOfNodes(nodes);
 
   final offsets = <NodeId, Offset>{};
-  for (final feature in nodes) {
-    final bounds = feature.localBounds();
+  for (final node in nodes) {
+    final bounds = node.localBounds();
     final delta = switch (alignment) {
-      FeatureAlignment.left => Offset(union.left - bounds.left, 0),
-      FeatureAlignment.right => Offset(union.right - bounds.right, 0),
-      FeatureAlignment.top => Offset(0, union.top - bounds.top),
-      FeatureAlignment.bottom => Offset(0, union.bottom - bounds.bottom),
-      FeatureAlignment.centerHorizontal => Offset(
+      NodeAlignment.left => Offset(union.left - bounds.left, 0),
+      NodeAlignment.right => Offset(union.right - bounds.right, 0),
+      NodeAlignment.top => Offset(0, union.top - bounds.top),
+      NodeAlignment.bottom => Offset(0, union.bottom - bounds.bottom),
+      NodeAlignment.centerHorizontal => Offset(
         union.center.dx - bounds.center.dx,
         0,
       ),
-      FeatureAlignment.centerVertical => Offset(
+      NodeAlignment.centerVertical => Offset(
         0,
         union.center.dy - bounds.center.dy,
       ),
     };
     if (delta != Offset.zero) {
-      offsets[feature.id] = delta;
+      offsets[node.id] = delta;
     }
   }
   return offsets;
@@ -58,22 +58,22 @@ Map<NodeId, Offset> computeAlignmentOffsets(
 Map<NodeId, Offset> computeDistributionOffsets(
   Document document,
   List<NodeId> ids,
-  FeatureDistribution distribution,
+  NodeDistribution distribution,
 ) {
   if (ids.length < 3) return const {};
 
   final entries = ids
       .map(document.nodeById)
       .whereType<Node>()
-      .map((feature) => (node: feature, bounds: feature.localBounds()))
+      .map((node) => (node: node, bounds: node.localBounds()))
       .toList();
   if (entries.length < 3) return const {};
 
   switch (distribution) {
-    case FeatureDistribution.horizontal:
+    case NodeDistribution.horizontal:
       entries.sort((a, b) => a.bounds.left.compareTo(b.bounds.left));
       return _distributeAlongAxis(entries, horizontal: true);
-    case FeatureDistribution.vertical:
+    case NodeDistribution.vertical:
       entries.sort((a, b) => a.bounds.top.compareTo(b.bounds.top));
       return _distributeAlongAxis(entries, horizontal: false);
   }

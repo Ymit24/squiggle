@@ -10,10 +10,10 @@ final class StylePanelHiddenState extends StylePanelState {
   const StylePanelHiddenState();
 }
 
-/// One or more features selected — panel is visible with active-style indicators.
+/// One or more nodes selected — panel is visible with relevant controls.
 final class StylePanelShowingState extends StylePanelState {
   const StylePanelShowingState({
-    required this.selectedFeatureIds,
+    required this.selectedNodeIds,
     required this.showStyleControls,
     required this.activeStrokePresetIndex,
     required this.isStrokeNone,
@@ -34,7 +34,7 @@ final class StylePanelShowingState extends StylePanelState {
     required this.activeVerticalAlignment,
   });
 
-  final List<NodeId> selectedFeatureIds;
+  final List<NodeId> selectedNodeIds;
   final bool showStyleControls;
   final int? activeStrokePresetIndex;
   final bool isStrokeNone;

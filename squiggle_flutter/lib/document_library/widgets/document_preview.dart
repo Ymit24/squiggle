@@ -6,7 +6,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-/// Renders a scaled-down view of a document's actual features.
+/// Renders a scaled-down view of a document's nodes.
 /// TODO: This whole thing is complete garbage.
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
@@ -26,7 +26,7 @@ class DocumentPreview extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: CustomPaint(
         painter: _DocumentPreviewPainter(
-          features: nodes,
+          nodes: nodes,
           imageRepository: imageRepository,
           gridColor: SquiggleColors.surface1.withValues(alpha: 0.55),
           baseColor: theme.colors.base,
@@ -39,13 +39,13 @@ class DocumentPreview extends StatelessWidget {
 
 class _DocumentPreviewPainter extends CustomPainter {
   _DocumentPreviewPainter({
-    required this.features,
+    required this.nodes,
     required this.imageRepository,
     required this.gridColor,
     required this.baseColor,
   });
 
-  final List<Node> features;
+  final List<Node> nodes;
   final ImageRepository imageRepository;
   final Color gridColor;
   final Color baseColor;
@@ -57,7 +57,7 @@ class _DocumentPreviewPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.drawRect(Offset.zero & size, Paint()..color = baseColor);
 
-    final contentBounds = _contentBounds(features);
+    final contentBounds = _contentBounds(nodes);
     final scale = _fitScale(contentBounds, size);
     final offset = _fitOffset(contentBounds, size, scale);
 
@@ -66,20 +66,20 @@ class _DocumentPreviewPainter extends CustomPainter {
     canvas.scale(scale);
 
     _drawGrid(canvas, contentBounds);
-    for (final feature in features) {
-      feature.paint(canvas, imageRepository);
+    for (final node in nodes) {
+      node.paint(canvas, imageRepository);
     }
     canvas.restore();
   }
 
-  Rect _contentBounds(List<Node> features) {
-    if (features.isEmpty) {
+  Rect _contentBounds(List<Node> nodes) {
+    if (nodes.isEmpty) {
       return _emptyView;
     }
 
-    var bounds = features.first.localBounds();
-    for (var i = 1; i < features.length; i++) {
-      bounds = bounds.expandToInclude(features[i].localBounds());
+    var bounds = nodes.first.localBounds();
+    for (var i = 1; i < nodes.length; i++) {
+      bounds = bounds.expandToInclude(nodes[i].localBounds());
     }
 
     final padding = _paddingFor(bounds);
@@ -124,7 +124,7 @@ class _DocumentPreviewPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DocumentPreviewPainter oldDelegate) {
-    return oldDelegate.features != features ||
+    return oldDelegate.nodes != nodes ||
         oldDelegate.imageRepository != imageRepository;
   }
 }

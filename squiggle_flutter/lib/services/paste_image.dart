@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/feature_clipboard.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
 
 /// Creates an image feature from a pasted clipboard image at the viewport center.
 Future<void> pasteImageFromClipboard({
@@ -19,7 +19,7 @@ Future<void> pasteImageFromClipboard({
     return;
   }
 
-  final feature = repositionFeaturesToCenter([
+  final feature = repositionNodesToCenter([
     createImageFeatureAtCenter(imported: imported, center: center),
   ], center).first;
 

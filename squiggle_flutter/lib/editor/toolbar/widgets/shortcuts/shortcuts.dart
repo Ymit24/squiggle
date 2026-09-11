@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/feature_clipboard.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_image.dart';
 import 'package:squiggle_flutter/services/paste_text.dart';
 
@@ -137,7 +137,7 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                     if (textEditOpen) {
                       return null;
                     }
-                    copySelectedFeaturesToClipboard(
+                    copySelectedNodesToClipboard(
                       context: context.read<EditorContext>(),
                       imageRepository: context.read<ImageRepository>(),
                     );
@@ -191,11 +191,11 @@ Future<void> _pasteFromClipboard(BuildContext context) async {
   final editorContext = context.read<EditorContext>();
   final imageRepository = context.read<ImageRepository>();
 
-  final pastedFeatures = await pasteFeaturesFromClipboard(
+  final pastedNodes = await pasteNodesFromClipboard(
     context: editorContext,
     imageRepository: imageRepository,
   );
-  if (pastedFeatures) {
+  if (pastedNodes) {
     return;
   }
 

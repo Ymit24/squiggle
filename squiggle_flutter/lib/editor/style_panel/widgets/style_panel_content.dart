@@ -8,7 +8,7 @@ import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/feature_layout_selector.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
@@ -79,21 +79,21 @@ class StylePanelContent extends StatelessWidget {
                         bloc.add(SetStrokeWidthEvent(preset)),
                   ),
                 ],
-                if (state.selectedFeatureIds.length >= 2) ...[
+                if (state.selectedNodeIds.length >= 2) ...[
                   if (state.showStyleControls)
                     SizedBox(height: spacing.panelSectionSpacing),
                   SectionLabel('Align'),
-                  FeatureAlignSelector(
+                  NodeAlignSelector(
                     onAlign: (alignment) =>
-                        bloc.add(AlignFeaturesEvent(alignment)),
+                        bloc.add(AlignNodesEvent(alignment)),
                   ),
                 ],
-                if (state.selectedFeatureIds.length >= 3) ...[
+                if (state.selectedNodeIds.length >= 3) ...[
                   SizedBox(height: spacing.panelSectionSpacing),
                   SectionLabel('Distribute'),
-                  FeatureDistributeSelector(
+                  NodeDistributeSelector(
                     onDistribute: (distribution) =>
-                        bloc.add(DistributeFeaturesEvent(distribution)),
+                        bloc.add(DistributeNodesEvent(distribution)),
                   ),
                 ],
                 if (state.showFontSize) ...[

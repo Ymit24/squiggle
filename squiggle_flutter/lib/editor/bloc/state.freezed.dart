@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EditorState {
 
- Document get document; List<NodeId> get selectedFeatures;
+ Document get document; List<NodeId> get selectedNodes;
 /// Create a copy of EditorState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $EditorStateCopyWith<EditorState> get copyWith => _$EditorStateCopyWithImpl<Edit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other.selectedFeatures, selectedFeatures));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other.selectedNodes, selectedNodes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,document,const DeepCollectionEquality().hash(selectedFeatures));
+int get hashCode => Object.hash(runtimeType,document,const DeepCollectionEquality().hash(selectedNodes));
 
 @override
 String toString() {
-  return 'EditorState(document: $document, selectedFeatures: $selectedFeatures)';
+  return 'EditorState(document: $document, selectedNodes: $selectedNodes)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $EditorStateCopyWith<$Res>  {
   factory $EditorStateCopyWith(EditorState value, $Res Function(EditorState) _then) = _$EditorStateCopyWithImpl;
 @useResult
 $Res call({
- Document document, List<NodeId> selectedFeatures
+ Document document, List<NodeId> selectedNodes
 });
 
 
@@ -62,10 +62,10 @@ class _$EditorStateCopyWithImpl<$Res>
 
 /// Create a copy of EditorState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? document = null,Object? selectedFeatures = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? document = null,Object? selectedNodes = null,}) {
   return _then(_self.copyWith(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
-as Document,selectedFeatures: null == selectedFeatures ? _self.selectedFeatures : selectedFeatures // ignore: cast_nullable_to_non_nullable
+as Document,selectedNodes: null == selectedNodes ? _self.selectedNodes : selectedNodes // ignore: cast_nullable_to_non_nullable
 as List<NodeId>,
   ));
 }
@@ -151,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Document document,  List<NodeId> selectedFeatures)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Document document,  List<NodeId> selectedNodes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EditorState() when $default != null:
-return $default(_that.document,_that.selectedFeatures);case _:
+return $default(_that.document,_that.selectedNodes);case _:
   return orElse();
 
 }
@@ -172,10 +172,10 @@ return $default(_that.document,_that.selectedFeatures);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Document document,  List<NodeId> selectedFeatures)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Document document,  List<NodeId> selectedNodes)  $default,) {final _that = this;
 switch (_that) {
 case _EditorState():
-return $default(_that.document,_that.selectedFeatures);case _:
+return $default(_that.document,_that.selectedNodes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +192,10 @@ return $default(_that.document,_that.selectedFeatures);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Document document,  List<NodeId> selectedFeatures)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Document document,  List<NodeId> selectedNodes)?  $default,) {final _that = this;
 switch (_that) {
 case _EditorState() when $default != null:
-return $default(_that.document,_that.selectedFeatures);case _:
+return $default(_that.document,_that.selectedNodes);case _:
   return null;
 
 }
@@ -207,15 +207,15 @@ return $default(_that.document,_that.selectedFeatures);case _:
 
 
 class _EditorState implements EditorState {
-  const _EditorState({required this.document, required final  List<NodeId> selectedFeatures}): _selectedFeatures = selectedFeatures;
+  const _EditorState({required this.document, required final  List<NodeId> selectedNodes}): _selectedNodes = selectedNodes;
   
 
 @override final  Document document;
- final  List<NodeId> _selectedFeatures;
-@override List<NodeId> get selectedFeatures {
-  if (_selectedFeatures is EqualUnmodifiableListView) return _selectedFeatures;
+ final  List<NodeId> _selectedNodes;
+@override List<NodeId> get selectedNodes {
+  if (_selectedNodes is EqualUnmodifiableListView) return _selectedNodes;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_selectedFeatures);
+  return EqualUnmodifiableListView(_selectedNodes);
 }
 
 
@@ -229,16 +229,16 @@ _$EditorStateCopyWith<_EditorState> get copyWith => __$EditorStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other._selectedFeatures, _selectedFeatures));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other._selectedNodes, _selectedNodes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,document,const DeepCollectionEquality().hash(_selectedFeatures));
+int get hashCode => Object.hash(runtimeType,document,const DeepCollectionEquality().hash(_selectedNodes));
 
 @override
 String toString() {
-  return 'EditorState(document: $document, selectedFeatures: $selectedFeatures)';
+  return 'EditorState(document: $document, selectedNodes: $selectedNodes)';
 }
 
 
@@ -249,7 +249,7 @@ abstract mixin class _$EditorStateCopyWith<$Res> implements $EditorStateCopyWith
   factory _$EditorStateCopyWith(_EditorState value, $Res Function(_EditorState) _then) = __$EditorStateCopyWithImpl;
 @override @useResult
 $Res call({
- Document document, List<NodeId> selectedFeatures
+ Document document, List<NodeId> selectedNodes
 });
 
 
@@ -266,10 +266,10 @@ class __$EditorStateCopyWithImpl<$Res>
 
 /// Create a copy of EditorState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? document = null,Object? selectedFeatures = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? document = null,Object? selectedNodes = null,}) {
   return _then(_EditorState(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
-as Document,selectedFeatures: null == selectedFeatures ? _self._selectedFeatures : selectedFeatures // ignore: cast_nullable_to_non_nullable
+as Document,selectedNodes: null == selectedNodes ? _self._selectedNodes : selectedNodes // ignore: cast_nullable_to_non_nullable
 as List<NodeId>,
   ));
 }

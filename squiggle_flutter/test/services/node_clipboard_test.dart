@@ -9,12 +9,12 @@ import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/feature_clipboard.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('repositionFeaturesToCenter', () {
+  group('repositionNodesToCenter', () {
     test('centers a single feature on the target', () {
       final feature = Feature(
         origin: const Offset(100, 50),
@@ -22,7 +22,7 @@ void main() {
         kind: const FeatureKindRectangle(),
       );
 
-      final repositioned = repositionFeaturesToCenter([
+      final repositioned = repositionNodesToCenter([
         feature,
       ], const Offset(500, 400));
 
@@ -42,7 +42,7 @@ void main() {
         kind: const FeatureKindCircle(),
       );
 
-      final repositioned = repositionFeaturesToCenter([
+      final repositioned = repositionNodesToCenter([
         first,
         second,
       ], const Offset(300, 300));

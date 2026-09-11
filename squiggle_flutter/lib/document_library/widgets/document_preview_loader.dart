@@ -27,11 +27,9 @@ class DocumentPreviewLoader extends StatelessWidget {
           return const ColoredBox(color: Color(0xFF1E1E2E));
         }
 
-        return Placeholder(
-          child: DocumentPreview(
-            nodes: snapshot.data ?? const [],
-            imageRepository: imageRepository,
-          ),
+        return DocumentPreview(
+          nodes: snapshot.data ?? const [],
+          imageRepository: imageRepository,
         );
       },
     );
