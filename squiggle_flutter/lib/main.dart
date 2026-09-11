@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
@@ -14,8 +11,7 @@ import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-
-const _windowChannel = MethodChannel('squiggle/window');
+import 'package:window_manager/window_manager.dart';
 
 String get _buildMode {
   if (kDebugMode) return 'DEBUG';
@@ -29,9 +25,8 @@ void main() async {
   final appTitle =
       'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
 
-  if (Platform.isMacOS) {
-    await _windowChannel.invokeMethod<void>('setTitle', {'title': appTitle});
-  }
+  await windowManager.ensureInitialized();
+  await windowManager.setTitle(appTitle);
 
   final imageRepository = ImageRepository();
   await imageRepository.initialize();
