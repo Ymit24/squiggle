@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'squiggle_color_scheme.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 
 /// Convenience accessors for Squiggle UI colors outside of [BuildContext].
 ///

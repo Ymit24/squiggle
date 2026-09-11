@@ -6,7 +6,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
-Future<Uint8List> _createTestPngBytes({int width = 100, int height = 50}) async {
+Future<Uint8List> _createTestPngBytes({
+  int width = 100,
+  int height = 50,
+}) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   canvas.drawRect(
@@ -25,10 +28,7 @@ void main() {
 
   group('clampImageWorldSize', () {
     test('returns intrinsic size when within max dimension', () {
-      expect(
-        clampImageWorldSize(const Size(400, 200)),
-        const Size(400, 200),
-      );
+      expect(clampImageWorldSize(const Size(400, 200)), const Size(400, 200));
     });
 
     test('scales down large images preserving aspect ratio', () {
@@ -56,16 +56,18 @@ void main() {
       }
     });
 
-    test('importPngBytes writes file, caches image, and returns intrinsic size',
-        () async {
-      final bytes = await _createTestPngBytes();
-      final imported = await repository.importPngBytes(bytes);
+    test(
+      'importPngBytes writes file, caches image, and returns intrinsic size',
+      () async {
+        final bytes = await _createTestPngBytes();
+        final imported = await repository.importPngBytes(bytes);
 
-      expect(imported, isNotNull);
-      expect(imported!.intrinsicSize, const Size(100, 50));
-      expect(await repository.fileFor(imported.imageId).exists(), isTrue);
-      expect(repository.getCached(imported.imageId), isNotNull);
-    });
+        expect(imported, isNotNull);
+        expect(imported!.intrinsicSize, const Size(100, 50));
+        expect(await repository.fileFor(imported.imageId).exists(), isTrue);
+        expect(repository.getCached(imported.imageId), isNotNull);
+      },
+    );
 
     test('requestImage loads from disk when not cached', () async {
       final bytes = await _createTestPngBytes(width: 64, height: 32);

@@ -13,8 +13,7 @@ class StylePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spacing = context.squiggleTheme.spacing;
-    final maxHeight =
-        viewportHeight - spacing.overlayTop - spacing.overlaySide;
+    final maxHeight = viewportHeight - spacing.overlayTop - spacing.overlaySide;
 
     return Positioned(
       top: spacing.overlayTop,

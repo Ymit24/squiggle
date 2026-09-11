@@ -11,7 +11,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
-import 'fling_controller.dart';
+import 'package:squiggle_flutter/widgets/fling_controller.dart';
 
 class PointerRecord {
   final int pointer;

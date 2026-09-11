@@ -3,7 +3,7 @@ import 'package:squiggle_flutter/editor/history/edit.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/node.dart';
 
-export 'edit.dart';
+export 'package:squiggle_flutter/editor/history/edit.dart';
 
 class History extends ChangeNotifier {
   Transaction? _active;

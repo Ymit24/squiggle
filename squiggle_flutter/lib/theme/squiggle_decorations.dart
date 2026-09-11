@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'squiggle_color_scheme.dart';
-import 'squiggle_radii.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
+import 'package:squiggle_flutter/theme/squiggle_radii.dart';
 
 /// Shared [BoxDecoration] and [InputDecoration] builders for UI chrome.
 @immutable
 class SquiggleDecorations {
-  const SquiggleDecorations({
-    required this.colors,
-    required this.radii,
-  });
+  const SquiggleDecorations({required this.colors, required this.radii});
 
   final SquiggleColorScheme colors;
   final SquiggleRadii radii;
@@ -29,9 +26,7 @@ class SquiggleDecorations {
     required bool isActive,
     required bool isHovering,
   }) => BoxDecoration(
-    color: isActive
-        ? colors.surface1
-        : (isHovering ? colors.surface0 : null),
+    color: isActive ? colors.surface1 : (isHovering ? colors.surface0 : null),
     borderRadius: BorderRadius.circular(radii.button),
   );
 

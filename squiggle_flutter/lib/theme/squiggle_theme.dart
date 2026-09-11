@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'squiggle_color_scheme.dart';
-import 'squiggle_decorations.dart';
-import 'squiggle_radii.dart';
-import 'squiggle_spacing.dart';
-import 'squiggle_typography.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
+import 'package:squiggle_flutter/theme/squiggle_decorations.dart';
+import 'package:squiggle_flutter/theme/squiggle_radii.dart';
+import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
+import 'package:squiggle_flutter/theme/squiggle_typography.dart';
 
 /// Central theme extension bundling Squiggle UI tokens.
 @immutable
@@ -50,7 +50,10 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
       typography: typography ?? this.typography.copyWith(colors: nextColors),
       decorations:
           decorations ??
-          this.decorations.copyWith(colors: nextColors, radii: radii ?? this.radii),
+          this.decorations.copyWith(
+            colors: nextColors,
+            radii: radii ?? this.radii,
+          ),
     );
   }
 

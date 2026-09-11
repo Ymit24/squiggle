@@ -63,8 +63,10 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final bounds = widget.state.canvasLocalBounds;
-    final panelWidth =
-        bounds.width.clamp(textEditPanelMinWidth, _panelMaxWidth);
+    final panelWidth = bounds.width.clamp(
+      textEditPanelMinWidth,
+      _panelMaxWidth,
+    );
     final left = bounds.left.clamp(0.0, widget.viewportSize.width - panelWidth);
     var top = bounds.top + _panelOffsetBelow;
     final panelHeight = _panelHeight;
@@ -97,9 +99,7 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: _cancel,
-                  child: ColoredBox(
-                    color: theme.colors.scrim,
-                  ),
+                  child: ColoredBox(color: theme.colors.scrim),
                 ),
                 Positioned(
                   left: left,

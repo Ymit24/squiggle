@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'squiggle_color_scheme.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 
 /// Text style presets for UI chrome.
 @immutable
@@ -29,10 +29,7 @@ class SquiggleTypography {
     fontWeight: FontWeight.w600,
   );
 
-  TextStyle get inputText => TextStyle(
-    color: colors.text,
-    fontSize: 14,
-  );
+  TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
   TextStyle panelButtonLabel({required bool isPrimary}) => TextStyle(
     color: isPrimary ? colors.base : colors.text,
@@ -55,8 +52,6 @@ class SquiggleTypography {
   }
 
   SquiggleTypography lerp(SquiggleTypography other, double t) {
-    return SquiggleTypography(
-      colors: colors.lerp(other.colors, t),
-    );
+    return SquiggleTypography(colors: colors.lerp(other.colors, t));
   }
 }

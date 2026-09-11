@@ -10,10 +10,7 @@ import 'package:super_clipboard/super_clipboard.dart';
 
 /// Result of importing a clipboard image into app storage.
 class ImportedImage {
-  const ImportedImage({
-    required this.imageId,
-    required this.intrinsicSize,
-  });
+  const ImportedImage({required this.imageId, required this.intrinsicSize});
 
   final String imageId;
   final Size intrinsicSize;
@@ -22,7 +19,7 @@ class ImportedImage {
 /// Stores pasted images on disk and lazily decodes them for canvas rendering.
 class ImageRepository {
   ImageRepository({Directory? imagesDirectory})
-      : _imagesDirectory = imagesDirectory; // ignore: prefer_initializing_formals
+    : _imagesDirectory = imagesDirectory; // ignore: prefer_initializing_formals
 
   Directory? _imagesDirectory;
   final Map<String, ui.Image> _cache = {};
@@ -98,10 +95,7 @@ class ImageRepository {
     await fileFor(imageId).writeAsBytes(bytes, flush: true);
     _cache[imageId] = decoded.image;
 
-    return ImportedImage(
-      imageId: imageId,
-      intrinsicSize: decoded.size,
-    );
+    return ImportedImage(imageId: imageId, intrinsicSize: decoded.size);
   }
 
   Future<Uint8List?> _readClipboardPngBytes() async {

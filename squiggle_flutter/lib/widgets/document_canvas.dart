@@ -4,8 +4,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import '../models/document.dart';
-import '../utils/grid.dart';
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/utils/grid.dart';
 
 /// Paints a [Document]'s nodes on an infinite world-space grid.
 class DocumentCanvas extends LeafRenderObjectWidget {

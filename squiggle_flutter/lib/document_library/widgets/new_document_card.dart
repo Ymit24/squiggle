@@ -33,7 +33,9 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
                 : colors.mantle.withValues(alpha: 0.65),
             borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
             border: Border.all(
-              color: _hovering ? colors.accent.withValues(alpha: 0.55) : colors.surface1,
+              color: _hovering
+                  ? colors.accent.withValues(alpha: 0.55)
+                  : colors.surface1,
               width: _hovering ? 1.5 : 1,
             ),
           ),
@@ -42,7 +44,9 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: colors.accent.withValues(alpha: _hovering ? 0.18 : 0.12),
+                  color: colors.accent.withValues(
+                    alpha: _hovering ? 0.18 : 0.12,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: const SizedBox(

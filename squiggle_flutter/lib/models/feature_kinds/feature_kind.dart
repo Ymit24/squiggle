@@ -5,8 +5,8 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
-import '../feature.dart';
-import '../feature_geometry.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';

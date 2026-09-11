@@ -1,5 +1,5 @@
-import 'feature.dart';
-import 'group.dart';
+import 'package:data_models/src/feature.dart';
+import 'package:data_models/src/group.dart';
 
 abstract class Node {
   const Node({required this.id, required this.originX, required this.originY});

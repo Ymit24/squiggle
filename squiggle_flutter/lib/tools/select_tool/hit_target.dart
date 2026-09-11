@@ -1,7 +1,7 @@
 import 'package:squiggle_flutter/models/node.dart';
 
-import 'polyline_handle.dart';
-import 'resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 
 class HitTarget {}
 

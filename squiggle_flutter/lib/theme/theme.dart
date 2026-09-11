@@ -1,8 +1,8 @@
-export 'document_colors.dart';
-export 'squiggle_color_scheme.dart';
-export 'squiggle_colors.dart';
-export 'squiggle_decorations.dart';
-export 'squiggle_radii.dart';
-export 'squiggle_spacing.dart';
-export 'squiggle_theme.dart';
-export 'squiggle_typography.dart';
+export 'package:squiggle_flutter/theme/document_colors.dart';
+export 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
+export 'package:squiggle_flutter/theme/squiggle_colors.dart';
+export 'package:squiggle_flutter/theme/squiggle_decorations.dart';
+export 'package:squiggle_flutter/theme/squiggle_radii.dart';
+export 'package:squiggle_flutter/theme/squiggle_spacing.dart';
+export 'package:squiggle_flutter/theme/squiggle_theme.dart';
+export 'package:squiggle_flutter/theme/squiggle_typography.dart';
