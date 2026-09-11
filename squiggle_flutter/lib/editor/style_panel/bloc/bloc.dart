@@ -51,7 +51,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
         .whereType<Feature>()
         .map((feature) => feature.kind)
         .toList();
-    if (kinds.isEmpty) {
+    final showStyleControls = kinds.isNotEmpty;
+    if (!showStyleControls && selectedFeatureIds.length < 2) {
       return const StylePanelHiddenState();
     }
 
@@ -67,7 +68,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final fillMixed = fillStates.length > 1;
 
     int? activeStrokePresetIndex;
-    if (!strokeMixed && !isStrokeNone) {
+    if (showStyleControls && !strokeMixed && !isStrokeNone) {
       activeStrokePresetIndex = strokePresetIndexForColor(
         kinds.first.strokeColor,
       );
@@ -79,7 +80,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     }
 
     StrokeWidthPreset? activeStrokeWidth;
-    if (!strokeWidthMixed) {
+    if (showStyleControls && !strokeWidthMixed) {
       activeStrokeWidth = StrokeWidthPreset.fromWidth(kinds.first.strokeWidth);
     }
 
@@ -120,6 +121,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
 
     return StylePanelShowingState(
       selectedFeatureIds: selectedFeatureIds,
+      showStyleControls: showStyleControls,
       activeStrokePresetIndex: activeStrokePresetIndex,
       isStrokeNone: isStrokeNone,
       strokeMixed: strokeMixed,

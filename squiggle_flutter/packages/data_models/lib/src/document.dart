@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'node.dart';
 
-const dataModelFormatVersion = 1;
+const dataModelFormatVersion = 2;
 
 final class Document {
   const Document({this.name = 'Untitled', this.nodes = const []});

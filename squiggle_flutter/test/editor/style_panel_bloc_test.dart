@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_layout.dart';
+import 'package:squiggle_flutter/models/group.dart';
 
 void main() {
   group('StylePanelBloc', () {
@@ -70,6 +71,32 @@ void main() {
         (showingState as StylePanelShowingState).selectedFeatureIds,
         hasLength(1),
       );
+      await bloc.close();
+    });
+
+    test('group-only selections show layout controls and can align', () async {
+      final first = Group(origin: Offset.zero, children: [_groupChild()]);
+      final second = Group(
+        origin: const Offset(200, 50),
+        children: [_groupChild()],
+      );
+      context = EditorContext(document: Document()..addNodes([first, second]));
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+      context.selection.setSelection([first.id, second.id]);
+
+      final showing =
+          await bloc.stream.firstWhere(
+                (state) => state is StylePanelShowingState,
+              )
+              as StylePanelShowingState;
+      expect(showing.showStyleControls, isFalse);
+      expect(showing.selectedFeatureIds, hasLength(2));
+
+      bloc.add(const AlignFeaturesEvent(FeatureAlignment.left));
+      await Future<void>.delayed(Duration.zero);
+      expect(second.localBounds().left, first.localBounds().left);
       await bloc.close();
     });
 
@@ -415,3 +442,9 @@ void main() {
     });
   });
 }
+
+Feature _groupChild() => Feature(
+  origin: Offset.zero,
+  size: const Size(20, 20),
+  kind: const FeatureKindRectangle(),
+);

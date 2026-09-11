@@ -119,7 +119,6 @@ class DocumentStorage {
       id: id,
       name: documentName,
       updatedAt: DateTime.now(),
-      featureCount: 0,
     );
     await saveDocument(id, Document(), documentName);
     return info;
@@ -195,7 +194,6 @@ class DocumentStorage {
         id: id,
         name: document.name,
         updatedAt: stat.modified,
-        featureCount: document.nodes.length,
       );
     } on Object {
       return null;
