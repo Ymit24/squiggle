@@ -62,18 +62,9 @@ class SquiggleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Squiggle',
+      title: 'Squiggle - v$appVersion $_buildMode',
       theme: SquiggleThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        return Banner(
-          message: 'v$appVersion $_buildMode',
-          location: BannerLocation.topStart,
-          color: Theme.of(context).colorScheme.primary,
-          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-          child: child!,
-        );
-      },
       home: SquiggleHomePage(
         imageRepository: imageRepository,
         context: this.context,
