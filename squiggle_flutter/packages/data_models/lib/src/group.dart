@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 
-import 'node.dart';
+import 'package:data_models/src/node.dart';
 
 final class Group extends Node {
   const Group({

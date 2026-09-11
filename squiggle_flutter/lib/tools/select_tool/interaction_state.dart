@@ -6,8 +6,8 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'select_tool.dart';
-import 'hit_target.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
 
 abstract class InteractionState {
   final SelectTool parent;

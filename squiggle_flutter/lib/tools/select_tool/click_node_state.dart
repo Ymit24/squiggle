@@ -6,10 +6,10 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'duplicate_state.dart';
-import 'idle_interaction_state.dart';
-import 'interaction_state.dart';
-import 'translate_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/duplicate_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/translate_state.dart';
 
 class ClickNodeState extends InteractionState {
   ClickNodeState({

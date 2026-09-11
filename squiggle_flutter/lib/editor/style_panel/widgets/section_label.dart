@@ -12,10 +12,7 @@ class SectionLabel extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(bottom: theme.spacing.panelLabelSpacing),
-      child: Text(
-        label,
-        style: theme.typography.sectionLabel,
-      ),
+      child: Text(label, style: theme.typography.sectionLabel),
     );
   }
 }

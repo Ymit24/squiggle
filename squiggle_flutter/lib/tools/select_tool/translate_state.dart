@@ -7,9 +7,9 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'duplicate_state.dart';
-import 'idle_interaction_state.dart';
-import 'interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/duplicate_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 
 class TranslateState extends InteractionState {
   TranslateState({

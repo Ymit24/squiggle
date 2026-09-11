@@ -76,14 +76,10 @@ class _TextEditPanelState extends State<TextEditPanel> {
                 constraints: BoxConstraints(maxHeight: widget.maxHeight),
                 child: Shortcuts(
                   shortcuts: const {
-                    SingleActivator(
-                      LogicalKeyboardKey.enter,
-                      meta: true,
-                    ): _AcceptTextIntent(),
-                    SingleActivator(
-                      LogicalKeyboardKey.enter,
-                      control: true,
-                    ): _AcceptTextIntent(),
+                    SingleActivator(LogicalKeyboardKey.enter, meta: true):
+                        _AcceptTextIntent(),
+                    SingleActivator(LogicalKeyboardKey.enter, control: true):
+                        _AcceptTextIntent(),
                   },
                   child: Actions(
                     actions: {
@@ -112,10 +108,7 @@ class _TextEditPanelState extends State<TextEditPanel> {
                 spacing: spacing.textEditButtonSpacing,
                 runSpacing: spacing.textEditButtonSpacing,
                 children: [
-                  _PanelButton(
-                    label: 'Cancel',
-                    onPressed: widget.onCancel,
-                  ),
+                  _PanelButton(label: 'Cancel', onPressed: widget.onCancel),
                   _PanelButton(
                     label: 'Accept',
                     isPrimary: true,

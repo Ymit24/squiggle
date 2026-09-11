@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:data_models/data_models.dart' as data;
 
-import 'feature.dart';
-import 'node_id.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 /// Editable document tree with document-wide node IDs.
 ///

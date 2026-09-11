@@ -39,7 +39,8 @@ class DocumentLibraryPage extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(32, 28, 32, 8),
                     child: _LibraryHeader(
                       documentCount: documents.length,
-                      onCreateNamed: () => _createNamedDocument(context, library),
+                      onCreateNamed: () =>
+                          _createNamedDocument(context, library),
                     ),
                   ),
                 ),
@@ -48,19 +49,22 @@ class DocumentLibraryPage extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(32, 16, 32, 40),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final crossAxisCount = _gridColumnCount(constraints.maxWidth);
+                        final crossAxisCount = _gridColumnCount(
+                          constraints.maxWidth,
+                        );
                         const spacing = 20.0;
                         const cardAspectRatio = 0.82;
 
                         return GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            mainAxisSpacing: spacing,
-                            crossAxisSpacing: spacing,
-                            childAspectRatio: cardAspectRatio,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                mainAxisSpacing: spacing,
+                                crossAxisSpacing: spacing,
+                                childAspectRatio: cardAspectRatio,
+                              ),
                           itemCount: documents.length + 1,
                           itemBuilder: (context, index) {
                             if (index == 0) {
@@ -75,16 +79,10 @@ class DocumentLibraryPage extends StatelessWidget {
                               isCurrent: document.id == currentId,
                               canDelete: documents.length > 1,
                               onOpen: () => onOpenDocument(document.id),
-                              onRename: () => _renameDocument(
-                                context,
-                                library,
-                                document,
-                              ),
-                              onDelete: () => _deleteDocument(
-                                context,
-                                library,
-                                document,
-                              ),
+                              onRename: () =>
+                                  _renameDocument(context, library, document),
+                              onDelete: () =>
+                                  _deleteDocument(context, library, document),
                             );
                           },
                         );
@@ -163,12 +161,17 @@ class DocumentLibraryPage extends StatelessWidget {
         ),
         content: Text(
           '"${document.name}" will be permanently deleted.',
-          style: theme.typography.inputText.copyWith(color: theme.colors.subtext0),
+          style: theme.typography.inputText.copyWith(
+            color: theme.colors.subtext0,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: TextStyle(color: theme.colors.subtext0)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.colors.subtext0),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -262,7 +265,10 @@ class _LibraryHeaderState extends State<_LibraryHeader> {
                 isHovering: _hovering,
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

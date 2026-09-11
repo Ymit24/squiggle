@@ -21,7 +21,10 @@ List<Offset> localPointsFromWorld(List<Offset> worldPoints, Offset reference) {
   ];
 }
 
-Rect envelopeOfPoints(List<Offset> worldPoints, {required double strokePadding}) {
+Rect envelopeOfPoints(
+  List<Offset> worldPoints, {
+  required double strokePadding,
+}) {
   if (worldPoints.isEmpty) {
     return Rect.fromLTWH(0, 0, kMinEnvelopeDimension, kMinEnvelopeDimension);
   }
@@ -56,7 +59,8 @@ double distanceToSegment(Offset point, Offset segmentStart, Offset segmentEnd) {
     return (point - segmentStart).distance;
   }
 
-  final t = ((point.dx - segmentStart.dx) * ab.dx +
+  final t =
+      ((point.dx - segmentStart.dx) * ab.dx +
           (point.dy - segmentStart.dy) * ab.dy) /
       abLengthSquared;
   final clamped = t.clamp(0.0, 1.0);
@@ -108,18 +112,14 @@ double direction(Offset segmentStart, Offset segmentEnd, Offset point) {
 }
 
 bool onSegment(Offset segmentStart, Offset segmentEnd, Offset point) {
-  return point.dx <= (segmentStart.dx > segmentEnd.dx
-              ? segmentStart.dx
-              : segmentEnd.dx) &&
-      point.dx >= (segmentStart.dx < segmentEnd.dx
-              ? segmentStart.dx
-              : segmentEnd.dx) &&
-      point.dy <= (segmentStart.dy > segmentEnd.dy
-              ? segmentStart.dy
-              : segmentEnd.dy) &&
-      point.dy >= (segmentStart.dy < segmentEnd.dy
-              ? segmentStart.dy
-              : segmentEnd.dy);
+  return point.dx <=
+          (segmentStart.dx > segmentEnd.dx ? segmentStart.dx : segmentEnd.dx) &&
+      point.dx >=
+          (segmentStart.dx < segmentEnd.dx ? segmentStart.dx : segmentEnd.dx) &&
+      point.dy <=
+          (segmentStart.dy > segmentEnd.dy ? segmentStart.dy : segmentEnd.dy) &&
+      point.dy >=
+          (segmentStart.dy < segmentEnd.dy ? segmentStart.dy : segmentEnd.dy);
 }
 
 /// Builds a rect that expands symmetrically from [center] to [point].
@@ -279,8 +279,9 @@ Rect symmetricRectWithAspectRatio(
   if (resizeHorizontal && resizeVertical) {
     final halfWidth = (dragged.dx - center.dx).abs();
     final halfHeight = (dragged.dy - center.dy).abs();
-    final effectiveRatio =
-        halfHeight == 0 ? double.infinity : halfWidth / halfHeight;
+    final effectiveRatio = halfHeight == 0
+        ? double.infinity
+        : halfWidth / halfHeight;
 
     late double width;
     late double height;

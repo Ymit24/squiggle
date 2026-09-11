@@ -6,8 +6,8 @@ import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
-import 'interaction_state.dart';
-import 'translate_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/translate_state.dart';
 
 class DuplicateState extends InteractionState {
   DuplicateState({

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'node.dart';
+import 'package:data_models/src/node.dart';
 
 const dataModelFormatVersion = 2;
 

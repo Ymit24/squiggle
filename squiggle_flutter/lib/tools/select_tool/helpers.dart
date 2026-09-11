@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'hit_target.dart';
-import 'polyline_handle_util.dart';
-import 'resize_handle_util.dart';
+import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
+import 'package:squiggle_flutter/tools/select_tool/polyline_handle_util.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
 
 enum SelectionResizeHandle {
   topLeft,

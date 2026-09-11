@@ -6,9 +6,9 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'idle_interaction_state.dart';
-import 'interaction_state.dart';
-import 'polyline_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
 
 class DragPolylineHandleState extends InteractionState {
   DragPolylineHandleState({required super.parent, required this._handle});

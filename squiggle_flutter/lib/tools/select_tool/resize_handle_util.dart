@@ -4,7 +4,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 
-import 'resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 
 class ResizeHandleUtil {
   static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {

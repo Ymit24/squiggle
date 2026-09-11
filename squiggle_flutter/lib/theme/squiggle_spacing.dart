@@ -121,9 +121,11 @@ class SquiggleSpacing {
       swatchGap: swatchGap ?? this.swatchGap,
       swatchBorderWidth: swatchBorderWidth ?? this.swatchBorderWidth,
       textEditPanelPadding: textEditPanelPadding ?? this.textEditPanelPadding,
-      textEditButtonSpacing: textEditButtonSpacing ?? this.textEditButtonSpacing,
+      textEditButtonSpacing:
+          textEditButtonSpacing ?? this.textEditButtonSpacing,
       textEditButtonHorizontalPadding:
-          textEditButtonHorizontalPadding ?? this.textEditButtonHorizontalPadding,
+          textEditButtonHorizontalPadding ??
+          this.textEditButtonHorizontalPadding,
       textEditButtonVerticalPadding:
           textEditButtonVerticalPadding ?? this.textEditButtonVerticalPadding,
     );
@@ -135,21 +137,45 @@ class SquiggleSpacing {
       overlaySide: _lerpDouble(overlaySide, other.overlaySide, t),
       toolbarPadding: _lerpDouble(toolbarPadding, other.toolbarPadding, t),
       toolbarGap: _lerpDouble(toolbarGap, other.toolbarGap, t),
-      toolbarButtonSize: _lerpDouble(toolbarButtonSize, other.toolbarButtonSize, t),
+      toolbarButtonSize: _lerpDouble(
+        toolbarButtonSize,
+        other.toolbarButtonSize,
+        t,
+      ),
       toolbarIconSize: _lerpDouble(toolbarIconSize, other.toolbarIconSize, t),
-      toolbarDividerHeight:
-          _lerpDouble(toolbarDividerHeight, other.toolbarDividerHeight, t),
+      toolbarDividerHeight: _lerpDouble(
+        toolbarDividerHeight,
+        other.toolbarDividerHeight,
+        t,
+      ),
       panelPadding: _lerpDouble(panelPadding, other.panelPadding, t),
-      panelSectionSpacing:
-          _lerpDouble(panelSectionSpacing, other.panelSectionSpacing, t),
-      panelLabelSpacing: _lerpDouble(panelLabelSpacing, other.panelLabelSpacing, t),
+      panelSectionSpacing: _lerpDouble(
+        panelSectionSpacing,
+        other.panelSectionSpacing,
+        t,
+      ),
+      panelLabelSpacing: _lerpDouble(
+        panelLabelSpacing,
+        other.panelLabelSpacing,
+        t,
+      ),
       swatchSize: _lerpDouble(swatchSize, other.swatchSize, t),
       swatchGap: _lerpDouble(swatchGap, other.swatchGap, t),
-      swatchBorderWidth: _lerpDouble(swatchBorderWidth, other.swatchBorderWidth, t),
-      textEditPanelPadding:
-          _lerpDouble(textEditPanelPadding, other.textEditPanelPadding, t),
-      textEditButtonSpacing:
-          _lerpDouble(textEditButtonSpacing, other.textEditButtonSpacing, t),
+      swatchBorderWidth: _lerpDouble(
+        swatchBorderWidth,
+        other.swatchBorderWidth,
+        t,
+      ),
+      textEditPanelPadding: _lerpDouble(
+        textEditPanelPadding,
+        other.textEditPanelPadding,
+        t,
+      ),
+      textEditButtonSpacing: _lerpDouble(
+        textEditButtonSpacing,
+        other.textEditButtonSpacing,
+        t,
+      ),
       textEditButtonHorizontalPadding: _lerpDouble(
         textEditButtonHorizontalPadding,
         other.textEditButtonHorizontalPadding,

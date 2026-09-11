@@ -8,13 +8,13 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'click_canvas_state.dart';
-import 'click_node_state.dart';
-import 'drag_polyline_handle_state.dart';
-import 'helpers.dart';
-import 'hit_target.dart';
-import 'interaction_state.dart';
-import 'resize_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/click_canvas_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/click_node_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/drag_polyline_handle_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
+import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_state.dart';
 
 class IdleInteractionState extends InteractionState {
   IdleInteractionState({required super.parent});

@@ -41,10 +41,7 @@ void main() {
       LogicalKeyboardKey.metaLeft,
       platform: 'macos',
     );
-    await tester.sendKeyDownEvent(
-      LogicalKeyboardKey.enter,
-      platform: 'macos',
-    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.enter, platform: 'macos');
     await tester.pump();
 
     expect(acceptedText, 'hello');

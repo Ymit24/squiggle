@@ -5,10 +5,10 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
-import 'helpers.dart';
-import 'idle_interaction_state.dart';
-import 'interaction_state.dart';
-import 'resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 
 class ResizeState extends InteractionState {
   ResizeState({
