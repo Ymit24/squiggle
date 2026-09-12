@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateTextTool extends Tool {
@@ -62,6 +63,7 @@ class CreateTextTool extends Tool {
         ),
       ),
     );
+    context.setTool(SelectTool());
     return true;
   }
 }

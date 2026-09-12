@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateFeatureTool extends Tool {
@@ -105,6 +106,7 @@ class CreateFeatureTool extends Tool {
         );
       });
       _state = const _Idle();
+      context.setTool(SelectTool());
     }
     return true;
   }
