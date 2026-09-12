@@ -56,12 +56,12 @@ void main() {
       });
       context.selection.selectNode(context.document.nodes.first.id);
       expect(context.document.nodes, hasLength(1));
-      expect(context.selection.selectedNodes, hasLength(1));
+      expect(context.selection.selectedNodeIds, hasLength(1));
 
       await library.createDocument(name: 'Two');
       expect(library.currentDocument?.name, 'Two');
       expect(context.document.nodes, isEmpty);
-      expect(context.selection.selectedNodes, isEmpty);
+      expect(context.selection.selectedNodeIds, isEmpty);
 
       final one = library.documents.firstWhere((doc) => doc.name == 'One');
       await library.openDocument(one.id);

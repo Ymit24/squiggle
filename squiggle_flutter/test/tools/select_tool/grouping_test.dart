@@ -16,17 +16,17 @@ void main() {
 
     // The point is in the gap between the two children.
     harness.click(const Offset(250, 250));
-    expect(harness.context.selection.selectedNodes, [group.id]);
+    expect(harness.context.selection.selectedNodeIds, [group.id]);
     harness.context.selection.clearSelection();
     harness.pointerDown(const Offset(240, 180));
     harness.pointerMove(const Offset(260, 260));
     harness.pointerUp(const Offset(260, 260));
-    expect(harness.context.selection.selectedNodes, [group.id]);
+    expect(harness.context.selection.selectedNodeIds, [group.id]);
 
     final before = document.toDataModel().nodes;
     expect(harness.keyDown(LogicalKeyboardKey.delete), isTrue);
     expect(document.nodes, isEmpty);
-    expect(harness.context.selection.selectedNodes, isEmpty);
+    expect(harness.context.selection.selectedNodeIds, isEmpty);
     harness.context.history.undo();
     expect(document.toDataModel().nodes, before);
     for (final child in children) {
@@ -55,7 +55,7 @@ void main() {
         try {
           expect(harness.keyDown(LogicalKeyboardKey.keyG), isTrue);
           final group = document.nodes.single as Group;
-          expect(context.selection.selectedNodes, [group.id]);
+          expect(context.selection.selectedNodeIds, [group.id]);
           expect(group.children.map((node) => node.id), ids);
           expect(group.children.map((node) => node.globalBounds()), bounds);
           expect(group.children.every((node) => node.parent == group), isTrue);
@@ -76,7 +76,7 @@ void main() {
           }
           expect(document.nodes.map((node) => node.id), ids);
           expect(document.nodes.map((node) => node.globalBounds()), bounds);
-          expect(context.selection.selectedNodes, ids);
+          expect(context.selection.selectedNodeIds, ids);
           expect(
             document.nodes.every((node) => node.parent == document),
             isTrue,

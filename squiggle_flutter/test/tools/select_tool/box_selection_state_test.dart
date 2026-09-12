@@ -15,7 +15,7 @@ void main() {
       harness.pointerMove(const Offset(120, 120));
       harness.pointerUp(const Offset(120, 120));
 
-      expect(harness.context.selection.selectedNodes, [
+      expect(harness.context.selection.selectedNodeIds, [
         harness.context.document.nodes.first.id,
       ]);
     });
@@ -23,11 +23,11 @@ void main() {
     test('updates selection as the marquee changes', () {
       harness.pointerDown(const Offset(-20, -20));
       harness.pointerMove(const Offset(320, 120));
-      expect(harness.context.selection.selectedNodes, hasLength(2));
+      expect(harness.context.selection.selectedNodeIds, hasLength(2));
 
       harness.pointerMove(const Offset(120, 120));
 
-      expect(harness.context.selection.selectedNodes, [
+      expect(harness.context.selection.selectedNodeIds, [
         harness.context.document.nodes.first.id,
       ]);
     });
@@ -40,7 +40,7 @@ void main() {
       harness.pointerMove(const Offset(320, 120), shift: true);
       harness.pointerUp(const Offset(320, 120), shift: true);
 
-      expect(harness.context.selection.selectedNodes, [
+      expect(harness.context.selection.selectedNodeIds, [
         features.first.id,
         features.last.id,
       ]);

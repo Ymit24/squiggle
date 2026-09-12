@@ -47,7 +47,7 @@ class SelectTool extends Tool {
       // TODO: Move this somewhere else. we will need something like
       // this during normal undo/redo anyway.
       context.selection.setSelection(
-        context.selection.selectedNodes.where(
+        context.selection.selectedNodeIds.where(
           (id) => context.document.nodeById(id) != null,
         ),
       );

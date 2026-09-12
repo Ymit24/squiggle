@@ -31,7 +31,7 @@ abstract final class SelectionPainter {
     Camera camera,
     EditorContext context,
   ) {
-    for (final featureId in context.selection.selectedNodes) {
+    for (final featureId in context.selection.selectedNodeIds) {
       final node = context.document.nodeById(featureId);
       if (node != null) {
         paintSelectionBox(canvas, camera, node.localBounds());
@@ -44,9 +44,9 @@ abstract final class SelectionPainter {
     Camera camera,
     EditorContext context,
   ) {
-    if (context.selection.selectedNodes.length != 1) return;
+    if (context.selection.selectedNodeIds.length != 1) return;
 
-    final selectedId = context.selection.selectedNodes.single;
+    final selectedId = context.selection.selectedNodeIds.single;
     final feature = context.document.featureById(selectedId);
     if (feature == null || feature.kind is! FeatureKindPolyline) return;
 

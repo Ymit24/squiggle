@@ -57,7 +57,7 @@ Future<void> copySelectedNodesToClipboard({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
-  final selectedIds = context.selection.selectedNodes;
+  final selectedIds = context.selection.selectedNodeIds;
   if (selectedIds.isEmpty) {
     return;
   }

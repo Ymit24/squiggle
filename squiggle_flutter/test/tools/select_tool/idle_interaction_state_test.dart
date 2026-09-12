@@ -27,7 +27,7 @@ void main() {
       harness.doubleClick(const Offset(50, 24));
       await Future<void>.delayed(Duration.zero);
 
-      expect(harness.context.selection.selectedNodes, [feature.id]);
+      expect(harness.context.selection.selectedNodeIds, [feature.id]);
       expect(sessions, hasLength(1));
       final session = sessions.single as EditTextEditSession;
       expect(session.featureId, feature.id);
@@ -67,7 +67,7 @@ void main() {
 
         expect(harness.keyDown(key), isTrue);
         expect(harness.context.document.featureById(feature.id), isNull);
-        expect(harness.context.selection.selectedNodes, isEmpty);
+        expect(harness.context.selection.selectedNodeIds, isEmpty);
 
         harness.context.history.undo();
         expect(harness.context.document.featureById(feature.id), isNotNull);

@@ -16,7 +16,7 @@ void main() {
     test('clears selection on an empty click', () {
       harness.click(const Offset(500, 500));
 
-      expect(harness.context.selection.selectedNodes, isEmpty);
+      expect(harness.context.selection.selectedNodeIds, isEmpty);
     });
 
     test('shift-click on empty canvas preserves selection', () {
@@ -24,7 +24,7 @@ void main() {
 
       harness.click(const Offset(500, 500), shift: true);
 
-      expect(harness.context.selection.selectedNodes, [selectedId]);
+      expect(harness.context.selection.selectedNodeIds, [selectedId]);
     });
   });
 }
