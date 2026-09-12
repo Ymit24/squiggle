@@ -3,6 +3,7 @@ import 'package:squiggle_flutter/editor/bloc/notifier_stream.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
@@ -30,11 +31,11 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     RequestWatchToolbarStateEvent event,
     Emitter<ToolbarState> emit,
   ) async {
-    emit(_stateWithHistory(state));
+    emit(_stateFromContext(state));
 
     await emit.forEach(
-      notifierChangesStream(_context.history),
-      onData: (_) => _stateWithHistory(state),
+      notifierChangesStream(_context),
+      onData: (_) => _stateFromContext(state),
     );
   }
 
@@ -91,5 +92,19 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
       canUndo: _context.history.canUndo,
       canRedo: _context.history.canRedo,
     );
+  }
+
+  ToolbarState _stateFromContext(ToolbarState state) {
+    final activeTool = switch (_context.tool.activeTool) {
+      SelectTool() => ActiveToolKind.select,
+      CreateFeatureTool(kind: FeatureKindRectangle()) =>
+        ActiveToolKind.createRect,
+      CreateFeatureTool(kind: FeatureKindCircle()) =>
+        ActiveToolKind.createCircle,
+      CreateLineTool() => ActiveToolKind.createLine,
+      CreateTextTool() => ActiveToolKind.createText,
+      _ => state.activeTool,
+    };
+    return _stateWithHistory(state.copyWith(activeTool: activeTool));
   }
 }
