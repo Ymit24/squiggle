@@ -89,17 +89,18 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
 
     context.history.run('Edit text', (transaction) {
       transaction.watch([feature]);
-      final bounds = feature.localBounds();
-      final newKind = FeatureKindText(
-        contents,
-        fontSize: labelKind.fontSize,
-        horizontalAlignment: labelKind.horizontalAlignment,
-        verticalAlignment: labelKind.verticalAlignment,
-        strokeColor: labelKind.strokeColor,
-        fillColor: labelKind.fillColor,
-        strokeWidth: labelKind.strokeWidth,
-      ).fittedToBounds(width: bounds.width, height: bounds.height);
-      feature.setKind(newKind);
+      // final bounds = feature.localBounds();
+      labelKind.label = contents;
+      // final newKind = FeatureKindText(
+      //   contents,
+      //   fontSize: labelKind.fontSize,
+      //   horizontalAlignment: labelKind.horizontalAlignment,
+      //   verticalAlignment: labelKind.verticalAlignment,
+      //   strokeColor: labelKind.strokeColor,
+      //   fillColor: labelKind.fillColor,
+      //   strokeWidth: labelKind.strokeWidth,
+      // ).fittedToBounds(width: bounds.width, height: bounds.height);
+      // feature.setKind(newKind);
     }, container: feature.parent);
   }
 }

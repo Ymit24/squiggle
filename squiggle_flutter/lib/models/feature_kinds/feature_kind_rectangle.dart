@@ -4,7 +4,7 @@ final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
   FeatureKindRectangle({super.strokeColor, super.fillColor, super.strokeWidth});
 
   @override
-  String? label = "Yeah";
+  String? label;
 
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
@@ -25,6 +25,10 @@ final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);
+    if (label != null) {
+      print("D: rect has label! $label");
+      paintLabel(feature, canvas, imageRepository);
+    }
     canvas.drawRect(
       bounds,
       Paint()
@@ -36,7 +40,7 @@ final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
 
   @override
   // TODO: implement fontSize
-  double get fontSize => 12;
+  double get fontSize => 36;
 
   @override
   // TODO: implement horizontalAlignment

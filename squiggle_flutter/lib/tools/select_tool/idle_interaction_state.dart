@@ -102,7 +102,7 @@ class IdleInteractionState extends InteractionState {
       context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
-          initialContents: text.label ?? "(none)",
+          initialContents: text.label ?? "",
           canvasLocalBounds: camera.worldToScreenBounds(feature.localBounds()),
         ),
       );

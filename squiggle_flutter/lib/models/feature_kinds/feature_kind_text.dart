@@ -14,6 +14,60 @@ mixin FeatureKindWithLabel {
   Color get strokeColor;
   Color get fillColor;
   double get strokeWidth;
+
+  void paintLabel(
+    Feature feature,
+    Canvas canvas,
+    ImageRepository imageRepository,
+  ) {
+    if (label != null && label!.isEmpty) return;
+
+    final worldBounds = feature.localBounds();
+    final paragraphStyle = _paragraphStyle(fontSize);
+
+    final strokeParagraph = _layoutParagraph(
+      paragraphStyle: paragraphStyle,
+      textStyle: ui.TextStyle(
+        foreground: Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..color = strokeColor,
+        fontSize: fontSize,
+      ),
+      width: worldBounds.width,
+    );
+    final fillParagraph = _layoutParagraph(
+      paragraphStyle: paragraphStyle,
+      textStyle: ui.TextStyle(color: fillColor, fontSize: fontSize),
+      width: worldBounds.width,
+    );
+
+    final position = textOriginInBounds(
+      bounds: worldBounds,
+      textHeight: fillParagraph.height,
+      verticalAlignment: verticalAlignment,
+    );
+
+    canvas.drawParagraph(strokeParagraph, position);
+    canvas.drawParagraph(fillParagraph, position);
+  }
+
+  ui.ParagraphStyle _paragraphStyle(double fontSize) => ui.ParagraphStyle(
+    textAlign: horizontalAlignment.textAlign,
+    fontSize: fontSize,
+    textDirection: TextDirection.ltr,
+  );
+
+  ui.Paragraph _layoutParagraph({
+    required ui.ParagraphStyle paragraphStyle,
+    required ui.TextStyle textStyle,
+    required double width,
+  }) {
+    final builder = ui.ParagraphBuilder(paragraphStyle)
+      ..pushStyle(textStyle)
+      ..addText(label ?? "");
+    return builder.build()..layout(ui.ParagraphConstraints(width: width));
+  }
 }
 
 final class FeatureKindText extends FeatureKind with FeatureKindWithLabel {
@@ -218,35 +272,6 @@ final class FeatureKindText extends FeatureKind with FeatureKindWithLabel {
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    if (contents.isEmpty) return;
-
-    final worldBounds = feature.localBounds();
-    final paragraphStyle = _paragraphStyle(fontSize);
-
-    final strokeParagraph = _layoutParagraph(
-      paragraphStyle: paragraphStyle,
-      textStyle: ui.TextStyle(
-        foreground: Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..color = strokeColor,
-        fontSize: fontSize,
-      ),
-      width: worldBounds.width,
-    );
-    final fillParagraph = _layoutParagraph(
-      paragraphStyle: paragraphStyle,
-      textStyle: ui.TextStyle(color: fillColor, fontSize: fontSize),
-      width: worldBounds.width,
-    );
-
-    final position = textOriginInBounds(
-      bounds: worldBounds,
-      textHeight: fillParagraph.height,
-      verticalAlignment: verticalAlignment,
-    );
-
-    canvas.drawParagraph(strokeParagraph, position);
-    canvas.drawParagraph(fillParagraph, position);
+    paintLabel(feature, canvas, imageRepository);
   }
 }

@@ -12,7 +12,7 @@ class CreateFeatureTool extends Tool {
   CreateFeatureTool({required this.kind}) : _state = const _Idle();
 
   factory CreateFeatureTool.rect() =>
-      CreateFeatureTool(kind: const FeatureKindRectangle());
+      CreateFeatureTool(kind: FeatureKindRectangle());
 
   factory CreateFeatureTool.circle() =>
       CreateFeatureTool(kind: const FeatureKindCircle());

@@ -191,7 +191,7 @@ Feature rect([int id = 0]) => Feature(
   id: NodeId.newId(id),
   origin: Offset.zero,
   size: const Size(10, 10),
-  kind: const FeatureKindRectangle(),
+  kind: FeatureKindRectangle(),
 );
 
 class FailingFeature extends Feature {
@@ -199,7 +199,7 @@ class FailingFeature extends Feature {
     : super(
         origin: Offset.zero,
         size: const Size(10, 10),
-        kind: const FeatureKindRectangle(),
+        kind: FeatureKindRectangle(),
       );
   bool fail = false;
   @override
