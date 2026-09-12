@@ -47,7 +47,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     }
 
     final kinds = selectedNodeIds
-        .map(context.document.featureById)
+        .map(context.document.requireNodeById)
         .whereType<Feature>()
         .map((feature) => feature.kind)
         .toList();
@@ -308,7 +308,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   List<Node> _nodesById(Iterable<NodeId> ids) => [
-    for (final id in ids) ?context.document.nodeById(id),
+    for (final id in ids) context.document.requireNodeById(id),
   ];
 
   void _applyOffsets(Map<NodeId, Offset> offsets) {

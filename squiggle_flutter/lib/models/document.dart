@@ -62,6 +62,12 @@ class Document extends NodeContainer {
 
   Node? nodeById(NodeId id) => _nodesById[id];
 
+  /// Returns the node with [id], or throws if it is not in this document.
+  Node requireNodeById(NodeId id) {
+    return _nodesById[id] ??
+        (throw StateError('Node with id ${id.value} does not exist'));
+  }
+
   Feature? featureById(NodeId id) {
     final node = _nodesById[id];
     return node is Feature ? node : null;

@@ -32,10 +32,8 @@ abstract final class SelectionPainter {
     EditorContext context,
   ) {
     for (final featureId in context.selection.selectedNodeIds) {
-      final node = context.document.nodeById(featureId);
-      if (node != null) {
-        paintSelectionBox(canvas, camera, node.localBounds());
-      }
+      final node = context.document.requireNodeById(featureId);
+      paintSelectionBox(canvas, camera, node.localBounds());
     }
   }
 
@@ -47,11 +45,11 @@ abstract final class SelectionPainter {
     if (context.selection.selectedNodeIds.length != 1) return;
 
     final selectedId = context.selection.selectedNodeIds.single;
-    final feature = context.document.featureById(selectedId);
-    if (feature == null || feature.kind is! FeatureKindPolyline) return;
+    final node = context.document.requireNodeById(selectedId);
+    if (node is! Feature || node.kind is! FeatureKindPolyline) return;
 
-    final kind = feature.kind as FeatureKindPolyline;
-    for (final point in worldPoints(feature.origin, kind.localPoints)) {
+    final kind = node.kind as FeatureKindPolyline;
+    for (final point in worldPoints(node.origin, kind.localPoints)) {
       paintVertexHandle(canvas, camera, point);
     }
   }

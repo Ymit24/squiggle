@@ -25,8 +25,7 @@ Map<NodeId, Offset> computeAlignmentOffsets(
 ) {
   if (ids.length < 2) return const {};
 
-  final nodes = ids.map(document.nodeById).whereType<Node>().toList();
-  if (nodes.length < 2) return const {};
+  final nodes = ids.map(document.requireNodeById).toList();
 
   var union = Node.localBoundsOfNodes(nodes);
 
@@ -63,11 +62,9 @@ Map<NodeId, Offset> computeDistributionOffsets(
   if (ids.length < 3) return const {};
 
   final entries = ids
-      .map(document.nodeById)
-      .whereType<Node>()
+      .map(document.requireNodeById)
       .map((node) => (node: node, bounds: node.localBounds()))
       .toList();
-  if (entries.length < 3) return const {};
 
   switch (distribution) {
     case NodeDistribution.horizontal:

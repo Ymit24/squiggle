@@ -8,6 +8,34 @@ import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 void main() {
+  group('Document node lookup', () {
+    test('requireNodeById returns the node', () {
+      final feature = Feature(
+        origin: Offset.zero,
+        size: const Size(10, 10),
+        kind: const FeatureKindRectangle(),
+      );
+      final document = Document()..addNode(feature);
+
+      expect(document.requireNodeById(feature.id), same(feature));
+    });
+
+    test('requireNodeById throws when the node does not exist', () {
+      final document = Document();
+
+      expect(
+        () => document.requireNodeById(NodeId.newId(42)),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            'Node with id 42 does not exist',
+          ),
+        ),
+      );
+    });
+  });
+
   group('Document.nodeAtPoint', () {
     test('returns the top-most root node, including group interiors', () {
       final child = Feature(

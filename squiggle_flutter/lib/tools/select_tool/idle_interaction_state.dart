@@ -64,18 +64,14 @@ class IdleInteractionState extends InteractionState {
         break;
       case NodeTarget(node: var chaseNode):
         final selectedNodes = context.selection.selectedNodeIds.map(
-          (id) => context.document.nodeById(id),
+          context.document.requireNodeById,
         );
-        if (selectedNodes.any((f) => f == null)) {
-          // TODO: Is this possible? What to do?
-          return;
-        }
         parent.transition(
           ClickNodeState(
             parent: parent,
             start: cursorWorldPosition,
             chase: chaseNode,
-            selectedNodes: selectedNodes.map((f) => f!).toList(),
+            selectedNodes: selectedNodes.toList(),
             isShiftPressed: isShiftPressed,
           ),
           context,
@@ -142,8 +138,8 @@ class IdleInteractionState extends InteractionState {
 
   void _onDeletePress(EditorContext context) {
     final container = context.document
-        .nodeById(context.selection.selectedNodeIds.first)
-        ?.parent;
+        .requireNodeById(context.selection.selectedNodeIds.first)
+        .parent;
 
     context.history.run('Delete Selected Nodes', (transaction) {
       transaction.removeAll(context.selection.selectedNodeIds);
@@ -158,7 +154,9 @@ class IdleInteractionState extends InteractionState {
     }
 
     final selectedIds = context.selection.selectedNodeIds.toSet();
-    final container = context.document.nodeById(selectedIds.first)?.parent;
+    final container = context.document
+        .requireNodeById(selectedIds.first)
+        .parent;
     if (container == null) return;
     final siblings = container.children.toList();
     final selectedNodes = siblings
@@ -195,8 +193,7 @@ class IdleInteractionState extends InteractionState {
     }
 
     final selectedNodes = context.selection.selectedNodeIds
-        .map((id) => context.document.nodeById(id))
-        .where((node) => node != null)
+        .map(context.document.requireNodeById)
         .whereType<Group>()
         .toList();
 
