@@ -20,26 +20,24 @@ enum SelectionResizeHandle {
 
 HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
   if (context.selection.selectedNodeIds.length == 1) {
-    final node = context.document.nodeById(
+    final node = context.document.requireNodeById(
       context.selection.selectedNodeIds.first,
     );
-    if (node != null) {
-      final polyHandle = PolylineHandleUtil.hitTest(
-        node,
-        worldPosition,
-        context.camera,
-      );
-      if (polyHandle != null) {
-        return PolylineHandleTarget(handle: polyHandle);
-      }
-      final handle = ResizeHandleUtil.hitTest(
-        node,
-        worldPosition,
-        context.camera,
-      );
-      if (handle != null) {
-        return ResizeHandleTarget(handle: handle);
-      }
+    final polyHandle = PolylineHandleUtil.hitTest(
+      node,
+      worldPosition,
+      context.camera,
+    );
+    if (polyHandle != null) {
+      return PolylineHandleTarget(handle: polyHandle);
+    }
+    final handle = ResizeHandleUtil.hitTest(
+      node,
+      worldPosition,
+      context.camera,
+    );
+    if (handle != null) {
+      return ResizeHandleTarget(handle: handle);
     }
   }
 
