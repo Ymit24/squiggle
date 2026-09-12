@@ -3,8 +3,21 @@ part of 'feature_kind.dart';
 const kMinTextFontSize = 1.0;
 const kMaxTextFontSize = 1000.0;
 
-final class FeatureKindText extends FeatureKind {
-  const FeatureKindText(
+mixin FeatureKindWithLabel {
+  String? get label;
+  set label(String? value);
+
+  double get fontSize;
+  TextHorizontalAlignment get horizontalAlignment;
+  TextVerticalAlignment get verticalAlignment;
+
+  Color get strokeColor;
+  Color get fillColor;
+  double get strokeWidth;
+}
+
+final class FeatureKindText extends FeatureKind with FeatureKindWithLabel {
+  FeatureKindText(
     this.contents, {
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
@@ -43,9 +56,23 @@ final class FeatureKindText extends FeatureKind {
     };
   }
 
-  final String contents;
+  String contents;
+
+  @override
+  String? get label => contents;
+
+  @override
+  set label(String? value) {
+    contents = value ?? "";
+  }
+
+  @override
   final double fontSize;
+
+  @override
   final TextHorizontalAlignment horizontalAlignment;
+
+  @override
   final TextVerticalAlignment verticalAlignment;
 
   ui.ParagraphStyle _paragraphStyle(double fontSize) => ui.ParagraphStyle(

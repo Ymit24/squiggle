@@ -39,7 +39,7 @@ void main() {
           Feature(
             origin: const Offset(240, 0),
             size: const Size(200, 48),
-            kind: const FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
+            kind: FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
           ),
         ]),
       );

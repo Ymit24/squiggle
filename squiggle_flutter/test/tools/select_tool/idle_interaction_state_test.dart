@@ -66,8 +66,7 @@ void main() {
 
       harness.doubleClick(click);
 
-      final session =
-          harness.context.textEdit.session as CreateTextEditSession;
+      final session = harness.context.textEdit.session as CreateTextEditSession;
       expect(session.worldOrigin, click);
       expect(session.initialContents, isEmpty);
       expect(
@@ -109,7 +108,7 @@ EditorContext _textContext() => EditorContext(
     Feature(
       origin: Offset.zero,
       size: const Size(200, 48),
-      kind: const FeatureKindText('hello world', fillColor: Color(0xFFFFFFFF)),
+      kind: FeatureKindText('hello world', fillColor: Color(0xFFFFFFFF)),
     ),
   ]),
 );

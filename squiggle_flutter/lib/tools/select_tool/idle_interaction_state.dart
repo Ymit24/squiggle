@@ -96,13 +96,13 @@ class IdleInteractionState extends InteractionState {
   ) {
     if (target case NodeTarget(
       node: final Feature feature,
-    ) when feature.kind is FeatureKindText) {
-      final text = feature.kind as FeatureKindText;
+    ) when feature.kind is FeatureKindWithLabel) {
+      final text = feature.kind as FeatureKindWithLabel;
       context.selection.setSelection([feature.id]);
       context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
-          initialContents: text.contents,
+          initialContents: text.label ?? "(none)",
           canvasLocalBounds: camera.worldToScreenBounds(feature.localBounds()),
         ),
       );

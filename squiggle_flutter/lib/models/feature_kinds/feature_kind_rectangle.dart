@@ -1,11 +1,10 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindRectangle extends FeatureKind {
-  const FeatureKindRectangle({
-    super.strokeColor,
-    super.fillColor,
-    super.strokeWidth,
-  });
+final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
+  FeatureKindRectangle({super.strokeColor, super.fillColor, super.strokeWidth});
+
+  @override
+  String? label = "Yeah";
 
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
@@ -34,4 +33,17 @@ final class FeatureKindRectangle extends FeatureKind {
         ..strokeWidth = strokeWidth,
     );
   }
+
+  @override
+  // TODO: implement fontSize
+  double get fontSize => 12;
+
+  @override
+  // TODO: implement horizontalAlignment
+  TextHorizontalAlignment get horizontalAlignment =>
+      TextHorizontalAlignment.center;
+
+  @override
+  // TODO: implement verticalAlignment
+  TextVerticalAlignment get verticalAlignment => TextVerticalAlignment.center;
 }

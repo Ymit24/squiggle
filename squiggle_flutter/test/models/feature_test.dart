@@ -71,7 +71,7 @@ void main() {
           id: NodeId.newId(44),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindText('text'),
+          kind: FeatureKindText('text'),
         ),
         Feature(
           id: NodeId.newId(45),

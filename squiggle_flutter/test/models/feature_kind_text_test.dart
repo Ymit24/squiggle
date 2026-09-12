@@ -28,7 +28,7 @@ void main() {
     });
 
     test('toDataModel emits all text and style fields', () {
-      const kind = FeatureKindText(
+      final kind = FeatureKindText(
         'Hello',
         fontSize: 24.5,
         horizontalAlignment: TextHorizontalAlignment.center,
