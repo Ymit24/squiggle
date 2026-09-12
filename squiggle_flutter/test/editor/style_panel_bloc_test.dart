@@ -446,5 +446,5 @@ void main() {
 Feature _groupChild() => Feature(
   origin: Offset.zero,
   size: const Size(20, 20),
-  kind: FeatureKindRectangle(),
+  kind: const FeatureKindRectangle(),
 );

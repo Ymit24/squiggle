@@ -50,7 +50,7 @@ void main() {
           Feature(
             origin: const Offset(0, 0),
             size: const Size(10, 10),
-            kind: FeatureKindRectangle(),
+            kind: const FeatureKindRectangle(),
           ),
         );
       });

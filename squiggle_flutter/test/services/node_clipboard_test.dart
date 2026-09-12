@@ -19,7 +19,7 @@ void main() {
       final feature = Feature(
         origin: const Offset(100, 50),
         size: const Size(200, 100),
-        kind: FeatureKindRectangle(),
+        kind: const FeatureKindRectangle(),
       );
 
       final repositioned = repositionNodesToCenter([
@@ -34,7 +34,7 @@ void main() {
       final first = Feature(
         origin: const Offset(0, 0),
         size: const Size(100, 100),
-        kind: FeatureKindRectangle(),
+        kind: const FeatureKindRectangle(),
       );
       final second = Feature(
         origin: const Offset(120, 40),

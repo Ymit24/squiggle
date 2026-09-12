@@ -12,7 +12,7 @@ void main() {
   }) {
     return Document.fromFeatures([
       for (final origin in origins)
-        Feature(origin: origin, size: size, kind: FeatureKindRectangle()),
+        Feature(origin: origin, size: size, kind: const FeatureKindRectangle()),
     ]);
   }
 

@@ -201,5 +201,5 @@ void main() {
 Feature _rectangle() => Feature(
   origin: Offset.zero,
   size: const Size(100, 80),
-  kind: FeatureKindRectangle(),
+  kind: const FeatureKindRectangle(),
 );

@@ -13,7 +13,7 @@ void main() {
       final feature = Feature(
         origin: Offset.zero,
         size: const Size(10, 10),
-        kind: FeatureKindRectangle(),
+        kind: const FeatureKindRectangle(),
       );
       final document = Document()..addNode(feature);
 
@@ -41,13 +41,13 @@ void main() {
       final child = Feature(
         origin: const Offset(10, 20),
         size: const Size(20, 20),
-        kind: FeatureKindRectangle(),
+        kind: const FeatureKindRectangle(),
       );
       final group = Group(origin: const Offset(100, 200), children: [child]);
       final foreground = Feature(
         origin: const Offset(120, 220),
         size: const Size(20, 20),
-        kind: FeatureKindRectangle(),
+        kind: const FeatureKindRectangle(),
       );
       final doc = Document()..addNodes([group, foreground]);
 
@@ -61,12 +61,12 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(100, 100),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
         Feature(
           origin: const Offset(50, 50),
           size: const Size(100, 100),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
       ]);
 
@@ -81,7 +81,7 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(50, 50),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
       ]);
 
@@ -141,7 +141,7 @@ void main() {
             id: NodeId.newId(4),
             origin: const Offset(1, 2),
             size: const Size(3, 4),
-            kind: FeatureKindRectangle(),
+            kind: const FeatureKindRectangle(),
           ),
           Feature(
             id: NodeId.newId(7),
@@ -171,7 +171,7 @@ void main() {
             id: NodeId.newId(20),
             origin: Offset.zero,
             size: const Size(1, 1),
-            kind: FeatureKindRectangle(),
+            kind: const FeatureKindRectangle(),
           ),
         ]);
 
@@ -189,7 +189,7 @@ void main() {
       final feature = Feature(
         origin: const Offset(1, 2),
         size: const Size(3, 4),
-        kind: FeatureKindRectangle(),
+        kind: const FeatureKindRectangle(),
       );
 
       doc.addNode(feature);
@@ -204,7 +204,7 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(10, 10),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
         Feature(
           origin: const Offset(20, 0),
@@ -224,7 +224,7 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(10, 10),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
       ]);
       final id = doc.nodes.first.id;
@@ -239,7 +239,7 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(10, 10),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
       ]);
       final id = doc.nodes.first.id;
@@ -254,7 +254,7 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(10, 10),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
       ]);
       final id = doc.nodes.first.id;
@@ -269,7 +269,7 @@ void main() {
         Feature(
           origin: const Offset(0, 0),
           size: const Size(10, 10),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
       ]);
       final replacement = Document.fromFeatures([

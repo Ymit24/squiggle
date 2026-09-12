@@ -59,7 +59,7 @@ void main() {
           id: NodeId.newId(42),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: FeatureKindRectangle(),
+          kind: const FeatureKindRectangle(),
         ),
         Feature(
           id: NodeId.newId(43),

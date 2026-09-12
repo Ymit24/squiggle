@@ -1,19 +1,11 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindRectangle extends FeatureKind {
-  FeatureKindRectangle({super.strokeColor, super.fillColor, super.strokeWidth});
-
-  void addLabel(Feature feature, String label) {
-    labelNode = feature.insert(
-      Feature(
-        kind: FeatureKindText(label),
-        origin: Offset.zero,
-        size: feature.size,
-      ),
-    );
-  }
-
-  Feature? labelNode;
+  const FeatureKindRectangle({
+    super.strokeColor,
+    super.fillColor,
+    super.strokeWidth,
+  });
 
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
@@ -31,15 +23,6 @@ final class FeatureKindRectangle extends FeatureKind {
   };
 
   @override
-  void applyBounds(Feature feature, Rect bounds) {
-    super.applyBounds(feature, bounds);
-    print(
-      "D: bounds of feature, ${feature.localBounds()}, bounds of text: ${labelNode?.localBounds()}",
-    );
-    labelNode?.resize(feature.localBounds().shift(-feature.origin));
-  }
-
-  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);
@@ -50,12 +33,5 @@ final class FeatureKindRectangle extends FeatureKind {
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth,
     );
-
-    if (labelNode != null) {
-      canvas.save();
-      canvas.translate(feature.origin.dx, feature.origin.dy);
-      labelNode!.paint(canvas, imageRepository);
-      canvas.restore();
-    }
   }
 }
