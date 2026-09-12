@@ -63,7 +63,7 @@ class IdleInteractionState extends InteractionState {
         );
         break;
       case NodeTarget(node: var chaseNode):
-        final selectedNodes = context.selection.selectedNodes.map(
+        final selectedNodes = context.selection.selectedNodeIds.map(
           (id) => context.document.nodeById(id),
         );
         if (selectedNodes.any((f) => f == null)) {
@@ -142,22 +142,22 @@ class IdleInteractionState extends InteractionState {
 
   void _onDeletePress(EditorContext context) {
     final container = context.document
-        .nodeById(context.selection.selectedNodes.first)
+        .nodeById(context.selection.selectedNodeIds.first)
         ?.parent;
 
     context.history.run('Delete Selected Nodes', (transaction) {
-      transaction.removeAll(context.selection.selectedNodes);
+      transaction.removeAll(context.selection.selectedNodeIds);
     }, container: container);
 
     context.selection.clearSelection();
   }
 
   void _onCtrlCmdGPress(EditorContext context) {
-    if (context.selection.selectedNodes.length < 2) {
+    if (context.selection.selectedNodeIds.length < 2) {
       return;
     }
 
-    final selectedIds = context.selection.selectedNodes.toSet();
+    final selectedIds = context.selection.selectedNodeIds.toSet();
     final container = context.document.nodeById(selectedIds.first)?.parent;
     if (container == null) return;
     final siblings = container.children.toList();
@@ -190,11 +190,11 @@ class IdleInteractionState extends InteractionState {
   }
 
   void _onShiftCtrlCmdGPress(EditorContext context) {
-    if (context.selection.selectedNodes.isEmpty) {
+    if (context.selection.selectedNodeIds.isEmpty) {
       return;
     }
 
-    final selectedNodes = context.selection.selectedNodes
+    final selectedNodes = context.selection.selectedNodeIds
         .map((id) => context.document.nodeById(id))
         .where((node) => node != null)
         .whereType<Group>()

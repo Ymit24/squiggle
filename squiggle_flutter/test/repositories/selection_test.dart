@@ -8,15 +8,15 @@ void main() {
     test('can select features', () {
       final selection = SelectionModel();
       selection.selectNode(NodeId.newId(0));
-      expect(selection.selectedNodes.length, 1);
-      expect(selection.selectedNodes[0], NodeId.newId(0));
+      expect(selection.selectedNodeIds.length, 1);
+      expect(selection.selectedNodeIds[0], NodeId.newId(0));
     });
 
     test('can deselect features', () {
       final selection = SelectionModel();
       selection.selectNode(NodeId.newId(0));
       selection.deselectNode(NodeId.newId(0));
-      expect(selection.selectedNodes.length, 0);
+      expect(selection.selectedNodeIds.length, 0);
     });
 
     test('can clear selection', () {
@@ -24,7 +24,7 @@ void main() {
       selection.selectNode(NodeId.newId(0));
       selection.selectNode(NodeId.newId(1));
       selection.clearSelection();
-      expect(selection.selectedNodes, isEmpty);
+      expect(selection.selectedNodeIds, isEmpty);
     });
 
     test('does not duplicate on select', () {
@@ -32,7 +32,7 @@ void main() {
       final id = NodeId.newId(0);
       selection.selectNode(id);
       selection.selectNode(id);
-      expect(selection.selectedNodes.length, 1);
+      expect(selection.selectedNodeIds.length, 1);
     });
 
     test('can check if a feature is selected', () {
@@ -48,7 +48,7 @@ void main() {
       final id1 = NodeId.newId(1);
       final events = <List<NodeId>>[];
       final subscription = notifierChangesStream(selection).listen((_) {
-        events.add(selection.selectedNodes);
+        events.add(selection.selectedNodeIds);
       });
 
       selection.selectNode(id0);

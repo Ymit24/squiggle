@@ -22,7 +22,7 @@ void main() {
       harness.context.tool.activeTool.deactivate(harness.context);
 
       expect(feature.origin, Offset.zero);
-      expect(harness.context.selection.selectedNodes, isEmpty);
+      expect(harness.context.selection.selectedNodeIds, isEmpty);
       expect(harness.context.history.isActive, isFalse);
       expect(harness.context.history.canUndo, isFalse);
     });

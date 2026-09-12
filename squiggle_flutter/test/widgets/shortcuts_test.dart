@@ -135,7 +135,7 @@ void main() {
     await tester.pump();
 
     expect(context.document.nodes, isEmpty);
-    expect(context.selection.selectedNodes, isEmpty);
+    expect(context.selection.selectedNodeIds, isEmpty);
   });
 
   testWidgets('ToolShortcuts undoes and redoes document commands', (
@@ -239,7 +239,7 @@ void main() {
     await tester.pump();
 
     expect(feature.origin, Offset.zero);
-    expect(context.selection.selectedNodes, [feature.id]);
+    expect(context.selection.selectedNodeIds, [feature.id]);
   });
 
   testWidgets('ToolShortcuts restores focus after text edit closes', (

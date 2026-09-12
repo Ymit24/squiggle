@@ -17,14 +17,16 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     Emitter<EditorState> emit,
   ) async {
     emit(
-      state.copyWith(selectedNodes: List.of(context.selection.selectedNodes)),
+      state.copyWith(
+        selectedNodeIds: List.of(context.selection.selectedNodeIds),
+      ),
     );
 
     await emit.forEach(
       notifierChangesStream(context),
       onData: (_) => EditorState(
         document: context.document,
-        selectedNodes: List.of(context.selection.selectedNodes),
+        selectedNodeIds: List.of(context.selection.selectedNodeIds),
       ),
     );
   }

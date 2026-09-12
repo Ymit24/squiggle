@@ -18,7 +18,7 @@ void main() {
       expect(harness.context.document.nodes, hasLength(3));
       expect(original.origin, Offset.zero);
       final duplicate = harness.context.document.featureById(
-        harness.context.selection.selectedNodes.single,
+        harness.context.selection.selectedNodeIds.single,
       )!;
       expect(duplicate.id, isNot(original.id));
       expect(duplicate.origin, const Offset(20, 30));
@@ -37,7 +37,7 @@ void main() {
       expect(features[0].origin, Offset.zero);
       expect(features[1].origin, const Offset(200, 0));
       expect(
-        harness.context.selection.selectedNodes
+        harness.context.selection.selectedNodeIds
             .map((id) => harness.context.document.featureById(id)!.origin)
             .toSet(),
         {const Offset(10, 10), const Offset(210, 10)},
@@ -55,7 +55,7 @@ void main() {
       expect(original.origin, Offset.zero);
       expect(
         harness.context.document
-            .featureById(harness.context.selection.selectedNodes.single)!
+            .featureById(harness.context.selection.selectedNodeIds.single)!
             .origin,
         const Offset(40, 30),
       );
@@ -67,7 +67,7 @@ void main() {
       harness.pointerMove(const Offset(70, 80), alt: true);
       harness.pointerMove(const Offset(90, 100), alt: true);
       harness.pointerUp(const Offset(90, 100), alt: true);
-      final duplicateId = harness.context.selection.selectedNodes.single;
+      final duplicateId = harness.context.selection.selectedNodeIds.single;
       final finalOrigin = harness.context.document
           .nodeById(duplicateId)!
           .origin;
