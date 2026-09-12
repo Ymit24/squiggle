@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/click_canvas_state.dart';
@@ -106,6 +107,16 @@ class IdleInteractionState extends InteractionState {
         ),
       );
       return;
+    } else if (target is CanvasTarget) {
+      context.startTextEdit(
+        CreateTextEditSession(
+          worldOrigin: worldPosition,
+          initialContents: '',
+          canvasLocalBounds: camera.worldToScreenBounds(
+            newTextBoundsAt(worldPosition),
+          ),
+        ),
+      );
     }
   }
 
