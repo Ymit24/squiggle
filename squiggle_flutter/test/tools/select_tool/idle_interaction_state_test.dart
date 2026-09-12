@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -56,6 +57,24 @@ void main() {
         await subscription.cancel();
       },
     );
+
+    test('double-clicking the canvas starts a create text edit session', () {
+      const click = Offset(150, 75);
+      harness.camera
+        ..location = const Offset(25, 15)
+        ..zoom = 2;
+
+      harness.doubleClick(click);
+
+      final session =
+          harness.context.textEdit.session as CreateTextEditSession;
+      expect(session.worldOrigin, click);
+      expect(session.initialContents, isEmpty);
+      expect(
+        session.canvasLocalBounds,
+        harness.camera.worldToScreenBounds(newTextBoundsAt(click)),
+      );
+    });
 
     for (final key in [
       LogicalKeyboardKey.delete,
