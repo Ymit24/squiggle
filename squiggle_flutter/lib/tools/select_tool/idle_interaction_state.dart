@@ -107,6 +107,20 @@ class IdleInteractionState extends InteractionState {
         ),
       );
       return;
+    } else if (target case NodeTarget(
+      node: final Feature feature,
+    ) when feature.kind is FeatureKindRectangle) {
+      final kind = feature.kind as FeatureKindRectangle;
+      if (kind.labelNode == null) {
+        return;
+      }
+      context.startTextEdit(
+        EditTextEditSession(
+          featureId: kind.labelNode!.id,
+          initialContents: (kind.labelNode!.kind as FeatureKindText).contents,
+          canvasLocalBounds: camera.worldToScreenBounds(feature.localBounds()),
+        ),
+      );
     } else if (target is CanvasTarget) {
       context.startTextEdit(
         CreateTextEditSession(

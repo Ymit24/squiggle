@@ -12,7 +12,7 @@ export 'stroke_width_preset.dart';
 export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.
-class Feature extends Node {
+class Feature extends Node with NodeContainer {
   Feature({
     super.id,
     required super.origin,

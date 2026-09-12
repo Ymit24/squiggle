@@ -113,5 +113,5 @@ void main() {
 Feature rectangle(Rect bounds) => Feature(
   origin: bounds.topLeft,
   size: bounds.size,
-  kind: const FeatureKindRectangle(),
+  kind: FeatureKindRectangle(),
 );
