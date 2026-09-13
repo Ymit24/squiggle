@@ -18,8 +18,9 @@ mixin FeatureKindWithLabel {
   void paintLabel(
     Feature feature,
     Canvas canvas,
-    ImageRepository imageRepository,
-  ) {
+    ImageRepository imageRepository, {
+    void Function(Canvas, Feature, Offset, Paragraph)? beforeDraw,
+  }) {
     if (label != null && label!.isEmpty) return;
 
     final worldBounds = feature.localBounds();
@@ -44,6 +45,7 @@ mixin FeatureKindWithLabel {
 
     final position = getLabelPosition(worldBounds, fillParagraph);
 
+    beforeDraw?.call(canvas, feature, position, fillParagraph);
     canvas.drawParagraph(strokeParagraph, position);
     canvas.drawParagraph(fillParagraph, position);
   }

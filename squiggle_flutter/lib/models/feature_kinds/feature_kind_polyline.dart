@@ -189,7 +189,7 @@ final class FeatureKindPolyline extends FeatureKind with FeatureKindWithLabel {
           ..strokeCap = StrokeCap.round,
       );
       if (label != null) {
-        paintLabel(feature, canvas, imageRepository);
+        _paintLabel(feature, canvas, imageRepository);
       }
       return;
     }
@@ -205,7 +205,7 @@ final class FeatureKindPolyline extends FeatureKind with FeatureKindWithLabel {
           ..strokeCap = StrokeCap.round,
       );
       if (label != null) {
-        paintLabel(feature, canvas, imageRepository);
+        _paintLabel(feature, canvas, imageRepository);
       }
       return;
     }
@@ -221,9 +221,54 @@ final class FeatureKindPolyline extends FeatureKind with FeatureKindWithLabel {
           ..strokeCap = StrokeCap.round,
       );
       if (label != null) {
-        paintLabel(feature, canvas, imageRepository);
+        _paintLabel(feature, canvas, imageRepository);
       }
     }
+  }
+
+  void _paintLabel(
+    Feature feature,
+    Canvas canvas,
+    ImageRepository imageRepository,
+  ) {
+    paintLabel(
+      feature,
+      canvas,
+      imageRepository,
+      beforeDraw: _cutOutLineBehindLabel,
+    );
+  }
+
+  void _cutOutLineBehindLabel(
+    Canvas canvas,
+    Feature feature,
+    Offset position,
+    Paragraph paragraph,
+  ) {
+    if (label == null || label!.isEmpty) return;
+
+    final boxes = paragraph.getBoxesForRange(0, label!.length);
+    if (boxes.isEmpty) return;
+
+    var labelBounds = boxes.first.toRect().shift(position);
+    for (final box in boxes.skip(1)) {
+      labelBounds = labelBounds.expandToInclude(box.toRect().shift(position));
+    }
+
+    canvas.save();
+    canvas.clipRect(labelBounds.inflate(1));
+    canvas.drawPath(
+      _pathFor(feature),
+      Paint()
+        ..blendMode = BlendMode.clear
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = hasVisibleStroke && hasVisibleFill
+            ? strokeWidth * 2
+            : strokeWidth
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.restore();
   }
 
   @override
@@ -231,7 +276,63 @@ final class FeatureKindPolyline extends FeatureKind with FeatureKindWithLabel {
 
   @override
   Offset getLabelPosition(Rect worldBounds, Paragraph fillParagraph) {
-    return Offset.zero;
+    if (localPoints.isEmpty) {
+      return Offset(
+        worldBounds.center.dx - fillParagraph.width / 2,
+        worldBounds.center.dy - fillParagraph.height / 2,
+      );
+    }
+
+    // Find the midpoint by distance along the polyline, rather than using
+    // the center of its bounding box. The latter is not generally on a
+    // polyline with bends or unevenly sized segments.
+    var totalLength = 0.0;
+    for (var i = 0; i < localPoints.length - 1; i++) {
+      totalLength += (localPoints[i + 1] - localPoints[i]).distance;
+    }
+
+    var midpoint = localPoints.first;
+    if (totalLength > 0) {
+      var distanceToMidpoint = totalLength / 2;
+      for (var i = 0; i < localPoints.length - 1; i++) {
+        final start = localPoints[i];
+        final end = localPoints[i + 1];
+        final segment = end - start;
+        final segmentLength = segment.distance;
+
+        if (segmentLength == 0) continue;
+        if (distanceToMidpoint <= segmentLength) {
+          final t = distanceToMidpoint / segmentLength;
+          midpoint = Offset(
+            start.dx + segment.dx * t,
+            start.dy + segment.dy * t,
+          );
+          break;
+        }
+        distanceToMidpoint -= segmentLength;
+      }
+    }
+
+    // worldBounds is the translated envelope of localPoints. Its top-left
+    // lets us convert the local midpoint to world coordinates without the
+    // Feature (which is not part of this callback's API).
+    var minX = localPoints.first.dx;
+    var minY = localPoints.first.dy;
+    for (final point in localPoints.skip(1)) {
+      if (point.dx < minX) minX = point.dx;
+      if (point.dy < minY) minY = point.dy;
+    }
+    final worldMidpoint =
+        worldBounds.topLeft +
+        Offset(
+          midpoint.dx - minX + _hitRadius,
+          midpoint.dy - minY + _hitRadius,
+        );
+
+    return Offset(
+      worldMidpoint.dx - fillParagraph.width / 2,
+      worldMidpoint.dy - fillParagraph.height / 2,
+    );
   }
 
   @override
