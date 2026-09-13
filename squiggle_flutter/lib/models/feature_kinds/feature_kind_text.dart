@@ -42,15 +42,18 @@ mixin FeatureKindWithLabel {
       width: worldBounds.width,
     );
 
-    final position = textOriginInBounds(
-      bounds: worldBounds,
-      textHeight: fillParagraph.height,
-      verticalAlignment: verticalAlignment,
-    );
+    final position = getLabelPosition(worldBounds, fillParagraph);
 
     canvas.drawParagraph(strokeParagraph, position);
     canvas.drawParagraph(fillParagraph, position);
   }
+
+  Offset getLabelPosition(Rect worldBounds, Paragraph fillParagraph) =>
+      textOriginInBounds(
+        bounds: worldBounds,
+        textHeight: fillParagraph.height,
+        verticalAlignment: verticalAlignment,
+      );
 
   ui.ParagraphStyle _paragraphStyle(double fontSize) => ui.ParagraphStyle(
     textAlign: horizontalAlignment.textAlign,

@@ -77,7 +77,7 @@ void main() {
           id: NodeId.newId(45),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindPolyline([Offset.zero, Offset(1, 1)]),
+          kind: FeatureKindPolyline([Offset.zero, Offset(1, 1)]),
         ),
         Feature(
           id: NodeId.newId(46),

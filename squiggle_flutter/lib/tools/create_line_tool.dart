@@ -248,7 +248,7 @@ class CreateLineTool extends Tool {
     return Feature(
       origin: origin,
       size: Size.zero,
-      kind: const FeatureKindPolyline(
+      kind: FeatureKindPolyline(
         [],
         fillColor: SquiggleColors.accent,
       ).copyWith(localPoints: localPoints),

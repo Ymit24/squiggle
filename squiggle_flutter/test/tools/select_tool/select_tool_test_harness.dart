@@ -36,7 +36,7 @@ class SelectToolTestHarness {
       Feature(
         origin: const Offset(0, 0),
         size: const Size(100, 100),
-        kind: const FeatureKindPolyline(
+        kind: FeatureKindPolyline(
           [Offset.zero, Offset(100, 100)],
           strokeColor: Color(0xFFFFFFFF),
           fillColor: Color(0xFF89B4FA),

@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
+import 'dart:ui';
 
-import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';

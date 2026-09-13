@@ -1,7 +1,7 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindPolyline extends FeatureKind {
-  const FeatureKindPolyline(
+final class FeatureKindPolyline extends FeatureKind with FeatureKindWithLabel {
+  FeatureKindPolyline(
     this.localPoints, {
     super.strokeColor,
     super.fillColor,
@@ -188,6 +188,9 @@ final class FeatureKindPolyline extends FeatureKind {
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
+      if (label != null) {
+        paintLabel(feature, canvas, imageRepository);
+      }
       return;
     }
 
@@ -201,6 +204,9 @@ final class FeatureKindPolyline extends FeatureKind {
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
+      if (label != null) {
+        paintLabel(feature, canvas, imageRepository);
+      }
       return;
     }
 
@@ -214,6 +220,30 @@ final class FeatureKindPolyline extends FeatureKind {
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
+      if (label != null) {
+        paintLabel(feature, canvas, imageRepository);
+      }
     }
   }
+
+  @override
+  String? label;
+
+  @override
+  Offset getLabelPosition(Rect worldBounds, Paragraph fillParagraph) {
+    return Offset.zero;
+  }
+
+  @override
+  // TODO: implement fontSize
+  double get fontSize => 36;
+
+  @override
+  // TODO: implement horizontalAlignment
+  TextHorizontalAlignment get horizontalAlignment =>
+      TextHorizontalAlignment.center;
+
+  @override
+  // TODO: implement verticalAlignment
+  TextVerticalAlignment get verticalAlignment => TextVerticalAlignment.center;
 }
