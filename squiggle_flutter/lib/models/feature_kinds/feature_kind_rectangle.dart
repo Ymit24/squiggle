@@ -3,9 +3,6 @@ part of 'feature_kind.dart';
 final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
   FeatureKindRectangle({super.strokeColor, super.fillColor, super.strokeWidth});
 
-  @override
-  String? label;
-
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
@@ -26,7 +23,6 @@ final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
     final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);
     if (label != null) {
-      print("D: rect has label! $label");
       paintLabel(feature, canvas, imageRepository);
     }
     canvas.drawRect(
@@ -37,6 +33,9 @@ final class FeatureKindRectangle extends FeatureKind with FeatureKindWithLabel {
         ..strokeWidth = strokeWidth,
     );
   }
+
+  @override
+  String? label;
 
   @override
   // TODO: implement fontSize

@@ -147,7 +147,7 @@ void main() {
             id: NodeId.newId(7),
             origin: const Offset(5, 6),
             size: const Size(8, 9),
-            kind: const FeatureKindCircle(),
+            kind: FeatureKindCircle(),
           ),
         ]);
         document.name = 'Named document';
@@ -165,7 +165,7 @@ void main() {
             id: NodeId.newId(10),
             origin: Offset.zero,
             size: const Size(1, 1),
-            kind: const FeatureKindCircle(),
+            kind: FeatureKindCircle(),
           ),
           Feature(
             id: NodeId.newId(20),
@@ -209,7 +209,7 @@ void main() {
         Feature(
           origin: const Offset(20, 0),
           size: const Size(10, 10),
-          kind: const FeatureKindCircle(),
+          kind: FeatureKindCircle(),
         ),
       ];
 
@@ -276,12 +276,12 @@ void main() {
         Feature(
           origin: const Offset(5, 5),
           size: const Size(20, 20),
-          kind: const FeatureKindCircle(),
+          kind: FeatureKindCircle(),
         ),
         Feature(
           origin: const Offset(30, 30),
           size: const Size(20, 20),
-          kind: const FeatureKindCircle(),
+          kind: FeatureKindCircle(),
         ),
       ]);
       replacement.name = 'Replacement';

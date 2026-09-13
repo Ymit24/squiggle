@@ -15,7 +15,7 @@ class CreateFeatureTool extends Tool {
       CreateFeatureTool(kind: FeatureKindRectangle());
 
   factory CreateFeatureTool.circle() =>
-      CreateFeatureTool(kind: const FeatureKindCircle());
+      CreateFeatureTool(kind: FeatureKindCircle());
 
   final FeatureKind kind;
   _CreateState _state;

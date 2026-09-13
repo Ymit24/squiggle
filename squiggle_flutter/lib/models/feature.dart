@@ -22,7 +22,7 @@ class Feature extends Node {
 
   factory Feature.fromDataModel(data.Feature raw) {
     final content = raw.content;
-    final kind = switch (content['type']) {
+    final FeatureKind kind = switch (content['type']) {
       'rectangle' => FeatureKindRectangle.fromDataModel(content),
       'circle' => FeatureKindCircle.fromDataModel(content),
       'text' => FeatureKindText.fromDataModel(content),

@@ -39,7 +39,7 @@ void main() {
       final second = Feature(
         origin: const Offset(120, 40),
         size: const Size(50, 50),
-        kind: const FeatureKindCircle(),
+        kind: FeatureKindCircle(),
       );
 
       final repositioned = repositionNodesToCenter([

@@ -1,11 +1,7 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindCircle extends FeatureKind {
-  const FeatureKindCircle({
-    super.strokeColor,
-    super.fillColor,
-    super.strokeWidth,
-  });
+final class FeatureKindCircle extends FeatureKind with FeatureKindWithLabel {
+  FeatureKindCircle({super.strokeColor, super.fillColor, super.strokeWidth});
 
   factory FeatureKindCircle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindCircle(
@@ -26,6 +22,9 @@ final class FeatureKindCircle extends FeatureKind {
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawOval(bounds, Paint()..color = fillColor);
+    if (label != null) {
+      paintLabel(feature, canvas, imageRepository);
+    }
     canvas.drawOval(
       bounds,
       Paint()
@@ -34,4 +33,20 @@ final class FeatureKindCircle extends FeatureKind {
         ..strokeWidth = strokeWidth,
     );
   }
+
+  @override
+  String? label;
+
+  @override
+  // TODO: implement fontSize
+  double get fontSize => 36;
+
+  @override
+  // TODO: implement horizontalAlignment
+  TextHorizontalAlignment get horizontalAlignment =>
+      TextHorizontalAlignment.center;
+
+  @override
+  // TODO: implement verticalAlignment
+  TextVerticalAlignment get verticalAlignment => TextVerticalAlignment.center;
 }
