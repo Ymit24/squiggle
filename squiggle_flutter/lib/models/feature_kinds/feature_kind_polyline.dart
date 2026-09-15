@@ -30,6 +30,14 @@ final class FeatureKindPolyline extends FeatureKind {
     'strokeWidth': strokeWidth,
   };
 
+  @override
+  FeatureKindPolyline clone() => FeatureKindPolyline(
+    localPoints,
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
+
   List<Offset> localPoints;
 
   void setGeometry(

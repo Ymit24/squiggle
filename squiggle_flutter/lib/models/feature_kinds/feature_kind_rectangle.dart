@@ -19,6 +19,13 @@ final class FeatureKindRectangle extends FeatureKind {
   };
 
   @override
+  FeatureKindRectangle clone() => FeatureKindRectangle(
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
+
+  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);

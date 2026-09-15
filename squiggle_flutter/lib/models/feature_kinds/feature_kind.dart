@@ -31,45 +31,7 @@ sealed class FeatureKind {
 
   bool get hasVisibleFill => fillColor.a > 0;
 
-  FeatureKind clone() => switch (this) {
-    FeatureKindRectangle() => FeatureKindRectangle(
-      strokeColor: strokeColor,
-      fillColor: fillColor,
-      strokeWidth: strokeWidth,
-    ),
-    FeatureKindCircle() => FeatureKindCircle(
-      strokeColor: strokeColor,
-      fillColor: fillColor,
-      strokeWidth: strokeWidth,
-    ),
-    FeatureKindText(
-      :final contents,
-      :final fontSize,
-      :final horizontalAlignment,
-      :final verticalAlignment,
-    ) =>
-      FeatureKindText(
-        contents,
-        fontSize: fontSize,
-        horizontalAlignment: horizontalAlignment,
-        verticalAlignment: verticalAlignment,
-        strokeColor: strokeColor,
-        fillColor: fillColor,
-        strokeWidth: strokeWidth,
-      ),
-    FeatureKindPolyline(:final localPoints) => FeatureKindPolyline(
-      List.of(localPoints),
-      strokeColor: strokeColor,
-      fillColor: fillColor,
-      strokeWidth: strokeWidth,
-    ),
-    FeatureKindImage(:final imageId) => FeatureKindImage(
-      imageId,
-      strokeColor: strokeColor,
-      fillColor: fillColor,
-      strokeWidth: strokeWidth,
-    ),
-  };
+  FeatureKind clone();
 
   Rect boundsFor(Feature feature) => Rect.fromLTWH(
     feature.origin.dx,

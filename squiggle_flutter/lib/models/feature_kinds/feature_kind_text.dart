@@ -43,6 +43,17 @@ final class FeatureKindText extends FeatureKind {
     };
   }
 
+  @override
+  FeatureKindText clone() => FeatureKindText(
+    contents,
+    fontSize: fontSize,
+    horizontalAlignment: horizontalAlignment,
+    verticalAlignment: verticalAlignment,
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
+
   String contents;
   double fontSize;
   TextHorizontalAlignment horizontalAlignment;

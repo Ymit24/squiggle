@@ -19,6 +19,13 @@ final class FeatureKindCircle extends FeatureKind {
   };
 
   @override
+  FeatureKindCircle clone() => FeatureKindCircle(
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
+
+  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawOval(bounds, Paint()..color = fillColor);

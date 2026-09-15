@@ -25,6 +25,14 @@ final class FeatureKindImage extends FeatureKind {
     'strokeWidth': strokeWidth,
   };
 
+  @override
+  FeatureKindImage clone() => FeatureKindImage(
+    imageId,
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
+
   String imageId;
 
   @override
