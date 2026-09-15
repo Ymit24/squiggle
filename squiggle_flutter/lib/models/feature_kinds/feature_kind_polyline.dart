@@ -1,11 +1,12 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindPolyline extends FeatureKind {
+final class FeatureKindPolyline extends FeatureKind
+    with StrokeColorCapable, FillColorCapable, StrokeWidthCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
-    super.strokeColor,
-    super.fillColor,
-    super.strokeWidth,
+    this.strokeColor = defaultFeatureStrokeColor,
+    this.fillColor = defaultFeatureFillColor,
+    this.strokeWidth = defaultStrokeWidth,
   }) : localPoints = List.of(localPoints);
 
   factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
@@ -39,6 +40,12 @@ final class FeatureKindPolyline extends FeatureKind {
   );
 
   List<Offset> localPoints;
+  @override
+  Color strokeColor;
+  @override
+  Color fillColor;
+  @override
+  double strokeWidth;
 
   void setGeometry(
     Feature feature, {

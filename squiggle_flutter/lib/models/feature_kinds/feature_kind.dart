@@ -15,21 +15,7 @@ part 'feature_kind_polyline.dart';
 part 'feature_kind_image.dart';
 
 sealed class FeatureKind {
-  FeatureKind({
-    this.strokeColor = defaultFeatureStrokeColor,
-    this.fillColor = defaultFeatureFillColor,
-    this.strokeWidth = defaultStrokeWidth,
-  });
-
   Map<String, dynamic> toDataModel();
-
-  Color strokeColor;
-  Color fillColor;
-  double strokeWidth;
-
-  bool get hasVisibleStroke => strokeColor.a > 0;
-
-  bool get hasVisibleFill => fillColor.a > 0;
 
   FeatureKind clone();
 
@@ -49,6 +35,25 @@ sealed class FeatureKind {
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
+}
+
+mixin StrokeColorCapable {
+  Color get strokeColor;
+  set strokeColor(Color value);
+
+  bool get hasVisibleStroke => strokeColor.a > 0;
+}
+
+mixin FillColorCapable {
+  Color get fillColor;
+  set fillColor(Color value);
+
+  bool get hasVisibleFill => fillColor.a > 0;
+}
+
+mixin StrokeWidthCapable {
+  double get strokeWidth;
+  set strokeWidth(double value);
 }
 
 double _doubleFromDataModel(Map<String, dynamic> content, String key) {

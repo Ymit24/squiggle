@@ -1,7 +1,21 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindRectangle extends FeatureKind {
-  FeatureKindRectangle({super.strokeColor, super.fillColor, super.strokeWidth});
+final class FeatureKindRectangle extends FeatureKind
+    with StrokeColorCapable, FillColorCapable, StrokeWidthCapable {
+  FeatureKindRectangle({
+    this.strokeColor = defaultFeatureStrokeColor,
+    this.fillColor = defaultFeatureFillColor,
+    this.strokeWidth = defaultStrokeWidth,
+  });
+
+  @override
+  Color strokeColor;
+
+  @override
+  Color fillColor;
+
+  @override
+  double strokeWidth;
 
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(

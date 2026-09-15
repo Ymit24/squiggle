@@ -152,7 +152,7 @@ void main() {
 
       context.history.run('Set fill', (transaction) {
         transaction.update(context.document.featureById(featureId)!, (feature) {
-          feature.kind.fillColor = transparentFillColor;
+          (feature.kind as FillColorCapable).fillColor = transparentFillColor;
         });
       });
       await Future<void>.delayed(Duration.zero);
@@ -176,7 +176,9 @@ void main() {
       bloc.add(const ClearStrokeEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final kind = (context.document.nodes.first as Feature).kind;
+      final kind =
+          (context.document.nodes.first as Feature).kind
+              as FeatureKindRectangle;
       expect(kind.hasVisibleStroke, isFalse);
       expect(kind.strokeWidth, StrokeWidthPreset.medium.width);
       await bloc.close();
@@ -193,7 +195,7 @@ void main() {
 
       context.history.run('Set fill', (transaction) {
         transaction.update(context.document.featureById(featureId)!, (feature) {
-          feature.kind.fillColor = transparentFillColor;
+          (feature.kind as FillColorCapable).fillColor = transparentFillColor;
         });
       });
       await Future<void>.delayed(Duration.zero);
@@ -201,7 +203,9 @@ void main() {
       bloc.add(const ClearStrokeEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final kind = (context.document.nodes.first as Feature).kind;
+      final kind =
+          (context.document.nodes.first as Feature).kind
+              as FeatureKindRectangle;
       expect(kind.hasVisibleStroke, isFalse);
       expect(kind.hasVisibleFill, isFalse);
       expect(kind.strokeWidth, StrokeWidthPreset.medium.width);
@@ -214,7 +218,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(
-        (context.document.nodes.first as Feature).kind.strokeColor,
+        ((context.document.nodes.first as Feature).kind as StrokeColorCapable)
+            .strokeColor,
         stylePresets[1].strokeColor,
       );
       await bloc.close();
@@ -232,7 +237,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(
-        (context.document.nodes.first as Feature).kind.strokeColor,
+        ((context.document.nodes.first as Feature).kind as StrokeColorCapable)
+            .strokeColor,
         stylePresets[0].strokeColor,
       );
       await bloc.close();

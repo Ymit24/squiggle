@@ -56,10 +56,11 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       return const StylePanelHiddenState();
     }
 
-    final isStrokeNone = kinds.every((kind) => !kind.hasVisibleStroke);
-    final isFillNone = kinds.every((kind) => !kind.hasVisibleFill);
+    final isStrokeNone = !kinds.any(_hasVisibleStroke);
+    final isFillNone = !kinds.any(_hasVisibleFill);
 
     final strokeColorStates = kinds.map(_strokeColorStateKey).toSet();
+    final strokeWidthKinds = kinds.whereType<StrokeWidthCapable>().toList();
     final strokeWidthStates = kinds.map(_strokeWidthStateKey).toSet();
     final fillStates = kinds.map(_fillStateKey).toSet();
 
@@ -70,18 +71,22 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     int? activeStrokePresetIndex;
     if (showStyleControls && !strokeMixed && !isStrokeNone) {
       activeStrokePresetIndex = strokePresetIndexForColor(
-        kinds.first.strokeColor,
+        kinds.whereType<StrokeColorCapable>().first.strokeColor,
       );
     }
 
     int? activeFillPresetIndex;
     if (!fillMixed && !isFillNone) {
-      activeFillPresetIndex = fillPresetIndexForColor(kinds.first.fillColor);
+      activeFillPresetIndex = fillPresetIndexForColor(
+        kinds.whereType<FillColorCapable>().first.fillColor,
+      );
     }
 
     StrokeWidthPreset? activeStrokeWidth;
-    if (showStyleControls && !strokeWidthMixed) {
-      activeStrokeWidth = StrokeWidthPreset.fromWidth(kinds.first.strokeWidth);
+    if (strokeWidthKinds.isNotEmpty && !strokeWidthMixed) {
+      activeStrokeWidth = StrokeWidthPreset.fromWidth(
+        strokeWidthKinds.first.strokeWidth,
+      );
     }
 
     final textKinds = kinds.whereType<FeatureKindText>().toList();
@@ -142,23 +147,30 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     );
   }
 
-  String _strokeColorStateKey(FeatureKind kind) {
-    if (!kind.hasVisibleStroke) {
-      return 'none';
-    }
-    return 'stroke:${kind.strokeColor.toARGB32()}';
-  }
+  bool _hasVisibleStroke(FeatureKind kind) => switch (kind) {
+    StrokeColorCapable(:final hasVisibleStroke) => hasVisibleStroke,
+  };
 
-  String _strokeWidthStateKey(FeatureKind kind) {
-    return 'width:${kind.strokeWidth}';
-  }
+  bool _hasVisibleFill(FeatureKind kind) => switch (kind) {
+    FillColorCapable(:final hasVisibleFill) => hasVisibleFill,
+    _ => false,
+  };
 
-  String _fillStateKey(FeatureKind kind) {
-    if (!kind.hasVisibleFill) {
-      return 'none';
-    }
-    return 'fill:${kind.fillColor.toARGB32()}';
-  }
+  String _strokeColorStateKey(FeatureKind kind) => switch (kind) {
+    StrokeColorCapable(hasVisibleStroke: true, :final strokeColor) =>
+      'stroke:${strokeColor.toARGB32()}',
+    _ => 'none',
+  };
+
+  String _strokeWidthStateKey(FeatureKind kind) => switch (kind) {
+    StrokeWidthCapable(:final strokeWidth) => 'width:$strokeWidth',
+  };
+
+  String _fillStateKey(FeatureKind kind) => switch (kind) {
+    FillColorCapable(hasVisibleFill: true, :final fillColor) =>
+      'fill:${fillColor.toARGB32()}',
+    _ => 'none',
+  };
 
   List<NodeId> _selectedIdsOrEmpty() {
     final current = state;
@@ -189,11 +201,21 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       transaction.watch(features);
       for (final feature in features) {
         final kind = feature.kind;
-        if (strokeColor != null) kind.strokeColor = strokeColor;
-        if (fillColor != null && kind is! FeatureKindImage) {
-          kind.fillColor = fillColor;
+        if (strokeColor case final Color color) {
+          if (kind case final StrokeColorCapable capable) {
+            capable.strokeColor = color;
+          }
         }
-        if (strokeWidth != null) kind.strokeWidth = strokeWidth;
+        if (fillColor case final Color color) {
+          if (kind case final FillColorCapable capable) {
+            capable.fillColor = color;
+          }
+        }
+        if (strokeWidth case final double width) {
+          if (kind case final StrokeWidthCapable capable) {
+            capable.strokeWidth = width;
+          }
+        }
 
         if (kind is FeatureKindText) {
           if (horizontalAlignment != null) {
