@@ -56,8 +56,16 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       return const StylePanelHiddenState();
     }
 
-    final isStrokeNone = kinds.every((kind) => !kind.hasVisibleStroke);
-    final isFillNone = kinds.every((kind) => !kind.hasVisibleFill);
+    final isStrokeNone = kinds.every(
+      (kind) =>
+          kind is! StrokeColorCapable ||
+          !(kind as StrokeColorCapable).hasVisibleStroke,
+    );
+    final isFillNone = kinds.every(
+      (kind) =>
+          kind is! FillColorCapable ||
+          !(kind as FillColorCapable).hasVisibleFill,
+    );
 
     final strokeColorStates = kinds.map(_strokeColorStateKey).toSet();
     final strokeWidthStates = kinds.map(_strokeWidthStateKey).toSet();
@@ -70,13 +78,15 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     int? activeStrokePresetIndex;
     if (showStyleControls && !strokeMixed && !isStrokeNone) {
       activeStrokePresetIndex = strokePresetIndexForColor(
-        kinds.first.strokeColor,
+        kinds.whereType<StrokeColorCapable>().first.strokeColor,
       );
     }
 
     int? activeFillPresetIndex;
     if (!fillMixed && !isFillNone) {
-      activeFillPresetIndex = fillPresetIndexForColor(kinds.first.fillColor);
+      activeFillPresetIndex = fillPresetIndexForColor(
+        kinds.whereType<FillColorCapable>().first.fillColor,
+      );
     }
 
     StrokeWidthPreset? activeStrokeWidth;
@@ -143,10 +153,12 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   String _strokeColorStateKey(FeatureKind kind) {
-    if (!kind.hasVisibleStroke) {
+    if (kind is! StrokeColorCapable) {
       return 'none';
     }
-    return 'stroke:${kind.strokeColor.toARGB32()}';
+    final capable = kind as StrokeColorCapable;
+    if (!capable.hasVisibleStroke) return 'none';
+    return 'stroke:${capable.strokeColor.toARGB32()}';
   }
 
   String _strokeWidthStateKey(FeatureKind kind) {
@@ -154,10 +166,12 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
   }
 
   String _fillStateKey(FeatureKind kind) {
-    if (!kind.hasVisibleFill) {
+    if (kind is! FillColorCapable) {
       return 'none';
     }
-    return 'fill:${kind.fillColor.toARGB32()}';
+    final capable = kind as FillColorCapable;
+    if (!capable.hasVisibleFill) return 'none';
+    return 'fill:${capable.fillColor.toARGB32()}';
   }
 
   List<NodeId> _selectedIdsOrEmpty() {
@@ -189,9 +203,11 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       transaction.watch(features);
       for (final feature in features) {
         final kind = feature.kind;
-        if (strokeColor != null) kind.strokeColor = strokeColor;
-        if (fillColor != null && kind is! FeatureKindImage) {
-          kind.fillColor = fillColor;
+        if (strokeColor != null && kind is StrokeColorCapable) {
+          (kind as StrokeColorCapable).strokeColor = strokeColor;
+        }
+        if (fillColor != null && kind is FillColorCapable) {
+          (kind as FillColorCapable).fillColor = fillColor;
         }
         if (strokeWidth != null) kind.strokeWidth = strokeWidth;
 

@@ -1,10 +1,9 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindImage extends FeatureKind {
+final class FeatureKindImage extends FeatureKind with StrokeColorCapable {
   FeatureKindImage(
     this.imageId, {
-    super.strokeColor = transparentStrokeColor,
-    super.fillColor = const Color(0x00000000),
+    this.strokeColor = transparentStrokeColor,
     super.strokeWidth,
   });
 
@@ -12,7 +11,6 @@ final class FeatureKindImage extends FeatureKind {
       FeatureKindImage(
         content['imageId'] as String,
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
-        fillColor: _colorFromDataModel(content, 'fillColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
@@ -21,7 +19,6 @@ final class FeatureKindImage extends FeatureKind {
     'type': 'image',
     'imageId': imageId,
     'strokeColor': strokeColor.toARGB32(),
-    'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
   };
 
@@ -29,14 +26,12 @@ final class FeatureKindImage extends FeatureKind {
   FeatureKindImage clone() => FeatureKindImage(
     imageId,
     strokeColor: strokeColor,
-    fillColor: fillColor,
     strokeWidth: strokeWidth,
   );
 
   String imageId;
-
   @override
-  bool get hasVisibleFill => false;
+  Color strokeColor;
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {

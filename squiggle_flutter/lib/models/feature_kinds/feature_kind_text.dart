@@ -3,14 +3,15 @@ part of 'feature_kind.dart';
 const kMinTextFontSize = 1.0;
 const kMaxTextFontSize = 1000.0;
 
-final class FeatureKindText extends FeatureKind {
+final class FeatureKindText extends FeatureKind
+    with StrokeColorCapable, FillColorCapable {
   FeatureKindText(
     this.contents, {
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
     this.verticalAlignment = TextVerticalAlignment.top,
-    super.strokeColor,
-    super.fillColor,
+    this.strokeColor = defaultFeatureStrokeColor,
+    this.fillColor = defaultFeatureFillColor,
     super.strokeWidth,
   });
 
@@ -55,6 +56,10 @@ final class FeatureKindText extends FeatureKind {
   );
 
   String contents;
+  @override
+  Color strokeColor;
+  @override
+  Color fillColor;
   double fontSize;
   TextHorizontalAlignment horizontalAlignment;
   TextVerticalAlignment verticalAlignment;
