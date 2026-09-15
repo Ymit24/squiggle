@@ -84,12 +84,13 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
     final feature = context.document.featureById(id);
     if (feature == null) return;
     final textKind = feature.kind;
-    if (textKind is! FeatureKindText) return;
+    if (textKind is! LabelCapable) return;
+    final labelCapability = textKind as LabelCapable;
     context.history.run('Edit text', (transaction) {
       transaction.watch([feature]);
       final bounds = feature.localBounds();
-      textKind.contents = contents;
-      textKind.fitToBounds(width: bounds.width, height: bounds.height);
+      labelCapability.label = contents;
+      labelCapability.fitToBounds(width: bounds.width, height: bounds.height);
     }, container: feature.parent);
   }
 }
