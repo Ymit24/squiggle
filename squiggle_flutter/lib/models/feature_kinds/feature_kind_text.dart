@@ -66,90 +66,55 @@ final class FeatureKindText extends FeatureKind
   TextHorizontalAlignment horizontalAlignment;
   TextVerticalAlignment verticalAlignment;
 
-  ui.ParagraphStyle _paragraphStyle(double fontSize) => ui.ParagraphStyle(
-    textAlign: horizontalAlignment.textAlign,
-    fontSize: fontSize,
-    textDirection: TextDirection.ltr,
-  );
-
+  /// Measures wrapped text at [width], returning the supplied width and paragraph height.
   Size measureContents({required double width, required double fontSize}) {
-    final clampedWidth = width < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : width;
-    if (contents.isEmpty) {
-      return Size(clampedWidth, fontSize);
-    }
-
-    final builder = ui.ParagraphBuilder(_paragraphStyle(fontSize))
-      ..pushStyle(ui.TextStyle(fontSize: fontSize))
-      ..addText(contents);
-    final paragraph = builder.build()
-      ..layout(ui.ParagraphConstraints(width: clampedWidth));
-    return Size(
-      clampedWidth,
-      paragraph.height.clamp(fontSize, double.infinity),
+    final paragraph = _layoutTextParagraph(
+      contents,
+      width: width,
+      fontSize: fontSize,
+      horizontalAlignment: horizontalAlignment,
     );
+    try {
+      return Size(width, paragraph.height);
+    } finally {
+      paragraph.dispose();
+    }
   }
 
-  /// Largest [fontSize] where [contents] fits within [width] x [height].
-  double fontSizeFillingBounds({
+  /// Largest font size, within 0.25 units, whose wrapped layout fits [height].
+  ///
+  /// Returns null if the minimum size does not fit. This checks paragraph height,
+  /// not glyph or outline containment; painting can clip any overflow.
+  double? fontSizeFillingBounds({
     required double width,
     required double height,
   }) {
-    final clampedWidth = width < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : width;
-    final clampedHeight = height < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : height;
+    assert(width.isFinite && width > 0);
+    assert(height.isFinite && height >= 0);
 
-    if (contents.isEmpty) {
-      return clampedHeight.clamp(kMinTextFontSize, kMaxTextFontSize);
-    }
+    bool fits(double size) =>
+        measureContents(width: width, fontSize: size).height <= height;
 
-    if (measureContents(
-          width: clampedWidth,
-          fontSize: kMinTextFontSize,
-        ).height >
-        clampedHeight) {
-      return kMinTextFontSize;
-    }
+    var low = kMinTextFontSize;
+    var high = kMaxTextFontSize;
+    if (!fits(low)) return null;
+    if (fits(high)) return high;
 
-    var lo = kMinTextFontSize;
-    var hi = clampedHeight;
-    while (measureContents(width: clampedWidth, fontSize: hi).height <=
-            clampedHeight &&
-        hi < kMaxTextFontSize) {
-      hi *= 2;
-    }
-    hi = hi.clamp(kMinTextFontSize, kMaxTextFontSize);
-
-    for (var i = 0; i < 40; i++) {
-      if (hi - lo < 0.25) {
-        break;
-      }
-      final mid = (lo + hi) / 2;
-      if (measureContents(width: clampedWidth, fontSize: mid).height <=
-          clampedHeight) {
-        lo = mid;
+    while (high - low > 0.25) {
+      final mid = (low + high) / 2;
+      if (fits(mid)) {
+        low = mid;
       } else {
-        hi = mid;
+        high = mid;
       }
     }
-    return lo;
+    return low;
   }
 
   void fitToBounds({required double width, required double height}) {
-    final clampedWidth = width < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : width;
-    final clampedHeight = height < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : height;
-    fontSize = fontSizeFillingBounds(
-      width: clampedWidth,
-      height: clampedHeight,
-    );
+    if (contents.isEmpty) return;
+    fontSize =
+        fontSizeFillingBounds(width: width, height: height) ?? kMinTextFontSize;
   }
 
   /// Sets [feature] to [fontSize] and a height measured from [contents].
@@ -177,48 +142,108 @@ final class FeatureKindText extends FeatureKind
     fitToBounds(width: clampedWidth, height: clampedHeight);
   }
 
-  ui.Paragraph _layoutParagraph({
-    required ui.ParagraphStyle paragraphStyle,
-    required ui.TextStyle textStyle,
-    required double width,
-  }) {
-    final builder = ui.ParagraphBuilder(paragraphStyle)
-      ..pushStyle(textStyle)
-      ..addText(contents);
-    return builder.build()..layout(ui.ParagraphConstraints(width: width));
-  }
-
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    if (contents.isEmpty) return;
+    paintText(
+      canvas,
+      contents,
+      feature.localBounds(),
+      fontSize: fontSize,
+      fillColor: fillColor,
+      strokeColor: strokeColor,
+      strokeWidth: strokeWidth,
+      horizontalAlignment: horizontalAlignment,
+      verticalAlignment: verticalAlignment,
+      clipToBounds: false,
+    );
+  }
+}
 
-    final worldBounds = feature.localBounds();
-    final paragraphStyle = _paragraphStyle(fontSize);
+/// Lays out text identically for measurement and painting.
+/// The caller owns and must dispose the returned paragraph.
+ui.Paragraph _layoutTextParagraph(
+  String text, {
+  required double width,
+  required double fontSize,
+  TextHorizontalAlignment horizontalAlignment = TextHorizontalAlignment.left,
+  Paint? foreground,
+}) {
+  assert(width.isFinite && width > 0);
+  assert(fontSize.isFinite && fontSize > 0);
 
-    final strokeParagraph = _layoutParagraph(
-      paragraphStyle: paragraphStyle,
-      textStyle: ui.TextStyle(
-        foreground: Paint()
+  final builder =
+      ui.ParagraphBuilder(
+          ui.ParagraphStyle(
+            textAlign: horizontalAlignment.textAlign,
+            fontSize: fontSize,
+            textDirection: TextDirection.ltr,
+          ),
+        )
+        ..pushStyle(ui.TextStyle(fontSize: fontSize, foreground: foreground))
+        ..addText(text);
+  return builder.build()..layout(ui.ParagraphConstraints(width: width));
+}
+
+/// Paints wrapped text at a fixed font size in the canvas's current coordinates.
+///
+/// Null colors omit that pass; zero stroke width disables the outline.
+/// [bounds] is the content area; callers supply any desired padding.
+void paintText(
+  Canvas canvas,
+  String text,
+  Rect bounds, {
+  double fontSize = defaultFontSize,
+  Color? fillColor = defaultNewTextFillColor,
+  Color? strokeColor,
+  double strokeWidth = 1,
+  TextHorizontalAlignment horizontalAlignment = TextHorizontalAlignment.center,
+  TextVerticalAlignment verticalAlignment = TextVerticalAlignment.center,
+  bool clipToBounds = true,
+}) {
+  assert(bounds.isFinite);
+  assert(fontSize.isFinite && fontSize > 0);
+  assert(strokeWidth.isFinite && strokeWidth >= 0);
+  if (text.isEmpty || bounds.isEmpty) return;
+
+  void paintParagraph(Paint foreground) {
+    final paragraph = _layoutTextParagraph(
+      text,
+      width: bounds.width,
+      fontSize: fontSize,
+      horizontalAlignment: horizontalAlignment,
+      foreground: foreground,
+    );
+    try {
+      canvas.drawParagraph(
+        paragraph,
+        textOriginInBounds(
+          bounds: bounds,
+          textHeight: paragraph.height,
+          verticalAlignment: verticalAlignment,
+        ),
+      );
+    } finally {
+      paragraph.dispose();
+    }
+  }
+
+  if (clipToBounds) {
+    canvas.save();
+    canvas.clipRect(bounds);
+  }
+  try {
+    if (strokeColor != null && strokeColor.a > 0 && strokeWidth > 0) {
+      paintParagraph(
+        Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = strokeWidth
           ..color = strokeColor,
-        fontSize: fontSize,
-      ),
-      width: worldBounds.width,
-    );
-    final fillParagraph = _layoutParagraph(
-      paragraphStyle: paragraphStyle,
-      textStyle: ui.TextStyle(color: fillColor, fontSize: fontSize),
-      width: worldBounds.width,
-    );
-
-    final position = textOriginInBounds(
-      bounds: worldBounds,
-      textHeight: fillParagraph.height,
-      verticalAlignment: verticalAlignment,
-    );
-
-    canvas.drawParagraph(strokeParagraph, position);
-    canvas.drawParagraph(fillParagraph, position);
+      );
+    }
+    if (fillColor != null && fillColor.a > 0) {
+      paintParagraph(Paint()..color = fillColor);
+    }
+  } finally {
+    if (clipToBounds) canvas.restore();
   }
 }
