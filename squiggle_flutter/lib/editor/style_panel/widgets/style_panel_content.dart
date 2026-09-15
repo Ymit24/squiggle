@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/line_end_cap_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
@@ -56,21 +57,23 @@ class StylePanelContent extends StatelessWidget {
                     onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
                   ),
                   SizedBox(height: spacing.panelSectionSpacing),
-                  SectionLabel('Fill'),
-                  ColorRow(
-                    presets: stylePresets
-                        .map((preset) => preset.fillColor)
-                        .toList(),
-                    activePresetIndex: state.fillMixed
-                        ? null
-                        : state.activeFillPresetIndex,
-                    isNoneActive: state.isFillNone,
-                    noneEnabled: state.canClearFill,
-                    onPresetSelected: (index) =>
-                        bloc.add(SetFillPresetEvent(index)),
-                    onNoneSelected: () => bloc.add(const ClearFillEvent()),
-                  ),
-                  SizedBox(height: spacing.panelSectionSpacing),
+                  if (state.showFillControls) ...[
+                    SectionLabel('Fill'),
+                    ColorRow(
+                      presets: stylePresets
+                          .map((preset) => preset.fillColor)
+                          .toList(),
+                      activePresetIndex: state.fillMixed
+                          ? null
+                          : state.activeFillPresetIndex,
+                      isNoneActive: state.isFillNone,
+                      noneEnabled: state.canClearFill,
+                      onPresetSelected: (index) =>
+                          bloc.add(SetFillPresetEvent(index)),
+                      onNoneSelected: () => bloc.add(const ClearFillEvent()),
+                    ),
+                    SizedBox(height: spacing.panelSectionSpacing),
+                  ],
                   SectionLabel('Width'),
                   StrokeWidthSelector(
                     activePreset: state.activeStrokeWidth,
@@ -78,6 +81,26 @@ class StylePanelContent extends StatelessWidget {
                     onPresetSelected: (preset) =>
                         bloc.add(SetStrokeWidthEvent(preset)),
                   ),
+                  if (state.showEndCaps) ...[
+                    SizedBox(height: spacing.panelSectionSpacing),
+                    SectionLabel('Start cap'),
+                    LineEndCapSelector(
+                      activeEndCap: state.activeStartEndCap,
+                      isMixed: state.startEndCapMixed,
+                      isStart: true,
+                      onEndCapSelected: (endCap) =>
+                          bloc.add(SetStartEndCapEvent(endCap)),
+                    ),
+                    SizedBox(height: spacing.panelSectionSpacing),
+                    SectionLabel('End cap'),
+                    LineEndCapSelector(
+                      activeEndCap: state.activeEndEndCap,
+                      isMixed: state.endEndCapMixed,
+                      isStart: false,
+                      onEndCapSelected: (endCap) =>
+                          bloc.add(SetEndEndCapEvent(endCap)),
+                    ),
+                  ],
                 ],
                 if (state.selectedNodeIds.length >= 2) ...[
                   if (state.showStyleControls)

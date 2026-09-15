@@ -1,0 +1,1 @@
+enum LineEndCap { rounded, arrow }

@@ -7,7 +7,6 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
@@ -248,7 +247,7 @@ class CreateLineTool extends Tool {
     return Feature(
       origin: origin,
       size: Size.zero,
-      kind: FeatureKindPolyline(localPoints, fillColor: SquiggleColors.accent),
+      kind: FeatureKindPolyline(localPoints),
     );
   }
 

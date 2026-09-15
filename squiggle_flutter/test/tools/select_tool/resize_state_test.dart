@@ -221,8 +221,8 @@ void main() {
       final grabOffset = down - bounds.bottomRight;
 
       harness.pointerDown(down);
-      harness.pointerMove(const Offset(142, 142) + grabOffset);
-      harness.pointerUp(const Offset(142, 142) + grabOffset);
+      harness.pointerMove(const Offset(146, 146) + grabOffset);
+      harness.pointerUp(const Offset(146, 146) + grabOffset);
 
       expect(feature.size, const Size(150, 150));
       expect(polylineWorldPoints(feature).last, isNot(endBefore));
