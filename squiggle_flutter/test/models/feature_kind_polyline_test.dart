@@ -16,7 +16,6 @@ Feature polylineFeature({
     kind: FeatureKindPolyline(
       localPoints,
       strokeColor: const Color(0xFFFFFFFF),
-      fillColor: const Color(0xFF89B4FA),
     ),
   );
 }
@@ -37,7 +36,6 @@ void main() {
           {'x': 10.0, 'y': 20.0},
         ],
         'strokeColor': kind.strokeColor.toARGB32(),
-        'fillColor': kind.fillColor.toARGB32(),
         'strokeWidth': kind.strokeWidth,
       });
     });
@@ -51,16 +49,13 @@ void main() {
       final kind = FeatureKindPolyline(
         [Offset(1.5, -2.5), Offset(10, 20)],
         strokeColor: Color(0xFF112233),
-        fillColor: Color(0xFF445566),
         strokeWidth: 3.5,
       );
       final decoded = FeatureKindPolyline.fromDataModel(kind.toDataModel());
       expect(decoded.localPoints, kind.localPoints);
       expect(decoded.strokeColor, kind.strokeColor);
-      expect(decoded.fillColor, kind.fillColor);
       expect(decoded.strokeWidth, kind.strokeWidth);
     });
-  });
 
   group('FeatureKindPolyline geometry', () {
     test('boundsFor includes stroke padding around centerline points', () {
@@ -70,7 +65,7 @@ void main() {
         localPoints: const [Offset.zero, Offset(100, 100)],
       );
 
-      expect(feature.localBounds(), const Rect.fromLTWH(2, 12, 116, 116));
+      expect(feature.localBounds(), const Rect.fromLTWH(6, 16, 108, 108));
     });
 
     test('hitTest hits on segment and misses off to the side', () {
@@ -111,9 +106,9 @@ void main() {
         localPoints: const [Offset.zero, Offset(100, 0)],
       );
 
-      expect(feature.hitTest(const Offset(50, 10)), isTrue);
+      expect(feature.hitTest(const Offset(50, 7)), isTrue);
       expect(
-        feature.intersectsRect(const Rect.fromLTWH(45, 8, 10, 10)),
+        feature.intersectsRect(const Rect.fromLTWH(45, 7, 10, 10)),
         isTrue,
       );
     });
@@ -168,8 +163,8 @@ void main() {
 
       final resized = (doc.nodes.first as Feature);
       expect(resized.localBounds(), const Rect.fromLTWH(0, 0, 200, 50));
-      expect(worldPoint(resized, 0), const Offset(8, 8));
-      expect(worldPoint(resized, 1), const Offset(192, 42));
+      expect(worldPoint(resized, 0), const Offset(4, 4));
+      expect(worldPoint(resized, 1), const Offset(196, 46));
     });
   });
 

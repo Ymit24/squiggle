@@ -134,6 +134,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       activeFillPresetIndex: activeFillPresetIndex,
       isFillNone: isFillNone,
       fillMixed: fillMixed,
+      showFillControls: kinds.any((kind) => kind is FillColorCapable),
       activeStrokeWidth: activeStrokeWidth,
       canClearStroke: !isStrokeNone,
       canClearFill: !isFillNone,
