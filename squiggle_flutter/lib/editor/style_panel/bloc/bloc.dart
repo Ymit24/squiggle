@@ -19,6 +19,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     on<SetFillPresetEvent>(_onSetFillPreset);
     on<ClearFillEvent>(_onClearFill);
     on<SetStrokeWidthEvent>(_onSetStrokeWidth);
+    on<SetStartEndCapEvent>(_onSetStartEndCap);
+    on<SetEndEndCapEvent>(_onSetEndEndCap);
     on<SetFontSizeEvent>(_onSetFontSize);
     on<SetTextHorizontalAlignmentEvent>(_onSetTextHorizontalAlignment);
     on<SetTextVerticalAlignmentEvent>(_onSetTextVerticalAlignment);
@@ -61,6 +63,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
 
     final strokeColorStates = kinds.map(_strokeColorStateKey).toSet();
     final strokeWidthKinds = kinds.whereType<StrokeWidthCapable>().toList();
+    final lineKinds = kinds.whereType<FeatureKindPolyline>().toList();
     final strokeWidthStates = kinds.map(_strokeWidthStateKey).toSet();
     final fillStates = kinds.map(_fillStateKey).toSet();
 
@@ -88,6 +91,11 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
         strokeWidthKinds.first.strokeWidth,
       );
     }
+
+    final startEndCapStates = lineKinds.map((kind) => kind.startEndCap).toSet();
+    final endEndCapStates = lineKinds.map((kind) => kind.endEndCap).toSet();
+    final startEndCapMixed = startEndCapStates.length > 1;
+    final endEndCapMixed = endEndCapStates.length > 1;
 
     final textKinds = kinds.whereType<FeatureKindText>().toList();
     final showFontSize = textKinds.isNotEmpty;
@@ -136,6 +144,15 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       fillMixed: fillMixed,
       showFillControls: kinds.any((kind) => kind is FillColorCapable),
       activeStrokeWidth: activeStrokeWidth,
+      showEndCaps: lineKinds.isNotEmpty,
+      startEndCapMixed: startEndCapMixed,
+      activeStartEndCap: lineKinds.isEmpty || startEndCapMixed
+          ? null
+          : lineKinds.first.startEndCap,
+      endEndCapMixed: endEndCapMixed,
+      activeEndEndCap: lineKinds.isEmpty || endEndCapMixed
+          ? null
+          : lineKinds.first.endEndCap,
       canClearStroke: !isStrokeNone,
       canClearFill: !isFillNone,
       showFontSize: showFontSize,
@@ -188,6 +205,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     double? fontSize,
     TextHorizontalAlignment? horizontalAlignment,
     TextVerticalAlignment? verticalAlignment,
+    LineEndCap? startEndCap,
+    LineEndCap? endEndCap,
   }) {
     final ids = _selectedIdsOrEmpty();
     if (ids.isEmpty) return;
@@ -216,6 +235,10 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
           if (kind case final StrokeWidthCapable capable) {
             capable.strokeWidth = width;
           }
+        }
+        if (kind is FeatureKindPolyline) {
+          if (startEndCap != null) kind.startEndCap = startEndCap;
+          if (endEndCap != null) kind.endEndCap = endEndCap;
         }
 
         if (kind is FeatureKindText) {
@@ -280,6 +303,19 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     if (state is! StylePanelShowingState) return;
 
     _applyStyleUpdate(strokeWidth: event.preset.width);
+  }
+
+  void _onSetStartEndCap(
+    SetStartEndCapEvent event,
+    Emitter<StylePanelState> emit,
+  ) {
+    if (state is! StylePanelShowingState) return;
+    _applyStyleUpdate(startEndCap: event.endCap);
+  }
+
+  void _onSetEndEndCap(SetEndEndCapEvent event, Emitter<StylePanelState> emit) {
+    if (state is! StylePanelShowingState) return;
+    _applyStyleUpdate(endEndCap: event.endCap);
   }
 
   void _onSetFontSize(SetFontSizeEvent event, Emitter<StylePanelState> emit) {

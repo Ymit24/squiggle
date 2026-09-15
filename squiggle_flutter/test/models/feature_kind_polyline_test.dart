@@ -37,6 +37,8 @@ void main() {
         ],
         'strokeColor': kind.strokeColor.toARGB32(),
         'strokeWidth': kind.strokeWidth,
+        'startEndCap': LineEndCap.rounded.name,
+        'endEndCap': LineEndCap.rounded.name,
       });
     });
 
@@ -50,12 +52,28 @@ void main() {
         [Offset(1.5, -2.5), Offset(10, 20)],
         strokeColor: Color(0xFF112233),
         strokeWidth: 3.5,
+        startEndCap: LineEndCap.arrow,
       );
       final decoded = FeatureKindPolyline.fromDataModel(kind.toDataModel());
       expect(decoded.localPoints, kind.localPoints);
       expect(decoded.strokeColor, kind.strokeColor);
       expect(decoded.strokeWidth, kind.strokeWidth);
+      expect(decoded.startEndCap, LineEndCap.arrow);
+      expect(decoded.endEndCap, LineEndCap.rounded);
     });
+
+    test('missing end caps decode as rounded for existing documents', () {
+      final data =
+          FeatureKindPolyline([Offset.zero, const Offset(10, 0)]).toDataModel()
+            ..remove('startEndCap')
+            ..remove('endEndCap');
+
+      final decoded = FeatureKindPolyline.fromDataModel(data);
+
+      expect(decoded.startEndCap, LineEndCap.rounded);
+      expect(decoded.endEndCap, LineEndCap.rounded);
+    });
+  });
 
   group('FeatureKindPolyline geometry', () {
     test('boundsFor includes stroke padding around centerline points', () {
@@ -77,6 +95,15 @@ void main() {
 
       expect(feature.hitTest(const Offset(50, 0)), isTrue);
       expect(feature.hitTest(const Offset(50, 40)), isFalse);
+    });
+
+    test('hitTest includes arrow heads', () {
+      final feature = polylineFeature(
+        localPoints: const [Offset.zero, Offset(100, 0)],
+      );
+      (feature.kind as FeatureKindPolyline).endEndCap = LineEndCap.arrow;
+
+      expect(feature.hitTest(const Offset(80, 10)), isTrue);
     });
 
     test(

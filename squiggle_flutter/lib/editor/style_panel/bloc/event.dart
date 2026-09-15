@@ -35,6 +35,18 @@ class SetStrokeWidthEvent extends StylePanelEvent {
   final StrokeWidthPreset preset;
 }
 
+class SetStartEndCapEvent extends StylePanelEvent {
+  const SetStartEndCapEvent(this.endCap);
+
+  final LineEndCap endCap;
+}
+
+class SetEndEndCapEvent extends StylePanelEvent {
+  const SetEndEndCapEvent(this.endCap);
+
+  final LineEndCap endCap;
+}
+
 class SetFontSizeEvent extends StylePanelEvent {
   const SetFontSizeEvent(this.preset);
 
