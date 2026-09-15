@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 Feature polylineFeature({
   Offset origin = Offset.zero,
@@ -104,6 +105,33 @@ void main() {
       (feature.kind as FeatureKindPolyline).endEndCap = LineEndCap.arrow;
 
       expect(feature.hitTest(const Offset(80, 10)), isTrue);
+    });
+
+    test('paints the line and solid arrow head with stroke color', () async {
+      final feature = polylineFeature(
+        origin: const Offset(30, 50),
+        localPoints: const [Offset.zero, Offset(100, 0)],
+      );
+      (feature.kind as FeatureKindPolyline).endEndCap = LineEndCap.arrow;
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      final imageRepository = ImageRepository();
+      feature.paint(canvas, imageRepository);
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(160, 100);
+      final pixels = await image.toByteData(format: ImageByteFormat.rawRgba);
+
+      List<int> pixelAt(int x, int y) {
+        final offset = (y * image.width + x) * 4;
+        return [for (var i = 0; i < 4; i++) pixels!.getUint8(offset + i)];
+      }
+
+      expect(pixelAt(80, 50), [0xFF, 0xFF, 0xFF, 0xFF]);
+      expect(pixelAt(120, 50), [0xFF, 0xFF, 0xFF, 0xFF]);
+
+      image.dispose();
+      picture.dispose();
+      imageRepository.dispose();
     });
 
     test(
