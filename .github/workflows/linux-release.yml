@@ -86,7 +86,7 @@ jobs:
         run: |
           tar \
             -C build/linux/x64/release/bundle \
-            -czf "../../../../../squiggle-linux-x64-v${RELEASE_VERSION}.tar.gz" \
+            -czf "${GITHUB_WORKSPACE}/squiggle_flutter/squiggle-linux-x64-v${RELEASE_VERSION}.tar.gz" \
             .
 
       - name: Commit version and tag release
