@@ -4,7 +4,7 @@ const kMinTextFontSize = 1.0;
 const kMaxTextFontSize = 1000.0;
 
 final class FeatureKindText extends FeatureKind
-    with StrokeColorCapable, FillColorCapable {
+    with StrokeColorCapable, FillColorCapable, StrokeWidthCapable {
   FeatureKindText(
     this.contents, {
     this.fontSize = defaultFontSize,
@@ -12,7 +12,7 @@ final class FeatureKindText extends FeatureKind
     this.verticalAlignment = TextVerticalAlignment.top,
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
-    super.strokeWidth,
+    this.strokeWidth = defaultStrokeWidth,
   });
 
   factory FeatureKindText.fromDataModel(Map<String, dynamic> content) =>
@@ -60,6 +60,8 @@ final class FeatureKindText extends FeatureKind
   Color strokeColor;
   @override
   Color fillColor;
+  @override
+  double strokeWidth;
   double fontSize;
   TextHorizontalAlignment horizontalAlignment;
   TextVerticalAlignment verticalAlignment;

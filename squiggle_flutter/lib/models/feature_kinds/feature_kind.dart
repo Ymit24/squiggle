@@ -15,11 +15,7 @@ part 'feature_kind_polyline.dart';
 part 'feature_kind_image.dart';
 
 sealed class FeatureKind {
-  FeatureKind({this.strokeWidth = defaultStrokeWidth});
-
   Map<String, dynamic> toDataModel();
-
-  double strokeWidth;
 
   FeatureKind clone();
 
@@ -53,6 +49,11 @@ mixin FillColorCapable {
   set fillColor(Color value);
 
   bool get hasVisibleFill => fillColor.a > 0;
+}
+
+mixin StrokeWidthCapable {
+  double get strokeWidth;
+  set strokeWidth(double value);
 }
 
 double _doubleFromDataModel(Map<String, dynamic> content, String key) {

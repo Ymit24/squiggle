@@ -1,11 +1,11 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindCircle extends FeatureKind
-    with StrokeColorCapable, FillColorCapable {
+    with StrokeColorCapable, FillColorCapable, StrokeWidthCapable {
   FeatureKindCircle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
-    super.strokeWidth,
+    this.strokeWidth = defaultStrokeWidth,
   });
 
   @override
@@ -13,6 +13,9 @@ final class FeatureKindCircle extends FeatureKind
 
   @override
   Color fillColor;
+
+  @override
+  double strokeWidth;
 
   factory FeatureKindCircle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindCircle(

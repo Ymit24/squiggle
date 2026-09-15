@@ -60,6 +60,7 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     final isFillNone = !kinds.any(_hasVisibleFill);
 
     final strokeColorStates = kinds.map(_strokeColorStateKey).toSet();
+    final strokeWidthKinds = kinds.whereType<StrokeWidthCapable>().toList();
     final strokeWidthStates = kinds.map(_strokeWidthStateKey).toSet();
     final fillStates = kinds.map(_fillStateKey).toSet();
 
@@ -82,8 +83,10 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     }
 
     StrokeWidthPreset? activeStrokeWidth;
-    if (showStyleControls && !strokeWidthMixed) {
-      activeStrokeWidth = StrokeWidthPreset.fromWidth(kinds.first.strokeWidth);
+    if (strokeWidthKinds.isNotEmpty && !strokeWidthMixed) {
+      activeStrokeWidth = StrokeWidthPreset.fromWidth(
+        strokeWidthKinds.first.strokeWidth,
+      );
     }
 
     final textKinds = kinds.whereType<FeatureKindText>().toList();
@@ -159,9 +162,9 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     _ => 'none',
   };
 
-  String _strokeWidthStateKey(FeatureKind kind) {
-    return 'width:${kind.strokeWidth}';
-  }
+  String _strokeWidthStateKey(FeatureKind kind) => switch (kind) {
+    StrokeWidthCapable(:final strokeWidth) => 'width:$strokeWidth',
+  };
 
   String _fillStateKey(FeatureKind kind) => switch (kind) {
     FillColorCapable(hasVisibleFill: true, :final fillColor) =>
@@ -208,7 +211,11 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
             capable.fillColor = color;
           }
         }
-        if (strokeWidth != null) kind.strokeWidth = strokeWidth;
+        if (strokeWidth case final double width) {
+          if (kind case final StrokeWidthCapable capable) {
+            capable.strokeWidth = width;
+          }
+        }
 
         if (kind is FeatureKindText) {
           if (horizontalAlignment != null) {
