@@ -1,11 +1,7 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindCircle extends FeatureKind {
-  const FeatureKindCircle({
-    super.strokeColor,
-    super.fillColor,
-    super.strokeWidth,
-  });
+  FeatureKindCircle({super.strokeColor, super.fillColor, super.strokeWidth});
 
   factory FeatureKindCircle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindCircle(
@@ -21,6 +17,13 @@ final class FeatureKindCircle extends FeatureKind {
     'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
   };
+
+  @override
+  FeatureKindCircle clone() => FeatureKindCircle(
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {

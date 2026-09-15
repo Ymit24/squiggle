@@ -151,7 +151,7 @@ Feature _rectangle(int id, Offset origin) => Feature(
   id: NodeId.newId(id),
   origin: origin,
   size: const Size(100, 80),
-  kind: const FeatureKindRectangle(),
+  kind: FeatureKindRectangle(),
 );
 
 List<NodeId> _ids(Document document) => [

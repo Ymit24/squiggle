@@ -12,10 +12,10 @@ class CreateFeatureTool extends Tool {
   CreateFeatureTool({required this.kind}) : _state = const _Idle();
 
   factory CreateFeatureTool.rect() =>
-      CreateFeatureTool(kind: const FeatureKindRectangle());
+      CreateFeatureTool(kind: FeatureKindRectangle());
 
   factory CreateFeatureTool.circle() =>
-      CreateFeatureTool(kind: const FeatureKindCircle());
+      CreateFeatureTool(kind: FeatureKindCircle());
 
   final FeatureKind kind;
   _CreateState _state;
@@ -101,7 +101,11 @@ class CreateFeatureTool extends Tool {
     if (_state case _Dragging(:final bounds)) {
       context.history.run('Create feature', (transaction) {
         transaction.add(
-          Feature(origin: bounds.topLeft, size: bounds.size, kind: kind),
+          Feature(
+            origin: bounds.topLeft,
+            size: bounds.size,
+            kind: kind.clone(),
+          ),
         );
       });
       _state = const _Idle();

@@ -188,30 +188,27 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     context.history.run('Change style', (transaction) {
       transaction.watch(features);
       for (final feature in features) {
-        final newKind = switch (feature.kind) {
-          FeatureKindText() => feature.kind.copyWithStyle(
-            strokeColor: strokeColor,
-            fillColor: fillColor,
-            strokeWidth: strokeWidth,
-            fontSize: fontSize,
-            horizontalAlignment: horizontalAlignment,
-            verticalAlignment: verticalAlignment,
-          ),
-          _ => feature.kind.copyWithStyle(
-            strokeColor: strokeColor,
-            fillColor: fillColor,
-            strokeWidth: strokeWidth,
-          ),
-        };
+        final kind = feature.kind;
+        if (strokeColor != null) kind.strokeColor = strokeColor;
+        if (fillColor != null && kind is! FeatureKindImage) {
+          kind.fillColor = fillColor;
+        }
+        if (strokeWidth != null) kind.strokeWidth = strokeWidth;
 
-        if (fontSize != null && newKind is FeatureKindText) {
-          final size = newKind.measureContents(
-            width: feature.size.width,
-            fontSize: newKind.fontSize,
-          );
-          feature.setKind(newKind, newSize: size);
-        } else {
-          feature.setKind(newKind);
+        if (kind is FeatureKindText) {
+          if (horizontalAlignment != null) {
+            kind.horizontalAlignment = horizontalAlignment;
+          }
+          if (verticalAlignment != null) {
+            kind.verticalAlignment = verticalAlignment;
+          }
+          if (fontSize != null) {
+            kind.fontSize = fontSize;
+            feature.size = kind.measureContents(
+              width: feature.size.width,
+              fontSize: fontSize,
+            );
+          }
         }
       }
     }, container: container);

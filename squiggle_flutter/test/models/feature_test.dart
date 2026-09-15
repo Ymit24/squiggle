@@ -59,31 +59,31 @@ void main() {
           id: NodeId.newId(42),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindRectangle(),
+          kind: FeatureKindRectangle(),
         ),
         Feature(
           id: NodeId.newId(43),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindCircle(),
+          kind: FeatureKindCircle(),
         ),
         Feature(
           id: NodeId.newId(44),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindText('text'),
+          kind: FeatureKindText('text'),
         ),
         Feature(
           id: NodeId.newId(45),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindPolyline([Offset.zero, Offset(1, 1)]),
+          kind: FeatureKindPolyline([Offset.zero, Offset(1, 1)]),
         ),
         Feature(
           id: NodeId.newId(46),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
-          kind: const FeatureKindImage('image-id'),
+          kind: FeatureKindImage('image-id'),
         ),
       ];
 
@@ -118,6 +118,37 @@ void main() {
         );
       });
     });
+  });
+
+  test('kind fields can be mutated directly', () {
+    final kind = FeatureKindText('before');
+
+    kind
+      ..contents = 'after'
+      ..fontSize = 24
+      ..strokeWidth = 3;
+
+    expect(kind.contents, 'after');
+    expect(kind.fontSize, 24);
+    expect(kind.strokeWidth, 3);
+  });
+
+  test('copyWith deep-copies mutable kind data', () {
+    final original = Feature(
+      origin: Offset.zero,
+      size: const Size(10, 10),
+      kind: FeatureKindPolyline([Offset.zero, const Offset(10, 10)]),
+    );
+    final copy = original.copyWith();
+    final copiedKind = copy.kind as FeatureKindPolyline;
+
+    copiedKind
+      ..strokeWidth = 4
+      ..localPoints[1] = const Offset(5, 5);
+
+    final originalKind = original.kind as FeatureKindPolyline;
+    expect(originalKind.strokeWidth, defaultStrokeWidth);
+    expect(originalKind.localPoints[1], const Offset(10, 10));
   });
 }
 

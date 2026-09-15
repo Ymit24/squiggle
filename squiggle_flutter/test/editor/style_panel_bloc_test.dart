@@ -39,7 +39,7 @@ void main() {
           Feature(
             origin: const Offset(240, 0),
             size: const Size(200, 48),
-            kind: const FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
+            kind: FeatureKindText('hello', fillColor: Color(0xFFFFFFFF)),
           ),
         ]),
       );
@@ -152,9 +152,7 @@ void main() {
 
       context.history.run('Set fill', (transaction) {
         transaction.update(context.document.featureById(featureId)!, (feature) {
-          feature.setKind(
-            feature.kind.copyWithStyle(fillColor: transparentFillColor),
-          );
+          feature.kind.fillColor = transparentFillColor;
         });
       });
       await Future<void>.delayed(Duration.zero);
@@ -195,9 +193,7 @@ void main() {
 
       context.history.run('Set fill', (transaction) {
         transaction.update(context.document.featureById(featureId)!, (feature) {
-          feature.setKind(
-            feature.kind.copyWithStyle(fillColor: transparentFillColor),
-          );
+          feature.kind.fillColor = transparentFillColor;
         });
       });
       await Future<void>.delayed(Duration.zero);
@@ -446,5 +442,5 @@ void main() {
 Feature _groupChild() => Feature(
   origin: Offset.zero,
   size: const Size(20, 20),
-  kind: const FeatureKindRectangle(),
+  kind: FeatureKindRectangle(),
 );

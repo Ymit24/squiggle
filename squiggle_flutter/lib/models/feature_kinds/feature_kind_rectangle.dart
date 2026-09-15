@@ -1,11 +1,7 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindRectangle extends FeatureKind {
-  const FeatureKindRectangle({
-    super.strokeColor,
-    super.fillColor,
-    super.strokeWidth,
-  });
+  FeatureKindRectangle({super.strokeColor, super.fillColor, super.strokeWidth});
 
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
@@ -21,6 +17,13 @@ final class FeatureKindRectangle extends FeatureKind {
     'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
   };
+
+  @override
+  FeatureKindRectangle clone() => FeatureKindRectangle(
+    strokeColor: strokeColor,
+    fillColor: fillColor,
+    strokeWidth: strokeWidth,
+  );
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {

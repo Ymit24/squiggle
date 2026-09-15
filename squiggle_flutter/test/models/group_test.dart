@@ -66,7 +66,7 @@ void main() {
       final feature = Feature(
         origin: const Offset(10, 20),
         size: const Size(30, 40),
-        kind: const FeatureKindPolyline([
+        kind: FeatureKindPolyline([
           Offset.zero,
           Offset(30, 40),
         ], strokeWidth: 0),
@@ -113,5 +113,5 @@ void main() {
 Feature rectangle(Rect bounds) => Feature(
   origin: bounds.topLeft,
   size: bounds.size,
-  kind: const FeatureKindRectangle(),
+  kind: FeatureKindRectangle(),
 );

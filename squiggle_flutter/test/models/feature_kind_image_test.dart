@@ -19,7 +19,7 @@ void main() {
     });
 
     test('toDataModel emits image ID and style fields', () {
-      const kind = FeatureKindImage(
+      final kind = FeatureKindImage(
         'image-id',
         strokeColor: Color(0xFF112233),
         fillColor: Color(0xFF445566),
@@ -35,7 +35,7 @@ void main() {
     });
 
     test('round trip preserves image ID and style fields', () {
-      const kind = FeatureKindImage(
+      final kind = FeatureKindImage(
         'image-id',
         strokeColor: Color(0xFF112233),
         fillColor: Color(0xFF445566),
@@ -51,13 +51,13 @@ void main() {
 
   group('FeatureKindImage', () {
     test('has no visible stroke by default', () {
-      const kind = FeatureKindImage('img_test.png');
+      final kind = FeatureKindImage('img_test.png');
 
       expect(kind.hasVisibleStroke, isFalse);
     });
 
     test('has no visible fill', () {
-      const kind = FeatureKindImage(
+      final kind = FeatureKindImage(
         'img_test.png',
         fillColor: Color(0xFFFFFFFF),
       );
@@ -65,20 +65,17 @@ void main() {
       expect(kind.hasVisibleFill, isFalse);
     });
 
-    test('copyWithStyle updates stroke but ignores fill', () {
-      const kind = FeatureKindImage('img_test.png');
-      final updated = kind.copyWithStyle(
-        strokeColor: const Color(0xFFFF0000),
-        fillColor: const Color(0xFF00FF00),
-        strokeWidth: 4,
-      );
+    test('style fields are mutable while fill remains invisible', () {
+      final kind = FeatureKindImage('img_test.png');
+      kind
+        ..strokeColor = const Color(0xFFFF0000)
+        ..fillColor = const Color(0xFF00FF00)
+        ..strokeWidth = 4;
 
-      expect(updated, isA<FeatureKindImage>());
-      final imageKind = updated as FeatureKindImage;
-      expect(imageKind.strokeColor, const Color(0xFFFF0000));
-      expect(imageKind.strokeWidth, 4);
-      expect(imageKind.fillColor, const Color(0x00000000));
-      expect(imageKind.hasVisibleFill, isFalse);
+      expect(kind.strokeColor, const Color(0xFFFF0000));
+      expect(kind.strokeWidth, 4);
+      expect(kind.fillColor, const Color(0xFF00FF00));
+      expect(kind.hasVisibleFill, isFalse);
     });
   });
 }

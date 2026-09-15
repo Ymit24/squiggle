@@ -20,7 +20,7 @@ void main() {
     });
 
     test('toDataModel emits type and style fields', () {
-      const kind = FeatureKindRectangle(
+      final kind = FeatureKindRectangle(
         strokeColor: Color(0xFF112233),
         fillColor: Color(0xFF445566),
         strokeWidth: 3.5,
