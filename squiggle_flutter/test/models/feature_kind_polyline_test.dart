@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 Feature polylineFeature({
   Offset origin = Offset.zero,
@@ -37,6 +38,8 @@ void main() {
         ],
         'strokeColor': kind.strokeColor.toARGB32(),
         'strokeWidth': kind.strokeWidth,
+        'startEndCap': LineEndCap.rounded.name,
+        'endEndCap': LineEndCap.rounded.name,
       });
     });
 
@@ -50,12 +53,28 @@ void main() {
         [Offset(1.5, -2.5), Offset(10, 20)],
         strokeColor: Color(0xFF112233),
         strokeWidth: 3.5,
+        startEndCap: LineEndCap.arrow,
       );
       final decoded = FeatureKindPolyline.fromDataModel(kind.toDataModel());
       expect(decoded.localPoints, kind.localPoints);
       expect(decoded.strokeColor, kind.strokeColor);
       expect(decoded.strokeWidth, kind.strokeWidth);
+      expect(decoded.startEndCap, LineEndCap.arrow);
+      expect(decoded.endEndCap, LineEndCap.rounded);
     });
+
+    test('missing end caps decode as rounded for existing documents', () {
+      final data =
+          FeatureKindPolyline([Offset.zero, const Offset(10, 0)]).toDataModel()
+            ..remove('startEndCap')
+            ..remove('endEndCap');
+
+      final decoded = FeatureKindPolyline.fromDataModel(data);
+
+      expect(decoded.startEndCap, LineEndCap.rounded);
+      expect(decoded.endEndCap, LineEndCap.rounded);
+    });
+  });
 
   group('FeatureKindPolyline geometry', () {
     test('boundsFor includes stroke padding around centerline points', () {
@@ -77,6 +96,42 @@ void main() {
 
       expect(feature.hitTest(const Offset(50, 0)), isTrue);
       expect(feature.hitTest(const Offset(50, 40)), isFalse);
+    });
+
+    test('hitTest includes arrow heads', () {
+      final feature = polylineFeature(
+        localPoints: const [Offset.zero, Offset(100, 0)],
+      );
+      (feature.kind as FeatureKindPolyline).endEndCap = LineEndCap.arrow;
+
+      expect(feature.hitTest(const Offset(82, 8.5)), isTrue);
+    });
+
+    test('paints the line and solid arrow head with stroke color', () async {
+      final feature = polylineFeature(
+        origin: const Offset(30, 50),
+        localPoints: const [Offset.zero, Offset(100, 0)],
+      );
+      (feature.kind as FeatureKindPolyline).endEndCap = LineEndCap.arrow;
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      final imageRepository = ImageRepository();
+      feature.paint(canvas, imageRepository);
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(160, 100);
+      final pixels = await image.toByteData(format: ImageByteFormat.rawRgba);
+
+      List<int> pixelAt(int x, int y) {
+        final offset = (y * image.width + x) * 4;
+        return [for (var i = 0; i < 4; i++) pixels!.getUint8(offset + i)];
+      }
+
+      expect(pixelAt(80, 50), [0xFF, 0xFF, 0xFF, 0xFF]);
+      expect(pixelAt(120, 50), [0xFF, 0xFF, 0xFF, 0xFF]);
+
+      image.dispose();
+      picture.dispose();
+      imageRepository.dispose();
     });
 
     test(

@@ -24,6 +24,11 @@ final class StylePanelShowingState extends StylePanelState {
     required this.fillMixed,
     required this.showFillControls,
     required this.activeStrokeWidth,
+    required this.showEndCaps,
+    required this.startEndCapMixed,
+    required this.activeStartEndCap,
+    required this.endEndCapMixed,
+    required this.activeEndEndCap,
     required this.canClearStroke,
     required this.canClearFill,
     required this.showFontSize,
@@ -46,6 +51,11 @@ final class StylePanelShowingState extends StylePanelState {
   final bool fillMixed;
   final bool showFillControls;
   final StrokeWidthPreset? activeStrokeWidth;
+  final bool showEndCaps;
+  final bool startEndCapMixed;
+  final LineEndCap? activeStartEndCap;
+  final bool endEndCapMixed;
+  final LineEndCap? activeEndEndCap;
   final bool canClearStroke;
   final bool canClearFill;
   final bool showFontSize;

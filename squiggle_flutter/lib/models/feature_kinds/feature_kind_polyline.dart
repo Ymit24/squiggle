@@ -6,6 +6,8 @@ final class FeatureKindPolyline extends FeatureKind
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
     this.strokeWidth = defaultStrokeWidth,
+    this.startEndCap = LineEndCap.rounded,
+    this.endEndCap = LineEndCap.rounded,
   }) : localPoints = List.of(localPoints);
 
   factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
@@ -16,6 +18,8 @@ final class FeatureKindPolyline extends FeatureKind
         ],
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        startEndCap: _endCapFromDataModel(content, 'startEndCap'),
+        endEndCap: _endCapFromDataModel(content, 'endEndCap'),
       );
 
   @override
@@ -26,6 +30,8 @@ final class FeatureKindPolyline extends FeatureKind
     ],
     'strokeColor': strokeColor.toARGB32(),
     'strokeWidth': strokeWidth,
+    'startEndCap': startEndCap.name,
+    'endEndCap': endEndCap.name,
   };
 
   @override
@@ -33,6 +39,8 @@ final class FeatureKindPolyline extends FeatureKind
     localPoints,
     strokeColor: strokeColor,
     strokeWidth: strokeWidth,
+    startEndCap: startEndCap,
+    endEndCap: endEndCap,
   );
 
   List<Offset> localPoints;
@@ -40,6 +48,13 @@ final class FeatureKindPolyline extends FeatureKind
   Color strokeColor;
   @override
   double strokeWidth;
+  LineEndCap startEndCap;
+  LineEndCap endEndCap;
+
+  static LineEndCap _endCapFromDataModel(
+    Map<String, dynamic> content,
+    String key,
+  ) => LineEndCap.values.asNameMap()[content[key]] ?? LineEndCap.rounded;
 
   void setGeometry(
     Feature feature, {
@@ -75,7 +90,17 @@ final class FeatureKindPolyline extends FeatureKind
 
     return envelopeOfPoints(
       worldPoints(feature.origin, localPoints),
-      strokePadding: _hitRadius,
+      strokePadding: _boundsPadding,
+    );
+  }
+
+  double get _boundsPadding {
+    if (startEndCap != LineEndCap.arrow && endEndCap != LineEndCap.arrow) {
+      return _hitRadius;
+    }
+    return math.max(
+      _hitRadius,
+      math.max(5.0, strokeWidth * 1.5) + _hitRadius / 2,
     );
   }
 
@@ -85,11 +110,24 @@ final class FeatureKindPolyline extends FeatureKind
       return path;
     }
 
-    final first = feature.origin + localPoints.first;
+    final points = worldPoints(feature.origin, localPoints);
+    if (startEndCap == LineEndCap.arrow) {
+      final direction = _endpointDirection(points, fromStart: true);
+      if (direction != null) {
+        points[0] -= direction * _arrowLength;
+      }
+    }
+    if (endEndCap == LineEndCap.arrow) {
+      final direction = _endpointDirection(points, fromStart: false);
+      if (direction != null) {
+        points[points.length - 1] -= direction * _arrowLength;
+      }
+    }
+
+    final first = points.first;
     path.moveTo(first.dx, first.dy);
-    for (final local in localPoints.skip(1)) {
-      final world = feature.origin + local;
-      path.lineTo(world.dx, world.dy);
+    for (final point in points.skip(1)) {
+      path.lineTo(point.dx, point.dy);
     }
     return path;
   }
@@ -108,7 +146,7 @@ final class FeatureKindPolyline extends FeatureKind
         return true;
       }
     }
-    return false;
+    return _arrowPaths(points).any((path) => path.contains(worldPoint));
   }
 
   @override
@@ -130,8 +168,8 @@ final class FeatureKindPolyline extends FeatureKind
   @override
   void applyBounds(Feature feature, Rect bounds) {
     final oldBounds = boundsFor(feature);
-    final oldCenterlineBounds = oldBounds.deflate(_hitRadius);
-    final newCenterlineBounds = bounds.deflate(_hitRadius);
+    final oldCenterlineBounds = oldBounds.deflate(_boundsPadding);
+    final newCenterlineBounds = bounds.deflate(_boundsPadding);
     final scaledLocalPoints = localPoints.map((local) {
       final world = feature.origin + local;
       final nx = oldCenterlineBounds.width == 0
@@ -169,6 +207,65 @@ final class FeatureKindPolyline extends FeatureKind
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
+      _paintArrowHeads(canvas, feature);
+    }
+  }
+
+  Iterable<Path> _arrowPaths(List<Offset> points) sync* {
+    if (startEndCap == LineEndCap.arrow) {
+      final direction = _endpointDirection(points, fromStart: true);
+      if (direction != null) yield _arrowPath(points.first, direction);
+    }
+    if (endEndCap == LineEndCap.arrow) {
+      final direction = _endpointDirection(points, fromStart: false);
+      if (direction != null) yield _arrowPath(points.last, direction);
+    }
+  }
+
+  Offset? _endpointDirection(List<Offset> points, {required bool fromStart}) {
+    final tip = fromStart ? points.first : points.last;
+    final candidates = fromStart ? points.skip(1) : points.reversed.skip(1);
+    for (final point in candidates) {
+      final delta = tip - point;
+      if (delta.distanceSquared > 0) return delta / delta.distance;
+    }
+    return null;
+  }
+
+  Path _arrowPath(Offset tip, Offset direction) {
+    final halfWidth = math.max(5.0, strokeWidth * 1.5);
+    final base = tip - direction * _arrowLength;
+    final normal = Offset(-direction.dy, direction.dx) * halfWidth;
+    final upper = base + normal;
+    final lower = base - normal;
+    final cornerRadius = math.min(4.0, strokeWidth / 2);
+    final tipUpper = _pointToward(tip, upper, cornerRadius);
+    final upperTip = _pointToward(upper, tip, cornerRadius);
+    final upperLower = _pointToward(upper, lower, cornerRadius);
+    final lowerUpper = _pointToward(lower, upper, cornerRadius);
+    final lowerTip = _pointToward(lower, tip, cornerRadius);
+    return Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..quadraticBezierTo(tip.dx, tip.dy, tipUpper.dx, tipUpper.dy)
+      ..lineTo(upperTip.dx, upperTip.dy)
+      ..quadraticBezierTo(upper.dx, upper.dy, upperLower.dx, upperLower.dy)
+      ..lineTo(lowerUpper.dx, lowerUpper.dy)
+      ..quadraticBezierTo(lower.dx, lower.dy, lowerTip.dx, lowerTip.dy)
+      ..quadraticBezierTo(tip.dx, tip.dy, tip.dx, tip.dy)
+      ..close();
+  }
+
+  Offset _pointToward(Offset from, Offset to, double distance) {
+    final delta = to - from;
+    return from + delta / delta.distance * math.min(distance, delta.distance);
+  }
+
+  double get _arrowLength => math.max(12.0, strokeWidth * 3);
+
+  void _paintArrowHeads(Canvas canvas, Feature feature) {
+    final points = worldPoints(feature.origin, localPoints);
+    for (final arrow in _arrowPaths(points)) {
+      canvas.drawPath(arrow, Paint()..color = strokeColor);
     }
   }
 }

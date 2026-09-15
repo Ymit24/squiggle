@@ -244,6 +244,37 @@ void main() {
       await bloc.close();
     });
 
+    test('shows and updates start and end caps for lines', () async {
+      final line = Feature(
+        origin: Offset.zero,
+        size: const Size(100, 0),
+        kind: FeatureKindPolyline(const [Offset.zero, Offset(100, 0)]),
+      );
+      context = EditorContext(document: Document.fromFeatures([line]));
+      final bloc = createBloc();
+      bloc.add(const RequestWatchStylePanelStateEvent());
+      await bloc.stream.first;
+      context.selection.selectNode(line.id);
+      final showing =
+          await bloc.stream.firstWhere(
+                (state) => state is StylePanelShowingState,
+              )
+              as StylePanelShowingState;
+
+      expect(showing.showEndCaps, isTrue);
+      expect(showing.activeStartEndCap, LineEndCap.rounded);
+      expect(showing.activeEndEndCap, LineEndCap.rounded);
+
+      bloc.add(const SetStartEndCapEvent(LineEndCap.arrow));
+      bloc.add(const SetEndEndCapEvent(LineEndCap.arrow));
+      await Future<void>.delayed(Duration.zero);
+
+      final kind = line.kind as FeatureKindPolyline;
+      expect(kind.startEndCap, LineEndCap.arrow);
+      expect(kind.endEndCap, LineEndCap.arrow);
+      await bloc.close();
+    });
+
     test('shows font size controls when a text feature is selected', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchStylePanelStateEvent());
