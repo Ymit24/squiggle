@@ -56,16 +56,8 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       return const StylePanelHiddenState();
     }
 
-    final isStrokeNone = kinds.every(
-      (kind) =>
-          kind is! StrokeColorCapable ||
-          !(kind as StrokeColorCapable).hasVisibleStroke,
-    );
-    final isFillNone = kinds.every(
-      (kind) =>
-          kind is! FillColorCapable ||
-          !(kind as FillColorCapable).hasVisibleFill,
-    );
+    final isStrokeNone = !kinds.any(_hasVisibleStroke);
+    final isFillNone = !kinds.any(_hasVisibleFill);
 
     final strokeColorStates = kinds.map(_strokeColorStateKey).toSet();
     final strokeWidthStates = kinds.map(_strokeWidthStateKey).toSet();
@@ -152,27 +144,30 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
     );
   }
 
-  String _strokeColorStateKey(FeatureKind kind) {
-    if (kind is! StrokeColorCapable) {
-      return 'none';
-    }
-    final capable = kind as StrokeColorCapable;
-    if (!capable.hasVisibleStroke) return 'none';
-    return 'stroke:${capable.strokeColor.toARGB32()}';
-  }
+  bool _hasVisibleStroke(FeatureKind kind) => switch (kind) {
+    StrokeColorCapable(:final hasVisibleStroke) => hasVisibleStroke,
+  };
+
+  bool _hasVisibleFill(FeatureKind kind) => switch (kind) {
+    FillColorCapable(:final hasVisibleFill) => hasVisibleFill,
+    _ => false,
+  };
+
+  String _strokeColorStateKey(FeatureKind kind) => switch (kind) {
+    StrokeColorCapable(hasVisibleStroke: true, :final strokeColor) =>
+      'stroke:${strokeColor.toARGB32()}',
+    _ => 'none',
+  };
 
   String _strokeWidthStateKey(FeatureKind kind) {
     return 'width:${kind.strokeWidth}';
   }
 
-  String _fillStateKey(FeatureKind kind) {
-    if (kind is! FillColorCapable) {
-      return 'none';
-    }
-    final capable = kind as FillColorCapable;
-    if (!capable.hasVisibleFill) return 'none';
-    return 'fill:${capable.fillColor.toARGB32()}';
-  }
+  String _fillStateKey(FeatureKind kind) => switch (kind) {
+    FillColorCapable(hasVisibleFill: true, :final fillColor) =>
+      'fill:${fillColor.toARGB32()}',
+    _ => 'none',
+  };
 
   List<NodeId> _selectedIdsOrEmpty() {
     final current = state;
@@ -203,11 +198,15 @@ class StylePanelBloc extends Bloc<StylePanelEvent, StylePanelState> {
       transaction.watch(features);
       for (final feature in features) {
         final kind = feature.kind;
-        if (strokeColor != null && kind is StrokeColorCapable) {
-          (kind as StrokeColorCapable).strokeColor = strokeColor;
+        if (strokeColor case final Color color) {
+          if (kind case final StrokeColorCapable capable) {
+            capable.strokeColor = color;
+          }
         }
-        if (fillColor != null && kind is FillColorCapable) {
-          (kind as FillColorCapable).fillColor = fillColor;
+        if (fillColor case final Color color) {
+          if (kind case final FillColorCapable capable) {
+            capable.fillColor = color;
+          }
         }
         if (strokeWidth != null) kind.strokeWidth = strokeWidth;
 
