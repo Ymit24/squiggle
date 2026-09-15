@@ -104,7 +104,7 @@ void main() {
       );
       (feature.kind as FeatureKindPolyline).endEndCap = LineEndCap.arrow;
 
-      expect(feature.hitTest(const Offset(80, 10)), isTrue);
+      expect(feature.hitTest(const Offset(82, 8.5)), isTrue);
     });
 
     test('paints the line and solid arrow head with stroke color', () async {

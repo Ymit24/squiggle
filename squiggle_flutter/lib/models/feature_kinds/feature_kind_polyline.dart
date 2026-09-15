@@ -236,11 +236,28 @@ final class FeatureKindPolyline extends FeatureKind
     final halfWidth = math.max(5.0, strokeWidth * 1.5);
     final base = tip - direction * _arrowLength;
     final normal = Offset(-direction.dy, direction.dx) * halfWidth;
+    final upper = base + normal;
+    final lower = base - normal;
+    final cornerRadius = math.min(4.0, strokeWidth / 2);
+    final tipUpper = _pointToward(tip, upper, cornerRadius);
+    final upperTip = _pointToward(upper, tip, cornerRadius);
+    final upperLower = _pointToward(upper, lower, cornerRadius);
+    final lowerUpper = _pointToward(lower, upper, cornerRadius);
+    final lowerTip = _pointToward(lower, tip, cornerRadius);
     return Path()
       ..moveTo(tip.dx, tip.dy)
-      ..lineTo((base + normal).dx, (base + normal).dy)
-      ..lineTo((base - normal).dx, (base - normal).dy)
+      ..quadraticBezierTo(tip.dx, tip.dy, tipUpper.dx, tipUpper.dy)
+      ..lineTo(upperTip.dx, upperTip.dy)
+      ..quadraticBezierTo(upper.dx, upper.dy, upperLower.dx, upperLower.dy)
+      ..lineTo(lowerUpper.dx, lowerUpper.dy)
+      ..quadraticBezierTo(lower.dx, lower.dy, lowerTip.dx, lowerTip.dy)
+      ..quadraticBezierTo(tip.dx, tip.dy, tip.dx, tip.dy)
       ..close();
+  }
+
+  Offset _pointToward(Offset from, Offset to, double distance) {
+    final delta = to - from;
+    return from + delta / delta.distance * math.min(distance, delta.distance);
   }
 
   double get _arrowLength => math.max(12.0, strokeWidth * 3);
