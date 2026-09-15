@@ -52,6 +52,10 @@ void main() {
       expect(kind, isNot(isA<FillColorCapable>()));
     });
 
+    test('supports stroke width', () {
+      expect(FeatureKindImage('img_test.png'), isA<StrokeWidthCapable>());
+    });
+
     test('has no visible stroke by default', () {
       final kind = FeatureKindImage('img_test.png');
 

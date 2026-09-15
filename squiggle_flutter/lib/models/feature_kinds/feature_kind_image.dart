@@ -1,10 +1,11 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindImage extends FeatureKind with StrokeColorCapable {
+final class FeatureKindImage extends FeatureKind
+    with StrokeColorCapable, StrokeWidthCapable {
   FeatureKindImage(
     this.imageId, {
     this.strokeColor = transparentStrokeColor,
-    super.strokeWidth,
+    this.strokeWidth = defaultStrokeWidth,
   });
 
   factory FeatureKindImage.fromDataModel(Map<String, dynamic> content) =>
@@ -32,6 +33,8 @@ final class FeatureKindImage extends FeatureKind with StrokeColorCapable {
   String imageId;
   @override
   Color strokeColor;
+  @override
+  double strokeWidth;
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
