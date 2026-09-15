@@ -1,0 +1,114 @@
+name: Linux release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: linux-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and release Linux app
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: squiggle_flutter
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            libstdc++-12-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
+      - name: Increment pre-1.0 version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_version="$(sed -nE 's/^version: ([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)$/\1+\2/p' pubspec.yaml)"
+          if [[ ! "$current_version" =~ ^0\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
+            echo "Expected a zero-based Flutter version such as 0.0.1+2; found '$current_version'." >&2
+            exit 1
+          fi
+
+          minor="${BASH_REMATCH[1]}"
+          patch="${BASH_REMATCH[2]}"
+          build="${BASH_REMATCH[3]}"
+          next_version="0.${minor}.$((patch + 1))+$((build + 1))"
+          release_version="${next_version%%+*}"
+
+          sed -i -E "s/^version: .+$/version: ${next_version}/" pubspec.yaml
+          echo "flutter_version=${next_version}" >> "$GITHUB_OUTPUT"
+          echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${release_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build Linux release
+        run: flutter build linux --release
+
+      - name: Package Linux bundle
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
+        run: |
+          tar \
+            -C build/linux/x64/release/bundle \
+            -czf "../../../../../squiggle-linux-x64-v${RELEASE_VERSION}.tar.gz" \
+            .
+
+      - name: Commit version and tag release
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          FLUTTER_VERSION: ${{ steps.version.outputs.flutter_version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "chore: bump version to ${FLUTTER_VERSION} [skip ci]"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin HEAD:main "$TAG"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
+        run: |
+          gh release create "$TAG" \
+            "squiggle-linux-x64-v${RELEASE_VERSION}.tar.gz" \
+            --title "Squiggle $TAG" \
+            --generate-notes \
+            --verify-tag
