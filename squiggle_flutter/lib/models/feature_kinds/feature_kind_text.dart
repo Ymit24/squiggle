@@ -4,7 +4,7 @@ const kMinTextFontSize = 1.0;
 const kMaxTextFontSize = 1000.0;
 
 final class FeatureKindText extends FeatureKind {
-  const FeatureKindText(
+  FeatureKindText(
     this.contents, {
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
@@ -43,10 +43,10 @@ final class FeatureKindText extends FeatureKind {
     };
   }
 
-  final String contents;
-  final double fontSize;
-  final TextHorizontalAlignment horizontalAlignment;
-  final TextVerticalAlignment verticalAlignment;
+  String contents;
+  double fontSize;
+  TextHorizontalAlignment horizontalAlignment;
+  TextVerticalAlignment verticalAlignment;
 
   ui.ParagraphStyle _paragraphStyle(double fontSize) => ui.ParagraphStyle(
     textAlign: horizontalAlignment.textAlign,
@@ -121,27 +121,16 @@ final class FeatureKindText extends FeatureKind {
     return lo;
   }
 
-  FeatureKindText fittedToBounds({
-    required double width,
-    required double height,
-  }) {
+  void fitToBounds({required double width, required double height}) {
     final clampedWidth = width < kMinEnvelopeDimension
         ? kMinEnvelopeDimension
         : width;
     final clampedHeight = height < kMinEnvelopeDimension
         ? kMinEnvelopeDimension
         : height;
-    return FeatureKindText(
-      contents,
-      fontSize: fontSizeFillingBounds(
-        width: clampedWidth,
-        height: clampedHeight,
-      ),
-      horizontalAlignment: horizontalAlignment,
-      verticalAlignment: verticalAlignment,
-      strokeColor: strokeColor,
-      fillColor: fillColor,
-      strokeWidth: strokeWidth,
+    fontSize = fontSizeFillingBounds(
+      width: clampedWidth,
+      height: clampedHeight,
     );
   }
 
@@ -154,15 +143,7 @@ final class FeatureKindText extends FeatureKind {
   }) {
     feature.origin = origin;
     feature.size = measureContents(width: width, fontSize: fontSize);
-    feature.kind = FeatureKindText(
-      contents,
-      fontSize: fontSize,
-      horizontalAlignment: horizontalAlignment,
-      verticalAlignment: verticalAlignment,
-      strokeColor: strokeColor,
-      fillColor: fillColor,
-      strokeWidth: strokeWidth,
-    );
+    this.fontSize = fontSize;
   }
 
   @override
@@ -175,7 +156,7 @@ final class FeatureKindText extends FeatureKind {
         : bounds.height;
     feature.origin = bounds.topLeft;
     feature.size = Size(clampedWidth, clampedHeight);
-    feature.kind = fittedToBounds(width: clampedWidth, height: clampedHeight);
+    fitToBounds(width: clampedWidth, height: clampedHeight);
   }
 
   ui.Paragraph _layoutParagraph({

@@ -1,11 +1,7 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindCircle extends FeatureKind {
-  const FeatureKindCircle({
-    super.strokeColor,
-    super.fillColor,
-    super.strokeWidth,
-  });
+  FeatureKindCircle({super.strokeColor, super.fillColor, super.strokeWidth});
 
   factory FeatureKindCircle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindCircle(

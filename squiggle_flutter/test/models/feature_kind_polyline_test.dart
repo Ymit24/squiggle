@@ -29,7 +29,7 @@ Offset worldPoint(Feature feature, int index) {
 void main() {
   group('FeatureKindPolyline serde', () {
     test('toDataModel emits type and encodes points', () {
-      const kind = FeatureKindPolyline([Offset(1.5, -2.5), Offset(10, 20)]);
+      final kind = FeatureKindPolyline([Offset(1.5, -2.5), Offset(10, 20)]);
       expect(kind.toDataModel(), {
         'type': 'polyline',
         'localPoints': [
@@ -43,12 +43,12 @@ void main() {
     });
 
     test('toDataModel preserves an empty point list', () {
-      const kind = FeatureKindPolyline([]);
+      final kind = FeatureKindPolyline([]);
       expect(kind.toDataModel()['localPoints'], isEmpty);
     });
 
     test('round trip preserves points and style fields', () {
-      const kind = FeatureKindPolyline(
+      final kind = FeatureKindPolyline(
         [Offset(1.5, -2.5), Offset(10, 20)],
         strokeColor: Color(0xFF112233),
         fillColor: Color(0xFF445566),

@@ -61,7 +61,7 @@ void main() {
             Feature(
               origin: Offset(x, 0),
               size: const Size(100, 1),
-              kind: const FeatureKindPolyline([
+              kind: FeatureKindPolyline([
                 Offset.zero,
                 Offset(100, 0),
               ], strokeColor: Color(0xFFFFFFFF)),

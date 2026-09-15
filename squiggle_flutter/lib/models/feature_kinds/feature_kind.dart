@@ -15,7 +15,7 @@ part 'feature_kind_polyline.dart';
 part 'feature_kind_image.dart';
 
 sealed class FeatureKind {
-  const FeatureKind({
+  FeatureKind({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
     this.strokeWidth = defaultStrokeWidth,
@@ -23,62 +23,53 @@ sealed class FeatureKind {
 
   Map<String, dynamic> toDataModel();
 
-  final Color strokeColor;
-  final Color fillColor;
-  final double strokeWidth;
+  Color strokeColor;
+  Color fillColor;
+  double strokeWidth;
 
   bool get hasVisibleStroke => strokeColor.a > 0;
 
   bool get hasVisibleFill => fillColor.a > 0;
 
-  FeatureKind copyWithStyle({
-    Color? strokeColor,
-    Color? fillColor,
-    double? strokeWidth,
-    double? fontSize,
-    TextHorizontalAlignment? horizontalAlignment,
-    TextVerticalAlignment? verticalAlignment,
-  }) {
-    return switch (this) {
-      FeatureKindRectangle() => FeatureKindRectangle(
-        strokeColor: strokeColor ?? this.strokeColor,
-        fillColor: fillColor ?? this.fillColor,
-        strokeWidth: strokeWidth ?? this.strokeWidth,
-      ),
-      FeatureKindCircle() => FeatureKindCircle(
-        strokeColor: strokeColor ?? this.strokeColor,
-        fillColor: fillColor ?? this.fillColor,
-        strokeWidth: strokeWidth ?? this.strokeWidth,
-      ),
+  FeatureKind clone() => switch (this) {
+    FeatureKindRectangle() => FeatureKindRectangle(
+      strokeColor: strokeColor,
+      fillColor: fillColor,
+      strokeWidth: strokeWidth,
+    ),
+    FeatureKindCircle() => FeatureKindCircle(
+      strokeColor: strokeColor,
+      fillColor: fillColor,
+      strokeWidth: strokeWidth,
+    ),
+    FeatureKindText(
+      :final contents,
+      :final fontSize,
+      :final horizontalAlignment,
+      :final verticalAlignment,
+    ) =>
       FeatureKindText(
-        :final contents,
-        fontSize: final currentFontSize,
-        horizontalAlignment: final currentHorizontalAlignment,
-        verticalAlignment: final currentVerticalAlignment,
-      ) =>
-        FeatureKindText(
-          contents,
-          fontSize: fontSize ?? currentFontSize,
-          horizontalAlignment:
-              horizontalAlignment ?? currentHorizontalAlignment,
-          verticalAlignment: verticalAlignment ?? currentVerticalAlignment,
-          strokeColor: strokeColor ?? this.strokeColor,
-          fillColor: fillColor ?? this.fillColor,
-          strokeWidth: strokeWidth ?? this.strokeWidth,
-        ),
-      FeatureKindPolyline(:final localPoints) => FeatureKindPolyline(
-        localPoints,
-        strokeColor: strokeColor ?? this.strokeColor,
-        fillColor: fillColor ?? this.fillColor,
-        strokeWidth: strokeWidth ?? this.strokeWidth,
+        contents,
+        fontSize: fontSize,
+        horizontalAlignment: horizontalAlignment,
+        verticalAlignment: verticalAlignment,
+        strokeColor: strokeColor,
+        fillColor: fillColor,
+        strokeWidth: strokeWidth,
       ),
-      FeatureKindImage(:final imageId) => FeatureKindImage(
-        imageId,
-        strokeColor: strokeColor ?? this.strokeColor,
-        strokeWidth: strokeWidth ?? this.strokeWidth,
-      ),
-    };
-  }
+    FeatureKindPolyline(:final localPoints) => FeatureKindPolyline(
+      List.of(localPoints),
+      strokeColor: strokeColor,
+      fillColor: fillColor,
+      strokeWidth: strokeWidth,
+    ),
+    FeatureKindImage(:final imageId) => FeatureKindImage(
+      imageId,
+      strokeColor: strokeColor,
+      fillColor: fillColor,
+      strokeWidth: strokeWidth,
+    ),
+  };
 
   Rect boundsFor(Feature feature) => Rect.fromLTWH(
     feature.origin.dx,

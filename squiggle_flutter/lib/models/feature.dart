@@ -88,11 +88,6 @@ class Feature extends Node {
 
   Offset center() => localBounds().center;
 
-  void setKind(FeatureKind newKind, {Size? newSize}) {
-    if (newSize != null) size = newSize;
-    kind = newKind;
-  }
-
   @override
   Feature copyWith({
     NodeId? id,
@@ -103,7 +98,7 @@ class Feature extends Node {
     id: id ?? this.id,
     origin: origin ?? this.origin,
     size: size ?? this.size,
-    kind: kind ?? this.kind,
+    kind: (kind ?? this.kind).clone(),
   );
 
   @override

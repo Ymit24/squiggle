@@ -1,12 +1,12 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind {
-  const FeatureKindPolyline(
-    this.localPoints, {
+  FeatureKindPolyline(
+    List<Offset> localPoints, {
     super.strokeColor,
     super.fillColor,
     super.strokeWidth,
-  });
+  }) : localPoints = List.of(localPoints);
 
   factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindPolyline(
@@ -30,21 +30,7 @@ final class FeatureKindPolyline extends FeatureKind {
     'strokeWidth': strokeWidth,
   };
 
-  final List<Offset> localPoints;
-
-  FeatureKindPolyline copyWith({
-    List<Offset>? localPoints,
-    Color? strokeColor,
-    Color? fillColor,
-    double? strokeWidth,
-  }) {
-    return FeatureKindPolyline(
-      localPoints ?? this.localPoints,
-      strokeColor: strokeColor ?? this.strokeColor,
-      fillColor: fillColor ?? this.fillColor,
-      strokeWidth: strokeWidth ?? this.strokeWidth,
-    );
-  }
+  List<Offset> localPoints;
 
   void setGeometry(
     Feature feature, {
@@ -52,7 +38,7 @@ final class FeatureKindPolyline extends FeatureKind {
     required List<Offset> localPoints,
   }) {
     feature.origin = origin;
-    feature.kind = copyWith(localPoints: List.of(localPoints));
+    this.localPoints = List.of(localPoints);
     feature.size = feature.localBounds().size;
   }
 
@@ -158,7 +144,7 @@ final class FeatureKindPolyline extends FeatureKind {
     }).toList();
 
     feature.setBounds(bounds);
-    feature.kind = copyWith(localPoints: scaledLocalPoints);
+    localPoints = scaledLocalPoints;
   }
 
   @override
