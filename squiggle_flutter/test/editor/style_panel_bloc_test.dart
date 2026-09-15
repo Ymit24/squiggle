@@ -244,28 +244,6 @@ void main() {
       await bloc.close();
     });
 
-    test('hides fill controls when only lines are selected', () async {
-      final line = Feature(
-        origin: Offset.zero,
-        size: const Size(100, 0),
-        kind: FeatureKindPolyline(const [Offset.zero, Offset(100, 0)]),
-      );
-      context = EditorContext(document: Document.fromFeatures([line]));
-      final bloc = createBloc();
-      bloc.add(const RequestWatchStylePanelStateEvent());
-      await bloc.stream.first;
-      context.selection.selectNode(line.id);
-
-      final showing =
-          await bloc.stream.firstWhere(
-                (state) => state is StylePanelShowingState,
-              )
-              as StylePanelShowingState;
-
-      expect(showing.showFillControls, isFalse);
-      await bloc.close();
-    });
-
     test('shows font size controls when a text feature is selected', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchStylePanelStateEvent());

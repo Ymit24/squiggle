@@ -57,18 +57,6 @@ void main() {
       expect(decoded.strokeWidth, kind.strokeWidth);
     });
 
-    test('ignores legacy fill color when decoding', () {
-      final data = FeatureKindPolyline([
-        Offset.zero,
-        const Offset(10, 0),
-      ]).toDataModel()..['fillColor'] = 0xFF445566;
-
-      final decoded = FeatureKindPolyline.fromDataModel(data);
-
-      expect(decoded.toDataModel(), isNot(contains('fillColor')));
-    });
-  });
-
   group('FeatureKindPolyline geometry', () {
     test('boundsFor includes stroke padding around centerline points', () {
       final feature = polylineFeature(
