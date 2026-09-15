@@ -1,11 +1,10 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, FillColorCapable, StrokeWidthCapable {
+    with StrokeColorCapable, StrokeWidthCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
-    this.fillColor = defaultFeatureFillColor,
     this.strokeWidth = defaultStrokeWidth,
   }) : localPoints = List.of(localPoints);
 
@@ -16,7 +15,6 @@ final class FeatureKindPolyline extends FeatureKind
             _offsetFromDataModel(point),
         ],
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
-        fillColor: _colorFromDataModel(content, 'fillColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
@@ -27,7 +25,6 @@ final class FeatureKindPolyline extends FeatureKind
       for (final point in localPoints) {'x': point.dx, 'y': point.dy},
     ],
     'strokeColor': strokeColor.toARGB32(),
-    'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
   };
 
@@ -35,15 +32,12 @@ final class FeatureKindPolyline extends FeatureKind
   FeatureKindPolyline clone() => FeatureKindPolyline(
     localPoints,
     strokeColor: strokeColor,
-    fillColor: fillColor,
     strokeWidth: strokeWidth,
   );
 
   List<Offset> localPoints;
   @override
   Color strokeColor;
-  @override
-  Color fillColor;
   @override
   double strokeWidth;
 
@@ -69,12 +63,7 @@ final class FeatureKindPolyline extends FeatureKind
     );
   }
 
-  double get _hitRadius {
-    if (hasVisibleStroke && hasVisibleFill) {
-      return strokeWidth;
-    }
-    return strokeWidth / 2;
-  }
+  double get _hitRadius => strokeWidth / 2;
 
   double get _selectionTolerance => _hitRadius + kPolylineHitSlop;
 
@@ -170,46 +159,11 @@ final class FeatureKindPolyline extends FeatureKind
 
     final path = _pathFor(feature);
 
-    if (hasVisibleStroke && hasVisibleFill) {
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = strokeColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth * 2
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = fillColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round,
-      );
-      return;
-    }
-
     if (hasVisibleStroke) {
       canvas.drawPath(
         path,
         Paint()
           ..color = strokeColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round,
-      );
-      return;
-    }
-
-    if (hasVisibleFill) {
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = fillColor
           ..style = PaintingStyle.stroke
           ..strokeWidth = strokeWidth
           ..strokeJoin = StrokeJoin.round

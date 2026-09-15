@@ -22,6 +22,7 @@ final class StylePanelShowingState extends StylePanelState {
     required this.activeFillPresetIndex,
     required this.isFillNone,
     required this.fillMixed,
+    required this.showFillControls,
     required this.activeStrokeWidth,
     required this.canClearStroke,
     required this.canClearFill,
@@ -43,6 +44,7 @@ final class StylePanelShowingState extends StylePanelState {
   final int? activeFillPresetIndex;
   final bool isFillNone;
   final bool fillMixed;
+  final bool showFillControls;
   final StrokeWidthPreset? activeStrokeWidth;
   final bool canClearStroke;
   final bool canClearFill;

@@ -56,21 +56,23 @@ class StylePanelContent extends StatelessWidget {
                     onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
                   ),
                   SizedBox(height: spacing.panelSectionSpacing),
-                  SectionLabel('Fill'),
-                  ColorRow(
-                    presets: stylePresets
-                        .map((preset) => preset.fillColor)
-                        .toList(),
-                    activePresetIndex: state.fillMixed
-                        ? null
-                        : state.activeFillPresetIndex,
-                    isNoneActive: state.isFillNone,
-                    noneEnabled: state.canClearFill,
-                    onPresetSelected: (index) =>
-                        bloc.add(SetFillPresetEvent(index)),
-                    onNoneSelected: () => bloc.add(const ClearFillEvent()),
-                  ),
-                  SizedBox(height: spacing.panelSectionSpacing),
+                  if (state.showFillControls) ...[
+                    SectionLabel('Fill'),
+                    ColorRow(
+                      presets: stylePresets
+                          .map((preset) => preset.fillColor)
+                          .toList(),
+                      activePresetIndex: state.fillMixed
+                          ? null
+                          : state.activeFillPresetIndex,
+                      isNoneActive: state.isFillNone,
+                      noneEnabled: state.canClearFill,
+                      onPresetSelected: (index) =>
+                          bloc.add(SetFillPresetEvent(index)),
+                      onNoneSelected: () => bloc.add(const ClearFillEvent()),
+                    ),
+                    SizedBox(height: spacing.panelSectionSpacing),
+                  ],
                   SectionLabel('Width'),
                   StrokeWidthSelector(
                     activePreset: state.activeStrokeWidth,
