@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
@@ -97,8 +98,8 @@ class SquiggleHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RepositoryProvider(
-        create: (context) => this.context,
+      body: ChangeNotifierProvider.value(
+        value: this.context,
         child: RepositoryProvider(
           create: (context) => imageRepository,
           dispose: (repository) => repository.dispose(),

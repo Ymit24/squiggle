@@ -11,7 +11,7 @@ void main() {
       );
 
       expect(feature.kind, isA<FeatureKindText>());
-      expect((feature.kind as FeatureKindText).contents, 'Hello paste');
+      expect((feature.kind as FeatureKindText).label, 'Hello paste');
       expect(feature.localBounds().center, const Offset(300, 200));
     });
   });

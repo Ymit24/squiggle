@@ -308,5 +308,6 @@ data.Feature _rawFeature({required int id, required String type}) =>
         'strokeColor': 0xFF000000,
         'fillColor': 0xFFFFFFFF,
         'strokeWidth': 1.0,
+        'label': '',
       },
     );

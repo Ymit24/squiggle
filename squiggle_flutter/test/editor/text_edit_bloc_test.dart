@@ -53,14 +53,37 @@ void main() {
       await bloc.close();
     });
 
-    test(
-      'TextEditSubmitted applies command and emits TextEditClosed',
-      () async {
+    for (final testCase in <({String name, FeatureKind Function() createKind})>[
+      (name: 'text', createKind: () => FeatureKindText('initial text')),
+      (
+        name: 'rectangle',
+        createKind: () => FeatureKindRectangle(label: 'initial text'),
+      ),
+      (
+        name: 'circle',
+        createKind: () => FeatureKindCircle(label: 'initial text'),
+      ),
+    ]) {
+      test('TextEditSubmitted updates ${testCase.name} label as one undoable '
+          'command', () async {
+        context = EditorContext(
+          document: Document.fromFeatures([
+            Feature(
+              origin: Offset.zero,
+              size: const Size(200, 48),
+              kind: testCase.createKind(),
+            ),
+          ]),
+        );
         final bloc = createBloc();
         bloc.add(const RequestWatchTextEditStateEvent());
         await Future<void>.delayed(Duration.zero);
 
         final feature = (context.document.nodes.first as Feature);
+        final originalSize = feature.size;
+        final originalKindData = Map<String, dynamic>.of(
+          feature.kind.toDataModel(),
+        )..remove('label');
         context.startTextEdit(
           EditTextEditSession(
             featureId: feature.id,
@@ -76,14 +99,26 @@ void main() {
         );
 
         expect(closedState, isA<TextEditClosed>());
-        expect(
-          ((context.document.nodes.first as Feature).kind as FeatureKindText)
-              .contents,
-          'updated text',
-        );
+        expect((feature.kind as LabelCapable).label, 'updated text');
+        final updatedSize = feature.size;
+        if (feature.kind is! FeatureKindText) {
+          expect(
+            Map<String, dynamic>.of(feature.kind.toDataModel())
+              ..remove('label'),
+            originalKindData,
+          );
+        }
+
+        context.history.undo();
+        expect((feature.kind as LabelCapable).label, 'initial text');
+        expect(feature.size, originalSize);
+
+        context.history.redo();
+        expect((feature.kind as LabelCapable).label, 'updated text');
+        expect(feature.size, updatedSize);
         await bloc.close();
-      },
-    );
+      });
+    }
 
     test('TextEditCancelled emits TextEditClosed without command', () async {
       final bloc = createBloc();
@@ -108,7 +143,7 @@ void main() {
       expect(closedState, isA<TextEditClosed>());
       expect(
         ((context.document.nodes.first as Feature).kind as FeatureKindText)
-            .contents,
+            .label,
         'initial text',
       );
       await bloc.close();
@@ -137,7 +172,7 @@ void main() {
       expect(context.document.nodes, hasLength(2));
       final created = (context.document.nodes.last as Feature);
       expect(created.origin, origin);
-      expect((created.kind as FeatureKindText).contents, 'new text');
+      expect((created.kind as FeatureKindText).label, 'new text');
       expect(created.size.width, defaultNewTextWidth);
       await bloc.close();
     });
