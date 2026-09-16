@@ -34,27 +34,37 @@ class _DocumentNameDialog extends StatefulWidget {
 
 class _DocumentNameDialogState extends State<_DocumentNameDialog> {
   late final TextEditingController _controller;
-  late final FocusNode _focusNode;
+  bool _canSubmit = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialName);
-    _focusNode = FocusNode();
+    _canSubmit = widget.initialName.trim().isNotEmpty;
+    _controller.addListener(() {
+      final canSubmit = _controller.text.trim().isNotEmpty;
+      if (canSubmit != _canSubmit) {
+        setState(() => _canSubmit = canSubmit);
+      }
+    });
+    // Select the whole name so typing immediately replaces it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
   void _submit() {
     final name = _controller.text.trim();
-    if (name.isEmpty) {
-      return;
-    }
+    if (name.isEmpty) return;
     Navigator.of(context).pop(name);
   }
 
@@ -63,42 +73,103 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
     final theme = context.squiggleTheme;
 
     return AlertDialog(
-      backgroundColor: theme.colors.mantle,
+      backgroundColor: const Color(0xFF1D1D25),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
-        side: BorderSide(color: theme.colors.surface1),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF363644)),
       ),
-      title: Text(
-        widget.title,
-        style: theme.typography.inputText.copyWith(
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
+      titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
+      contentPadding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.title.toUpperCase(),
+            style: theme.typography.hotkey.copyWith(
+              fontSize: 10.5,
+              letterSpacing: 0.9,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            widget.title,
+            style: theme.typography.inputText.copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
       ),
       content: SizedBox(
         width: 360,
         child: TextField(
           controller: _controller,
-          focusNode: _focusNode,
           autofocus: true,
-          style: theme.typography.inputText,
-          decoration: theme.decorations.textField(),
+          style: theme.typography.inputText.copyWith(fontSize: 14.5),
+          decoration: InputDecoration(
+            hintText: 'Canvas name',
+            hintStyle: TextStyle(
+              color: theme.colors.subtext0.withValues(alpha: 0.6),
+            ),
+            isDense: true,
+            filled: true,
+            fillColor: const Color(0xFF141419),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 11,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFF363644)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFF363644)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: theme.colors.accent.withValues(alpha: 0.7),
+                width: 1.4,
+              ),
+            ),
+          ),
           onSubmitted: (_) => _submit(),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel', style: TextStyle(color: theme.colors.subtext0)),
+          style: TextButton.styleFrom(
+            foregroundColor: theme.colors.subtext0,
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 10),
+          ),
+          child: const Text('Cancel'),
         ),
-        TextButton(
-          onPressed: _submit,
+        FilledButton(
+          onPressed: _canSubmit ? _submit : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colors.text,
+            foregroundColor: Colors.black87,
+            disabledBackgroundColor:
+                const Color(0xFF2A2A35),
+            disabledForegroundColor:
+                theme.colors.subtext0.withValues(alpha: 0.5),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 18, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(9),
+            ),
+          ),
           child: Text(
             widget.confirmLabel,
-            style: TextStyle(
-              color: theme.colors.accent,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
       ],

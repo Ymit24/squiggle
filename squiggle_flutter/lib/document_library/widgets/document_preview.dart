@@ -3,33 +3,37 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
-import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 /// Renders a scaled-down view of a document's nodes.
-/// TODO: This whole thing is complete garbage.
+///
+/// The thumbnail draws a screen-space dot grid (independent of content zoom)
+/// over a slightly elevated canvas tone, then fits the document content
+/// inside with sensible scale clamps so tiny sketches don't blow up and
+/// huge boards don't collapse into dust.
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
     super.key,
     required this.nodes,
     required this.imageRepository,
+    this.backgroundColor = const Color(0xFF202027),
+    this.dotColor = const Color(0xFF3A3A46),
   });
 
   final List<Node> nodes;
   final ImageRepository imageRepository;
+  final Color backgroundColor;
+  final Color dotColor;
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: CustomPaint(
         painter: _DocumentPreviewPainter(
           nodes: nodes,
           imageRepository: imageRepository,
-          gridColor: SquiggleColors.surface1.withValues(alpha: 0.55),
-          baseColor: theme.colors.base,
+          backgroundColor: backgroundColor,
+          dotColor: dotColor,
         ),
         child: const SizedBox.expand(),
       ),
@@ -41,31 +45,35 @@ class _DocumentPreviewPainter extends CustomPainter {
   _DocumentPreviewPainter({
     required this.nodes,
     required this.imageRepository,
-    required this.gridColor,
-    required this.baseColor,
+    required this.backgroundColor,
+    required this.dotColor,
   });
 
   final List<Node> nodes;
   final ImageRepository imageRepository;
-  final Color gridColor;
-  final Color baseColor;
+  final Color backgroundColor;
+  final Color dotColor;
 
-  static const _gridCellSize = 128.0;
-  static const _emptyView = Rect.fromLTWH(-256, -192, 512, 384);
+  static const _dotGap = 22.0;
+  static const _dotRadius = 1.1;
+  static const _minViewport = Size(560, 420);
+  static const _maxScale = 1.25;
+  static const _minScale = 0.06;
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = baseColor);
+    canvas.drawRect(Offset.zero & size, Paint()..color = backgroundColor);
+    _drawDotGrid(canvas, size);
 
-    final contentBounds = _contentBounds(nodes);
-    final scale = _fitScale(contentBounds, size);
-    final offset = _fitOffset(contentBounds, size, scale);
+    if (nodes.isEmpty) return;
+
+    final content = _contentBounds(nodes);
+    final scale = _fitScale(content, size);
+    final offset = _fitOffset(content, size, scale);
 
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
     canvas.scale(scale);
-
-    _drawGrid(canvas, contentBounds);
     for (final node in nodes) {
       node.paint(canvas, imageRepository);
     }
@@ -73,58 +81,56 @@ class _DocumentPreviewPainter extends CustomPainter {
   }
 
   Rect _contentBounds(List<Node> nodes) {
-    if (nodes.isEmpty) {
-      return _emptyView;
-    }
-
     var bounds = nodes.first.localBounds();
     for (var i = 1; i < nodes.length; i++) {
       bounds = bounds.expandToInclude(nodes[i].localBounds());
     }
-
-    final padding = _paddingFor(bounds);
-    return bounds.inflate(padding);
+    // Guard against degenerate (zero-area) bounds from single points.
+    final w = math.max(bounds.width, 64.0);
+    final h = math.max(bounds.height, 64.0);
+    final center = bounds.center;
+    final padded = Rect.fromCenter(
+      center: center,
+      width: w,
+      height: h,
+    );
+    final pad = math.max(64.0, math.max(w, h) * 0.18);
+    return padded.inflate(pad);
   }
 
   double _fitScale(Rect content, Size size) {
-    if (content.width <= 0 || content.height <= 0) {
-      return 1;
-    }
-    return math.min(size.width / content.width, size.height / content.height);
-  }
-
-  double _paddingFor(Rect bounds) {
-    return math.max(48.0, math.max(bounds.width, bounds.height) * 0.12);
+    // Never let a tiny sketch fill the whole card: pretend the viewport is
+    // at least _minViewport so small content stays small and contextual.
+    final effectiveW = math.max(content.width, _minViewport.width);
+    final effectiveH = math.max(content.height, _minViewport.height);
+    final raw = math.min(size.width / effectiveW, size.height / effectiveH);
+    return raw.clamp(_minScale, _maxScale);
   }
 
   Offset _fitOffset(Rect content, Size size, double scale) {
-    final fittedWidth = content.width * scale;
-    final fittedHeight = content.height * scale;
+    // Center the *actual* content (not the inflated minimum viewport).
+    final fittedW = content.width * scale;
+    final fittedH = content.height * scale;
     return Offset(
-      (size.width - fittedWidth) / 2 - content.left * scale,
-      (size.height - fittedHeight) / 2 - content.top * scale,
+      (size.width - fittedW) / 2 - content.left * scale,
+      (size.height - fittedH) / 2 - content.top * scale,
     );
   }
 
-  void _drawGrid(Canvas canvas, Rect world) {
-    final paint = Paint()
-      ..color = gridColor
-      ..strokeWidth = 1;
-
-    final firstX = (world.left / _gridCellSize).floorToDouble() * _gridCellSize;
-    final firstY = (world.top / _gridCellSize).floorToDouble() * _gridCellSize;
-
-    for (var x = firstX; x <= world.right; x += _gridCellSize) {
-      canvas.drawLine(Offset(x, world.top), Offset(x, world.bottom), paint);
-    }
-    for (var y = firstY; y <= world.bottom; y += _gridCellSize) {
-      canvas.drawLine(Offset(world.left, y), Offset(world.right, y), paint);
+  void _drawDotGrid(Canvas canvas, Size size) {
+    final paint = Paint()..color = dotColor.withValues(alpha: 0.55);
+    for (var y = _dotGap / 2; y < size.height; y += _dotGap) {
+      for (var x = _dotGap / 2; x < size.width; x += _dotGap) {
+        canvas.drawCircle(Offset(x, y), _dotRadius, paint);
+      }
     }
   }
 
   @override
   bool shouldRepaint(_DocumentPreviewPainter oldDelegate) {
     return oldDelegate.nodes != nodes ||
-        oldDelegate.imageRepository != imageRepository;
+        oldDelegate.imageRepository != imageRepository ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.dotColor != dotColor;
   }
 }

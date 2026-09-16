@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
@@ -27,6 +28,10 @@ class DocumentCard extends StatefulWidget {
 
 class _DocumentCardState extends State<DocumentCard> {
   bool _hovering = false;
+  bool _focused = false;
+  bool _menuOpen = false;
+
+  bool get _elevated => _hovering || _focused || _menuOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -39,140 +44,296 @@ class _DocumentCardState extends State<DocumentCard> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onOpen,
-        onSecondaryTap: () => _showActions(context),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
-            color: colors.mantle,
-            borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
-            border: Border.all(
-              color: widget.isCurrent
-                  ? colors.accent.withValues(alpha: 0.75)
-                  : _hovering
-                  ? colors.surface1
-                  : colors.surface1.withValues(alpha: 0.65),
-              width: widget.isCurrent ? 1.5 : 1,
+        onDoubleTap: widget.onRename,
+        onSecondaryTapDown: (details) => _showContextMenu(
+          context,
+          details.globalPosition,
+        ),
+        child: FocusableActionDetector(
+          onShowFocusHighlight: (value) => setState(() => _focused = value),
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) {
+                widget.onOpen();
+                return null;
+              },
             ),
-            boxShadow: _hovering
-                ? [
-                    BoxShadow(
-                      color: colors.accent.withValues(alpha: 0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 10),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                  child: Stack(
-                    children: [
-                      DocumentPreviewLoader(document: widget.document),
-                      if (_hovering || widget.isCurrent)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: _CardMenuButton(
-                            canDelete: widget.canDelete,
-                            onRename: widget.onRename,
-                            onDelete: widget.onDelete,
-                          ),
-                        ),
-                      if (widget.isCurrent)
-                        Positioned(
-                          left: 8,
-                          top: 8,
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOut,
+            transform: Matrix4.translationValues(0, _elevated ? -2 : 0, 0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16161C),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: widget.isCurrent
+                    ? colors.accent.withValues(alpha: 0.6)
+                    : _elevated
+                        ? const Color(0xFF4A4A5C)
+                        : const Color(0xFF2A2A35),
+                width: widget.isCurrent ? 1.4 : 1,
+              ),
+              boxShadow: _elevated
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        blurRadius: 28,
+                        offset: const Offset(0, 14),
+                      ),
+                      BoxShadow(
+                        color: colors.accent.withValues(alpha: 0.06),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.28),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        DocumentPreviewLoader(document: widget.document),
+                        // Hover scrim + open affordance.
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 150),
+                          opacity: _elevated ? 1 : 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: colors.accent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: colors.accent.withValues(alpha: 0.35),
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.42),
+                                ],
+                                stops: const [0.45, 1.0],
                               ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              child: Text(
-                                'Recent',
-                                style: theme.typography.hotkey.copyWith(
-                                  color: colors.accent,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _OpenPill(
+                                  isCurrent: widget.isCurrent,
                                 ),
                               ),
                             ),
                           ),
                         ),
+                        if (_elevated || widget.isCurrent)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: _CardMenuButton(
+                              canDelete: widget.canDelete,
+                              onRename: widget.onRename,
+                              onDelete: widget.onDelete,
+                              onOpenChanged: (open) =>
+                                  setState(() => _menuOpen = open),
+                            ),
+                          ),
+                        if (widget.isCurrent)
+                          const Positioned(
+                            left: 8,
+                            top: 8,
+                            child: _CurrentBadge(),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 11, 10, 13),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.document.name,
+                              style: theme.typography.inputText.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14.5,
+                                height: 1.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              formatLibraryEditedAt(widget.document.updatedAt),
+                              style: theme.typography.hotkey.copyWith(
+                                fontSize: 11.5,
+                                color: colors.subtext0
+                                    .withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_outward_rounded,
+                        size: 16,
+                        color: _elevated
+                            ? colors.text.withValues(alpha: 0.8)
+                            : colors.subtext0.withValues(alpha: 0.4),
+                      ),
                     ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.document.name,
-                      style: theme.typography.inputText.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _formatUpdatedAt(widget.document.updatedAt),
-                      style: theme.typography.hotkey.copyWith(fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _showActions(BuildContext context) {
+  void _showContextMenu(BuildContext context, Offset position) {
+    final theme = context.squiggleTheme;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     showMenu<void>(
       context: context,
-      position: const RelativeRect.fromLTRB(200, 200, 0, 0),
-      color: context.squiggleTheme.colors.mantle,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(position, position),
+        Offset.zero & overlay.size,
+      ),
+      color: const Color(0xFF1E1E26),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: Color(0xFF363644)),
+      ),
       items: [
-        PopupMenuItem(onTap: widget.onRename, child: const Text('Rename')),
+        PopupMenuItem(
+          onTap: widget.onRename,
+          child: Row(
+            children: [
+              Icon(Icons.drive_file_rename_outline,
+                  size: 16, color: theme.colors.subtext0),
+              const SizedBox(width: 10),
+              const Text('Rename'),
+            ],
+          ),
+        ),
         if (widget.canDelete)
-          PopupMenuItem(onTap: widget.onDelete, child: const Text('Delete')),
+          PopupMenuItem(
+            onTap: widget.onDelete,
+            child: const Row(
+              children: [
+                Icon(Icons.delete_outline_rounded,
+                    size: 16, color: Color(0xFFF28B8B)),
+                SizedBox(width: 10),
+                Text('Delete',
+                    style: TextStyle(color: Color(0xFFF28B8B))),
+              ],
+            ),
+          ),
       ],
     );
   }
+}
 
-  String _formatUpdatedAt(DateTime updatedAt) {
-    final now = DateTime.now();
-    final difference = now.difference(updatedAt);
-    if (difference.inMinutes < 1) {
-      return 'Edited just now';
-    }
-    if (difference.inHours < 1) {
-      return 'Edited ${difference.inMinutes}m ago';
-    }
-    if (difference.inDays < 1) {
-      return 'Edited ${difference.inHours}h ago';
-    }
-    if (difference.inDays < 7) {
-      return 'Edited ${difference.inDays}d ago';
-    }
-    return 'Edited ${updatedAt.month}/${updatedAt.day}/${updatedAt.year}';
+class _OpenPill extends StatelessWidget {
+  const _OpenPill({required this.isCurrent});
+
+  final bool isCurrent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        color: theme.colors.text,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isCurrent ? Icons.bolt_rounded : Icons.north_east_rounded,
+            size: 14,
+            color: Colors.black87,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            isCurrent ? 'Continue' : 'Open',
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CurrentBadge extends StatelessWidget {
+  const _CurrentBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: theme.colors.accent.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: theme.colors.accent,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Current',
+            style: theme.typography.hotkey.copyWith(
+              color: theme.colors.text,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -181,11 +342,13 @@ class _CardMenuButton extends StatefulWidget {
     required this.canDelete,
     required this.onRename,
     required this.onDelete,
+    required this.onOpenChanged,
   });
 
   final bool canDelete;
   final VoidCallback onRename;
   final VoidCallback onDelete;
+  final ValueChanged<bool> onOpenChanged;
 
   @override
   State<_CardMenuButton> createState() => _CardMenuButtonState();
@@ -197,39 +360,67 @@ class _CardMenuButtonState extends State<_CardMenuButton> {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: PopupMenuButton<void>(
         tooltip: 'Document actions',
         padding: EdgeInsets.zero,
-        color: theme.colors.mantle,
+        color: const Color(0xFF1E1E26),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(theme.radii.button),
-          side: BorderSide(color: theme.colors.surface1),
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: Color(0xFF363644)),
         ),
+        onOpened: () => widget.onOpenChanged(true),
+        onCanceled: () => widget.onOpenChanged(false),
         itemBuilder: (context) => [
           PopupMenuItem(
-            onTap: () => Future.microtask(widget.onRename),
-            child: const Text('Rename'),
+            onTap: () {
+              widget.onOpenChanged(false);
+              Future.microtask(widget.onRename);
+            },
+            child: Row(
+              children: [
+                Icon(Icons.drive_file_rename_outline,
+                    size: 16, color: theme.colors.subtext0),
+                const SizedBox(width: 10),
+                const Text('Rename'),
+              ],
+            ),
           ),
           if (widget.canDelete)
             PopupMenuItem(
-              onTap: () => Future.microtask(widget.onDelete),
-              child: const Text('Delete'),
+              onTap: () {
+                widget.onOpenChanged(false);
+                Future.microtask(widget.onDelete);
+              },
+              child: const Row(
+                children: [
+                  Icon(Icons.delete_outline_rounded,
+                      size: 16, color: Color(0xFFF28B8B)),
+                  SizedBox(width: 10),
+                  Text('Delete',
+                      style: TextStyle(color: Color(0xFFF28B8B))),
+                ],
+              ),
             ),
         ],
-        child: DecoratedBox(
+        child: Container(
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
-            color: theme.colors.mantle.withValues(alpha: _hovering ? 1 : 0.92),
-            borderRadius: BorderRadius.circular(theme.radii.button),
-            border: Border.all(color: theme.colors.surface1),
+            color: Colors.black.withValues(
+              alpha: _hovering ? 0.72 : 0.55,
+            ),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.14),
+            ),
           ),
-          child: const SizedBox(
-            width: 28,
-            height: 28,
-            child: Icon(Icons.more_horiz, size: 16),
+          child: const Icon(
+            Icons.more_horiz_rounded,
+            size: 17,
+            color: Colors.white,
           ),
         ),
       ),
