@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
@@ -375,8 +378,20 @@ class _CardMenuButtonState extends State<_CardMenuButton> {
         onEnter: (_) => setState(() => _hovering = true),
         onExit: (_) => setState(() => _hovering = false),
         cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: toggle,
+        // NB: pointer-down, not onTap. This button sits inside the
+        // card's double-tap-to-rename detector, and the gesture arena
+        // holds an onTap winner until the double-tap timeout expires
+        // (~300ms of dead air vs the instant sort menu). Opening on
+        // pointer-down matches native menu-button behavior and skips
+        // the arena entirely. Right-clicks still fall through to the
+        // card's context menu.
+        child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (event) {
+            final primary = event.kind != PointerDeviceKind.mouse ||
+                event.buttons == kPrimaryMouseButton;
+            if (primary) toggle();
+          },
           child: Tooltip(
             message: 'Document actions',
             child: Container(

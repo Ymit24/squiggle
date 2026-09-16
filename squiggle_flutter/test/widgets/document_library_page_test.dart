@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -105,6 +106,37 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Your documents'), findsOneWidget);
       expect(find.text('Recent'), findsOneWidget);
+    });
+
+    testWidgets('card menu opens on the same frame as the tap',
+        (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await pumpLibraryPage(tester);
+
+      // Hover the first card so its menu button fades in.
+      final cardMenu = find.byTooltip('Document actions').first;
+      final center = tester.getCenter(cardMenu);
+      final gesture =
+          await tester.startGesture(center, kind: PointerDeviceKind.mouse);
+      await gesture.moveTo(center);
+      await tester.pump();
+      await gesture.up();
+      // Exactly one frame after the tap, with no clock advance: the
+      // menu must already be visible. (The button lives inside the
+      // card's double-tap-to-rename detector, which used to hold the
+      // tap in the gesture arena until the double-tap timeout.)
+      await tester.pump();
+      expect(find.text('Rename'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      // Dismiss by tapping outside and flush the card's double-tap
+      // arena timer so teardown doesn't see a pending timer.
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(find.text('Rename'), findsNothing);
     });
   });
 }
