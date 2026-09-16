@@ -27,6 +27,9 @@ void main() async {
   final appTitle =
       'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
   await windowManager.setTitle(appTitle);
+  // Floor for the document library layout (compact header + single
+  // column). Kept at 640x480 so the app still fits small displays.
+  await windowManager.setMinimumSize(const Size(640, 480));
 
   final imageRepository = ImageRepository();
   await imageRepository.initialize();

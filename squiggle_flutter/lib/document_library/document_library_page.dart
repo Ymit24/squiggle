@@ -9,9 +9,24 @@ import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_card.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 enum _SortMode { recent, oldest, name }
+
+/// Window width below which the library switches to its compact layout
+/// (tight padding, icon-only header actions, stacked featured card).
+/// Chosen so the full layout always has room: at 760px the content area
+/// (760 - 2*40) still fits the featured row's detail column.
+const _compactLibraryBreakpoint = 760.0;
+
+bool _isCompactLibrary(BuildContext context) =>
+    MediaQuery.sizeOf(context).width < _compactLibraryBreakpoint;
+
+/// Outer horizontal padding for library sections: 40px on desktop,
+/// tightened on narrow windows so content keeps usable width.
+double _libraryHPadding(BuildContext context) =>
+    _isCompactLibrary(context) ? 16.0 : 40.0;
 
 class DocumentLibraryPage extends StatefulWidget {
   const DocumentLibraryPage({
@@ -105,6 +120,9 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                               _sorted(_filtered(library.documents));
                           final currentId = library.currentDocument?.id;
                           final featured = _featuredDocument(library);
+                          // Narrow windows get tight outer padding so the
+                          // content keeps usable width (see min 640x480).
+                          final hPad = _libraryHPadding(context);
 
                           return CustomScrollView(
                             slivers: [
@@ -114,8 +132,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                             constraints:
                                 const BoxConstraints(maxWidth: 1160),
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  40, 30, 40, 0),
+                              padding:
+                                  EdgeInsets.fromLTRB(hPad, 30, hPad, 0),
                               child: _TitleBlock(
                                 totalCount: library.documents.length,
                                 visibleCount: documents.length,
@@ -133,8 +151,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                               constraints:
                                   const BoxConstraints(maxWidth: 1160),
                               child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                    40, 22, 40, 0),
+                                padding:
+                                    EdgeInsets.fromLTRB(hPad, 22, hPad, 0),
                                 child: _FeaturedCard(
                                   document: featured,
                                   isCurrent: featured.id == currentId,
@@ -157,7 +175,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                 const BoxConstraints(maxWidth: 1160),
                             child: Padding(
                               padding:
-                                  const EdgeInsets.fromLTRB(40, 26, 40, 8),
+                                  EdgeInsets.fromLTRB(hPad, 26, hPad, 8),
                               child: _SectionHeader(
                                 title: _query.trim().isEmpty
                                     ? 'All canvases'
@@ -175,8 +193,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                               constraints:
                                   const BoxConstraints(maxWidth: 1160),
                               child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                    40, 8, 40, 64),
+                                padding:
+                                    EdgeInsets.fromLTRB(hPad, 8, hPad, 64),
                                 child: _EmptyResults(
                                   isSearching: _query.trim().isNotEmpty,
                                   onClear: () {
@@ -197,8 +215,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                               constraints:
                                   const BoxConstraints(maxWidth: 1160),
                               child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                    40, 8, 40, 56),
+                                padding:
+                                    EdgeInsets.fromLTRB(hPad, 8, hPad, 56),
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
                                     final crossAxisCount =
@@ -206,6 +224,11 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                       constraints.maxWidth,
                                     );
                                     const spacing = 18.0;
+                                    // Single-column cards would be
+                                    // floor-to-ceiling tall at 0.94;
+                                    // widen the aspect when stacked.
+                                    final aspectRatio =
+                                        crossAxisCount == 1 ? 1.6 : 0.94;
                                     return GridView.builder(
                                       shrinkWrap: true,
                                       physics:
@@ -215,7 +238,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                         crossAxisCount: crossAxisCount,
                                         mainAxisSpacing: spacing,
                                         crossAxisSpacing: spacing,
-                                        childAspectRatio: 0.94,
+                                        childAspectRatio: aspectRatio,
                                       ),
                                       itemCount: _query.trim().isEmpty
                                           ? documents.length + 1
@@ -413,7 +436,8 @@ class _StickyHeader extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1160),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(40, 14, 40, 14),
+            padding: EdgeInsets.fromLTRB(
+                _libraryHPadding(context), 14, _libraryHPadding(context), 14),
             child: _TopBar(
               searchController: searchController,
               searchFocus: searchFocus,
@@ -455,6 +479,17 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
+    // Compact header on narrow windows: the fixed 250px search plus
+    // labeled buttons overflow below ~760px, so the search goes flexible
+    // and the actions collapse to icon-only (tooltips retained).
+    final compact = _isCompactLibrary(context);
+    final searchField = _SearchField(
+      controller: searchController,
+      focusNode: searchFocus,
+      query: query,
+      onChanged: onQueryChanged,
+      onClear: onClearQuery,
+    );
     return Row(
       children: [
         Container(
@@ -497,21 +532,17 @@ class _TopBar extends StatelessWidget {
             ),
           ],
         ),
-        const Spacer(),
-        SizedBox(
-          width: 250,
-          child: _SearchField(
-            controller: searchController,
-            focusNode: searchFocus,
-            query: query,
-            onChanged: onQueryChanged,
-            onClear: onClearQuery,
-          ),
-        ),
+        if (compact) ...[
+          const SizedBox(width: 12),
+          Expanded(child: searchField),
+        ] else ...[
+          const Spacer(),
+          SizedBox(width: 250, child: searchField),
+        ],
         const SizedBox(width: 10),
-        _SortButton(sort: sort, onChanged: onSortChanged),
+        _SortButton(sort: sort, onChanged: onSortChanged, compact: compact),
         const SizedBox(width: 10),
-        _NewButton(onTap: onCreateNamed),
+        _NewButton(onTap: onCreateNamed, compact: compact),
       ],
     );
   }
@@ -609,10 +640,15 @@ class _SearchField extends StatelessWidget {
 }
 
 class _SortButton extends StatelessWidget {
-  const _SortButton({required this.sort, required this.onChanged});
+  const _SortButton({
+    required this.sort,
+    required this.onChanged,
+    this.compact = false,
+  });
 
   final _SortMode sort;
   final ValueChanged<_SortMode> onChanged;
+  final bool compact;
 
   String get _label => switch (sort) {
         _SortMode.recent => 'Recent',
@@ -671,24 +707,26 @@ class _SortButton extends StatelessWidget {
                 children: [
                   Icon(Icons.swap_vert_rounded,
                       size: 16, color: theme.colors.subtext0),
-                  const SizedBox(width: 7),
-                  Text(
-                    _label,
-                    style: theme.typography.inputText.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  if (!compact) ...[
+                    const SizedBox(width: 7),
+                    Text(
+                      _label,
+                      style: theme.typography.inputText.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  AnimatedRotation(
-                    turns: open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 160),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 17,
-                      color: theme.colors.subtext0,
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: open ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 17,
+                        color: theme.colors.subtext0,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -700,9 +738,10 @@ class _SortButton extends StatelessWidget {
 }
 
 class _NewButton extends StatefulWidget {
-  const _NewButton({required this.onTap});
+  const _NewButton({required this.onTap, this.compact = false});
 
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   State<_NewButton> createState() => _NewButtonState();
@@ -714,7 +753,7 @@ class _NewButtonState extends State<_NewButton> {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    return MouseRegion(
+    final button = MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       cursor: SystemMouseCursors.click,
@@ -723,7 +762,12 @@ class _NewButtonState extends State<_NewButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
           height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 15),
+          width: widget.compact ? 38 : null,
+          alignment:
+              widget.compact ? Alignment.center : Alignment.centerLeft,
+          padding: widget.compact
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(horizontal: 15),
           decoration: BoxDecoration(
             color: _hovering
                 ? const Color(0xFFF0F0F5)
@@ -737,24 +781,34 @@ class _NewButtonState extends State<_NewButton> {
               ),
             ],
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add_rounded, size: 18, color: Colors.black87),
-              SizedBox(width: 6),
-              Text(
-                'New canvas',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
+          child: widget.compact
+              ? const Icon(Icons.add_rounded,
+                  size: 18, color: Colors.black87)
+              : const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_rounded,
+                        size: 18, color: Colors.black87),
+                    SizedBox(width: 6),
+                    Text(
+                      'New canvas',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
+    // The label carries the meaning on desktop; icon-only narrow
+    // windows get it back via tooltip.
+    if (widget.compact) {
+      return Tooltip(message: 'New canvas', child: button);
+    }
+    return button;
   }
 }
 
@@ -854,24 +908,72 @@ class _FeaturedCardState extends State<_FeaturedCard> {
               ),
             ],
           ),
-          child: SizedBox(
-            height: 240,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: DocumentPreviewLoader(
-                      document: widget.document),
+          child: _isCompactLibrary(context)
+              // Narrow windows: stack preview above details. The side-
+              // by-side row squeezes the detail column until its button
+              // row overflows (see min window 640x480).
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      height: 200,
+                      child: DocumentPreviewLoader(
+                          document: widget.document),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 14, 6, 4),
+                      child: _details(
+                        context,
+                        theme,
+                        colors,
+                        MainAxisAlignment.start,
+                      ),
+                    ),
+                  ],
+                )
+              : SizedBox(
+                  height: 240,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: DocumentPreviewLoader(
+                            document: widget.document),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                              22, 10, 10, 10),
+                          child: _details(
+                            context,
+                            theme,
+                            colors,
+                            MainAxisAlignment.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(22, 10, 10, 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+        ),
+      ),
+    );
+  }
+
+  /// Title, timestamp, current-open status, and actions shared by the
+  /// side-by-side and stacked featured layouts.
+  Widget _details(
+    BuildContext context,
+    SquiggleTheme theme,
+    SquiggleColorScheme colors,
+    MainAxisAlignment mainAxisAlignment,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: mainAxisAlignment,
+      children: [
                         Text(
                           widget.document.name,
                           style: theme.typography.inputText.copyWith(
@@ -935,15 +1037,7 @@ class _FeaturedCardState extends State<_FeaturedCard> {
                           ],
                         ),
                       ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+                    );
   }
 }
 
