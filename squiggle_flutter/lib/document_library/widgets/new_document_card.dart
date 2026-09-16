@@ -41,7 +41,7 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: _active ? colors.surface0 : colors.mantle,
+              color: _active ? colors.surface0 : colors.base,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: _active

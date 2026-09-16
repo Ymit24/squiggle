@@ -58,7 +58,7 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
     final theme = context.squiggleTheme;
 
     return AlertDialog(
-      backgroundColor: theme.colors.mantle,
+      backgroundColor: theme.colors.base,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colors.surface1),
@@ -88,7 +88,7 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
             ),
             isDense: true,
             filled: true,
-            fillColor: theme.colors.base,
+            fillColor: theme.colors.surface0,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 13,
               vertical: 11,

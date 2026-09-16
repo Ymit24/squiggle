@@ -3,20 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_name_dialog.dart';
-import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_card.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 enum _SortMode { recent, oldest, name }
 
 const _compactLibraryBreakpoint = 760.0;
 const _maxLibraryWidth = 1160.0;
-const _maxFeaturedCardWidth = 720.0;
 const _headerControlHeight = 38.0;
 
 bool _isCompactLibrary(BuildContext context) =>
@@ -60,7 +56,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
     final library = context.read<DocumentLibraryRepository>();
 
     return Scaffold(
-      backgroundColor: theme.colors.base,
+      backgroundColor: theme.colors.mantle,
       body: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.keyN, meta: true): () =>
@@ -75,39 +71,60 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
         child: Focus(
           focusNode: _shortcutFocus,
           autofocus: true,
-          child: Listener(
-            behavior: HitTestBehavior.translucent,
-            onPointerDown: (_) => _shortcutFocus.requestFocus(),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  _StickyHeader(
-                    searchController: _searchController,
-                    searchFocus: _searchFocus,
-                    query: _query,
-                    sort: _sort,
-                    onQueryChanged: (value) => setState(() => _query = value),
-                    onClearQuery: () {
-                      _searchController.clear();
-                      setState(() => _query = '');
-                    },
-                    onSortChanged: (mode) => setState(() => _sort = mode),
-                    onCreateNamed: () => _createNamedDocument(context),
-                  ),
-                  Expanded(
-                    child: StreamBuilder<void>(
-                      stream: library.changesStream,
-                      initialData: null,
-                      builder: (context, _) {
-                        final documents = _sorted(_filtered(library.documents));
-                        final currentId = library.currentDocument?.id;
-                        final featured = _featuredDocument(library);
-                        final hPad = _libraryHPadding(context);
-                        final query = _query.trim();
-                        final isSearching = query.isNotEmpty;
+          child: SafeArea(
+            child: Column(
+              children: [
+                _StickyHeader(
+                  searchController: _searchController,
+                  searchFocus: _searchFocus,
+                  onSearchTapOutside: _shortcutFocus.requestFocus,
+                  query: _query,
+                  sort: _sort,
+                  onQueryChanged: (value) => setState(() => _query = value),
+                  onClearQuery: () {
+                    _searchController.clear();
+                    setState(() => _query = '');
+                  },
+                  onSortChanged: (mode) => setState(() => _sort = mode),
+                  onCreateNamed: () => _createNamedDocument(context),
+                ),
+                Expanded(
+                  child: StreamBuilder<void>(
+                    stream: library.changesStream,
+                    initialData: null,
+                    builder: (context, _) {
+                      final documents = _sorted(_filtered(library.documents));
+                      final currentId = library.currentDocument?.id;
+                      final hPad = _libraryHPadding(context);
+                      final query = _query.trim();
+                      final isSearching = query.isNotEmpty;
 
-                        return CustomScrollView(
-                          slivers: [
+                      return CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: _maxLibraryWidth,
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    hPad,
+                                    28,
+                                    hPad,
+                                    8,
+                                  ),
+                                  child: _SectionHeader(
+                                    title: !isSearching
+                                        ? 'All canvases'
+                                        : 'Results',
+                                    count: documents.length,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (documents.isEmpty)
                             SliverToBoxAdapter(
                               child: Center(
                                 child: ConstrainedBox(
@@ -117,186 +134,100 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                   child: Padding(
                                     padding: EdgeInsets.fromLTRB(
                                       hPad,
-                                      30,
+                                      8,
                                       hPad,
-                                      0,
+                                      64,
                                     ),
-                                    child: _TitleBlock(
+                                    child: _EmptyResults(
                                       isSearching: isSearching,
+                                      onClear: () {
+                                        _searchController.clear();
+                                        setState(() => _query = '');
+                                      },
+                                      onCreate: () => widget.onCreateAndOpen(),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            if (featured != null && !isSearching)
-                              SliverToBoxAdapter(
-                                child: Center(
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: _maxLibraryWidth,
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                        hPad,
-                                        22,
-                                        hPad,
-                                        0,
-                                      ),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxWidth: _maxFeaturedCardWidth,
-                                          ),
-                                          child: _FeaturedCard(
-                                            document: featured,
-                                            isCurrent: featured.id == currentId,
-                                            onOpen: () => widget.onOpenDocument(
-                                              featured.id,
-                                            ),
-                                            onRename: () => _renameDocument(
-                                              context,
-                                              library,
-                                              featured,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            SliverToBoxAdapter(
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: _maxLibraryWidth,
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                      hPad,
-                                      26,
-                                      hPad,
-                                      8,
-                                    ),
-                                    child: _SectionHeader(
-                                      title: !isSearching
-                                          ? 'All canvases'
-                                          : 'Results',
-                                      count: documents.length,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (documents.isEmpty)
-                              SliverToBoxAdapter(
-                                child: Center(
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: _maxLibraryWidth,
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                        hPad,
-                                        8,
-                                        hPad,
-                                        64,
-                                      ),
-                                      child: _EmptyResults(
-                                        isSearching: isSearching,
-                                        onClear: () {
-                                          _searchController.clear();
-                                          setState(() => _query = '');
-                                        },
-                                        onCreate: () =>
-                                            widget.onCreateAndOpen(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            else
-                              SliverLayoutBuilder(
-                                builder: (context, constraints) {
-                                  final sectionWidth = constraints
-                                      .crossAxisExtent
-                                      .clamp(0.0, _maxLibraryWidth);
-                                  final sidePadding =
-                                      (constraints.crossAxisExtent -
-                                              sectionWidth) /
-                                          2 +
-                                      hPad;
-                                  final gridWidth = sectionWidth - 2 * hPad;
-                                  final crossAxisCount = _gridColumnCount(
-                                    gridWidth,
-                                  );
+                            )
+                          else
+                            SliverLayoutBuilder(
+                              builder: (context, constraints) {
+                                final sectionWidth = constraints.crossAxisExtent
+                                    .clamp(0.0, _maxLibraryWidth);
+                                final sidePadding =
+                                    (constraints.crossAxisExtent -
+                                            sectionWidth) /
+                                        2 +
+                                    hPad;
+                                final gridWidth = sectionWidth - 2 * hPad;
+                                final crossAxisCount = _gridColumnCount(
+                                  gridWidth,
+                                );
 
-                                  return SliverPadding(
-                                    padding: EdgeInsets.fromLTRB(
-                                      sidePadding,
-                                      8,
-                                      sidePadding,
-                                      56,
-                                    ),
-                                    sliver: SliverGrid(
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: crossAxisCount,
-                                            mainAxisSpacing: 18,
-                                            crossAxisSpacing: 18,
-                                            childAspectRatio:
-                                                crossAxisCount == 1
-                                                ? 1.6
-                                                : 0.94,
-                                          ),
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          if (!isSearching && index == 0) {
-                                            return NewDocumentCard(
-                                              onPressed: () =>
-                                                  widget.onCreateAndOpen(),
-                                            );
-                                          }
-                                          final document =
-                                              documents[isSearching
-                                                  ? index
-                                                  : index - 1];
-                                          return DocumentCard(
-                                            document: document,
-                                            isCurrent: document.id == currentId,
-                                            canDelete:
-                                                library.documents.length > 1,
-                                            onOpen: () => widget.onOpenDocument(
-                                              document.id,
-                                            ),
-                                            onRename: () => _renameDocument(
-                                              context,
-                                              library,
-                                              document,
-                                            ),
-                                            onDelete: () => _deleteDocument(
-                                              context,
-                                              library,
-                                              document,
-                                            ),
+                                return SliverPadding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    sidePadding,
+                                    8,
+                                    sidePadding,
+                                    56,
+                                  ),
+                                  sliver: SliverGrid(
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          mainAxisSpacing: 18,
+                                          crossAxisSpacing: 18,
+                                          childAspectRatio: crossAxisCount == 1
+                                              ? 1.6
+                                              : 0.94,
+                                        ),
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, index) {
+                                        if (!isSearching && index == 0) {
+                                          return NewDocumentCard(
+                                            onPressed: () =>
+                                                widget.onCreateAndOpen(),
                                           );
-                                        },
-                                        childCount:
-                                            documents.length +
-                                            (isSearching ? 0 : 1),
-                                      ),
+                                        }
+                                        final document =
+                                            documents[isSearching
+                                                ? index
+                                                : index - 1];
+                                        return DocumentCard(
+                                          document: document,
+                                          isCurrent: document.id == currentId,
+                                          canDelete:
+                                              library.documents.length > 1,
+                                          onOpen: () => widget.onOpenDocument(
+                                            document.id,
+                                          ),
+                                          onRename: () => _renameDocument(
+                                            context,
+                                            library,
+                                            document,
+                                          ),
+                                          onDelete: () => _deleteDocument(
+                                            context,
+                                            library,
+                                            document,
+                                          ),
+                                        );
+                                      },
+                                      childCount:
+                                          documents.length +
+                                          (isSearching ? 0 : 1),
                                     ),
-                                  );
-                                },
-                              ),
-                          ],
-                        );
-                      },
-                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -327,14 +258,6 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
         break;
     }
     return documents;
-  }
-
-  DocumentInfo? _featuredDocument(DocumentLibraryRepository library) {
-    if (library.documents.length < 2) return null;
-    return library.documents.reduce(
-      (latest, document) =>
-          document.updatedAt.isAfter(latest.updatedAt) ? document : latest,
-    );
   }
 
   int _gridColumnCount(double width) {
@@ -387,6 +310,7 @@ class _StickyHeader extends StatelessWidget {
   const _StickyHeader({
     required this.searchController,
     required this.searchFocus,
+    required this.onSearchTapOutside,
     required this.query,
     required this.sort,
     required this.onQueryChanged,
@@ -397,6 +321,7 @@ class _StickyHeader extends StatelessWidget {
 
   final TextEditingController searchController;
   final FocusNode searchFocus;
+  final VoidCallback onSearchTapOutside;
   final String query;
   final _SortMode sort;
   final ValueChanged<String> onQueryChanged;
@@ -425,6 +350,7 @@ class _StickyHeader extends StatelessWidget {
             child: _TopBar(
               searchController: searchController,
               searchFocus: searchFocus,
+              onSearchTapOutside: onSearchTapOutside,
               query: query,
               sort: sort,
               onQueryChanged: onQueryChanged,
@@ -443,6 +369,7 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.searchController,
     required this.searchFocus,
+    required this.onSearchTapOutside,
     required this.query,
     required this.sort,
     required this.onQueryChanged,
@@ -453,6 +380,7 @@ class _TopBar extends StatelessWidget {
 
   final TextEditingController searchController;
   final FocusNode searchFocus;
+  final VoidCallback onSearchTapOutside;
   final String query;
   final _SortMode sort;
   final ValueChanged<String> onQueryChanged;
@@ -467,6 +395,7 @@ class _TopBar extends StatelessWidget {
     final searchField = _SearchField(
       controller: searchController,
       focusNode: searchFocus,
+      onTapOutside: onSearchTapOutside,
       query: query,
       onChanged: onQueryChanged,
       onClear: onClearQuery,
@@ -529,6 +458,7 @@ class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
     required this.focusNode,
+    required this.onTapOutside,
     required this.query,
     required this.onChanged,
     required this.onClear,
@@ -536,6 +466,7 @@ class _SearchField extends StatelessWidget {
 
   final TextEditingController controller;
   final FocusNode focusNode;
+  final VoidCallback onTapOutside;
   final String query;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
@@ -549,7 +480,7 @@ class _SearchField extends StatelessWidget {
         key: const ValueKey('library-search'),
         height: _headerControlHeight,
         decoration: BoxDecoration(
-          color: theme.colors.mantle,
+          color: theme.colors.surface0,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: focusNode.hasFocus
@@ -566,6 +497,7 @@ class _SearchField extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 focusNode: focusNode,
+                onTapOutside: (_) => onTapOutside(),
                 onChanged: onChanged,
                 style: theme.typography.inputText.copyWith(fontSize: 13.5),
                 decoration: InputDecoration(
@@ -601,7 +533,7 @@ class _SearchField extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colors.surface0,
+                    color: theme.colors.surface1,
                     borderRadius: BorderRadius.circular(5),
                     border: Border.all(color: theme.colors.surface1),
                   ),
@@ -672,7 +604,7 @@ class _SortButton extends StatelessWidget {
               height: _headerControlHeight,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: open ? theme.colors.surface0 : theme.colors.mantle,
+                color: open ? theme.colors.surface1 : theme.colors.surface0,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: open
@@ -730,336 +662,53 @@ class _NewButton extends StatelessWidget {
     final button = SizedBox(
       key: const ValueKey('library-new'),
       height: _headerControlHeight,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: TextButton(
-          onPressed: onTap,
-          style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.resolveWith(
-              (states) => states.contains(WidgetState.hovered)
-                  ? theme.colors.text.withValues(alpha: 0.9)
-                  : theme.colors.text,
-            ),
-            foregroundColor: WidgetStatePropertyAll(theme.colors.base),
-            minimumSize: const WidgetStatePropertyAll(
-              Size(0, _headerControlHeight),
-            ),
-            maximumSize: const WidgetStatePropertyAll(
-              Size(double.infinity, _headerControlHeight),
-            ),
-            fixedSize: compact
-                ? const WidgetStatePropertyAll(
-                    Size.square(_headerControlHeight),
-                  )
-                : null,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: WidgetStatePropertyAll(
-              compact
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.symmetric(horizontal: 15),
-            ),
-            shape: WidgetStatePropertyAll(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
+      child: TextButton(
+        onPressed: onTap,
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.hovered)
+                ? theme.colors.text.withValues(alpha: 0.9)
+                : theme.colors.text,
           ),
-          child: compact
-              ? const Icon(Icons.add_rounded, size: 18)
-              : const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add_rounded, size: 18),
-                    SizedBox(width: 6),
-                    Text(
-                      'New canvas',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
+          foregroundColor: WidgetStatePropertyAll(theme.colors.base),
+          minimumSize: const WidgetStatePropertyAll(
+            Size(0, _headerControlHeight),
+          ),
+          maximumSize: const WidgetStatePropertyAll(
+            Size(double.infinity, _headerControlHeight),
+          ),
+          fixedSize: compact
+              ? const WidgetStatePropertyAll(Size.square(_headerControlHeight))
+              : null,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: WidgetStatePropertyAll(
+            compact
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(horizontal: 11),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+          ),
         ),
+        child: compact
+            ? const Icon(Icons.add_rounded, size: 18)
+            : const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_rounded, size: 17),
+                  SizedBox(width: 5),
+                  Text(
+                    'New canvas',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
       ),
     );
     if (compact) {
       return Tooltip(message: 'New canvas', child: button);
     }
     return button;
-  }
-}
-
-class _TitleBlock extends StatelessWidget {
-  const _TitleBlock({required this.isSearching});
-
-  final bool isSearching;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    return Text(
-      isSearching ? 'Search results' : 'Documents',
-      style: theme.typography.inputText.copyWith(
-        fontSize: 30,
-        fontWeight: FontWeight.w800,
-        height: 1.05,
-        letterSpacing: -0.5,
-      ),
-    );
-  }
-}
-
-class _FeaturedCard extends StatefulWidget {
-  const _FeaturedCard({
-    required this.document,
-    required this.isCurrent,
-    required this.onOpen,
-    required this.onRename,
-  });
-
-  final DocumentInfo document;
-  final bool isCurrent;
-  final VoidCallback onOpen;
-  final VoidCallback onRename;
-
-  @override
-  State<_FeaturedCard> createState() => _FeaturedCardState();
-}
-
-class _FeaturedCardState extends State<_FeaturedCard> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final colors = theme.colors;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onOpen,
-        child: AnimatedContainer(
-          key: const ValueKey('library-featured-card'),
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colors.mantle,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: _hovering
-                  ? colors.accent.withValues(alpha: 0.5)
-                  : colors.surface1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 30,
-                offset: const Offset(0, 16),
-              ),
-            ],
-          ),
-          child: _isCompactLibrary(context)
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(
-                      height: 180,
-                      child: DocumentPreviewLoader(document: widget.document),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(6, 14, 6, 4),
-                      child: _details(
-                        context,
-                        theme,
-                        colors,
-                        MainAxisAlignment.start,
-                      ),
-                    ),
-                  ],
-                )
-              : SizedBox(
-                  height: 180,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 5,
-                        child: DocumentPreviewLoader(document: widget.document),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(22, 10, 10, 10),
-                          child: _details(
-                            context,
-                            theme,
-                            colors,
-                            MainAxisAlignment.center,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _details(
-    BuildContext context,
-    SquiggleTheme theme,
-    SquiggleColorScheme colors,
-    MainAxisAlignment mainAxisAlignment,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: mainAxisAlignment,
-      children: [
-        Text(
-          widget.document.name,
-          style: theme.typography.inputText.copyWith(
-            fontSize: 21,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          formatLibraryEditedAt(widget.document.updatedAt),
-          style: theme.typography.inputText.copyWith(
-            color: colors.subtext0,
-            fontSize: 13,
-          ),
-        ),
-        if (widget.isCurrent) ...[
-          const SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7EE2A8),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Currently open',
-                style: theme.typography.inputText.copyWith(
-                  color: colors.subtext0,
-                  fontSize: 12.5,
-                ),
-              ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 22),
-        Row(
-          children: [
-            _FeaturedPrimaryButton(
-              label: widget.isCurrent ? 'Continue' : 'Open canvas',
-              onTap: widget.onOpen,
-            ),
-            const SizedBox(width: 10),
-            _FeaturedGhostButton(
-              icon: Icons.drive_file_rename_outline_rounded,
-              tooltip: 'Rename',
-              onTap: widget.onRename,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _FeaturedPrimaryButton extends StatelessWidget {
-  const _FeaturedPrimaryButton({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.squiggleTheme.colors;
-    return FilledButton(
-      onPressed: onTap,
-      style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.hovered)
-              ? colors.text.withValues(alpha: 0.9)
-              : colors.text,
-        ),
-        foregroundColor: WidgetStatePropertyAll(colors.base),
-        padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        ),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(width: 7),
-          const Icon(Icons.arrow_forward_rounded, size: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeaturedGhostButton extends StatelessWidget {
-  const _FeaturedGhostButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    return IconButton(
-      onPressed: onTap,
-      tooltip: tooltip,
-      icon: Icon(icon, size: 17),
-      style: ButtonStyle(
-        foregroundColor: WidgetStatePropertyAll(theme.colors.subtext0),
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.hovered)
-              ? theme.colors.surface0
-              : Colors.transparent,
-        ),
-        fixedSize: const WidgetStatePropertyAll(Size.square(38)),
-        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-        side: WidgetStatePropertyAll(BorderSide(color: theme.colors.surface1)),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
-    );
   }
 }
 
@@ -1123,7 +772,7 @@ class _EmptyResults extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 24),
       decoration: BoxDecoration(
-        color: theme.colors.mantle,
+        color: theme.colors.base,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: theme.colors.surface0),
       ),
@@ -1187,7 +836,7 @@ class _DeleteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     return AlertDialog(
-      backgroundColor: theme.colors.mantle,
+      backgroundColor: theme.colors.base,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colors.surface1),

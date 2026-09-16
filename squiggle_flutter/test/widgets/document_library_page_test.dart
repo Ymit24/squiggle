@@ -88,7 +88,8 @@ void main() {
       await pumpLibraryPage(tester);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Documents'), findsOneWidget);
+      expect(find.text('All canvases'), findsOneWidget);
+      expect(find.text('Documents'), findsNothing);
       expect(find.text('Recent'), findsNothing);
       expect(find.byTooltip('New canvas'), findsOneWidget);
       expect(find.byTooltip('Sort canvases'), findsOneWidget);
@@ -105,7 +106,8 @@ void main() {
       await pumpLibraryPage(tester);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Documents'), findsOneWidget);
+      expect(find.text('All canvases'), findsOneWidget);
+      expect(find.text('Documents'), findsNothing);
       expect(find.text('Recent'), findsOneWidget);
 
       final searchSize = tester.getSize(
@@ -117,12 +119,7 @@ void main() {
       final newSize = tester.getSize(find.byKey(const ValueKey('library-new')));
       expect(sortSize.height, searchSize.height);
       expect(newSize.height, searchSize.height);
-      expect(
-        tester
-            .getSize(find.byKey(const ValueKey('library-featured-card')))
-            .width,
-        lessThanOrEqualTo(720),
-      );
+      expect(find.byKey(const ValueKey('library-featured-card')), findsNothing);
     });
 
     testWidgets('Cmd+/ focuses search after clicking the page body', (
@@ -133,15 +130,52 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await pumpLibraryPage(tester);
-      await tester.tap(find.text('Documents'));
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
-      await tester.sendKeyEvent(LogicalKeyboardKey.slash, platform: 'macos');
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
-      await tester.pump();
+      Future<void> focusSearchWithShortcut() async {
+        await tester.sendKeyDownEvent(
+          LogicalKeyboardKey.meta,
+          platform: 'macos',
+        );
+        await tester.sendKeyEvent(LogicalKeyboardKey.slash, platform: 'macos');
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
+        await tester.pump();
+      }
 
+      await pumpLibraryPage(tester);
       final search = tester.widget<TextField>(find.byType(TextField));
+
+      await tester.tap(find.text('All canvases'));
+      await focusSearchWithShortcut();
       expect(search.focusNode?.hasFocus, isTrue);
+
+      await tester.tap(find.text('All canvases'));
+      await tester.pump();
+      expect(search.focusNode?.hasFocus, isFalse);
+
+      await focusSearchWithShortcut();
+      expect(search.focusNode?.hasFocus, isTrue);
+    });
+
+    testWidgets('sort menu opens below its anchor', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await pumpLibraryPage(tester);
+
+      final sortButton = find.byKey(const ValueKey('library-sort'));
+      await tester.tap(sortButton);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final firstMenuItem = find.ancestor(
+        of: find.text('Last edited'),
+        matching: find.byType(MenuItemButton),
+      );
+      expect(firstMenuItem, findsOneWidget);
+      expect(
+        tester.getTopLeft(firstMenuItem).dy,
+        greaterThanOrEqualTo(tester.getBottomLeft(sortButton).dy),
+      );
     });
 
     testWidgets('card menu does not trigger the card action', (tester) async {

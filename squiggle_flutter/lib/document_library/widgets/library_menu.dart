@@ -70,7 +70,7 @@ void showLibraryContextMenu({
   showMenu<LibraryMenuItem>(
     context: context,
     position: positionRect,
-    color: colors.mantle,
+    color: colors.surface0,
     surfaceTintColor: Colors.transparent,
     shadowColor: Colors.black,
     elevation: 16,
@@ -95,8 +95,8 @@ void showLibraryContextMenu({
 MenuStyle _menuStyle(BuildContext context, double width) {
   final colors = context.squiggleTheme.colors;
   return MenuStyle(
-    alignment: AlignmentDirectional.topEnd,
-    backgroundColor: WidgetStatePropertyAll(colors.mantle),
+    alignment: AlignmentDirectional.bottomStart,
+    backgroundColor: WidgetStatePropertyAll(colors.surface0),
     surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
     shadowColor: const WidgetStatePropertyAll(Colors.black),
     elevation: const WidgetStatePropertyAll(16),
