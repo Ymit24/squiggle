@@ -96,8 +96,8 @@ class SquiggleHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RepositoryProvider(
-        create: (context) => this.context,
+      body: RepositoryProvider.value(
+        value: this.context,
         child: RepositoryProvider(
           create: (context) => imageRepository,
           dispose: (repository) => repository.dispose(),
