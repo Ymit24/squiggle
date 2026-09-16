@@ -51,6 +51,16 @@ final class FeatureKindRectangle extends FeatureKind
   );
 
   @override
+  void setLabel(Feature feature, String value) {
+    label = value;
+    _growHeightToFitLabel(
+      feature,
+      value,
+      _paddedLabelBounds(feature.localBounds()),
+    );
+  }
+
+  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);
@@ -65,8 +75,8 @@ final class FeatureKindRectangle extends FeatureKind
     text_painter.paintText(
       canvas,
       label,
-      feature.localBounds(),
-      fontSize: 24,
+      _paddedLabelBounds(bounds),
+      fontSize: _labelFontSize,
       fillColor: Color.fromARGB(255, 255, 255, 255),
     );
   }

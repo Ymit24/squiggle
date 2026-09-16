@@ -56,4 +56,35 @@ void main() {
       expect(FeatureKindCircle().label, isEmpty);
     });
   });
+
+  group('setLabel', () {
+    test('grows height using the inscribed label area', () {
+      final kind = FeatureKindCircle();
+      final feature = Feature(
+        origin: const Offset(10, 20),
+        size: const Size(80, 20),
+        kind: kind,
+      );
+
+      kind.setLabel(feature, 'a long circle label that needs many lines');
+
+      expect(feature.origin, const Offset(10, 20));
+      expect(feature.width, 80);
+      expect(feature.height, greaterThan(20));
+    });
+
+    test('does not shrink height when label fits or is empty', () {
+      final kind = FeatureKindCircle();
+      final feature = Feature(
+        origin: Offset.zero,
+        size: const Size(200, 200),
+        kind: kind,
+      );
+
+      kind.setLabel(feature, 'short');
+      expect(feature.height, 200);
+      kind.setLabel(feature, '');
+      expect(feature.height, 200);
+    });
+  });
 }

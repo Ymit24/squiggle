@@ -51,6 +51,17 @@ final class FeatureKindCircle extends FeatureKind
   );
 
   @override
+  void setLabel(Feature feature, String value) {
+    label = value;
+    _growHeightToFitLabel(
+      feature,
+      value,
+      _inscribedLabelBounds(feature.localBounds()),
+      outerHeightScale: math.sqrt2,
+    );
+  }
+
+  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawOval(bounds, Paint()..color = fillColor);
@@ -65,8 +76,8 @@ final class FeatureKindCircle extends FeatureKind
     text_painter.paintText(
       canvas,
       label,
-      bounds,
-      fontSize: 24,
+      _inscribedLabelBounds(bounds),
+      fontSize: _labelFontSize,
       fillColor: Color.fromARGB(255, 255, 255, 255),
     );
   }

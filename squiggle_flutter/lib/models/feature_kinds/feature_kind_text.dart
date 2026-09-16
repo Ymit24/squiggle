@@ -74,7 +74,7 @@ final class FeatureKindText extends FeatureKind
 
   Size measureContents({required double width, required double fontSize}) =>
       text_painter.measureText(
-        label,
+        label.isEmpty ? ' ' : label,
         width: width,
         fontSize: fontSize,
         horizontalAlignment: horizontalAlignment,
@@ -90,14 +90,6 @@ final class FeatureKindText extends FeatureKind
     horizontalAlignment: horizontalAlignment,
   );
 
-  @override
-  void fitToBounds({required double width, required double height}) {
-    if (label.isEmpty) return;
-    fontSize =
-        fontSizeFillingBounds(width: width, height: height) ??
-        text_painter.kMinTextFontSize;
-  }
-
   /// Sets [feature] to [fontSize] and a height measured from [label].
   void applySizeFromFontSize(
     Feature feature, {
@@ -111,6 +103,12 @@ final class FeatureKindText extends FeatureKind
   }
 
   @override
+  void setLabel(Feature feature, String value) {
+    label = value;
+    feature.size = measureContents(width: feature.width, fontSize: fontSize);
+  }
+
+  @override
   void applyBounds(Feature feature, Rect bounds) {
     final clampedWidth = bounds.width < kMinEnvelopeDimension
         ? kMinEnvelopeDimension
@@ -120,7 +118,11 @@ final class FeatureKindText extends FeatureKind
         : bounds.height;
     feature.origin = bounds.topLeft;
     feature.size = Size(clampedWidth, clampedHeight);
-    fitToBounds(width: clampedWidth, height: clampedHeight);
+    if (label.isNotEmpty) {
+      fontSize =
+          fontSizeFillingBounds(width: clampedWidth, height: clampedHeight) ??
+          text_painter.kMinTextFontSize;
+    }
   }
 
   @override

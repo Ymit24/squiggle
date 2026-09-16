@@ -100,7 +100,7 @@ void main() {
 
         expect(closedState, isA<TextEditClosed>());
         expect((feature.kind as LabelCapable).label, 'updated text');
-        expect(feature.size, originalSize);
+        final updatedSize = feature.size;
         if (feature.kind is! FeatureKindText) {
           expect(
             Map<String, dynamic>.of(feature.kind.toDataModel())
@@ -111,9 +111,11 @@ void main() {
 
         context.history.undo();
         expect((feature.kind as LabelCapable).label, 'initial text');
+        expect(feature.size, originalSize);
 
         context.history.redo();
         expect((feature.kind as LabelCapable).label, 'updated text');
+        expect(feature.size, updatedSize);
         await bloc.close();
       });
     }
