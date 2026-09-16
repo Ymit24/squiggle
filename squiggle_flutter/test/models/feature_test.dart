@@ -159,7 +159,9 @@ data.Feature _rawFeature(String type) {
     'fillColor': 0xFFFFFFFF,
     'strokeWidth': 1.0,
   };
-  if (type == 'text') {
+  if (type == 'rectangle' || type == 'circle') {
+    content['label'] = '';
+  } else if (type == 'text') {
     content.addAll({
       'contents': 'text',
       'fontSize': 16.0,
