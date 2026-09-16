@@ -124,11 +124,11 @@ void main() {
     final kind = FeatureKindText('before');
 
     kind
-      ..contents = 'after'
+      ..label = 'after'
       ..fontSize = 24
       ..strokeWidth = 3;
 
-    expect(kind.contents, 'after');
+    expect(kind.label, 'after');
     expect(kind.fontSize, 24);
     expect(kind.strokeWidth, 3);
   });
@@ -159,7 +159,9 @@ data.Feature _rawFeature(String type) {
     'fillColor': 0xFFFFFFFF,
     'strokeWidth': 1.0,
   };
-  if (type == 'text') {
+  if (type == 'rectangle' || type == 'circle') {
+    content['label'] = '';
+  } else if (type == 'text') {
     content.addAll({
       'contents': 'text',
       'fontSize': 16.0,

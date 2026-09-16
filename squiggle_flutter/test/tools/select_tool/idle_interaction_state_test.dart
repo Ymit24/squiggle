@@ -15,34 +15,50 @@ void main() {
 
     setUp(() => harness = SelectToolTestHarness());
 
-    test('double-clicking text starts a text edit session', () async {
-      harness.context = _textContext();
-      final feature = harness.context.document.nodes.first;
-      final sessions = <TextEditSession>[];
-      final subscription = notifierChangesStream(harness.context.textEdit)
-          .map((_) => harness.context.textEdit.session)
-          .where((session) => session != null)
-          .cast<TextEditSession>()
-          .listen(sessions.add);
+    for (final testCase in <({String name, FeatureKind kind})>[
+      (
+        name: 'text',
+        kind: FeatureKindText(
+          'hello world',
+          fillColor: const Color(0xFFFFFFFF),
+        ),
+      ),
+      (name: 'rectangle', kind: FeatureKindRectangle(label: 'hello world')),
+      (name: 'circle', kind: FeatureKindCircle(label: 'hello world')),
+    ]) {
+      test(
+        'double-clicking ${testCase.name} starts a label edit session',
+        () async {
+          harness.context = _labelContext(testCase.kind);
+          final feature = harness.context.document.nodes.first;
+          final sessions = <TextEditSession>[];
+          final subscription = notifierChangesStream(harness.context.textEdit)
+              .map((_) => harness.context.textEdit.session)
+              .where((session) => session != null)
+              .cast<TextEditSession>()
+              .listen(sessions.add);
 
-      harness.doubleClick(const Offset(50, 24));
-      await Future<void>.delayed(Duration.zero);
+          harness.doubleClick(const Offset(50, 24));
+          await Future<void>.delayed(Duration.zero);
 
-      expect(harness.context.selection.selectedNodeIds, [feature.id]);
-      expect(sessions, hasLength(1));
-      final session = sessions.single as EditTextEditSession;
-      expect(session.featureId, feature.id);
-      expect(session.initialContents, 'hello world');
-      expect(
-        session.canvasLocalBounds,
-        harness.camera.worldToScreenBounds(feature.localBounds()),
+          expect(harness.context.selection.selectedNodeIds, [feature.id]);
+          expect(sessions, hasLength(1));
+          final session = sessions.single as EditTextEditSession;
+          expect(session.featureId, feature.id);
+          expect(session.initialContents, 'hello world');
+          expect(
+            session.canvasLocalBounds,
+            harness.camera.worldToScreenBounds(feature.localBounds()),
+          );
+          await subscription.cancel();
+        },
       );
-      await subscription.cancel();
-    });
+    }
 
     test(
-      'double-clicking a non-text node does not start text editing',
+      'double-clicking a non-label node does not start text editing',
       () async {
+        harness.context = SelectToolTestHarness.polylineContext();
         final sessions = <TextEditSession>[];
         final subscription = notifierChangesStream(harness.context.textEdit)
             .map((_) => harness.context.textEdit.session)
@@ -103,12 +119,8 @@ void main() {
   });
 }
 
-EditorContext _textContext() => EditorContext(
+EditorContext _labelContext(FeatureKind kind) => EditorContext(
   document: Document.fromFeatures([
-    Feature(
-      origin: Offset.zero,
-      size: const Size(200, 48),
-      kind: FeatureKindText('hello world', fillColor: Color(0xFFFFFFFF)),
-    ),
+    Feature(origin: Offset.zero, size: const Size(200, 48), kind: kind),
   ]),
 );
