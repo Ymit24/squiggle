@@ -40,8 +40,6 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
-            // No transform lift: translating on hover moves the hit
-            // region away from the cursor and causes enter/exit flips.
             decoration: BoxDecoration(
               color: _active
                   ? const Color(0xFF1B1B24)
@@ -66,50 +64,52 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: _active
-                          ? colors.text
-                          : colors.surface0.withValues(alpha: 0.7),
-                      shape: BoxShape.circle,
-                      boxShadow: _active
-                          ? [
-                              BoxShadow(
-                                color: colors.text.withValues(alpha: 0.18),
-                                blurRadius: 18,
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Icon(
-                      Icons.add_rounded,
-                      size: 28,
-                      color: _active ? Colors.black87 : colors.text,
-                    ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: _active
+                        ? colors.text
+                        : colors.surface0.withValues(alpha: 0.7),
+                    shape: BoxShape.circle,
+                    boxShadow: _active
+                        ? [
+                            BoxShadow(
+                              color: colors.text.withValues(alpha: 0.18),
+                              blurRadius: 18,
+                            ),
+                          ]
+                        : null,
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'New canvas',
-                    style: theme.typography.inputText.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
-                      color: _active ? colors.text : colors.text.withValues(alpha: 0.85),
-                    ),
+                  child: Icon(
+                    Icons.add_rounded,
+                    size: 28,
+                    color: _active ? Colors.black87 : colors.text,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Start blank · ⌘N',
-                    style: theme.typography.hotkey.copyWith(
-                      fontSize: 11.5,
-                      color: _active
-                          ? colors.subtext0
-                          : colors.subtext0.withValues(alpha: 0.7),
-                    ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'New canvas',
+                  style: theme.typography.inputText.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.5,
+                    color: _active
+                        ? colors.text
+                        : colors.text.withValues(alpha: 0.85),
                   ),
-                ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Start blank · ⌘N',
+                  style: theme.typography.hotkey.copyWith(
+                    fontSize: 11.5,
+                    color: _active
+                        ? colors.subtext0
+                        : colors.subtext0.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

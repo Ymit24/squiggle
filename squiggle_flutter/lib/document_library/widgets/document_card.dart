@@ -1,6 +1,3 @@
-import 'dart:ui';
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
@@ -46,137 +43,135 @@ class _DocumentCardState extends State<DocumentCard> {
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onOpen,
-        onDoubleTap: widget.onRename,
-        onSecondaryTapDown: (details) => _showContextMenu(
-          context,
-          details.globalPosition,
-        ),
-        child: FocusableActionDetector(
-          onShowFocusHighlight: (value) => setState(() => _focused = value),
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (_) {
-                widget.onOpen();
-                return null;
-              },
+      child: FocusableActionDetector(
+        onShowFocusHighlight: (value) => setState(() => _focused = value),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) {
+              widget.onOpen();
+              return null;
+            },
+          ),
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: const Color(0xFF16161C),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.isCurrent
+                  ? colors.accent.withValues(alpha: 0.6)
+                  : _elevated
+                  ? const Color(0xFF4A4A5C)
+                  : const Color(0xFF2A2A35),
+              width: 1,
             ),
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            curve: Curves.easeOut,
-            // NB: no transform lift here. Translating the card on hover
-            // moves it away from the cursor at its edges, which flips
-            // MouseRegion enter/exit back and forth (hover jitter).
-            // Hover feedback stays in border/shadow/scrim only, which
-            // never affects hit-testing.
-            decoration: BoxDecoration(
-              color: const Color(0xFF16161C),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: widget.isCurrent
-                    ? colors.accent.withValues(alpha: 0.6)
-                    : _elevated
-                        ? const Color(0xFF4A4A5C)
-                        : const Color(0xFF2A2A35),
-                // Keep width constant: animating 1 -> 1.4 resizes the
-                // box by the delta and reads as jitter in the grid.
-                width: 1,
-              ),
-              boxShadow: _elevated
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.45),
-                        blurRadius: 28,
-                        offset: const Offset(0, 14),
-                      ),
-                      BoxShadow(
-                        color: colors.accent.withValues(alpha: 0.06),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.28),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        DocumentPreviewLoader(document: widget.document),
-                        // Hover scrim + open affordance.
-                        AnimatedOpacity(
-                          duration: const Duration(milliseconds: 150),
-                          opacity: _elevated ? 1 : 0,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.42),
-                                ],
-                                stops: const [0.45, 1.0],
-                              ),
-                            ),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _OpenPill(
-                                  isCurrent: widget.isCurrent,
+            boxShadow: _elevated
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      blurRadius: 28,
+                      offset: const Offset(0, 14),
+                    ),
+                    BoxShadow(
+                      color: colors.accent.withValues(alpha: 0.06),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.28),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: widget.onOpen,
+                        onDoubleTap: widget.onRename,
+                        onSecondaryTapDown: (details) =>
+                            _showContextMenu(context, details.globalPosition),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            DocumentPreviewLoader(document: widget.document),
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 150),
+                              opacity: _elevated ? 1 : 0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.42),
+                                    ],
+                                    stops: const [0.45, 1.0],
+                                  ),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: _OpenPill(
+                                      isCurrent: widget.isCurrent,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                        // Menu button stays in the tree with opacity so
-                        // hovering never inserts/removes a hit-test target
-                        // under the cursor (another hover-flip source).
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 150),
-                            opacity:
-                                (_elevated || widget.isCurrent) ? 1 : 0,
-                            child: IgnorePointer(
-                              ignoring: !(_elevated ||
-                                  widget.isCurrent),
-                              child: _CardMenuButton(
-                                canDelete: widget.canDelete,
-                                onRename: widget.onRename,
-                                onDelete: widget.onDelete,
-                                onOpenChanged: (open) =>
-                                    setState(() => _menuOpen = open),
-                              ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 150),
+                          opacity: (_elevated || widget.isCurrent) ? 1 : 0,
+                          child: IgnorePointer(
+                            ignoring: !(_elevated || widget.isCurrent),
+                            child: _CardMenuButton(
+                              canDelete: widget.canDelete,
+                              onRename: widget.onRename,
+                              onDelete: widget.onDelete,
+                              onOpenChanged: (open) =>
+                                  setState(() => _menuOpen = open),
                             ),
                           ),
                         ),
-                        if (widget.isCurrent)
-                          const Positioned(
-                            left: 8,
-                            top: 8,
-                            child: _CurrentBadge(),
-                          ),
-                      ],
-                    ),
+                      ),
+                      if (widget.isCurrent)
+                        const Positioned(
+                          left: 8,
+                          top: 8,
+                          child: IgnorePointer(child: _CurrentBadge()),
+                        ),
+                    ],
                   ),
                 ),
-                Padding(
+              ),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.onOpen,
+                onDoubleTap: widget.onRename,
+                onSecondaryTapDown: (details) =>
+                    _showContextMenu(context, details.globalPosition),
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 11, 10, 13),
                   child: Row(
                     children: [
@@ -200,8 +195,7 @@ class _DocumentCardState extends State<DocumentCard> {
                               formatLibraryEditedAt(widget.document.updatedAt),
                               style: theme.typography.hotkey.copyWith(
                                 fontSize: 11.5,
-                                color: colors.subtext0
-                                    .withValues(alpha: 0.85),
+                                color: colors.subtext0.withValues(alpha: 0.85),
                               ),
                             ),
                           ],
@@ -218,8 +212,8 @@ class _DocumentCardState extends State<DocumentCard> {
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -304,9 +298,7 @@ class _CurrentBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: theme.colors.accent.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: theme.colors.accent.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -378,20 +370,9 @@ class _CardMenuButtonState extends State<_CardMenuButton> {
         onEnter: (_) => setState(() => _hovering = true),
         onExit: (_) => setState(() => _hovering = false),
         cursor: SystemMouseCursors.click,
-        // NB: pointer-down, not onTap. This button sits inside the
-        // card's double-tap-to-rename detector, and the gesture arena
-        // holds an onTap winner until the double-tap timeout expires
-        // (~300ms of dead air vs the instant sort menu). Opening on
-        // pointer-down matches native menu-button behavior and skips
-        // the arena entirely. Right-clicks still fall through to the
-        // card's context menu.
-        child: Listener(
+        child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onPointerDown: (event) {
-            final primary = event.kind != PointerDeviceKind.mouse ||
-                event.buttons == kPrimaryMouseButton;
-            if (primary) toggle();
-          },
+          onTap: toggle,
           child: Tooltip(
             message: 'Document actions',
             child: Container(
@@ -402,9 +383,7 @@ class _CardMenuButtonState extends State<_CardMenuButton> {
                   alpha: _hovering || open ? 0.72 : 0.55,
                 ),
                 borderRadius: BorderRadius.circular(9),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.14),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
               ),
               child: const Icon(
                 Icons.more_horiz_rounded,

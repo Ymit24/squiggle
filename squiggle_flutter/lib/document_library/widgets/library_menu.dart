@@ -1,348 +1,164 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// A single row in a library overlay menu.
 class LibraryMenuItem {
   const LibraryMenuItem({
     required this.label,
+    required this.onTap,
     this.icon,
     this.danger = false,
     this.checked = false,
-    required this.onTap,
   });
 
   final String label;
+  final VoidCallback onTap;
   final IconData? icon;
   final bool danger;
   final bool checked;
-  final VoidCallback onTap;
 }
 
-/// Anchor-driven dropdown showing a custom overlay menu (no Material popup).
-///
-/// Wraps the button in the transform target plus outside-tap detection.
-/// [buttonBuilder] receives the open state and a toggle callback.
-class LibraryMenuAnchor extends StatefulWidget {
+class LibraryMenuAnchor extends StatelessWidget {
   const LibraryMenuAnchor({
     super.key,
     required this.menuWidth,
     required this.menuItems,
     required this.buttonBuilder,
     this.onOpenChanged,
-    this.followerOffset = const Offset(0, 8),
+    this.alignmentOffset = const Offset(0, 8),
   });
 
   final double menuWidth;
   final List<LibraryMenuItem> Function() menuItems;
-  final Widget Function(
-    BuildContext context,
-    bool open,
-    VoidCallback toggle,
-  ) buttonBuilder;
+  final Widget Function(BuildContext context, bool open, VoidCallback toggle)
+  buttonBuilder;
   final ValueChanged<bool>? onOpenChanged;
-  final Offset followerOffset;
-
-  @override
-  State<LibraryMenuAnchor> createState() => _LibraryMenuAnchorState();
-}
-
-class _LibraryMenuAnchorState extends State<LibraryMenuAnchor> {
-  final _groupId = Object();
-  OverlayEntry? _entry;
-
-  bool get isOpen => _entry != null;
-
-  @override
-  void dispose() {
-    // Close silently: no setState (element is unmounting) and no
-    // onOpenChanged (the parent is going away or rebuilding anyway).
-    _close(notify: false, rebuild: false);
-    super.dispose();
-  }
-
-  void _toggle() {
-    if (isOpen) {
-      _close();
-    } else {
-      _open();
-    }
-    setState(() {});
-  }
-
-  void _open() {
-    final overlay = Overlay.of(context);
-    final screenSize = MediaQuery.of(context).size;
-    // Resolve once: reused for the height estimate below and the panel,
-    // so the flip decision matches what actually renders.
-    final items = widget.menuItems();
-
-    // Position the menu from the button's global rect with a plain
-    // Positioned — no follower layer involved. Right-aligned to the
-    // button, below it, or above it when space is tight.
-    var left = screenSize.width - widget.menuWidth - 8;
-    var top = 8.0;
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox != null && renderBox.hasSize) {
-      final buttonTopLeft =
-          renderBox.localToGlobal(Offset.zero);
-      final buttonBottomRight = renderBox.localToGlobal(
-        Offset(renderBox.size.width, renderBox.size.height),
-      );
-      left = buttonBottomRight.dx - widget.menuWidth;
-      // Rows are ~40px tall with 12px of panel padding. The old fixed
-      // 220px estimate dwarfed small menus (card menu is ~90px) and
-      // forced the flip-above branch, parking the menu far from the
-      // button.
-      final estimatedHeight = items.length * 40.0 + 12.0;
-      final below = buttonBottomRight.dy + widget.followerOffset.dy;
-      top = below + estimatedHeight <= screenSize.height - 8
-          ? below
-          : buttonTopLeft.dy -
-              widget.followerOffset.dy -
-              estimatedHeight;
-    }
-    left = left.clamp(
-      8.0,
-      (screenSize.width - widget.menuWidth - 8).clamp(8.0, screenSize.width),
-    );
-    top = top.clamp(8.0, (screenSize.height - 120).clamp(8.0, screenSize.height));
-
-    _entry = OverlayEntry(
-      // NB: Overlay lays out non-positioned entry children with TIGHT
-      // full-screen constraints. The Stack below re-loosens them for its
-      // positioned child so the menu shrink-wraps instead of stretching
-      // across the whole window.
-      builder: (overlayContext) => Stack(
-        children: [
-          Positioned(
-            left: left,
-            top: top,
-            child: TapRegion(
-              groupId: _groupId,
-              child: Focus(
-                autofocus: true,
-                onKeyEvent: (node, event) {
-                  if (event is KeyDownEvent &&
-                      event.logicalKey == LogicalKeyboardKey.escape) {
-                    _close();
-                    return KeyEventResult.handled;
-                  }
-                  return KeyEventResult.ignored;
-                },
-                child: LibraryMenuPanel(
-                  width: widget.menuWidth,
-                  items: items,
-                  onSelected: (item) {
-                    _close();
-                    // Run after the overlay is gone so dialogs open cleanly.
-                    Future.microtask(item.onTap);
-                  },
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    overlay.insert(_entry!);
-    widget.onOpenChanged?.call(true);
-  }
-
-  void _close({bool notify = true, bool rebuild = true}) {
-    if (_entry == null) return;
-    _entry!.remove();
-    _entry = null;
-    if (notify) widget.onOpenChanged?.call(false);
-    if (rebuild) setState(() {});
-  }
+  final Offset alignmentOffset;
 
   @override
   Widget build(BuildContext context) {
-    return TapRegion(
-      groupId: _groupId,
-      onTapOutside: (_) => _close(),
-      child: widget.buttonBuilder(context, isOpen, _toggle),
+    return MenuAnchor(
+      alignmentOffset: alignmentOffset,
+      onOpen: () => onOpenChanged?.call(true),
+      onClose: () => onOpenChanged?.call(false),
+      style: _menuStyle(menuWidth),
+      menuChildren: [
+        for (final item in menuItems()) _LibraryMenuButton(item: item),
+      ],
+      builder: (context, controller, _) => buttonBuilder(
+        context,
+        controller.isOpen,
+        controller.isOpen ? controller.close : controller.open,
+      ),
     );
   }
 }
 
-/// Shows a floating library menu at a global [position] (e.g. right-click).
 void showLibraryContextMenu({
   required BuildContext context,
   required Offset position,
   required List<LibraryMenuItem> items,
   double width = 224,
 }) {
-  final overlay = Overlay.of(context);
-  final screenSize = MediaQuery.of(context).size;
-  late final OverlayEntry entry;
-  var closed = false;
-  void close() {
-    if (closed) return;
-    closed = true;
-    entry.remove();
-  }
-
-  final estimatedHeight = items.length * 40.0 + 20;
-  final left =
-      position.dx.clamp(8.0, (screenSize.width - width - 8).clamp(8.0, screenSize.width));
-  final top = position.dy.clamp(
-      8.0, (screenSize.height - estimatedHeight - 8).clamp(8.0, screenSize.height));
-
-  entry = OverlayEntry(
-    builder: (overlayContext) => Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: close,
-            onSecondaryTap: close,
-            child: const SizedBox.expand(),
-          ),
-        ),
-        Positioned(
-          left: left,
-          top: top,
-          child: Focus(
-            autofocus: true,
-            onKeyEvent: (node, event) {
-              if (event is KeyDownEvent &&
-                  event.logicalKey == LogicalKeyboardKey.escape) {
-                close();
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
-            },
-            child: LibraryMenuPanel(
-              width: width,
-              items: items,
-              onSelected: (item) {
-                close();
-                Future.microtask(item.onTap);
-              },
-            ),
-          ),
-        ),
-      ],
-    ),
+  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+  final localPosition = overlay.globalToLocal(position);
+  final positionRect = RelativeRect.fromSize(
+    Rect.fromLTWH(localPosition.dx, localPosition.dy, 0, 0),
+    overlay.size,
   );
-  overlay.insert(entry);
+
+  showMenu<LibraryMenuItem>(
+    context: context,
+    position: positionRect,
+    color: _menuBackground,
+    surfaceTintColor: Colors.transparent,
+    shadowColor: Colors.black,
+    elevation: 16,
+    shape: _menuShape,
+    menuPadding: const EdgeInsets.all(6),
+    constraints: BoxConstraints.tightFor(width: width),
+    items: [
+      for (final item in items)
+        PopupMenuItem(
+          value: item,
+          height: 40,
+          padding: EdgeInsets.zero,
+          child: _LibraryMenuContent(item: item),
+        ),
+    ],
+  ).then((item) => item?.onTap());
 }
 
-/// The floating panel shared by anchored dropdowns and context menus.
-///
-/// Wrapped in [Material]: overlay entries live above the page's [Scaffold],
-/// so without a Material ancestor text falls back to Flutter's debug
-/// fallback style (monospace with a yellow double underline).
-class LibraryMenuPanel extends StatelessWidget {
-  const LibraryMenuPanel({
-    super.key,
-    required this.width,
-    required this.items,
-    required this.onSelected,
-  });
+const _menuBackground = Color(0xFF1E1E27);
+const _menuShape = RoundedRectangleBorder(
+  borderRadius: BorderRadius.all(Radius.circular(12)),
+  side: BorderSide(color: Color(0xFF3A3A48)),
+);
 
-  final double width;
-  final List<LibraryMenuItem> items;
-  final ValueChanged<LibraryMenuItem> onSelected;
+MenuStyle _menuStyle(double width) => MenuStyle(
+  alignment: AlignmentDirectional.topEnd,
+  backgroundColor: const WidgetStatePropertyAll(_menuBackground),
+  surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+  shadowColor: const WidgetStatePropertyAll(Colors.black),
+  elevation: const WidgetStatePropertyAll(16),
+  padding: const WidgetStatePropertyAll(EdgeInsets.all(6)),
+  fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
+  shape: const WidgetStatePropertyAll(_menuShape),
+);
+
+class _LibraryMenuButton extends StatelessWidget {
+  const _LibraryMenuButton({required this.item});
+
+  final LibraryMenuItem item;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        width: width,
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E27),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF3A3A48)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0xB3000000),
-              blurRadius: 28,
-              offset: Offset(0, 12),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final item in items)
-              _MenuRow(item: item, onTap: () => onSelected(item)),
-          ],
-        ),
+    return MenuItemButton(
+      onPressed: item.onTap,
+      requestFocusOnHover: false,
+      style: MenuItemButton.styleFrom(
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
+      child: _LibraryMenuContent(item: item),
     );
   }
 }
 
-class _MenuRow extends StatefulWidget {
-  const _MenuRow({required this.item, required this.onTap});
+class _LibraryMenuContent extends StatelessWidget {
+  const _LibraryMenuContent({required this.item});
 
   final LibraryMenuItem item;
-  final VoidCallback onTap;
-
-  @override
-  State<_MenuRow> createState() => _MenuRowState();
-}
-
-class _MenuRowState extends State<_MenuRow> {
-  bool _hovering = false;
 
   @override
   Widget build(BuildContext context) {
-    final item = widget.item;
-    final labelColor = item.danger
+    final color = item.danger
         ? const Color(0xFFF28B8B)
         : const Color(0xFFE4E4E4);
-    final iconColor = item.danger
-        ? const Color(0xFFF28B8B)
-        : const Color(0xFFA0A0A0);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 110),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-          decoration: BoxDecoration(
-            color: _hovering
-                ? const Color(0xFF2B2B37)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              if (item.icon != null) ...[
-                Icon(item.icon, size: 16, color: iconColor),
-                const SizedBox(width: 10),
-              ],
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w500,
-                    color: labelColor,
-                  ),
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          if (item.icon case final icon?) ...[
+            Icon(
+              icon,
+              size: 16,
+              color: item.danger ? color : const Color(0xFFA0A0A0),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Text(
+              item.label,
+              style: TextStyle(
+                color: color,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
               ),
-              if (item.checked)
-                const Icon(
-                  Icons.check_rounded,
-                  size: 16,
-                  color: Color(0xFFA8B3C2),
-                ),
-            ],
+            ),
           ),
-        ),
+          if (item.checked)
+            const Icon(Icons.check_rounded, size: 16, color: Color(0xFFA8B3C2)),
+        ],
       ),
     );
   }

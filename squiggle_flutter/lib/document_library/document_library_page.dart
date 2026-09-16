@@ -14,17 +14,12 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 enum _SortMode { recent, oldest, name }
 
-/// Window width below which the library switches to its compact layout
-/// (tight padding, icon-only header actions, stacked featured card).
-/// Chosen so the full layout always has room: at 760px the content area
-/// (760 - 2*40) still fits the featured row's detail column.
 const _compactLibraryBreakpoint = 760.0;
+const _maxLibraryWidth = 1160.0;
 
 bool _isCompactLibrary(BuildContext context) =>
     MediaQuery.sizeOf(context).width < _compactLibraryBreakpoint;
 
-/// Outer horizontal padding for library sections: 40px on desktop,
-/// tightened on narrow windows so content keeps usable width.
 double _libraryHPadding(BuildContext context) =>
     _isCompactLibrary(context) ? 16.0 : 40.0;
 
@@ -49,19 +44,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
   _SortMode _sort = _SortMode.recent;
 
   @override
-  void initState() {
-    super.initState();
-    // Rebuild so the search field can reflect focus changes in its border.
-    _searchFocus.addListener(_onSearchFocusChanged);
-  }
-
-  void _onSearchFocusChanged() {
-    if (mounted) setState(() {});
-  }
-
-  @override
   void dispose() {
-    _searchFocus.removeListener(_onSearchFocusChanged);
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -74,18 +57,16 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
 
     return Scaffold(
       backgroundColor: theme.colors.base,
-      // CallbackShortcuts only sees keys when focus is inside its subtree,
-      // so the autofocus Focus node must sit *below* it, not above.
       body: CallbackShortcuts(
         bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyN, meta: true):
-              () => widget.onCreateAndOpen(),
-          const SingleActivator(LogicalKeyboardKey.keyN, control: true):
-              () => widget.onCreateAndOpen(),
+          const SingleActivator(LogicalKeyboardKey.keyN, meta: true): () =>
+              widget.onCreateAndOpen(),
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
+              widget.onCreateAndOpen(),
           const SingleActivator(LogicalKeyboardKey.slash, meta: true): () =>
               _searchFocus.requestFocus(),
-          const SingleActivator(LogicalKeyboardKey.slash, control: true):
-              () => _searchFocus.requestFocus(),
+          const SingleActivator(LogicalKeyboardKey.slash, control: true): () =>
+              _searchFocus.requestFocus(),
         },
         child: Focus(
           autofocus: true,
@@ -100,192 +81,207 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                       searchFocus: _searchFocus,
                       query: _query,
                       sort: _sort,
-                      onQueryChanged: (value) =>
-                          setState(() => _query = value),
+                      onQueryChanged: (value) => setState(() => _query = value),
                       onClearQuery: () {
                         _searchController.clear();
                         setState(() => _query = '');
                       },
-                      onSortChanged: (mode) =>
-                          setState(() => _sort = mode),
-                      onCreateNamed: () =>
-                          _createNamedDocument(context),
+                      onSortChanged: (mode) => setState(() => _sort = mode),
+                      onCreateNamed: () => _createNamedDocument(context),
                     ),
                     Expanded(
                       child: StreamBuilder<void>(
                         stream: library.changesStream,
                         initialData: null,
                         builder: (context, _) {
-                          final documents =
-                              _sorted(_filtered(library.documents));
+                          final documents = _sorted(
+                            _filtered(library.documents),
+                          );
                           final currentId = library.currentDocument?.id;
                           final featured = _featuredDocument(library);
-                          // Narrow windows get tight outer padding so the
-                          // content keeps usable width (see min 640x480).
                           final hPad = _libraryHPadding(context);
+                          final query = _query.trim();
+                          final isSearching = query.isNotEmpty;
 
                           return CustomScrollView(
                             slivers: [
-                      SliverToBoxAdapter(
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints:
-                                const BoxConstraints(maxWidth: 1160),
-                            child: Padding(
-                              padding:
-                                  EdgeInsets.fromLTRB(hPad, 30, hPad, 0),
-                              child: _TitleBlock(
-                                totalCount: library.documents.length,
-                                visibleCount: documents.length,
-                                isSearching: _query.trim().isNotEmpty,
-                                query: _query.trim(),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (featured != null && _query.trim().isEmpty)
-                        SliverToBoxAdapter(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints:
-                                  const BoxConstraints(maxWidth: 1160),
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.fromLTRB(hPad, 22, hPad, 0),
-                                child: _FeaturedCard(
-                                  document: featured,
-                                  isCurrent: featured.id == currentId,
-                                  onOpen: () =>
-                                      widget.onOpenDocument(featured.id),
-                                  onRename: () => _renameDocument(
-                                    context,
-                                    library,
-                                    featured,
+                              SliverToBoxAdapter(
+                                child: Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: _maxLibraryWidth,
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        hPad,
+                                        30,
+                                        hPad,
+                                        0,
+                                      ),
+                                      child: _TitleBlock(
+                                        totalCount: library.documents.length,
+                                        visibleCount: documents.length,
+                                        isSearching: isSearching,
+                                        query: query,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                      SliverToBoxAdapter(
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints:
-                                const BoxConstraints(maxWidth: 1160),
-                            child: Padding(
-                              padding:
-                                  EdgeInsets.fromLTRB(hPad, 26, hPad, 8),
-                              child: _SectionHeader(
-                                title: _query.trim().isEmpty
-                                    ? 'All canvases'
-                                    : 'Results',
-                                count: documents.length,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (documents.isEmpty)
-                        SliverToBoxAdapter(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints:
-                                  const BoxConstraints(maxWidth: 1160),
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.fromLTRB(hPad, 8, hPad, 64),
-                                child: _EmptyResults(
-                                  isSearching: _query.trim().isNotEmpty,
-                                  onClear: () {
-                                    _searchController.clear();
-                                    setState(() => _query = '');
-                                  },
-                                  onCreate: () =>
-                                      widget.onCreateAndOpen(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        SliverToBoxAdapter(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints:
-                                  const BoxConstraints(maxWidth: 1160),
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.fromLTRB(hPad, 8, hPad, 56),
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final crossAxisCount =
-                                        _gridColumnCount(
-                                      constraints.maxWidth,
-                                    );
-                                    const spacing = 18.0;
-                                    // Single-column cards would be
-                                    // floor-to-ceiling tall at 0.94;
-                                    // widen the aspect when stacked.
-                                    final aspectRatio =
-                                        crossAxisCount == 1 ? 1.6 : 0.94;
-                                    return GridView.builder(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: crossAxisCount,
-                                        mainAxisSpacing: spacing,
-                                        crossAxisSpacing: spacing,
-                                        childAspectRatio: aspectRatio,
+                              if (featured != null && !isSearching)
+                                SliverToBoxAdapter(
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: _maxLibraryWidth,
                                       ),
-                                      itemCount: _query.trim().isEmpty
-                                          ? documents.length + 1
-                                          : documents.length,
-                                      itemBuilder: (context, index) {
-                                        if (_query.trim().isEmpty &&
-                                            index == 0) {
-                                          return NewDocumentCard(
-                                            onPressed: () =>
-                                                widget.onCreateAndOpen(),
-                                          );
-                                        }
-                                        final docIndex =
-                                            _query.trim().isEmpty
-                                                ? index - 1
-                                                : index;
-                                        final document =
-                                            documents[docIndex];
-                                        return DocumentCard(
-                                          document: document,
-                                          isCurrent:
-                                              document.id == currentId,
-                                          canDelete:
-                                              library.documents.length > 1,
-                                          onOpen: () => widget
-                                              .onOpenDocument(document.id),
-                                          onRename: () =>
-                                              _renameDocument(
+                                      child: Padding(
+                                        padding: EdgeInsets.fromLTRB(
+                                          hPad,
+                                          22,
+                                          hPad,
+                                          0,
+                                        ),
+                                        child: _FeaturedCard(
+                                          document: featured,
+                                          isCurrent: featured.id == currentId,
+                                          onOpen: () => widget.onOpenDocument(
+                                            featured.id,
+                                          ),
+                                          onRename: () => _renameDocument(
                                             context,
                                             library,
-                                            document,
+                                            featured,
                                           ),
-                                          onDelete: () =>
-                                              _deleteDocument(
-                                            context,
-                                            library,
-                                            document,
-                                          ),
-                                        );
-                                      },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              SliverToBoxAdapter(
+                                child: Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: _maxLibraryWidth,
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        hPad,
+                                        26,
+                                        hPad,
+                                        8,
+                                      ),
+                                      child: _SectionHeader(
+                                        title: !isSearching
+                                            ? 'All canvases'
+                                            : 'Results',
+                                        count: documents.length,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (documents.isEmpty)
+                                SliverToBoxAdapter(
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: _maxLibraryWidth,
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsets.fromLTRB(
+                                          hPad,
+                                          8,
+                                          hPad,
+                                          64,
+                                        ),
+                                        child: _EmptyResults(
+                                          isSearching: isSearching,
+                                          onClear: () {
+                                            _searchController.clear();
+                                            setState(() => _query = '');
+                                          },
+                                          onCreate: () =>
+                                              widget.onCreateAndOpen(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                SliverLayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final sectionWidth = constraints
+                                        .crossAxisExtent
+                                        .clamp(0.0, _maxLibraryWidth);
+                                    final sidePadding =
+                                        (constraints.crossAxisExtent -
+                                                sectionWidth) /
+                                            2 +
+                                        hPad;
+                                    final gridWidth = sectionWidth - 2 * hPad;
+                                    final crossAxisCount = _gridColumnCount(
+                                      gridWidth,
+                                    );
+
+                                    return SliverPadding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        sidePadding,
+                                        8,
+                                        sidePadding,
+                                        56,
+                                      ),
+                                      sliver: SliverGrid(
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: crossAxisCount,
+                                              mainAxisSpacing: 18,
+                                              crossAxisSpacing: 18,
+                                              childAspectRatio:
+                                                  crossAxisCount == 1
+                                                  ? 1.6
+                                                  : 0.94,
+                                            ),
+                                        delegate: SliverChildBuilderDelegate(
+                                          (context, index) {
+                                            if (!isSearching && index == 0) {
+                                              return NewDocumentCard(
+                                                onPressed: () =>
+                                                    widget.onCreateAndOpen(),
+                                              );
+                                            }
+                                            final document =
+                                                documents[isSearching
+                                                    ? index
+                                                    : index - 1];
+                                            return DocumentCard(
+                                              document: document,
+                                              isCurrent:
+                                                  document.id == currentId,
+                                              canDelete:
+                                                  library.documents.length > 1,
+                                              onOpen: () => widget
+                                                  .onOpenDocument(document.id),
+                                              onRename: () => _renameDocument(
+                                                context,
+                                                library,
+                                                document,
+                                              ),
+                                              onDelete: () => _deleteDocument(
+                                                context,
+                                                library,
+                                                document,
+                                              ),
+                                            );
+                                          },
+                                          childCount:
+                                              documents.length +
+                                              (isSearching ? 0 : 1),
+                                        ),
+                                      ),
                                     );
                                   },
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
                             ],
                           );
                         },
@@ -319,8 +315,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
         break;
       case _SortMode.name:
         documents.sort(
-          (a, b) =>
-              a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         );
         break;
     }
@@ -328,12 +323,11 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
   }
 
   DocumentInfo? _featuredDocument(DocumentLibraryRepository library) {
-    if (library.documents.isEmpty) return null;
-    final sorted = List.of(library.documents)
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    // Only feature when there's something worth continuing.
     if (library.documents.length < 2) return null;
-    return sorted.first;
+    return library.documents.reduce(
+      (latest, document) =>
+          document.updatedAt.isAfter(latest.updatedAt) ? document : latest,
+    );
   }
 
   int _gridColumnCount(double width) {
@@ -428,16 +422,18 @@ class _StickyHeader extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colors.base,
-        border: const Border(
-          bottom: BorderSide(color: Color(0xFF23232C)),
-        ),
+        border: const Border(bottom: BorderSide(color: Color(0xFF23232C))),
       ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1160),
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-                _libraryHPadding(context), 14, _libraryHPadding(context), 14),
+              _libraryHPadding(context),
+              14,
+              _libraryHPadding(context),
+              14,
+            ),
             child: _TopBar(
               searchController: searchController,
               searchFocus: searchFocus,
@@ -479,9 +475,6 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    // Compact header on narrow windows: the fixed 250px search plus
-    // labeled buttons overflow below ~760px, so the search goes flexible
-    // and the actions collapse to icon-only (tooltips retained).
     final compact = _isCompactLibrary(context);
     final searchField = _SearchField(
       controller: searchController,
@@ -566,74 +559,75 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    return Container(
-      height: 38,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1C23),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: focusNode.hasFocus
-              ? theme.colors.accent.withValues(alpha: 0.6)
-              : const Color(0xFF2C2C38),
+    return ListenableBuilder(
+      listenable: focusNode,
+      builder: (context, child) => Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1C23),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: focusNode.hasFocus
+                ? theme.colors.accent.withValues(alpha: 0.6)
+                : const Color(0xFF2C2C38),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 10),
-          Icon(
-            Icons.search_rounded,
-            size: 17,
-            color: theme.colors.subtext0,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              onChanged: onChanged,
-              style: theme.typography.inputText.copyWith(fontSize: 13.5),
-              decoration: InputDecoration(
-                hintText: 'Search canvases…',
-                hintStyle: TextStyle(
-                  color: theme.colors.subtext0.withValues(alpha: 0.7),
-                  fontSize: 13.5,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-          if (query.isNotEmpty)
-            GestureDetector(
-              onTap: onClear,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 15,
-                  color: theme.colors.subtext0,
-                ),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2A2A35),
-                  borderRadius: BorderRadius.circular(5),
-                  border: Border.all(color: const Color(0xFF363644)),
-                ),
-                child: Text(
-                  '⌘/',
-                  style: theme.typography.hotkey.copyWith(fontSize: 10),
+        child: Row(
+          children: [
+            const SizedBox(width: 10),
+            Icon(Icons.search_rounded, size: 17, color: theme.colors.subtext0),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: onChanged,
+                style: theme.typography.inputText.copyWith(fontSize: 13.5),
+                decoration: InputDecoration(
+                  hintText: 'Search canvases…',
+                  hintStyle: TextStyle(
+                    color: theme.colors.subtext0.withValues(alpha: 0.7),
+                    fontSize: 13.5,
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
-        ],
+            if (query.isNotEmpty)
+              GestureDetector(
+                onTap: onClear,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 15,
+                    color: theme.colors.subtext0,
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A35),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: const Color(0xFF363644)),
+                  ),
+                  child: Text(
+                    '⌘/',
+                    style: theme.typography.hotkey.copyWith(fontSize: 10),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -651,10 +645,10 @@ class _SortButton extends StatelessWidget {
   final bool compact;
 
   String get _label => switch (sort) {
-        _SortMode.recent => 'Recent',
-        _SortMode.oldest => 'Oldest',
-        _SortMode.name => 'Name',
-      };
+    _SortMode.recent => 'Recent',
+    _SortMode.oldest => 'Oldest',
+    _SortMode.name => 'Name',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -692,9 +686,7 @@ class _SortButton extends StatelessWidget {
               height: 38,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: open
-                    ? const Color(0xFF23232E)
-                    : const Color(0xFF1C1C23),
+                color: open ? const Color(0xFF23232E) : const Color(0xFF1C1C23),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: open
@@ -705,8 +697,11 @@ class _SortButton extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.swap_vert_rounded,
-                      size: 16, color: theme.colors.subtext0),
+                  Icon(
+                    Icons.swap_vert_rounded,
+                    size: 16,
+                    color: theme.colors.subtext0,
+                  ),
                   if (!compact) ...[
                     const SizedBox(width: 7),
                     Text(
@@ -737,75 +732,67 @@ class _SortButton extends StatelessWidget {
   }
 }
 
-class _NewButton extends StatefulWidget {
+class _NewButton extends StatelessWidget {
   const _NewButton({required this.onTap, this.compact = false});
 
   final VoidCallback onTap;
   final bool compact;
 
   @override
-  State<_NewButton> createState() => _NewButtonState();
-}
-
-class _NewButtonState extends State<_NewButton> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    final button = MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          height: 38,
-          width: widget.compact ? 38 : null,
-          alignment:
-              widget.compact ? Alignment.center : Alignment.centerLeft,
-          padding: widget.compact
-              ? EdgeInsets.zero
-              : const EdgeInsets.symmetric(horizontal: 15),
-          decoration: BoxDecoration(
-            color: _hovering
+    final button = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextButton(
+        onPressed: onTap,
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.hovered)
                 ? const Color(0xFFF0F0F5)
                 : theme.colors.text,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
-          child: widget.compact
-              ? const Icon(Icons.add_rounded,
-                  size: 18, color: Colors.black87)
-              : const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add_rounded,
-                        size: 18, color: Colors.black87),
-                    SizedBox(width: 6),
-                    Text(
-                      'New canvas',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
+          foregroundColor: const WidgetStatePropertyAll(Colors.black87),
+          minimumSize: const WidgetStatePropertyAll(Size(0, 38)),
+          fixedSize: compact
+              ? const WidgetStatePropertyAll(Size.square(38))
+              : null,
+          padding: WidgetStatePropertyAll(
+            compact
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(horizontal: 15),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         ),
+        child: compact
+            ? const Icon(Icons.add_rounded, size: 18)
+            : const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_rounded, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    'New canvas',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
-    // The label carries the meaning on desktop; icon-only narrow
-    // windows get it back via tooltip.
-    if (widget.compact) {
+    if (compact) {
       return Tooltip(message: 'New canvas', child: button);
     }
     return button;
@@ -909,17 +896,13 @@ class _FeaturedCardState extends State<_FeaturedCard> {
             ],
           ),
           child: _isCompactLibrary(context)
-              // Narrow windows: stack preview above details. The side-
-              // by-side row squeezes the detail column until its button
-              // row overflows (see min window 640x480).
               ? Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(
                       height: 200,
-                      child: DocumentPreviewLoader(
-                          document: widget.document),
+                      child: DocumentPreviewLoader(document: widget.document),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(6, 14, 6, 4),
@@ -938,14 +921,12 @@ class _FeaturedCardState extends State<_FeaturedCard> {
                     children: [
                       Expanded(
                         flex: 5,
-                        child: DocumentPreviewLoader(
-                            document: widget.document),
+                        child: DocumentPreviewLoader(document: widget.document),
                       ),
                       Expanded(
                         flex: 3,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                              22, 10, 10, 10),
+                          padding: const EdgeInsets.fromLTRB(22, 10, 10, 10),
                           child: _details(
                             context,
                             theme,
@@ -962,8 +943,6 @@ class _FeaturedCardState extends State<_FeaturedCard> {
     );
   }
 
-  /// Title, timestamp, current-open status, and actions shared by the
-  /// side-by-side and stacked featured layouts.
   Widget _details(
     BuildContext context,
     SquiggleTheme theme,
@@ -974,166 +953,139 @@ class _FeaturedCardState extends State<_FeaturedCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: mainAxisAlignment,
       children: [
-                        Text(
-                          widget.document.name,
-                          style: theme.typography.inputText.copyWith(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          formatLibraryEditedAt(
-                              widget.document.updatedAt),
-                          style: theme.typography.inputText.copyWith(
-                            color: colors.subtext0,
-                            fontSize: 13,
-                          ),
-                        ),
-                        if (widget.isCurrent) ...[
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF7EE2A8),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Currently open',
-                                style: theme.typography.inputText
-                                    .copyWith(
-                                  color: colors.subtext0,
-                                  fontSize: 12.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: 22),
-                        Row(
-                          children: [
-                            _FeaturedPrimaryButton(
-                              label: widget.isCurrent
-                                  ? 'Continue'
-                                  : 'Open canvas',
-                              onTap: widget.onOpen,
-                            ),
-                            const SizedBox(width: 10),
-                            _FeaturedGhostButton(
-                              icon: Icons
-                                  .drive_file_rename_outline_rounded,
-                              tooltip: 'Rename',
-                              onTap: widget.onRename,
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
+        Text(
+          widget.document.name,
+          style: theme.typography.inputText.copyWith(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          formatLibraryEditedAt(widget.document.updatedAt),
+          style: theme.typography.inputText.copyWith(
+            color: colors.subtext0,
+            fontSize: 13,
+          ),
+        ),
+        if (widget.isCurrent) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF7EE2A8),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Currently open',
+                style: theme.typography.inputText.copyWith(
+                  color: colors.subtext0,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 22),
+        Row(
+          children: [
+            _FeaturedPrimaryButton(
+              label: widget.isCurrent ? 'Continue' : 'Open canvas',
+              onTap: widget.onOpen,
+            ),
+            const SizedBox(width: 10),
+            _FeaturedGhostButton(
+              icon: Icons.drive_file_rename_outline_rounded,
+              tooltip: 'Rename',
+              onTap: widget.onRename,
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
-class _FeaturedPrimaryButton extends StatefulWidget {
+class _FeaturedPrimaryButton extends StatelessWidget {
   const _FeaturedPrimaryButton({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
 
   @override
-  State<_FeaturedPrimaryButton> createState() =>
-      _FeaturedPrimaryButtonState();
-}
-
-class _FeaturedPrimaryButtonState extends State<_FeaturedPrimaryButton> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          decoration: BoxDecoration(
-            color: _hovering
-                ? const Color(0xFFF2F2F6)
-                : const Color(0xFFE4E4E4),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.label,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 7),
-              const Icon(Icons.arrow_forward_rounded,
-                  size: 16, color: Colors.black87),
-            ],
-          ),
+    return FilledButton(
+      onPressed: onTap,
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.hovered)
+              ? const Color(0xFFF2F2F6)
+              : const Color(0xFFE4E4E4),
         ),
+        foregroundColor: const WidgetStatePropertyAll(Colors.black87),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        ),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 7),
+          const Icon(Icons.arrow_forward_rounded, size: 16),
+        ],
       ),
     );
   }
 }
 
-class _FeaturedGhostButton extends StatefulWidget {
-  const _FeaturedGhostButton(
-      {required this.icon, required this.tooltip, required this.onTap});
+class _FeaturedGhostButton extends StatelessWidget {
+  const _FeaturedGhostButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
 
   @override
-  State<_FeaturedGhostButton> createState() => _FeaturedGhostButtonState();
-}
-
-class _FeaturedGhostButtonState extends State<_FeaturedGhostButton> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    return Tooltip(
-      message: widget.tooltip,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: _hovering
-                  ? const Color(0xFF2A2A35)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF363644)),
-            ),
-            child: Icon(widget.icon,
-                size: 17, color: theme.colors.subtext0),
-          ),
+    return IconButton(
+      onPressed: onTap,
+      tooltip: tooltip,
+      icon: Icon(icon, size: 17),
+      style: ButtonStyle(
+        foregroundColor: WidgetStatePropertyAll(theme.colors.subtext0),
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.hovered)
+              ? const Color(0xFF2A2A35)
+              : Colors.transparent,
+        ),
+        fixedSize: const WidgetStatePropertyAll(Size.square(38)),
+        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+        side: const WidgetStatePropertyAll(
+          BorderSide(color: Color(0xFF363644)),
+        ),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),
     );
@@ -1162,8 +1114,7 @@ class _SectionHeader extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: const Color(0xFF23232D),
             borderRadius: BorderRadius.circular(999),
@@ -1178,9 +1129,7 @@ class _SectionHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        const Expanded(
-          child: Divider(color: Color(0xFF26262F), thickness: 1),
-        ),
+        const Expanded(child: Divider(color: Color(0xFF26262F), thickness: 1)),
       ],
     );
   }
@@ -1245,10 +1194,7 @@ class _EmptyResults extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           if (isSearching)
-            TextButton(
-              onPressed: onClear,
-              child: const Text('Clear search'),
-            )
+            TextButton(onPressed: onClear, child: const Text('Clear search'))
           else
             FilledButton.icon(
               onPressed: onCreate,
@@ -1319,8 +1265,7 @@ class _DeleteDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
           style: TextButton.styleFrom(
             foregroundColor: theme.colors.subtext0,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
           child: const Text('Cancel'),
         ),
@@ -1329,8 +1274,7 @@ class _DeleteDialog extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFFD95F5F),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 18, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(9),
             ),

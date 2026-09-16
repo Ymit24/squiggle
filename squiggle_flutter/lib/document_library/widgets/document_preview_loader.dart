@@ -6,12 +6,6 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
-/// Loads persisted nodes and renders an accurate document thumbnail.
-///
-/// The load future is cached per document revision: creating a new future
-/// on every build (e.g. a hover setState on the card) would re-read from
-/// disk each time and flash the shimmer placeholder — the thumbnail
-/// flicker. Only the document id / updatedAt changing restarts the load.
 class DocumentPreviewLoader extends StatefulWidget {
   const DocumentPreviewLoader({super.key, required this.document});
 
@@ -22,33 +16,26 @@ class DocumentPreviewLoader extends StatefulWidget {
 }
 
 class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
-  late String _cacheKey;
   late Future<List<Node>> _future;
-
-  static String _keyOf(DocumentInfo document) =>
-      '${document.id}-${document.updatedAt.millisecondsSinceEpoch}';
 
   @override
   void initState() {
     super.initState();
-    _cacheKey = _keyOf(widget.document);
     _future = _load(widget.document.id);
   }
 
   @override
   void didUpdateWidget(DocumentPreviewLoader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final key = _keyOf(widget.document);
-    if (key != _cacheKey) {
-      _cacheKey = key;
+    if (widget.document.id != oldWidget.document.id ||
+        widget.document.updatedAt != oldWidget.document.updatedAt) {
       _future = _load(widget.document.id);
     }
   }
 
   Future<List<Node>> _load(String documentId) {
-    // read (listen: false) is safe outside build.
     final storage = context.read<DocumentStorage>();
-    return loadPreviewNodes(storage, documentId);
+    return _loadPreviewNodes(storage, documentId);
   }
 
   @override
@@ -56,7 +43,6 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
     final imageRepository = context.read<ImageRepository>();
 
     return FutureBuilder<List<Node>>(
-      key: ValueKey(_cacheKey),
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -74,17 +60,13 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
             ],
           );
         }
-        return DocumentPreview(
-          nodes: nodes,
-          imageRepository: imageRepository,
-        );
+        return DocumentPreview(nodes: nodes, imageRepository: imageRepository);
       },
     );
   }
 }
 
-/// Shared node fetch for thumbnails so cards don't each invent caching.
-Future<List<Node>> loadPreviewNodes(
+Future<List<Node>> _loadPreviewNodes(
   DocumentStorage storage,
   String documentId,
 ) async {

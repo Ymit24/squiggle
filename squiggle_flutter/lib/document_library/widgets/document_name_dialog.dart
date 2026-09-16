@@ -34,26 +34,11 @@ class _DocumentNameDialog extends StatefulWidget {
 
 class _DocumentNameDialogState extends State<_DocumentNameDialog> {
   late final TextEditingController _controller;
-  bool _canSubmit = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialName);
-    _canSubmit = widget.initialName.trim().isNotEmpty;
-    _controller.addListener(() {
-      final canSubmit = _controller.text.trim().isNotEmpty;
-      if (canSubmit != _canSubmit) {
-        setState(() => _canSubmit = canSubmit);
-      }
-    });
-    // Select the whole name so typing immediately replaces it.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: _controller.text.length,
-      );
-    });
   }
 
   @override
@@ -94,6 +79,7 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
         child: TextField(
           controller: _controller,
           autofocus: true,
+          selectAllOnFocus: true,
           style: theme.typography.inputText.copyWith(fontSize: 14.5),
           decoration: InputDecoration(
             hintText: 'Canvas name',
@@ -109,13 +95,11 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFF363644)),
+              borderSide: const BorderSide(color: Color(0xFF363644)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFF363644)),
+              borderSide: const BorderSide(color: Color(0xFF363644)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -133,29 +117,30 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
           onPressed: () => Navigator.of(context).pop(),
           style: TextButton.styleFrom(
             foregroundColor: theme.colors.subtext0,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _canSubmit ? _submit : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: theme.colors.text,
-            foregroundColor: Colors.black87,
-            disabledBackgroundColor:
-                const Color(0xFF2A2A35),
-            disabledForegroundColor:
-                theme.colors.subtext0.withValues(alpha: 0.5),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 18, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(9),
+        ValueListenableBuilder(
+          valueListenable: _controller,
+          builder: (context, value, _) => FilledButton(
+            onPressed: value.text.trim().isEmpty ? null : _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colors.text,
+              foregroundColor: Colors.black87,
+              disabledBackgroundColor: const Color(0xFF2A2A35),
+              disabledForegroundColor: theme.colors.subtext0.withValues(
+                alpha: 0.5,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
             ),
-          ),
-          child: Text(
-            widget.confirmLabel,
-            style: const TextStyle(fontWeight: FontWeight.w700),
+            child: Text(
+              widget.confirmLabel,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ),
       ],

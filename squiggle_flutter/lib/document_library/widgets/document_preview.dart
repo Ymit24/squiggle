@@ -4,12 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
-/// Renders a scaled-down view of a document's nodes.
-///
-/// The thumbnail draws a screen-space dot grid (independent of content zoom)
-/// over a slightly elevated canvas tone, then fits the document content
-/// inside with sensible scale clamps so tiny sketches don't blow up and
-/// huge boards don't collapse into dust.
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
     super.key,
@@ -85,22 +79,15 @@ class _DocumentPreviewPainter extends CustomPainter {
     for (var i = 1; i < nodes.length; i++) {
       bounds = bounds.expandToInclude(nodes[i].localBounds());
     }
-    // Guard against degenerate (zero-area) bounds from single points.
     final w = math.max(bounds.width, 64.0);
     final h = math.max(bounds.height, 64.0);
     final center = bounds.center;
-    final padded = Rect.fromCenter(
-      center: center,
-      width: w,
-      height: h,
-    );
+    final padded = Rect.fromCenter(center: center, width: w, height: h);
     final pad = math.max(64.0, math.max(w, h) * 0.18);
     return padded.inflate(pad);
   }
 
   double _fitScale(Rect content, Size size) {
-    // Never let a tiny sketch fill the whole card: pretend the viewport is
-    // at least _minViewport so small content stays small and contextual.
     final effectiveW = math.max(content.width, _minViewport.width);
     final effectiveH = math.max(content.height, _minViewport.height);
     final raw = math.min(size.width / effectiveW, size.height / effectiveH);
@@ -108,7 +95,6 @@ class _DocumentPreviewPainter extends CustomPainter {
   }
 
   Offset _fitOffset(Rect content, Size size, double scale) {
-    // Center the *actual* content (not the inflated minimum viewport).
     final fittedW = content.width * scale;
     final fittedH = content.height * scale;
     return Offset(

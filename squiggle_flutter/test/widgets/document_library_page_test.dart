@@ -38,7 +38,6 @@ void main() {
         context: editorContext,
       );
       await library.initialize();
-      // Two documents so the featured card renders too.
       await library.createDocument(name: 'Second');
     });
 
@@ -50,7 +49,10 @@ void main() {
       }
     });
 
-    Future<void> pumpLibraryPage(WidgetTester tester) async {
+    Future<void> pumpLibraryPage(
+      WidgetTester tester, {
+      Future<void> Function(String id)? onOpenDocument,
+    }) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: SquiggleThemeData.dark(),
@@ -61,7 +63,7 @@ void main() {
               child: RepositoryProvider<DocumentLibraryRepository>.value(
                 value: library,
                 child: DocumentLibraryPage(
-                  onOpenDocument: (_) async {},
+                  onOpenDocument: onOpenDocument ?? (_) async {},
                   onCreateAndOpen: ({String? name}) async {},
                 ),
               ),
@@ -69,16 +71,14 @@ void main() {
           ),
         ),
       );
-      // Manual pumps instead of pumpAndSettle: thumbnail placeholders
-      // run a repeating shimmer while loads are pending, which never
-      // settles by design.
       for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
     }
 
-    testWidgets('minimum 640x480 uses compact layout without overflow',
-        (tester) async {
+    testWidgets('minimum 640x480 uses compact layout without overflow', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(640, 480);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -88,14 +88,14 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Your documents'), findsOneWidget);
-      // Compact header: icon-only actions, labels hidden.
       expect(find.text('Recent'), findsNothing);
       expect(find.byTooltip('New canvas'), findsOneWidget);
       expect(find.byTooltip('Sort canvases'), findsOneWidget);
     });
 
-    testWidgets('wide window uses full layout without overflow',
-        (tester) async {
+    testWidgets('wide window uses full layout without overflow', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -108,34 +108,32 @@ void main() {
       expect(find.text('Recent'), findsOneWidget);
     });
 
-    testWidgets('card menu opens on the same frame as the tap',
-        (tester) async {
+    testWidgets('card menu does not trigger the card action', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await pumpLibraryPage(tester);
+      var openCount = 0;
+      await pumpLibraryPage(tester, onOpenDocument: (_) async => openCount++);
 
-      // Hover the first card so its menu button fades in.
       final cardMenu = find.byTooltip('Document actions').first;
       final center = tester.getCenter(cardMenu);
-      final gesture =
-          await tester.startGesture(center, kind: PointerDeviceKind.mouse);
+      final gesture = await tester.startGesture(
+        center,
+        kind: PointerDeviceKind.mouse,
+      );
       await gesture.moveTo(center);
       await tester.pump();
       await gesture.up();
-      // Exactly one frame after the tap, with no clock advance: the
-      // menu must already be visible. (The button lives inside the
-      // card's double-tap-to-rename detector, which used to hold the
-      // tap in the gesture arena until the double-tap timeout.)
       await tester.pump();
       expect(find.text('Rename'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      // Dismiss by tapping outside and flush the card's double-tap
-      // arena timer so teardown doesn't see a pending timer.
-      await tester.tapAt(const Offset(20, 20));
       await tester.pump(const Duration(milliseconds: 350));
+      expect(openCount, 0);
+      expect(find.text('Rename'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pump();
       expect(find.text('Rename'), findsNothing);
     });
   });

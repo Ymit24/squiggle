@@ -29,7 +29,7 @@ String _month(int month) {
     'Sep',
     'Oct',
     'Nov',
-    'Dec'
+    'Dec',
   ];
   return names[month.clamp(1, 12) - 1];
 }
