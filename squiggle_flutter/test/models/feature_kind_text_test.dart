@@ -18,7 +18,7 @@ void main() {
 
     test('fromDataModel preserves text and style fields', () {
       final kind = FeatureKindText.fromDataModel(content);
-      expect(kind.contents, 'Hello');
+      expect(kind.label, 'Hello');
       expect(kind.fontSize, 24.5);
       expect(kind.horizontalAlignment, TextHorizontalAlignment.center);
       expect(kind.verticalAlignment, TextVerticalAlignment.bottom);
@@ -43,7 +43,7 @@ void main() {
     test('round trip preserves text and style fields', () {
       final decoded = FeatureKindText.fromDataModel(content);
       final result = FeatureKindText.fromDataModel(decoded.toDataModel());
-      expect(result.contents, decoded.contents);
+      expect(result.label, decoded.label);
       expect(result.fontSize, decoded.fontSize);
       expect(result.horizontalAlignment, decoded.horizontalAlignment);
       expect(result.verticalAlignment, decoded.verticalAlignment);

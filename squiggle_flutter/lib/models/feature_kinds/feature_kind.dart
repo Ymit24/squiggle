@@ -61,7 +61,7 @@ mixin LabelCapable {
   String get label;
   set label(String value);
 
-  void fitToBounds({required double width, required double height});
+  void fitToBounds({required double width, required double height}) {}
 }
 
 double _doubleFromDataModel(Map<String, dynamic> content, String key) {

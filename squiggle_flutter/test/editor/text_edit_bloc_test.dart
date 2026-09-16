@@ -78,7 +78,7 @@ void main() {
         expect(closedState, isA<TextEditClosed>());
         expect(
           ((context.document.nodes.first as Feature).kind as FeatureKindText)
-              .contents,
+              .label,
           'updated text',
         );
         await bloc.close();
@@ -108,7 +108,7 @@ void main() {
       expect(closedState, isA<TextEditClosed>());
       expect(
         ((context.document.nodes.first as Feature).kind as FeatureKindText)
-            .contents,
+            .label,
         'initial text',
       );
       await bloc.close();
@@ -137,7 +137,7 @@ void main() {
       expect(context.document.nodes, hasLength(2));
       final created = (context.document.nodes.last as Feature);
       expect(created.origin, origin);
-      expect((created.kind as FeatureKindText).contents, 'new text');
+      expect((created.kind as FeatureKindText).label, 'new text');
       expect(created.size.width, defaultNewTextWidth);
       await bloc.close();
     });

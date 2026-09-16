@@ -124,11 +124,11 @@ void main() {
     final kind = FeatureKindText('before');
 
     kind
-      ..contents = 'after'
+      ..label = 'after'
       ..fontSize = 24
       ..strokeWidth = 3;
 
-    expect(kind.contents, 'after');
+    expect(kind.label, 'after');
     expect(kind.fontSize, 24);
     expect(kind.strokeWidth, 3);
   });

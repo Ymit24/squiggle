@@ -1,9 +1,13 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindText extends FeatureKind
-    with StrokeColorCapable, FillColorCapable, StrokeWidthCapable {
+    with
+        StrokeColorCapable,
+        FillColorCapable,
+        StrokeWidthCapable,
+        LabelCapable {
   FeatureKindText(
-    this.contents, {
+    this._label, {
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
     this.verticalAlignment = TextVerticalAlignment.top,
@@ -31,7 +35,7 @@ final class FeatureKindText extends FeatureKind
   Map<String, dynamic> toDataModel() {
     return {
       'type': 'text',
-      'contents': contents,
+      'contents': label,
       'fontSize': fontSize,
       'horizontalAlignment': horizontalAlignment.name,
       'verticalAlignment': verticalAlignment.name,
@@ -43,7 +47,7 @@ final class FeatureKindText extends FeatureKind
 
   @override
   FeatureKindText clone() => FeatureKindText(
-    contents,
+    label,
     fontSize: fontSize,
     horizontalAlignment: horizontalAlignment,
     verticalAlignment: verticalAlignment,
@@ -52,20 +56,25 @@ final class FeatureKindText extends FeatureKind
     strokeWidth: strokeWidth,
   );
 
-  String contents;
   @override
   Color strokeColor;
+
   @override
   Color fillColor;
+
   @override
   double strokeWidth;
+
+  @override
+  String label;
+
   double fontSize;
   TextHorizontalAlignment horizontalAlignment;
   TextVerticalAlignment verticalAlignment;
 
   Size measureContents({required double width, required double fontSize}) =>
       text_painter.measureText(
-        contents,
+        label,
         width: width,
         fontSize: fontSize,
         horizontalAlignment: horizontalAlignment,
@@ -75,20 +84,21 @@ final class FeatureKindText extends FeatureKind
     required double width,
     required double height,
   }) => text_painter.fontSizeFillingBounds(
-    contents,
+    label,
     width: width,
     height: height,
     horizontalAlignment: horizontalAlignment,
   );
 
+  @override
   void fitToBounds({required double width, required double height}) {
-    if (contents.isEmpty) return;
+    if (label.isEmpty) return;
     fontSize =
         fontSizeFillingBounds(width: width, height: height) ??
         text_painter.kMinTextFontSize;
   }
 
-  /// Sets [feature] to [fontSize] and a height measured from [contents].
+  /// Sets [feature] to [fontSize] and a height measured from [label].
   void applySizeFromFontSize(
     Feature feature, {
     required double width,
@@ -117,7 +127,7 @@ final class FeatureKindText extends FeatureKind
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     text_painter.paintText(
       canvas,
-      contents,
+      label,
       feature.localBounds(),
       fontSize: fontSize,
       fillColor: fillColor,

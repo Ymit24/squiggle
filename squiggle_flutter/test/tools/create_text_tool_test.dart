@@ -90,7 +90,7 @@ void main() {
       expect(context.document.nodes, hasLength(1));
       expect(
         ((context.document.nodes.first as Feature).kind as FeatureKindText)
-            .contents,
+            .label,
         'hello',
       );
     });

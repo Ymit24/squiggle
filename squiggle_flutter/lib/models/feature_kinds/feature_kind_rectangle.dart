@@ -25,9 +25,6 @@ final class FeatureKindRectangle extends FeatureKind
   @override
   String label;
 
-  @override
-  void fitToBounds({required double width, required double height}) {}
-
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
@@ -63,6 +60,14 @@ final class FeatureKindRectangle extends FeatureKind
         ..color = strokeColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth,
+    );
+
+    text_painter.paintText(
+      canvas,
+      label,
+      feature.localBounds(),
+      fontSize: 24,
+      fillColor: Color.fromARGB(255, 255, 255, 255),
     );
   }
 }
