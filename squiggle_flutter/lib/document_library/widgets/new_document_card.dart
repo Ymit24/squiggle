@@ -40,7 +40,8 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
-            transform: Matrix4.translationValues(0, _active ? -2 : 0, 0),
+            // No transform lift: translating on hover moves the hit
+            // region away from the cursor and causes enter/exit flips.
             decoration: BoxDecoration(
               color: _active
                   ? const Color(0xFF1B1B24)
@@ -50,7 +51,7 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
                 color: _active
                     ? colors.accent.withValues(alpha: 0.55)
                     : const Color(0xFF2E2E3B),
-                width: _active ? 1.4 : 1,
+                width: 1,
               ),
               boxShadow: _active
                   ? [

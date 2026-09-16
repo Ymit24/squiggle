@@ -63,7 +63,11 @@ class _DocumentCardState extends State<DocumentCard> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
-            transform: Matrix4.translationValues(0, _elevated ? -2 : 0, 0),
+            // NB: no transform lift here. Translating the card on hover
+            // moves it away from the cursor at its edges, which flips
+            // MouseRegion enter/exit back and forth (hover jitter).
+            // Hover feedback stays in border/shadow/scrim only, which
+            // never affects hit-testing.
             decoration: BoxDecoration(
               color: const Color(0xFF16161C),
               borderRadius: BorderRadius.circular(16),
@@ -73,7 +77,9 @@ class _DocumentCardState extends State<DocumentCard> {
                     : _elevated
                         ? const Color(0xFF4A4A5C)
                         : const Color(0xFF2A2A35),
-                width: widget.isCurrent ? 1.4 : 1,
+                // Keep width constant: animating 1 -> 1.4 resizes the
+                // box by the delta and reads as jitter in the grid.
+                width: 1,
               ),
               boxShadow: _elevated
                   ? [
@@ -134,18 +140,29 @@ class _DocumentCardState extends State<DocumentCard> {
                             ),
                           ),
                         ),
-                        if (_elevated || widget.isCurrent)
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: _CardMenuButton(
-                              canDelete: widget.canDelete,
-                              onRename: widget.onRename,
-                              onDelete: widget.onDelete,
-                              onOpenChanged: (open) =>
-                                  setState(() => _menuOpen = open),
+                        // Menu button stays in the tree with opacity so
+                        // hovering never inserts/removes a hit-test target
+                        // under the cursor (another hover-flip source).
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 150),
+                            opacity:
+                                (_elevated || widget.isCurrent) ? 1 : 0,
+                            child: IgnorePointer(
+                              ignoring: !(_elevated ||
+                                  widget.isCurrent),
+                              child: _CardMenuButton(
+                                canDelete: widget.canDelete,
+                                onRename: widget.onRename,
+                                onDelete: widget.onDelete,
+                                onOpenChanged: (open) =>
+                                    setState(() => _menuOpen = open),
+                              ),
                             ),
                           ),
+                        ),
                         if (widget.isCurrent)
                           const Positioned(
                             left: 8,
