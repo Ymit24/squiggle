@@ -72,6 +72,9 @@ class _LibraryMenuAnchorState extends State<LibraryMenuAnchor> {
   void _open() {
     final overlay = Overlay.of(context);
     final screenSize = MediaQuery.of(context).size;
+    // Resolve once: reused for the height estimate below and the panel,
+    // so the flip decision matches what actually renders.
+    final items = widget.menuItems();
 
     // Position the menu from the button's global rect with a plain
     // Positioned — no follower layer involved. Right-aligned to the
@@ -86,7 +89,11 @@ class _LibraryMenuAnchorState extends State<LibraryMenuAnchor> {
         Offset(renderBox.size.width, renderBox.size.height),
       );
       left = buttonBottomRight.dx - widget.menuWidth;
-      const estimatedHeight = 220.0;
+      // Rows are ~40px tall with 12px of panel padding. The old fixed
+      // 220px estimate dwarfed small menus (card menu is ~90px) and
+      // forced the flip-above branch, parking the menu far from the
+      // button.
+      final estimatedHeight = items.length * 40.0 + 12.0;
       final below = buttonBottomRight.dy + widget.followerOffset.dy;
       top = below + estimatedHeight <= screenSize.height - 8
           ? below
@@ -124,7 +131,7 @@ class _LibraryMenuAnchorState extends State<LibraryMenuAnchor> {
                 },
                 child: LibraryMenuPanel(
                   width: widget.menuWidth,
-                  items: widget.menuItems(),
+                  items: items,
                   onSelected: (item) {
                     _close();
                     // Run after the overlay is gone so dialogs open cleanly.

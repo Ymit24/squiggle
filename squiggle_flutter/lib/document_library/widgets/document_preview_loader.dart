@@ -7,21 +7,57 @@ import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 /// Loads persisted nodes and renders an accurate document thumbnail.
-class DocumentPreviewLoader extends StatelessWidget {
+///
+/// The load future is cached per document revision: creating a new future
+/// on every build (e.g. a hover setState on the card) would re-read from
+/// disk each time and flash the shimmer placeholder — the thumbnail
+/// flicker. Only the document id / updatedAt changing restarts the load.
+class DocumentPreviewLoader extends StatefulWidget {
   const DocumentPreviewLoader({super.key, required this.document});
 
   final DocumentInfo document;
 
   @override
-  Widget build(BuildContext context) {
+  State<DocumentPreviewLoader> createState() => _DocumentPreviewLoaderState();
+}
+
+class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
+  late String _cacheKey;
+  late Future<List<Node>> _future;
+
+  static String _keyOf(DocumentInfo document) =>
+      '${document.id}-${document.updatedAt.millisecondsSinceEpoch}';
+
+  @override
+  void initState() {
+    super.initState();
+    _cacheKey = _keyOf(widget.document);
+    _future = _load(widget.document.id);
+  }
+
+  @override
+  void didUpdateWidget(DocumentPreviewLoader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final key = _keyOf(widget.document);
+    if (key != _cacheKey) {
+      _cacheKey = key;
+      _future = _load(widget.document.id);
+    }
+  }
+
+  Future<List<Node>> _load(String documentId) {
+    // read (listen: false) is safe outside build.
     final storage = context.read<DocumentStorage>();
+    return loadPreviewNodes(storage, documentId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final imageRepository = context.read<ImageRepository>();
-    final cacheKey =
-        '${document.id}-${document.updatedAt.millisecondsSinceEpoch}';
 
     return FutureBuilder<List<Node>>(
-      key: ValueKey(cacheKey),
-      future: loadPreviewNodes(storage, document.id),
+      key: ValueKey(_cacheKey),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const _PreviewPlaceholder();
