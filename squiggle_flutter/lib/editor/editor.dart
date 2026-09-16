@@ -71,11 +71,7 @@ class Editor extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               EditorBackButton(onPressed: onBackToLibrary),
-                              Expanded(
-                                child: StylePanel(
-                                  viewportHeight: viewportSize.height,
-                                ),
-                              ),
+                              const Expanded(child: StylePanel()),
                             ],
                           ),
                         ),
