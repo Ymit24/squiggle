@@ -7,7 +7,7 @@ final class FeatureKindText extends FeatureKind
         StrokeWidthCapable,
         LabelCapable {
   FeatureKindText(
-    this._label, {
+    this.label, {
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
     this.verticalAlignment = TextVerticalAlignment.top,
