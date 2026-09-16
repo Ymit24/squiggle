@@ -81,27 +81,13 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
       titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
       contentPadding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
       actionsPadding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.title.toUpperCase(),
-            style: theme.typography.hotkey.copyWith(
-              fontSize: 10.5,
-              letterSpacing: 0.9,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            widget.title,
-            style: theme.typography.inputText.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
-              letterSpacing: -0.2,
-            ),
-          ),
-        ],
+      title: Text(
+        widget.title,
+        style: theme.typography.inputText.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 17,
+          letterSpacing: -0.2,
+        ),
       ),
       content: SizedBox(
         width: 360,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
@@ -206,44 +207,21 @@ class _DocumentCardState extends State<DocumentCard> {
   }
 
   void _showContextMenu(BuildContext context, Offset position) {
-    final theme = context.squiggleTheme;
-    final overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-    showMenu<void>(
+    showLibraryContextMenu(
       context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromPoints(position, position),
-        Offset.zero & overlay.size,
-      ),
-      color: const Color(0xFF1E1E26),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: Color(0xFF363644)),
-      ),
+      position: position,
       items: [
-        PopupMenuItem(
+        LibraryMenuItem(
+          label: 'Rename',
+          icon: Icons.drive_file_rename_outline,
           onTap: widget.onRename,
-          child: Row(
-            children: [
-              Icon(Icons.drive_file_rename_outline,
-                  size: 16, color: theme.colors.subtext0),
-              const SizedBox(width: 10),
-              const Text('Rename'),
-            ],
-          ),
         ),
         if (widget.canDelete)
-          PopupMenuItem(
+          LibraryMenuItem(
+            label: 'Delete',
+            icon: Icons.delete_outline_rounded,
+            danger: true,
             onTap: widget.onDelete,
-            child: const Row(
-              children: [
-                Icon(Icons.delete_outline_rounded,
-                    size: 16, color: Color(0xFFF28B8B)),
-                SizedBox(width: 10),
-                Text('Delete',
-                    style: TextStyle(color: Color(0xFFF28B8B))),
-              ],
-            ),
           ),
       ],
     );
@@ -359,68 +337,49 @@ class _CardMenuButtonState extends State<_CardMenuButton> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: PopupMenuButton<void>(
-        tooltip: 'Document actions',
-        padding: EdgeInsets.zero,
-        color: const Color(0xFF1E1E26),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Color(0xFF363644)),
+    return LibraryMenuAnchor(
+      menuWidth: 200,
+      onOpenChanged: widget.onOpenChanged,
+      menuItems: () => [
+        LibraryMenuItem(
+          label: 'Rename',
+          icon: Icons.drive_file_rename_outline,
+          onTap: widget.onRename,
         ),
-        onOpened: () => widget.onOpenChanged(true),
-        onCanceled: () => widget.onOpenChanged(false),
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            onTap: () {
-              widget.onOpenChanged(false);
-              Future.microtask(widget.onRename);
-            },
-            child: Row(
-              children: [
-                Icon(Icons.drive_file_rename_outline,
-                    size: 16, color: theme.colors.subtext0),
-                const SizedBox(width: 10),
-                const Text('Rename'),
-              ],
-            ),
+        if (widget.canDelete)
+          LibraryMenuItem(
+            label: 'Delete',
+            icon: Icons.delete_outline_rounded,
+            danger: true,
+            onTap: widget.onDelete,
           ),
-          if (widget.canDelete)
-            PopupMenuItem(
-              onTap: () {
-                widget.onOpenChanged(false);
-                Future.microtask(widget.onDelete);
-              },
-              child: const Row(
-                children: [
-                  Icon(Icons.delete_outline_rounded,
-                      size: 16, color: Color(0xFFF28B8B)),
-                  SizedBox(width: 10),
-                  Text('Delete',
-                      style: TextStyle(color: Color(0xFFF28B8B))),
-                ],
+      ],
+      buttonBuilder: (context, open, toggle) => MouseRegion(
+        onEnter: (_) => setState(() => _hovering = true),
+        onExit: (_) => setState(() => _hovering = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: toggle,
+          child: Tooltip(
+            message: 'Document actions',
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(
+                  alpha: _hovering || open ? 0.72 : 0.55,
+                ),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.14),
+                ),
+              ),
+              child: const Icon(
+                Icons.more_horiz_rounded,
+                size: 17,
+                color: Colors.white,
               ),
             ),
-        ],
-        child: Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(
-              alpha: _hovering ? 0.72 : 0.55,
-            ),
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.14),
-            ),
-          ),
-          child: const Icon(
-            Icons.more_horiz_rounded,
-            size: 17,
-            color: Colors.white,
           ),
         ),
       ),

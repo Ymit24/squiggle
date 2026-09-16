@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_name_dialog.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_card.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
@@ -33,7 +34,19 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
   _SortMode _sort = _SortMode.recent;
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild so the search field can reflect focus changes in its border.
+    _searchFocus.addListener(_onSearchFocusChanged);
+  }
+
+  void _onSearchFocusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    _searchFocus.removeListener(_onSearchFocusChanged);
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -46,56 +59,55 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
 
     return Scaffold(
       backgroundColor: theme.colors.base,
+      // CallbackShortcuts only sees keys when focus is inside its subtree,
+      // so the autofocus Focus node must sit *below* it, not above.
       body: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.keyN, meta: true):
               () => widget.onCreateAndOpen(),
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true):
+              () => widget.onCreateAndOpen(),
           const SingleActivator(LogicalKeyboardKey.slash, meta: true): () =>
               _searchFocus.requestFocus(),
+          const SingleActivator(LogicalKeyboardKey.slash, control: true):
+              () => _searchFocus.requestFocus(),
         },
-        child: Stack(
-          children: [
-            const _BackdropGlow(),
-            SafeArea(
-              child: StreamBuilder<void>(
-                stream: library.changesStream,
-                initialData: null,
-                builder: (context, _) {
-                  final documents = _sorted(_filtered(library.documents));
-                  final currentId = library.currentDocument?.id;
-                  final featured = _featuredDocument(library);
+        child: Focus(
+          autofocus: true,
+          child: Stack(
+            children: [
+              const _BackdropGlow(),
+              SafeArea(
+                child: Column(
+                  children: [
+                    _StickyHeader(
+                      searchController: _searchController,
+                      searchFocus: _searchFocus,
+                      query: _query,
+                      sort: _sort,
+                      onQueryChanged: (value) =>
+                          setState(() => _query = value),
+                      onClearQuery: () {
+                        _searchController.clear();
+                        setState(() => _query = '');
+                      },
+                      onSortChanged: (mode) =>
+                          setState(() => _sort = mode),
+                      onCreateNamed: () =>
+                          _createNamedDocument(context),
+                    ),
+                    Expanded(
+                      child: StreamBuilder<void>(
+                        stream: library.changesStream,
+                        initialData: null,
+                        builder: (context, _) {
+                          final documents =
+                              _sorted(_filtered(library.documents));
+                          final currentId = library.currentDocument?.id;
+                          final featured = _featuredDocument(library);
 
-                  return CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints:
-                                const BoxConstraints(maxWidth: 1160),
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  40, 26, 40, 0),
-                              child: _TopBar(
-                                searchController: _searchController,
-                                searchFocus: _searchFocus,
-                                query: _query,
-                                sort: _sort,
-                                onQueryChanged: (value) => setState(
-                                  () => _query = value,
-                                ),
-                                onClearQuery: () {
-                                  _searchController.clear();
-                                  setState(() => _query = '');
-                                },
-                                onSortChanged: (mode) =>
-                                    setState(() => _sort = mode),
-                                onCreateNamed: () =>
-                                    _createNamedDocument(context),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                          return CustomScrollView(
+                            slivers: [
                       SliverToBoxAdapter(
                         child: Center(
                           child: ConstrainedBox(
@@ -251,12 +263,16 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                             ),
                           ),
                         ),
-                    ],
-                  );
-                },
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -358,6 +374,59 @@ class _BackdropGlow extends StatelessWidget {
         ),
       ),
       child: SizedBox.expand(),
+    );
+  }
+}
+
+class _StickyHeader extends StatelessWidget {
+  const _StickyHeader({
+    required this.searchController,
+    required this.searchFocus,
+    required this.query,
+    required this.sort,
+    required this.onQueryChanged,
+    required this.onClearQuery,
+    required this.onSortChanged,
+    required this.onCreateNamed,
+  });
+
+  final TextEditingController searchController;
+  final FocusNode searchFocus;
+  final String query;
+  final _SortMode sort;
+  final ValueChanged<String> onQueryChanged;
+  final VoidCallback onClearQuery;
+  final ValueChanged<_SortMode> onSortChanged;
+  final VoidCallback onCreateNamed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colors.base,
+        border: const Border(
+          bottom: BorderSide(color: Color(0xFF23232C)),
+        ),
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1160),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(40, 14, 40, 14),
+            child: _TopBar(
+              searchController: searchController,
+              searchFocus: searchFocus,
+              query: query,
+              sort: sort,
+              onQueryChanged: onQueryChanged,
+              onClearQuery: onClearQuery,
+              onSortChanged: onSortChanged,
+              onCreateNamed: onCreateNamed,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -554,74 +623,77 @@ class _SortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    return PopupMenuButton<_SortMode>(
-      tooltip: 'Sort canvases',
-      color: const Color(0xFF1E1E26),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: Color(0xFF363644)),
-      ),
-      onSelected: onChanged,
-      itemBuilder: (context) => [
-        _item(_SortMode.recent, 'Last edited', Icons.schedule_rounded),
-        _item(_SortMode.oldest, 'Oldest first', Icons.history_rounded),
-        _item(_SortMode.name, 'Name A–Z', Icons.sort_by_alpha_rounded),
+    return LibraryMenuAnchor(
+      menuWidth: 216,
+      menuItems: () => [
+        LibraryMenuItem(
+          label: 'Last edited',
+          icon: Icons.schedule_rounded,
+          checked: sort == _SortMode.recent,
+          onTap: () => onChanged(_SortMode.recent),
+        ),
+        LibraryMenuItem(
+          label: 'Oldest first',
+          icon: Icons.history_rounded,
+          checked: sort == _SortMode.oldest,
+          onTap: () => onChanged(_SortMode.oldest),
+        ),
+        LibraryMenuItem(
+          label: 'Name A–Z',
+          icon: Icons.sort_by_alpha_rounded,
+          checked: sort == _SortMode.name,
+          onTap: () => onChanged(_SortMode.name),
+        ),
       ],
-      child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1C23),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF2C2C38)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.swap_vert_rounded,
-                size: 16, color: theme.colors.subtext0),
-            const SizedBox(width: 7),
-            Text(
-              _label,
-              style: theme.typography.inputText.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+      buttonBuilder: (context, open, toggle) => MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: toggle,
+          child: Tooltip(
+            message: 'Sort canvases',
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: open
+                    ? const Color(0xFF23232E)
+                    : const Color(0xFF1C1C23),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: open
+                      ? theme.colors.accent.withValues(alpha: 0.5)
+                      : const Color(0xFF2C2C38),
+                ),
               ),
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.keyboard_arrow_down_rounded,
-                size: 17, color: theme.colors.subtext0),
-          ],
-        ),
-      ),
-    );
-  }
-
-  PopupMenuItem<_SortMode> _item(_SortMode value, String label, IconData icon) {
-    final selected = value == sort;
-    return PopupMenuItem(
-      value: value,
-      child: Row(
-        children: [
-          Icon(icon,
-              size: 16,
-              color: selected
-                  ? const Color(0xFFE4E4E4)
-                  : const Color(0xFFA0A0A0)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.normal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.swap_vert_rounded,
+                      size: 16, color: theme.colors.subtext0),
+                  const SizedBox(width: 7),
+                  Text(
+                    _label,
+                    style: theme.typography.inputText.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  AnimatedRotation(
+                    turns: open ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 160),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 17,
+                      color: theme.colors.subtext0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          if (selected)
-            const Icon(Icons.check_rounded,
-                size: 16, color: Color(0xFFA8B3C2)),
-        ],
+        ),
       ),
     );
   }
@@ -788,52 +860,8 @@ class _FeaturedCardState extends State<_FeaturedCard> {
               children: [
                 Expanded(
                   flex: 5,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      DocumentPreviewLoader(
-                          document: widget.document),
-                      Positioned(
-                        left: 10,
-                        top: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: Colors.white
-                                  .withValues(alpha: 0.14),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF7EE2A8),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 7),
-                              Text(
-                                'PICK UP WHERE YOU LEFT OFF',
-                                style: theme.typography.hotkey.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: DocumentPreviewLoader(
+                      document: widget.document),
                 ),
                 Expanded(
                   flex: 3,
@@ -863,6 +891,31 @@ class _FeaturedCardState extends State<_FeaturedCard> {
                             fontSize: 13,
                           ),
                         ),
+                        if (widget.isCurrent) ...[
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF7EE2A8),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Currently open',
+                                style: theme.typography.inputText
+                                    .copyWith(
+                                  color: colors.subtext0,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 22),
                         Row(
                           children: [
