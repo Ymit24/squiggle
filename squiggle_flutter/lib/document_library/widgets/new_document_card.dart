@@ -41,14 +41,12 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: _active
-                  ? const Color(0xFF1B1B24)
-                  : const Color(0xFF16161C).withValues(alpha: 0.6),
+              color: _active ? colors.surface0 : colors.mantle,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: _active
                     ? colors.accent.withValues(alpha: 0.55)
-                    : const Color(0xFF2E2E3B),
+                    : colors.surface1,
                 width: 1,
               ),
               boxShadow: _active

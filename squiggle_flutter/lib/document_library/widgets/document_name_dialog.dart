@@ -58,10 +58,10 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
     final theme = context.squiggleTheme;
 
     return AlertDialog(
-      backgroundColor: const Color(0xFF1D1D25),
+      backgroundColor: theme.colors.mantle,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFF363644)),
+        side: BorderSide(color: theme.colors.surface1),
       ),
       titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
       contentPadding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
@@ -88,18 +88,18 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
             ),
             isDense: true,
             filled: true,
-            fillColor: const Color(0xFF141419),
+            fillColor: theme.colors.base,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 13,
               vertical: 11,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF363644)),
+              borderSide: BorderSide(color: theme.colors.surface1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF363644)),
+              borderSide: BorderSide(color: theme.colors.surface1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -128,7 +128,7 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
             style: FilledButton.styleFrom(
               backgroundColor: theme.colors.text,
               foregroundColor: Colors.black87,
-              disabledBackgroundColor: const Color(0xFF2A2A35),
+              disabledBackgroundColor: theme.colors.surface0,
               disabledForegroundColor: theme.colors.subtext0.withValues(
                 alpha: 0.5,
               ),

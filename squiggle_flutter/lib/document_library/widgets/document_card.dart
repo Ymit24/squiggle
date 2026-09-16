@@ -57,14 +57,14 @@ class _DocumentCardState extends State<DocumentCard> {
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
-            color: const Color(0xFF16161C),
+            color: colors.mantle,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: widget.isCurrent
                   ? colors.accent.withValues(alpha: 0.6)
                   : _elevated
-                  ? const Color(0xFF4A4A5C)
-                  : const Color(0xFF2A2A35),
+                  ? colors.accent.withValues(alpha: 0.45)
+                  : colors.surface1,
               width: 1,
             ),
             boxShadow: _elevated

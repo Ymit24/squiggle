@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/document_library/document_library_page.dart';
@@ -87,7 +88,7 @@ void main() {
       await pumpLibraryPage(tester);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Your documents'), findsOneWidget);
+      expect(find.text('Documents'), findsOneWidget);
       expect(find.text('Recent'), findsNothing);
       expect(find.byTooltip('New canvas'), findsOneWidget);
       expect(find.byTooltip('Sort canvases'), findsOneWidget);
@@ -104,8 +105,43 @@ void main() {
       await pumpLibraryPage(tester);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Your documents'), findsOneWidget);
+      expect(find.text('Documents'), findsOneWidget);
       expect(find.text('Recent'), findsOneWidget);
+
+      final searchSize = tester.getSize(
+        find.byKey(const ValueKey('library-search')),
+      );
+      final sortSize = tester.getSize(
+        find.byKey(const ValueKey('library-sort')),
+      );
+      final newSize = tester.getSize(find.byKey(const ValueKey('library-new')));
+      expect(sortSize.height, searchSize.height);
+      expect(newSize.height, searchSize.height);
+      expect(
+        tester
+            .getSize(find.byKey(const ValueKey('library-featured-card')))
+            .width,
+        lessThanOrEqualTo(720),
+      );
+    });
+
+    testWidgets('Cmd+/ focuses search after clicking the page body', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await pumpLibraryPage(tester);
+      await tester.tap(find.text('Documents'));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.meta, platform: 'macos');
+      await tester.sendKeyEvent(LogicalKeyboardKey.slash, platform: 'macos');
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.meta, platform: 'macos');
+      await tester.pump();
+
+      final search = tester.widget<TextField>(find.byType(TextField));
+      expect(search.focusNode?.hasFocus, isTrue);
     });
 
     testWidgets('card menu does not trigger the card action', (tester) async {

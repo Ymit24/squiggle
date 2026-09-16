@@ -13,9 +13,6 @@ String formatLibraryEditedAt(DateTime updatedAt) {
   return 'Edited ${_month(updatedAt.month)} ${updatedAt.day}, ${updatedAt.year}';
 }
 
-String formatLibraryCount(int count) =>
-    count == 1 ? '1 canvas' : '$count canvases';
-
 String _month(int month) {
   const names = [
     'Jan',

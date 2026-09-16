@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 class DocumentPreviewLoader extends StatefulWidget {
   const DocumentPreviewLoader({super.key, required this.document});
@@ -109,8 +110,8 @@ class _PreviewPlaceholderState extends State<_PreviewPlaceholder>
           borderRadius: BorderRadius.circular(10),
           child: ColoredBox(
             color: Color.lerp(
-              const Color(0xFF1D1D24),
-              const Color(0xFF242430),
+              SquiggleColors.base,
+              SquiggleColors.surface0,
               _controller.value,
             )!,
             child: const SizedBox.expand(),
@@ -130,14 +131,14 @@ class _EmptyGlyph extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A35).withValues(alpha: 0.9),
+        color: SquiggleColors.surface0,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF3E3E4D)),
+        border: Border.all(color: SquiggleColors.surface1),
       ),
       child: const Icon(
         Icons.crop_square_rounded,
         size: 20,
-        color: Color(0xFF8E8EA3),
+        color: SquiggleColors.subtext0,
       ),
     );
   }

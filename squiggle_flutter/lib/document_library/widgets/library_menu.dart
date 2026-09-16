@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class LibraryMenuItem {
   const LibraryMenuItem({
@@ -39,7 +40,7 @@ class LibraryMenuAnchor extends StatelessWidget {
       alignmentOffset: alignmentOffset,
       onOpen: () => onOpenChanged?.call(true),
       onClose: () => onOpenChanged?.call(false),
-      style: _menuStyle(menuWidth),
+      style: _menuStyle(context, menuWidth),
       menuChildren: [
         for (final item in menuItems()) _LibraryMenuButton(item: item),
       ],
@@ -64,15 +65,19 @@ void showLibraryContextMenu({
     Rect.fromLTWH(localPosition.dx, localPosition.dy, 0, 0),
     overlay.size,
   );
+  final colors = context.squiggleTheme.colors;
 
   showMenu<LibraryMenuItem>(
     context: context,
     position: positionRect,
-    color: _menuBackground,
+    color: colors.mantle,
     surfaceTintColor: Colors.transparent,
     shadowColor: Colors.black,
     elevation: 16,
-    shape: _menuShape,
+    shape: RoundedRectangleBorder(
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
+      side: BorderSide(color: colors.surface1),
+    ),
     menuPadding: const EdgeInsets.all(6),
     constraints: BoxConstraints.tightFor(width: width),
     items: [
@@ -87,22 +92,24 @@ void showLibraryContextMenu({
   ).then((item) => item?.onTap());
 }
 
-const _menuBackground = Color(0xFF1E1E27);
-const _menuShape = RoundedRectangleBorder(
-  borderRadius: BorderRadius.all(Radius.circular(12)),
-  side: BorderSide(color: Color(0xFF3A3A48)),
-);
-
-MenuStyle _menuStyle(double width) => MenuStyle(
-  alignment: AlignmentDirectional.topEnd,
-  backgroundColor: const WidgetStatePropertyAll(_menuBackground),
-  surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-  shadowColor: const WidgetStatePropertyAll(Colors.black),
-  elevation: const WidgetStatePropertyAll(16),
-  padding: const WidgetStatePropertyAll(EdgeInsets.all(6)),
-  fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
-  shape: const WidgetStatePropertyAll(_menuShape),
-);
+MenuStyle _menuStyle(BuildContext context, double width) {
+  final colors = context.squiggleTheme.colors;
+  return MenuStyle(
+    alignment: AlignmentDirectional.topEnd,
+    backgroundColor: WidgetStatePropertyAll(colors.mantle),
+    surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+    shadowColor: const WidgetStatePropertyAll(Colors.black),
+    elevation: const WidgetStatePropertyAll(16),
+    padding: const WidgetStatePropertyAll(EdgeInsets.all(6)),
+    fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
+    shape: WidgetStatePropertyAll(
+      RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        side: BorderSide(color: colors.surface1),
+      ),
+    ),
+  );
+}
 
 class _LibraryMenuButton extends StatelessWidget {
   const _LibraryMenuButton({required this.item});
@@ -130,20 +137,15 @@ class _LibraryMenuContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = item.danger
-        ? const Color(0xFFF28B8B)
-        : const Color(0xFFE4E4E4);
+    final colors = context.squiggleTheme.colors;
+    final color = item.danger ? const Color(0xFFF28B8B) : colors.text;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
           if (item.icon case final icon?) ...[
-            Icon(
-              icon,
-              size: 16,
-              color: item.danger ? color : const Color(0xFFA0A0A0),
-            ),
+            Icon(icon, size: 16, color: item.danger ? color : colors.subtext0),
             const SizedBox(width: 10),
           ],
           Expanded(
@@ -157,7 +159,7 @@ class _LibraryMenuContent extends StatelessWidget {
             ),
           ),
           if (item.checked)
-            const Icon(Icons.check_rounded, size: 16, color: Color(0xFFA8B3C2)),
+            Icon(Icons.check_rounded, size: 16, color: colors.accent),
         ],
       ),
     );

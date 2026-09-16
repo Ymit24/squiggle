@@ -3,14 +3,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
     super.key,
     required this.nodes,
     required this.imageRepository,
-    this.backgroundColor = const Color(0xFF202027),
-    this.dotColor = const Color(0xFF3A3A46),
+    this.backgroundColor = SquiggleColors.surface0,
+    this.dotColor = SquiggleColors.surface1,
   });
 
   final List<Node> nodes;
