@@ -5,9 +5,19 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      bump:
+        description: Version component to increment
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: linux-release
@@ -48,9 +58,51 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Resolve version bump
+        id: bump
+        shell: bash
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          MANUAL_BUMP: ${{ inputs.bump }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          bump="patch"
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            bump="$MANUAL_BUMP"
+          else
+            labels="$(
+              gh api \
+                -H "Accept: application/vnd.github+json" \
+                "repos/${REPOSITORY}/commits/${COMMIT_SHA}/pulls" \
+                --jq '.[].labels[].name'
+            )"
+
+            if grep -Fxq "release:minor" <<< "$labels"; then
+              bump="minor"
+            fi
+          fi
+
+          case "$bump" in
+            patch|minor) ;;
+            *)
+              echo "Unsupported version bump: '$bump'." >&2
+              exit 1
+              ;;
+          esac
+
+          echo "Using $bump version bump."
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+
       - name: Increment pre-1.0 version
         id: version
         shell: bash
+        env:
+          BUMP: ${{ steps.bump.outputs.bump }}
         run: |
           set -euo pipefail
 
@@ -63,7 +115,13 @@ jobs:
           minor="${BASH_REMATCH[1]}"
           patch="${BASH_REMATCH[2]}"
           build="${BASH_REMATCH[3]}"
-          next_version="0.${minor}.$((patch + 1))+$((build + 1))"
+
+          if [[ "$BUMP" == "minor" ]]; then
+            next_version="0.$((minor + 1)).0+$((build + 1))"
+          else
+            next_version="0.${minor}.$((patch + 1))+$((build + 1))"
+          fi
+
           release_version="${next_version%%+*}"
 
           sed -i -E "s/^version: .+$/version: ${next_version}/" pubspec.yaml
