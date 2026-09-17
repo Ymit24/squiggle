@@ -28,6 +28,7 @@ void main() async {
   final appTitle =
       'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
   await windowManager.setTitle(appTitle);
+  await windowManager.setMinimumSize(const Size(640, 480));
 
   final imageRepository = ImageRepository();
   await imageRepository.initialize();

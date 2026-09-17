@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/document_library/widgets/delete_document_dialog.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_name_dialog.dart';
+import 'package:squiggle_flutter/document_library/widgets/empty_library_results.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_header.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_section_header.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_card.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-class DocumentLibraryPage extends StatelessWidget {
+class DocumentLibraryPage extends StatefulWidget {
   const DocumentLibraryPage({
     super.key,
     required this.onOpenDocument,
@@ -18,107 +25,249 @@ class DocumentLibraryPage extends StatelessWidget {
   final Future<void> Function({String? name}) onCreateAndOpen;
 
   @override
+  State<DocumentLibraryPage> createState() => _DocumentLibraryPageState();
+}
+
+class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  final _shortcutFocus = FocusNode();
+  String _query = '';
+  DocumentSortMode _sort = DocumentSortMode.recent;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocus.dispose();
+    _shortcutFocus.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final library = context.read<DocumentLibraryRepository>();
 
     return Scaffold(
-      backgroundColor: theme.colors.base,
-      body: SafeArea(
-        child: StreamBuilder<void>(
-          stream: library.changesStream,
-          initialData: null,
-          builder: (context, _) {
-            final documents = library.documents;
-            final currentId = library.currentDocument?.id;
-
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(32, 28, 32, 8),
-                    child: _LibraryHeader(
-                      documentCount: documents.length,
-                      onCreateNamed: () =>
-                          _createNamedDocument(context, library),
-                    ),
-                  ),
+      backgroundColor: theme.colors.mantle,
+      body: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyN, meta: true): () =>
+              widget.onCreateAndOpen(),
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
+              widget.onCreateAndOpen(),
+          const SingleActivator(LogicalKeyboardKey.slash, meta: true): () =>
+              _searchFocus.requestFocus(),
+          const SingleActivator(LogicalKeyboardKey.slash, control: true): () =>
+              _searchFocus.requestFocus(),
+        },
+        child: Focus(
+          focusNode: _shortcutFocus,
+          autofocus: true,
+          child: SafeArea(
+            child: Column(
+              children: [
+                LibraryHeader(
+                  searchController: _searchController,
+                  searchFocus: _searchFocus,
+                  onSearchTapOutside: _shortcutFocus.requestFocus,
+                  query: _query,
+                  sort: _sort,
+                  onQueryChanged: (value) => setState(() => _query = value),
+                  onClearQuery: () {
+                    _searchController.clear();
+                    setState(() => _query = '');
+                  },
+                  onSortChanged: (mode) => setState(() => _sort = mode),
+                  onCreateNamed: () => _createNamedDocument(context),
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(32, 16, 32, 40),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final crossAxisCount = _gridColumnCount(
-                          constraints.maxWidth,
-                        );
-                        const spacing = 20.0;
-                        const cardAspectRatio = 0.82;
+                Expanded(
+                  child: StreamBuilder<void>(
+                    stream: library.changesStream,
+                    initialData: null,
+                    builder: (context, _) {
+                      final documents = _sorted(_filtered(library.documents));
+                      final currentId = library.currentDocument?.id;
+                      final hPad = libraryHorizontalPadding(context);
+                      final query = _query.trim();
+                      final isSearching = query.isNotEmpty;
 
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                mainAxisSpacing: spacing,
-                                crossAxisSpacing: spacing,
-                                childAspectRatio: cardAspectRatio,
+                      return CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: maxLibraryWidth,
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    hPad,
+                                    28,
+                                    hPad,
+                                    8,
+                                  ),
+                                  child: LibrarySectionHeader(
+                                    title: !isSearching
+                                        ? 'All canvases'
+                                        : 'Results',
+                                    count: documents.length,
+                                  ),
+                                ),
                               ),
-                          itemCount: documents.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return NewDocumentCard(
-                                onPressed: () => onCreateAndOpen(),
-                              );
-                            }
+                            ),
+                          ),
+                          if (documents.isEmpty)
+                            SliverToBoxAdapter(
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: maxLibraryWidth,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(
+                                      hPad,
+                                      8,
+                                      hPad,
+                                      64,
+                                    ),
+                                    child: EmptyLibraryResults(
+                                      isSearching: isSearching,
+                                      onClear: () {
+                                        _searchController.clear();
+                                        setState(() => _query = '');
+                                      },
+                                      onCreate: () => widget.onCreateAndOpen(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            SliverLayoutBuilder(
+                              builder: (context, constraints) {
+                                final sectionWidth = constraints.crossAxisExtent
+                                    .clamp(0.0, maxLibraryWidth);
+                                final sidePadding =
+                                    (constraints.crossAxisExtent -
+                                            sectionWidth) /
+                                        2 +
+                                    hPad;
+                                final gridWidth = sectionWidth - 2 * hPad;
+                                final crossAxisCount = _gridColumnCount(
+                                  gridWidth,
+                                );
 
-                            final document = documents[index - 1];
-                            return DocumentCard(
-                              document: document,
-                              isCurrent: document.id == currentId,
-                              canDelete: documents.length > 1,
-                              onOpen: () => onOpenDocument(document.id),
-                              onRename: () =>
-                                  _renameDocument(context, library, document),
-                              onDelete: () =>
-                                  _deleteDocument(context, library, document),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                                return SliverPadding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    sidePadding,
+                                    8,
+                                    sidePadding,
+                                    56,
+                                  ),
+                                  sliver: SliverGrid(
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          mainAxisSpacing: 18,
+                                          crossAxisSpacing: 18,
+                                          childAspectRatio: crossAxisCount == 1
+                                              ? 1.6
+                                              : 0.94,
+                                        ),
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, index) {
+                                        if (!isSearching && index == 0) {
+                                          return NewDocumentCard(
+                                            onPressed: () =>
+                                                widget.onCreateAndOpen(),
+                                          );
+                                        }
+                                        final document =
+                                            documents[isSearching
+                                                ? index
+                                                : index - 1];
+                                        return DocumentCard(
+                                          document: document,
+                                          isCurrent: document.id == currentId,
+                                          canDelete:
+                                              library.documents.length > 1,
+                                          onOpen: () => widget.onOpenDocument(
+                                            document.id,
+                                          ),
+                                          onRename: () => _renameDocument(
+                                            context,
+                                            library,
+                                            document,
+                                          ),
+                                          onDelete: () => _deleteDocument(
+                                            context,
+                                            library,
+                                            document,
+                                          ),
+                                        );
+                                      },
+                                      childCount:
+                                          documents.length +
+                                          (isSearching ? 0 : 1),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
   }
 
+  List<DocumentInfo> _filtered(List<DocumentInfo> documents) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return List.of(documents);
+    return documents
+        .where((doc) => doc.name.toLowerCase().contains(query))
+        .toList();
+  }
+
+  List<DocumentInfo> _sorted(List<DocumentInfo> documents) {
+    switch (_sort) {
+      case DocumentSortMode.recent:
+        documents.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        break;
+      case DocumentSortMode.oldest:
+        documents.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+        break;
+      case DocumentSortMode.name:
+        documents.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+        break;
+    }
+    return documents;
+  }
+
   int _gridColumnCount(double width) {
-    if (width >= 1200) return 4;
-    if (width >= 900) return 3;
-    if (width >= 560) return 2;
+    if (width >= 1020) return 3;
+    if (width >= 680) return 2;
     return 1;
   }
 
-  Future<void> _createNamedDocument(
-    BuildContext context,
-    DocumentLibraryRepository library,
-  ) async {
+  Future<void> _createNamedDocument(BuildContext context) async {
     final name = await showDocumentNameDialog(
       context,
-      title: 'New document',
+      title: 'New canvas',
       confirmLabel: 'Create',
       initialName: 'Untitled',
     );
-    if (name == null || !context.mounted) {
-      return;
-    }
-    await onCreateAndOpen(name: name);
+    if (name == null || !context.mounted) return;
+    await widget.onCreateAndOpen(name: name);
   }
 
   Future<void> _renameDocument(
@@ -128,13 +277,11 @@ class DocumentLibraryPage extends StatelessWidget {
   ) async {
     final name = await showDocumentNameDialog(
       context,
-      title: 'Rename document',
+      title: 'Rename canvas',
       confirmLabel: 'Save',
       initialName: document.name,
     );
-    if (name == null || !context.mounted) {
-      return;
-    }
+    if (name == null || !context.mounted) return;
     await library.renameDocument(document.id, name);
   }
 
@@ -143,148 +290,11 @@ class DocumentLibraryPage extends StatelessWidget {
     DocumentLibraryRepository library,
     DocumentInfo document,
   ) async {
-    final theme = context.squiggleTheme;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colors.mantle,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
-          side: BorderSide(color: theme.colors.surface1),
-        ),
-        title: Text(
-          'Delete document?',
-          style: theme.typography.inputText.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        content: Text(
-          '"${document.name}" will be permanently deleted.',
-          style: theme.typography.inputText.copyWith(
-            color: theme.colors.subtext0,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: theme.colors.subtext0),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              'Delete',
-              style: TextStyle(
-                color: theme.colors.accent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+      builder: (context) => DeleteDocumentDialog(document: document),
     );
-
-    if (confirmed != true || !context.mounted) {
-      return;
-    }
+    if (confirmed != true || !context.mounted) return;
     await library.deleteDocument(document.id);
-  }
-}
-
-class _LibraryHeader extends StatefulWidget {
-  const _LibraryHeader({
-    required this.documentCount,
-    required this.onCreateNamed,
-  });
-
-  final int documentCount;
-  final VoidCallback onCreateNamed;
-
-  @override
-  State<_LibraryHeader> createState() => _LibraryHeaderState();
-}
-
-class _LibraryHeaderState extends State<_LibraryHeader> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final colors = theme.colors;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Squiggle',
-                style: theme.typography.inputText.copyWith(
-                  color: colors.accent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  letterSpacing: 0.4,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Your documents',
-                style: theme.typography.inputText.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                widget.documentCount == 1
-                    ? '1 canvas ready to open'
-                    : '${widget.documentCount} canvases ready to open',
-                style: theme.typography.inputText.copyWith(
-                  color: colors.subtext0,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-        MouseRegion(
-          onEnter: (_) => setState(() => _hovering = true),
-          onExit: (_) => setState(() => _hovering = false),
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: widget.onCreateNamed,
-            child: DecoratedBox(
-              decoration: theme.decorations.panelButton(
-                isPrimary: true,
-                isHovering: _hovering,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add, size: 18, color: colors.base),
-                    const SizedBox(width: 8),
-                    Text(
-                      'New document',
-                      style: theme.typography.panelButtonLabel(isPrimary: true),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
