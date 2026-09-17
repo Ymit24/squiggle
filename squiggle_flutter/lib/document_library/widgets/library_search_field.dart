@@ -76,7 +76,9 @@ class LibrarySearchField extends StatelessWidget {
                 )
               : Padding(
                   padding: const EdgeInsets.only(right: 10),
-                  child: Center(
+                  child: Align(
+                    widthFactor: 1,
+                    heightFactor: 1,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: theme.colors.surface1,
