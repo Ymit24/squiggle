@@ -52,12 +52,22 @@ class LibrarySearchField extends StatelessWidget {
             size: 17,
             color: theme.colors.subtext0,
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 36),
-          suffixIconConstraints: const BoxConstraints(minWidth: 42),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 36,
+            minHeight: libraryHeaderControlHeight,
+          ),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 42,
+            minHeight: libraryHeaderControlHeight,
+          ),
           suffixIcon: query.isNotEmpty
               ? IconButton(
                   onPressed: onClear,
                   padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 42,
+                    height: libraryHeaderControlHeight,
+                  ),
                   icon: Icon(
                     Icons.close_rounded,
                     size: 15,
