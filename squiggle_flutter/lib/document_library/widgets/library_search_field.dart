@@ -76,19 +76,21 @@ class LibrarySearchField extends StatelessWidget {
                 )
               : Padding(
                   padding: const EdgeInsets.only(right: 10),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: theme.colors.surface1,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
+                  child: Center(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: theme.colors.surface1,
+                        borderRadius: BorderRadius.circular(5),
                       ),
-                      child: Text(
-                        '⌘/',
-                        style: theme.typography.hotkey.copyWith(fontSize: 10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        child: Text(
+                          '⌘/',
+                          style: theme.typography.hotkey.copyWith(fontSize: 10),
+                        ),
                       ),
                     ),
                   ),
