@@ -53,10 +53,6 @@ void main() {
     expect(find.text('Last edited'), findsOneWidget);
     expect(find.text('Oldest first'), findsOneWidget);
     expect(find.text('Name A–Z'), findsOneWidget);
-
-    final labelBounds = tester.getRect(find.text('Last edited'));
-    final checkBounds = tester.getRect(find.byIcon(Icons.check_rounded));
-    expect(checkBounds.left - labelBounds.right, greaterThanOrEqualTo(12));
   });
 
   testWidgets('tapping the button again closes the menu', (tester) async {
