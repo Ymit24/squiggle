@@ -158,8 +158,10 @@ class _LibraryMenuContent extends StatelessWidget {
               ),
             ),
           ),
-          if (item.checked)
+          if (item.checked) ...[
+            const SizedBox(width: 12),
             Icon(Icons.check_rounded, size: 16, color: colors.accent),
+          ],
         ],
       ),
     );

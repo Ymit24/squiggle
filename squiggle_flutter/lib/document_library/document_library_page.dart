@@ -571,7 +571,7 @@ class _SortButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     return LibraryMenuAnchor(
-      menuWidth: 232,
+      menuWidth: 216,
       menuItems: () => [
         LibraryMenuItem(
           label: 'Last edited',
