@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/document_library/widgets/current_document_badge.dart';
+import 'package:squiggle_flutter/document_library/widgets/document_card_menu_button.dart';
+import 'package:squiggle_flutter/document_library/widgets/document_open_pill.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
@@ -127,7 +130,7 @@ class _DocumentCardState extends State<DocumentCard> {
                                   alignment: Alignment.bottomCenter,
                                   child: Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
-                                    child: _OpenPill(
+                                    child: DocumentOpenPill(
                                       isCurrent: widget.isCurrent,
                                     ),
                                   ),
@@ -145,7 +148,7 @@ class _DocumentCardState extends State<DocumentCard> {
                           opacity: (_elevated || widget.isCurrent) ? 1 : 0,
                           child: IgnorePointer(
                             ignoring: !(_elevated || widget.isCurrent),
-                            child: _CardMenuButton(
+                            child: DocumentCardMenuButton(
                               canDelete: widget.canDelete,
                               onRename: widget.onRename,
                               onDelete: widget.onDelete,
@@ -159,7 +162,7 @@ class _DocumentCardState extends State<DocumentCard> {
                         const Positioned(
                           left: 8,
                           top: 8,
-                          child: IgnorePointer(child: _CurrentBadge()),
+                          child: IgnorePointer(child: CurrentDocumentBadge()),
                         ),
                     ],
                   ),
@@ -238,162 +241,6 @@ class _DocumentCardState extends State<DocumentCard> {
             onTap: widget.onDelete,
           ),
       ],
-    );
-  }
-}
-
-class _OpenPill extends StatelessWidget {
-  const _OpenPill({required this.isCurrent});
-
-  final bool isCurrent;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: theme.colors.text,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isCurrent ? Icons.bolt_rounded : Icons.north_east_rounded,
-            size: 14,
-            color: Colors.black87,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            isCurrent ? 'Continue' : 'Open',
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CurrentBadge extends StatelessWidget {
-  const _CurrentBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: theme.colors.accent.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: theme.colors.accent,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'Current',
-            style: theme.typography.hotkey.copyWith(
-              color: theme.colors.text,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardMenuButton extends StatefulWidget {
-  const _CardMenuButton({
-    required this.canDelete,
-    required this.onRename,
-    required this.onDelete,
-    required this.onOpenChanged,
-  });
-
-  final bool canDelete;
-  final VoidCallback onRename;
-  final VoidCallback onDelete;
-  final ValueChanged<bool> onOpenChanged;
-
-  @override
-  State<_CardMenuButton> createState() => _CardMenuButtonState();
-}
-
-class _CardMenuButtonState extends State<_CardMenuButton> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return LibraryMenuAnchor(
-      menuWidth: 200,
-      onOpenChanged: widget.onOpenChanged,
-      menuItems: () => [
-        LibraryMenuItem(
-          label: 'Rename',
-          icon: Icons.drive_file_rename_outline,
-          onTap: widget.onRename,
-        ),
-        if (widget.canDelete)
-          LibraryMenuItem(
-            label: 'Delete',
-            icon: Icons.delete_outline_rounded,
-            danger: true,
-            onTap: widget.onDelete,
-          ),
-      ],
-      buttonBuilder: (context, open, toggle) => MouseRegion(
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: toggle,
-          child: Tooltip(
-            message: 'Document actions',
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(
-                  alpha: _hovering || open ? 0.72 : 0.55,
-                ),
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-              ),
-              child: const Icon(
-                Icons.more_horiz_rounded,
-                size: 17,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

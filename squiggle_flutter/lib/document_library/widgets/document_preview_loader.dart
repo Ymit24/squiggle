@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview.dart';
+import 'package:squiggle_flutter/document_library/widgets/document_preview_placeholder.dart';
+import 'package:squiggle_flutter/document_library/widgets/empty_document_preview_glyph.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 class DocumentPreviewLoader extends StatefulWidget {
   const DocumentPreviewLoader({super.key, required this.document});
@@ -47,7 +48,7 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const _PreviewPlaceholder();
+          return const DocumentPreviewPlaceholder();
         }
         final nodes = snapshot.data ?? const [];
         if (nodes.isEmpty) {
@@ -57,7 +58,7 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
                 nodes: const [],
                 imageRepository: imageRepository,
               ),
-              const Center(child: _EmptyGlyph()),
+              const Center(child: EmptyDocumentPreviewGlyph()),
             ],
           );
         }
@@ -73,73 +74,4 @@ Future<List<Node>> _loadPreviewNodes(
 ) async {
   final decoded = await storage.loadDocument(documentId);
   return decoded?.document.nodes ?? const [];
-}
-
-class _PreviewPlaceholder extends StatefulWidget {
-  const _PreviewPlaceholder();
-
-  @override
-  State<_PreviewPlaceholder> createState() => _PreviewPlaceholderState();
-}
-
-class _PreviewPlaceholderState extends State<_PreviewPlaceholder>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: ColoredBox(
-            color: Color.lerp(
-              SquiggleColors.base,
-              SquiggleColors.surface0,
-              _controller.value,
-            )!,
-            child: const SizedBox.expand(),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _EmptyGlyph extends StatelessWidget {
-  const _EmptyGlyph();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: SquiggleColors.surface0,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: SquiggleColors.surface1),
-      ),
-      child: const Icon(
-        Icons.crop_square_rounded,
-        size: 20,
-        color: SquiggleColors.subtext0,
-      ),
-    );
-  }
 }

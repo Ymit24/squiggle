@@ -1,21 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_button.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_content.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_item.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-class LibraryMenuItem {
-  const LibraryMenuItem({
-    required this.label,
-    required this.onTap,
-    this.icon,
-    this.danger = false,
-    this.checked = false,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final IconData? icon;
-  final bool danger;
-  final bool checked;
-}
+export 'package:squiggle_flutter/document_library/widgets/library_menu_item.dart';
 
 class LibraryMenuAnchor extends StatelessWidget {
   const LibraryMenuAnchor({
@@ -42,7 +31,7 @@ class LibraryMenuAnchor extends StatelessWidget {
       onClose: () => onOpenChanged?.call(false),
       style: _menuStyle(context, menuWidth),
       menuChildren: [
-        for (final item in menuItems()) _LibraryMenuButton(item: item),
+        for (final item in menuItems()) LibraryMenuButton(item: item),
       ],
       builder: (context, controller, _) => buttonBuilder(
         context,
@@ -86,7 +75,7 @@ void showLibraryContextMenu({
           value: item,
           height: 40,
           padding: EdgeInsets.zero,
-          child: _LibraryMenuContent(item: item),
+          child: LibraryMenuContent(item: item),
         ),
     ],
   ).then((item) => item?.onTap());
@@ -109,61 +98,4 @@ MenuStyle _menuStyle(BuildContext context, double width) {
       ),
     ),
   );
-}
-
-class _LibraryMenuButton extends StatelessWidget {
-  const _LibraryMenuButton({required this.item});
-
-  final LibraryMenuItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    return MenuItemButton(
-      onPressed: item.onTap,
-      requestFocusOnHover: false,
-      style: MenuItemButton.styleFrom(
-        padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: _LibraryMenuContent(item: item),
-    );
-  }
-}
-
-class _LibraryMenuContent extends StatelessWidget {
-  const _LibraryMenuContent({required this.item});
-
-  final LibraryMenuItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.squiggleTheme.colors;
-    final color = item.danger ? const Color(0xFFF28B8B) : colors.text;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        children: [
-          if (item.icon case final icon?) ...[
-            Icon(icon, size: 16, color: item.danger ? color : colors.subtext0),
-            const SizedBox(width: 10),
-          ],
-          Expanded(
-            child: Text(
-              item.label,
-              style: TextStyle(
-                color: color,
-                fontSize: 13.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          if (item.checked) ...[
-            const SizedBox(width: 12),
-            Icon(Icons.check_rounded, size: 16, color: colors.accent),
-          ],
-        ],
-      ),
-    );
-  }
 }
