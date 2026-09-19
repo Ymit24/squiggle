@@ -30,16 +30,6 @@ class SquiggleDecorations {
     borderRadius: BorderRadius.circular(radii.button),
   );
 
-  BoxDecoration panelButton({
-    required bool isPrimary,
-    required bool isHovering,
-  }) => BoxDecoration(
-    color: isPrimary
-        ? colors.accent.withValues(alpha: isHovering ? 0.85 : 1)
-        : (isHovering ? colors.surface0 : colors.surface1),
-    borderRadius: BorderRadius.circular(radii.button),
-  );
-
   InputDecoration textField() => InputDecoration(
     isDense: true,
     filled: true,
@@ -56,6 +46,37 @@ class SquiggleDecorations {
       borderRadius: BorderRadius.circular(radii.input),
       borderSide: BorderSide(color: colors.accent),
     ),
+  );
+
+  InputDecoration libraryTextField({EdgeInsetsGeometry? contentPadding}) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(radii.control),
+      borderSide: BorderSide(color: colors.surface1),
+    );
+    return InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: colors.surface0,
+      contentPadding: contentPadding,
+      border: border,
+      enabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(
+          color: colors.accent.withValues(alpha: 0.7),
+          width: 1.4,
+        ),
+      ),
+    );
+  }
+
+  RoundedRectangleBorder dialogShape() => RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(radii.card),
+    side: BorderSide(color: colors.surface1),
+  );
+
+  RoundedRectangleBorder menuShape() => RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(radii.floatingPanel),
+    side: BorderSide(color: colors.surface1),
   );
 
   SquiggleDecorations copyWith({

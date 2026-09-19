@@ -1,8 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
 
 const compactLibraryBreakpoint = 760.0;
 const maxLibraryWidth = 1160.0;
-const libraryHeaderControlHeight = 38.0;
+const libraryHeaderControlHeight = kControlHeight;
 
 bool isCompactLibrary(BuildContext context) =>
     MediaQuery.sizeOf(context).width < compactLibraryBreakpoint;

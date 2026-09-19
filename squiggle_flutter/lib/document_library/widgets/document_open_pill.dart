@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle/squiggle_badge.dart';
 
 class DocumentOpenPill extends StatelessWidget {
   const DocumentOpenPill({super.key, required this.isCurrent});
@@ -9,19 +10,16 @@ class DocumentOpenPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    return Container(
+    return SquiggleBadge(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: theme.colors.text,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      backgroundColor: theme.colors.text,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.4),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

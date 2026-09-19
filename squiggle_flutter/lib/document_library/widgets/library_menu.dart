@@ -63,10 +63,7 @@ void showLibraryContextMenu({
     surfaceTintColor: Colors.transparent,
     shadowColor: Colors.black,
     elevation: 16,
-    shape: RoundedRectangleBorder(
-      borderRadius: const BorderRadius.all(Radius.circular(12)),
-      side: BorderSide(color: colors.surface1),
-    ),
+    shape: context.squiggleTheme.decorations.menuShape(),
     menuPadding: const EdgeInsets.all(6),
     constraints: BoxConstraints.tightFor(width: width),
     items: [
@@ -92,10 +89,7 @@ MenuStyle _menuStyle(BuildContext context, double width) {
     padding: const WidgetStatePropertyAll(EdgeInsets.all(6)),
     fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
     shape: WidgetStatePropertyAll(
-      RoundedRectangleBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        side: BorderSide(color: colors.surface1),
-      ),
+      context.squiggleTheme.decorations.menuShape(),
     ),
   );
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle/squiggle_pressable.dart';
 
-class DocumentCardMenuButton extends StatefulWidget {
+class DocumentCardMenuButton extends StatelessWidget {
   const DocumentCardMenuButton({
     super.key,
     required this.canDelete,
@@ -16,55 +18,44 @@ class DocumentCardMenuButton extends StatefulWidget {
   final ValueChanged<bool> onOpenChanged;
 
   @override
-  State<DocumentCardMenuButton> createState() => _DocumentCardMenuButtonState();
-}
-
-class _DocumentCardMenuButtonState extends State<DocumentCardMenuButton> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
     return LibraryMenuAnchor(
       menuWidth: 200,
-      onOpenChanged: widget.onOpenChanged,
+      onOpenChanged: onOpenChanged,
       menuItems: () => [
         LibraryMenuItem(
           label: 'Rename',
           icon: Icons.drive_file_rename_outline,
-          onTap: widget.onRename,
+          onTap: onRename,
         ),
-        if (widget.canDelete)
+        if (canDelete)
           LibraryMenuItem(
             label: 'Delete',
             icon: Icons.delete_outline_rounded,
             danger: true,
-            onTap: widget.onDelete,
+            onTap: onDelete,
           ),
       ],
-      buttonBuilder: (context, open, toggle) => MouseRegion(
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: toggle,
-          child: Tooltip(
-            message: 'Document actions',
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(
-                  alpha: _hovering || open ? 0.72 : 0.55,
-                ),
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      buttonBuilder: (context, open, toggle) => SquigglePressable(
+        onPressed: toggle,
+        semanticLabel: 'Document actions',
+        builder: (context, state) => Tooltip(
+          message: 'Document actions',
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(
+                alpha: state.highlighted || open ? 0.72 : 0.55,
               ),
-              child: const Icon(
-                Icons.more_horiz_rounded,
-                size: 17,
-                color: Colors.white,
-              ),
+              borderRadius: BorderRadius.circular(theme.radii.action),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            ),
+            child: const Icon(
+              Icons.more_horiz_rounded,
+              size: 17,
+              color: Colors.white,
             ),
           ),
         ),

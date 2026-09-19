@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle/squiggle_button.dart';
 
 class _AcceptTextIntent extends Intent {
   const _AcceptTextIntent();
@@ -108,68 +109,15 @@ class _TextEditPanelState extends State<TextEditPanel> {
                 spacing: spacing.textEditButtonSpacing,
                 runSpacing: spacing.textEditButtonSpacing,
                 children: [
-                  _PanelButton(label: 'Cancel', onPressed: widget.onCancel),
-                  _PanelButton(
-                    label: 'Accept',
-                    isPrimary: true,
-                    onPressed: _accept,
+                  SquiggleButton(
+                    label: 'Cancel',
+                    variant: SquiggleButtonVariant.secondary,
+                    onPressed: widget.onCancel,
                   ),
+                  SquiggleButton(label: 'Accept', onPressed: _accept),
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PanelButton extends StatefulWidget {
-  const _PanelButton({
-    required this.label,
-    required this.onPressed,
-    this.isPrimary = false,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-  final bool isPrimary;
-
-  @override
-  State<_PanelButton> createState() => _PanelButtonState();
-}
-
-class _PanelButtonState extends State<_PanelButton> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final spacing = theme.spacing;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        behavior: HitTestBehavior.opaque,
-        child: DecoratedBox(
-          decoration: theme.decorations.panelButton(
-            isPrimary: widget.isPrimary,
-            isHovering: _hovering,
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: spacing.textEditButtonHorizontalPadding,
-              vertical: spacing.textEditButtonVerticalPadding,
-            ),
-            child: Text(
-              widget.label,
-              style: theme.typography.panelButtonLabel(
-                isPrimary: widget.isPrimary,
-              ),
-            ),
           ),
         ),
       ),

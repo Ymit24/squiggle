@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle/squiggle_pressable.dart';
 
-class StyleColorSwatch extends StatefulWidget {
+class StyleColorSwatch extends StatelessWidget {
   const StyleColorSwatch({
     super.key,
     required this.color,
@@ -31,43 +32,30 @@ class StyleColorSwatch extends StatefulWidget {
   }
 
   @override
-  State<StyleColorSwatch> createState() => _StyleColorSwatchState();
-}
-
-class _StyleColorSwatchState extends State<StyleColorSwatch> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final spacing = theme.spacing;
     final colors = theme.colors;
-    final opacity = widget.enabled ? 1.0 : 0.35;
-    final borderColor = widget.isActive
-        ? colors.text
-        : (widget._needsSubtleBorder(widget.color)
-              ? colors.surface1
-              : (_hovering && widget.enabled
-                    ? colors.subtext0
-                    : colors.surface1));
+    final opacity = enabled ? 1.0 : 0.35;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: widget.enabled
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
-      child: GestureDetector(
-        onTap: widget.enabled ? widget.onPressed : null,
-        behavior: HitTestBehavior.opaque,
-        child: Opacity(
+    return SquigglePressable(
+      onPressed: enabled ? onPressed : null,
+      builder: (context, state) {
+        final borderColor = isActive
+            ? colors.text
+            : (_needsSubtleBorder(color)
+                  ? colors.surface1
+                  : (state.hovered && enabled
+                        ? colors.subtext0
+                        : colors.surface1));
+        return Opacity(
           opacity: opacity,
           child: SizedBox(
             width: spacing.swatchSize,
             height: spacing.swatchSize,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: widget.color ?? colors.surface0,
+                color: color ?? colors.surface0,
                 borderRadius: BorderRadius.circular(theme.radii.swatch),
                 border: Border.all(
                   color: borderColor,
@@ -75,20 +63,18 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
                 ),
               ),
               child:
-                  widget.overlay ??
-                  (widget.color == null
+                  overlay ??
+                  (color == null
                       ? CustomPaint(
                           painter: _NoneSwatchPainter(
-                            color: widget.isActive
-                                ? colors.text
-                                : colors.subtext0,
+                            color: isActive ? colors.text : colors.subtext0,
                           ),
                         )
                       : null),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
