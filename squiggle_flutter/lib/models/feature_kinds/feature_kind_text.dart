@@ -140,4 +140,34 @@ final class FeatureKindText extends FeatureKind
       clipToBounds: false,
     );
   }
+
+  @override
+  Iterable<InspectorCapability<dynamic>> buildInspectorCapabilities() {
+    return [
+      InspectorColorCapability(
+        fieldKey: 'strokeColor',
+        label: 'Stroke Color',
+        value: strokeColor,
+        onColorChanged: (color) {
+          strokeColor = color;
+        },
+      ),
+      InspectorColorCapability(
+        fieldKey: 'fillColor',
+        label: 'Fill Color',
+        value: fillColor,
+        onColorChanged: (color) {
+          fillColor = color;
+        },
+      ),
+      InspectorVerticalTextAlignmentCapability(
+        fieldKey: 'verticalAlignment',
+        label: 'Vertical Alignment',
+        value: verticalAlignment,
+        onTextAlignChanged: (value) {
+          verticalAlignment = value;
+        },
+      ),
+    ];
+  }
 }

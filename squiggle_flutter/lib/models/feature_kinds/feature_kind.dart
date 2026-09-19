@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';

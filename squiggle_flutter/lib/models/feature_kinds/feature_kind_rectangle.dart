@@ -167,12 +167,12 @@ class InspectorColorCapability extends InspectorCapability<Color> {
 }
 
 class InspectorVerticalTextAlignmentCapability
-    extends InspectorCapability<TextAlignVertical> {
+    extends InspectorCapability<TextVerticalAlignment> {
   InspectorVerticalTextAlignmentCapability({
     required super.fieldKey,
     required super.label,
-    required TextAlignVertical value,
-    required ValueChanged<TextAlignVertical> onTextAlignChanged,
+    required TextVerticalAlignment value,
+    required ValueChanged<TextVerticalAlignment> onTextAlignChanged,
   }) : super(values: [value], callbacks: [onTextAlignChanged]);
 
   @override
@@ -180,9 +180,21 @@ class InspectorVerticalTextAlignmentCapability
     BuildContext context,
     void Function(Function()) onUpdate,
   ) {
+    final activeVerticalAlignment = values.first;
+    final verticalAlignmentMixed = values.toSet().length > 1;
     return InspectorCapabilityFieldShell(
       label: label,
-      child: Text("Text align changer!"),
+      child: TextVerticalAlignmentSelector(
+        activeAlignment: activeVerticalAlignment,
+        isMixed: verticalAlignmentMixed,
+        onAlignmentSelected: (alignment) {
+          onUpdate(() {
+            for (final callback in callbacks) {
+              callback(alignment);
+            }
+          });
+        },
+      ),
     );
   }
 }
