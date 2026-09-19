@@ -50,11 +50,11 @@ class StylePanelContent extends StatelessWidget {
                     activePresetIndex: state.strokeMixed
                         ? null
                         : state.activeStrokePresetIndex,
-                    isNoneActive: state.isStrokeNone,
+
                     noneEnabled: state.canClearStroke,
-                    onPresetSelected: (index) =>
-                        bloc.add(SetStrokePresetEvent(index)),
-                    onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
+                    onPresetSelected: (index) => index == -1
+                        ? bloc.add(const ClearStrokeEvent())
+                        : bloc.add(SetStrokePresetEvent(index)),
                   ),
                   SizedBox(height: spacing.panelSectionSpacing),
                   if (state.showFillControls) ...[
@@ -66,11 +66,11 @@ class StylePanelContent extends StatelessWidget {
                       activePresetIndex: state.fillMixed
                           ? null
                           : state.activeFillPresetIndex,
-                      isNoneActive: state.isFillNone,
+
                       noneEnabled: state.canClearFill,
-                      onPresetSelected: (index) =>
-                          bloc.add(SetFillPresetEvent(index)),
-                      onNoneSelected: () => bloc.add(const ClearFillEvent()),
+                      onPresetSelected: (index) => index == -1
+                          ? bloc.add(const ClearFillEvent())
+                          : bloc.add(SetFillPresetEvent(index)),
                     ),
                     SizedBox(height: spacing.panelSectionSpacing),
                   ],

@@ -7,18 +7,15 @@ class ColorRow extends StatelessWidget {
     super.key,
     required this.presets,
     required this.activePresetIndex,
-    required this.isNoneActive,
     required this.noneEnabled,
     required this.onPresetSelected,
-    required this.onNoneSelected,
   });
 
   final List<Color> presets;
   final int? activePresetIndex;
-  final bool isNoneActive;
+
   final bool noneEnabled;
   final ValueChanged<int> onPresetSelected;
-  final VoidCallback onNoneSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +26,11 @@ class ColorRow extends StatelessWidget {
         runSpacing: swatchGap,
         children: [
           StyleColorSwatch.none(
-            isActive: isNoneActive,
+            isActive: activePresetIndex == 0,
             enabled: noneEnabled,
-            onPressed: onNoneSelected,
+            onPressed: () => onPresetSelected(0),
           ),
-          for (var i = 0; i < presets.length; i++)
+          for (var i = 1; i < presets.length; i++)
             StyleColorSwatch(
               color: presets[i],
               isActive: activePresetIndex == i,

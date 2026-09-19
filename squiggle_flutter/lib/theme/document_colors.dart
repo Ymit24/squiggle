@@ -22,6 +22,7 @@ class StylePreset {
 
 /// Muted studio palette — strokes are deeper, fills are soft tints within each hue.
 const stylePresets = <StylePreset>[
+  StylePreset(strokeColor: Color(0x00000000), fillColor: Color(0x00000000)),
   StylePreset(strokeColor: Color(0xFFC4597A), fillColor: Color(0xFFE8B8C8)),
   StylePreset(strokeColor: Color(0xFF4A72B8), fillColor: Color(0xFFB0C8E8)),
   StylePreset(strokeColor: Color(0xFF3D8C62), fillColor: Color(0xFFA8D8BC)),

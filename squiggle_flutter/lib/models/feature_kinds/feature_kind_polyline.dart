@@ -46,6 +46,7 @@ final class FeatureKindPolyline extends FeatureKind
   List<Offset> localPoints;
   @override
   Color strokeColor;
+
   @override
   double strokeWidth;
   LineEndCap startEndCap;
@@ -267,5 +268,19 @@ final class FeatureKindPolyline extends FeatureKind
     for (final arrow in _arrowPaths(points)) {
       canvas.drawPath(arrow, Paint()..color = strokeColor);
     }
+  }
+
+  @override
+  Iterable<InspectorCapability> buildInspectorCapabilities() {
+    return [
+      InspectorColorCapability(
+        fieldKey: 'strokeColor',
+        label: 'Stroke Color',
+        value: strokeColor,
+        onColorChanged: (color) {
+          strokeColor = color;
+        },
+      ),
+    ];
   }
 }

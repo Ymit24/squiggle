@@ -81,4 +81,26 @@ final class FeatureKindCircle extends FeatureKind
       fillColor: Color.fromARGB(255, 255, 255, 255),
     );
   }
+
+  @override
+  Iterable<InspectorCapability> buildInspectorCapabilities() {
+    return [
+      InspectorColorCapability(
+        fieldKey: 'strokeColor',
+        label: 'Stroke Color',
+        value: strokeColor,
+        onColorChanged: (color) {
+          strokeColor = color;
+        },
+      ),
+      InspectorColorCapability(
+        fieldKey: 'fillColor',
+        label: 'Fill Color',
+        value: fillColor,
+        onColorChanged: (color) {
+          fillColor = color;
+        },
+      ),
+    ];
+  }
 }

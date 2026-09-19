@@ -1,6 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
@@ -17,6 +22,11 @@ part 'feature_kind_image.dart';
 
 sealed class FeatureKind {
   Map<String, dynamic> toDataModel();
+
+  // TODO: Delete me
+  Iterable<InspectorCapability> buildInspectorCapabilities() {
+    return [];
+  }
 
   FeatureKind clone();
 
