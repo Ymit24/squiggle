@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_content_bounds.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_top_bar.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
@@ -36,28 +36,19 @@ class LibraryHeader extends StatelessWidget {
         color: theme.colors.base,
         border: Border(bottom: BorderSide(color: theme.colors.surface0)),
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: maxLibraryWidth),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              libraryHorizontalPadding(context),
-              14,
-              libraryHorizontalPadding(context),
-              14,
-            ),
-            child: LibraryTopBar(
-              searchController: searchController,
-              searchFocus: searchFocus,
-              onSearchTapOutside: onSearchTapOutside,
-              query: query,
-              sort: sort,
-              onQueryChanged: onQueryChanged,
-              onClearQuery: onClearQuery,
-              onSortChanged: onSortChanged,
-              onCreateNamed: onCreateNamed,
-            ),
-          ),
+      child: LibraryContentBounds(
+        top: 14,
+        bottom: 14,
+        child: LibraryTopBar(
+          searchController: searchController,
+          searchFocus: searchFocus,
+          onSearchTapOutside: onSearchTapOutside,
+          query: query,
+          sort: sort,
+          onQueryChanged: onQueryChanged,
+          onClearQuery: onClearQuery,
+          onSortChanged: onSortChanged,
+          onCreateNamed: onCreateNamed,
         ),
       ),
     );

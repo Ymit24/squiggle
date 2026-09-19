@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/document_library/widgets/document_card.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_name_dialog.dart';
 import 'package:squiggle_flutter/document_library/widgets/empty_library_results.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_header.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_content_bounds.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_section_header.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
@@ -95,51 +96,29 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                       return CustomScrollView(
                         slivers: [
                           SliverToBoxAdapter(
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: maxLibraryWidth,
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    hPad,
-                                    28,
-                                    hPad,
-                                    8,
-                                  ),
-                                  child: LibrarySectionHeader(
-                                    title: !isSearching
-                                        ? 'All canvases'
-                                        : 'Results',
-                                    count: documents.length,
-                                  ),
-                                ),
+                            child: LibraryContentBounds(
+                              top: 28,
+                              bottom: 8,
+                              child: LibrarySectionHeader(
+                                title: !isSearching
+                                    ? 'All canvases'
+                                    : 'Results',
+                                count: documents.length,
                               ),
                             ),
                           ),
                           if (documents.isEmpty)
                             SliverToBoxAdapter(
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: maxLibraryWidth,
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                      hPad,
-                                      8,
-                                      hPad,
-                                      64,
-                                    ),
-                                    child: EmptyLibraryResults(
-                                      isSearching: isSearching,
-                                      onClear: () {
-                                        _searchController.clear();
-                                        setState(() => _query = '');
-                                      },
-                                      onCreate: () => widget.onCreateAndOpen(),
-                                    ),
-                                  ),
+                              child: LibraryContentBounds(
+                                top: 8,
+                                bottom: 64,
+                                child: EmptyLibraryResults(
+                                  isSearching: isSearching,
+                                  onClear: () {
+                                    _searchController.clear();
+                                    setState(() => _query = '');
+                                  },
+                                  onCreate: () => widget.onCreateAndOpen(),
                                 ),
                               ),
                             )

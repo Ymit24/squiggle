@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_decorations.dart';
 import 'package:squiggle_flutter/theme/squiggle_radii.dart';
+import 'package:squiggle_flutter/theme/squiggle_motion.dart';
 import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
 import 'package:squiggle_flutter/theme/squiggle_typography.dart';
 
@@ -15,6 +16,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
     required this.radii,
     required this.typography,
     required this.decorations,
+    required this.motion,
   });
 
   final SquiggleColorScheme colors;
@@ -22,6 +24,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
   final SquiggleRadii radii;
   final SquiggleTypography typography;
   final SquiggleDecorations decorations;
+  final SquiggleMotion motion;
 
   static final dark = SquiggleTheme(
     colors: SquiggleColorScheme.dark,
@@ -32,6 +35,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
       colors: SquiggleColorScheme.dark,
       radii: SquiggleRadii.standard,
     ),
+    motion: SquiggleMotion.standardMotion,
   );
 
   @override
@@ -41,6 +45,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
     SquiggleRadii? radii,
     SquiggleTypography? typography,
     SquiggleDecorations? decorations,
+    SquiggleMotion? motion,
   }) {
     final nextColors = colors ?? this.colors;
     return SquiggleTheme(
@@ -54,6 +59,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
             colors: nextColors,
             radii: radii ?? this.radii,
           ),
+      motion: motion ?? this.motion,
     );
   }
 
@@ -66,6 +72,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
       radii: radii.lerp(other.radii, t),
       typography: typography.lerp(other.typography, t),
       decorations: decorations.lerp(other.decorations, t),
+      motion: motion.lerp(other.motion, t),
     );
   }
 }
@@ -84,6 +91,36 @@ abstract final class SquiggleThemeData {
         primary: squiggle.colors.accent,
         onPrimary: squiggle.colors.base,
         outline: squiggle.colors.surface1,
+        error: squiggle.colors.dangerStrong,
+        onError: squiggle.colors.onDanger,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: squiggle.colors.base,
+        shape: squiggle.decorations.dialogShape(),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: squiggle.colors.subtext0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(squiggle.radii.action),
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: squiggle.colors.text,
+          foregroundColor: squiggle.colors.base,
+          disabledBackgroundColor: squiggle.colors.surface0,
+          disabledForegroundColor: squiggle.colors.subtext0.withValues(
+            alpha: 0.5,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(squiggle.radii.action),
+          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
       ),
       extensions: [squiggle],
     );

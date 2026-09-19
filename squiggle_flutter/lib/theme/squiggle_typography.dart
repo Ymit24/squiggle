@@ -31,10 +31,25 @@ class SquiggleTypography {
 
   TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
-  TextStyle panelButtonLabel({required bool isPrimary}) => TextStyle(
-    color: isPrimary ? colors.base : colors.text,
-    fontSize: 13,
-    fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
+  TextStyle get body => TextStyle(color: colors.text, fontSize: 13.5);
+
+  TextStyle get title =>
+      TextStyle(color: colors.text, fontSize: 16, fontWeight: FontWeight.w700);
+
+  TextStyle get controlLabel =>
+      const TextStyle(fontSize: 13, fontWeight: FontWeight.w700);
+
+  TextStyle get cardTitle => TextStyle(
+    color: colors.text,
+    fontSize: 14.5,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+  );
+
+  TextStyle get caption => TextStyle(
+    color: colors.subtext0,
+    fontSize: 11.5,
+    fontWeight: FontWeight.w500,
   );
 
   TextStyle swatchOverlayLabel({

@@ -10,7 +10,7 @@ class LibraryMenuContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.squiggleTheme.colors;
-    final color = item.danger ? const Color(0xFFF28B8B) : colors.text;
+    final color = item.danger ? colors.danger : colors.text;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -23,9 +23,8 @@ class LibraryMenuContent extends StatelessWidget {
           Expanded(
             child: Text(
               item.label,
-              style: TextStyle(
+              style: context.squiggleTheme.typography.body.copyWith(
                 color: color,
-                fontSize: 13.5,
                 fontWeight: FontWeight.w500,
               ),
             ),

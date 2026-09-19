@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/document_library/widgets/library_search_field.d
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_button.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle/squiggle_icon_tile.dart';
 
 class LibraryTopBar extends StatelessWidget {
   const LibraryTopBar({
@@ -43,19 +44,11 @@ class LibraryTopBar extends StatelessWidget {
     );
     return Row(
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: theme.colors.surface0,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: theme.colors.surface1),
-          ),
-          child: Icon(
-            Icons.gesture_rounded,
-            size: 19,
-            color: theme.colors.text,
-          ),
+        const SquiggleIconTile(
+          icon: Icons.gesture_rounded,
+          size: 36,
+          iconSize: 19,
+          tone: SquiggleIconTileTone.accent,
         ),
         const SizedBox(width: 12),
         Column(

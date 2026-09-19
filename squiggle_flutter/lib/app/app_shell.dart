@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/document_library/document_library_page.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 enum _AppScreen { library, editor }
 
@@ -54,57 +53,5 @@ class _AppShellState extends State<AppShell> {
         onBackToLibrary: _returnToLibrary,
       ),
     };
-  }
-}
-
-/// Back control shown while editing a document.
-class EditorBackButton extends StatefulWidget {
-  const EditorBackButton({super.key, required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  State<EditorBackButton> createState() => _EditorBackButtonState();
-}
-
-class _EditorBackButtonState extends State<EditorBackButton> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final colors = theme.colors;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        behavior: HitTestBehavior.opaque,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: _hovering
-                ? colors.surface0.withValues(alpha: 0.85)
-                : colors.mantle,
-            border: Border.all(color: colors.surface1),
-            borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.grid_view_rounded,
-                  size: 16,
-                  color: _hovering ? colors.text : colors.subtext0,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

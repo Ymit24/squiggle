@@ -10,6 +10,9 @@ const squiggleTextColor = Color(0xFFE4E4E4);
 const squiggleAccentColor = Color(0xFFA8B3C2);
 const squiggleScrimColor = Color(0x33000000);
 const squiggleSelectionFillColor = Color(0x1AA8B3C2);
+const squiggleDangerColor = Color(0xFFF28B8B);
+const squiggleDangerStrongColor = Color(0xFFD95F5F);
+const squiggleOnDangerColor = Color(0xFFFFFFFF);
 
 /// Semantic UI color tokens for Squiggle's dark graphite theme.
 @immutable
@@ -24,6 +27,9 @@ class SquiggleColorScheme {
     required this.accent,
     required this.scrim,
     required this.selectionFill,
+    required this.danger,
+    required this.dangerStrong,
+    required this.onDanger,
   });
 
   final Color base;
@@ -35,6 +41,9 @@ class SquiggleColorScheme {
   final Color accent;
   final Color scrim;
   final Color selectionFill;
+  final Color danger;
+  final Color dangerStrong;
+  final Color onDanger;
 
   static const dark = SquiggleColorScheme(
     base: squiggleBaseColor,
@@ -46,6 +55,9 @@ class SquiggleColorScheme {
     accent: squiggleAccentColor,
     scrim: squiggleScrimColor,
     selectionFill: squiggleSelectionFillColor,
+    danger: squiggleDangerColor,
+    dangerStrong: squiggleDangerStrongColor,
+    onDanger: squiggleOnDangerColor,
   );
 
   SquiggleColorScheme copyWith({
@@ -58,6 +70,9 @@ class SquiggleColorScheme {
     Color? accent,
     Color? scrim,
     Color? selectionFill,
+    Color? danger,
+    Color? dangerStrong,
+    Color? onDanger,
   }) {
     return SquiggleColorScheme(
       base: base ?? this.base,
@@ -69,6 +84,9 @@ class SquiggleColorScheme {
       accent: accent ?? this.accent,
       scrim: scrim ?? this.scrim,
       selectionFill: selectionFill ?? this.selectionFill,
+      danger: danger ?? this.danger,
+      dangerStrong: dangerStrong ?? this.dangerStrong,
+      onDanger: onDanger ?? this.onDanger,
     );
   }
 
@@ -83,6 +101,9 @@ class SquiggleColorScheme {
       accent: Color.lerp(accent, other.accent, t)!,
       scrim: Color.lerp(scrim, other.scrim, t)!,
       selectionFill: Color.lerp(selectionFill, other.selectionFill, t)!,
+      danger: Color.lerp(danger, other.danger, t)!,
+      dangerStrong: Color.lerp(dangerStrong, other.dangerStrong, t)!,
+      onDanger: Color.lerp(onDanger, other.onDanger, t)!,
     );
   }
 }

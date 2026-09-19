@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
@@ -22,7 +23,7 @@ class DocumentPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(context.squiggleTheme.radii.control),
       child: CustomPaint(
         painter: _DocumentPreviewPainter(
           nodes: nodes,
