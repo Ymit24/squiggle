@@ -125,8 +125,14 @@ abstract class InspectorCapability<T> {
 
   InspectorCapabilityFieldShell build(
     BuildContext context,
-    void Function(Function()) onUpdate,
+    void Function(T) onUpdate,
   );
+
+  void apply(T value) {
+    for (final callback in callbacks) {
+      callback(value);
+    }
+  }
 }
 
 class InspectorColorCapability extends InspectorCapability<Color> {
@@ -140,7 +146,7 @@ class InspectorColorCapability extends InspectorCapability<Color> {
   @override
   InspectorCapabilityFieldShell build(
     BuildContext context,
-    void Function(Function()) onUpdate,
+    void Function(Color) onUpdate,
   ) {
     final isStrokeMixed = values.toSet().length > 1;
     final activeStrokePresetIndex = stylePresets.indexOf(
@@ -153,13 +159,8 @@ class InspectorColorCapability extends InspectorCapability<Color> {
         activePresetIndex: isStrokeMixed ? null : activeStrokePresetIndex,
         noneEnabled: true,
         onPresetSelected: (index) {
-          print("Selected color preset: $index");
-          onUpdate(() {
-            final color = stylePresets[index].strokeColor;
-            for (final callback in callbacks) {
-              callback(color);
-            }
-          });
+          final color = stylePresets[index].strokeColor;
+          onUpdate(color);
         },
       ),
     );
@@ -178,7 +179,7 @@ class InspectorVerticalTextAlignmentCapability
   @override
   InspectorCapabilityFieldShell build(
     BuildContext context,
-    void Function(Function()) onUpdate,
+    void Function(TextVerticalAlignment) onUpdate,
   ) {
     final activeVerticalAlignment = values.first;
     final verticalAlignmentMixed = values.toSet().length > 1;
@@ -187,13 +188,7 @@ class InspectorVerticalTextAlignmentCapability
       child: TextVerticalAlignmentSelector(
         activeAlignment: activeVerticalAlignment,
         isMixed: verticalAlignmentMixed,
-        onAlignmentSelected: (alignment) {
-          onUpdate(() {
-            for (final callback in callbacks) {
-              callback(alignment);
-            }
-          });
-        },
+        onAlignmentSelected: onUpdate,
       ),
     );
   }
@@ -219,16 +214,13 @@ Iterable<InspectorCapabilityFieldShell> buildInspectorPanel(
     }
   }
 
-  void onUpdate(void Function() cb) {
-    editorContext.history.run("Inspector Update", (transaction) {
-      transaction.watch(features);
-
-      cb();
-    });
-  }
-
   return callbacksByFieldKey.values.map(
-    (capability) => capability.build(context, onUpdate),
+    (capability) => capability.build(context, (result) {
+      editorContext.history.run("Inspector Update", (transaction) {
+        transaction.watch(features);
+        capability.apply(result);
+      });
+    }),
   );
 }
 
