@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
@@ -13,7 +12,6 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
-import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
@@ -96,87 +94,6 @@ class Editor extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class InspectorPanel extends StatelessWidget {
-  const InspectorPanel({super.key, required this.editorContext});
-
-  final EditorContext editorContext;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final spacing = theme.spacing;
-
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        editorContext.selection,
-        editorContext.history,
-      ]),
-      builder: (context, _) {
-        final selectedNodes = editorContext.selection.selectedNodeIds
-            .map((nodeId) => editorContext.document.requireNodeById(nodeId))
-            .whereType<Feature>();
-        if (selectedNodes.isEmpty) {
-          return SizedBox.shrink();
-        }
-
-        final inspectorCapabilityWidgets = buildInspectorPanel(
-          context,
-          editorContext,
-          selectedNodes.toList(),
-        );
-
-        print("Building inspector.");
-
-        return DecoratedBox(
-          decoration: theme.decorations.floatingPanel(),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(spacing.panelPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ...inspectorCapabilityWidgets
-                      .map(
-                        (widget) => [
-                          widget,
-                          SizedBox(height: spacing.panelSectionSpacing),
-                        ],
-                      )
-                      .flattened,
-                  // SectionLabel('Stroke'),
-                  // ColorRow(
-                  //   presets: stylePresets
-                  //       .map((preset) => preset.strokeColor)
-                  //       .toList(),
-                  //   activePresetIndex: state.strokeMixed
-                  //       ? null
-                  //       : state.activeStrokePresetIndex,
-                  //   isNoneActive: state.isStrokeNone,
-                  //   noneEnabled: state.canClearStroke,
-                  //   onPresetSelected: (index) =>
-                  //       bloc.add(SetStrokePresetEvent(index)),
-                  //   onNoneSelected: () => bloc.add(const ClearStrokeEvent()),
-                  // ),
-                  // SizedBox(height: spacing.panelSectionSpacing),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        // return Column(
-        //   children: [
-        //     Text("Yo2: selected feature ids: ${selectedNodes.length}"),
-        //     ...inspectorCapabilityWidgets,
-        //   ],
-        // );
-      },
     );
   }
 }
