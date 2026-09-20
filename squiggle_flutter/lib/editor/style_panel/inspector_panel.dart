@@ -67,22 +67,12 @@ Iterable<InspectorFieldShell> _buildInspectorFields(
   EditorContext editorContext,
   List<Feature> features,
 ) {
-  final callbacksByFieldKey = <String, InspectorField>{};
-  for (final capability in features.expand(
-    (feature) => feature.kind.buildInspectorFields(),
-  )) {
-    final fieldKey = capability.fieldKey;
-    if (callbacksByFieldKey.containsKey(fieldKey)) {
-      callbacksByFieldKey[fieldKey]!.merge(capability);
-    } else {
-      callbacksByFieldKey[fieldKey] = capability;
-    }
-  }
-  return callbacksByFieldKey.values.map(
-    (capability) => capability.build(context, (result) {
+  final inspectorFieldByKey = InspectorField.byKeyForFeatures(features);
+  return inspectorFieldByKey.values.map(
+    (field) => field.build(context, (result) {
       editorContext.history.run('Inspector Update', (transaction) {
         transaction.watch(features);
-        capability.apply(result);
+        field.apply(result);
       });
     }),
   );
