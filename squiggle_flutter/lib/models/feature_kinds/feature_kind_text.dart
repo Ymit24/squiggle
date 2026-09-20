@@ -168,6 +168,22 @@ final class FeatureKindText extends FeatureKind
           verticalAlignment = value;
         },
       ),
+      InspectorHorizontalTextAlignmentCapability(
+        fieldKey: 'horizontalAlignment',
+        label: 'Horizontal Alignment',
+        value: horizontalAlignment,
+        onTextAlignChanged: (value) {
+          horizontalAlignment = value;
+        },
+      ),
+      InspectorFontSizeCapability(
+        fieldKey: 'fontSize',
+        label: 'Font Size',
+        value: fontSize,
+        onFontSizeChanged: (value) {
+          fontSize = value;
+        },
+      ),
     ];
   }
 }

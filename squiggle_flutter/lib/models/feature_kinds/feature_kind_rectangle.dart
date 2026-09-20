@@ -100,6 +100,14 @@ final class FeatureKindRectangle extends FeatureKind
           fillColor = color;
         },
       ),
+      InspectorWidthCapability(
+        fieldKey: 'strokeWidth',
+        label: 'Stroke Width',
+        value: strokeWidth,
+        onWidthChanged: (width) {
+          strokeWidth = width;
+        },
+      ),
     ];
   }
 }
@@ -117,6 +125,10 @@ abstract class InspectorCapability<T> {
     required this.values,
     required this.callbacks,
   });
+
+  T get activeValue => values.first;
+
+  bool get isMixed => values.toSet().length > 1;
 
   void merge(InspectorCapability<T> other) {
     values.addAll(other.values);
@@ -148,15 +160,14 @@ class InspectorColorCapability extends InspectorCapability<Color> {
     BuildContext context,
     void Function(Color) onUpdate,
   ) {
-    final isStrokeMixed = values.toSet().length > 1;
     final activeStrokePresetIndex = stylePresets.indexOf(
-      stylePresets.firstWhere((preset) => preset.strokeColor == values.first),
+      stylePresets.firstWhere((preset) => preset.strokeColor == activeValue),
     );
     return InspectorCapabilityFieldShell(
       label: label,
       child: ColorRow(
         presets: stylePresets.map((preset) => preset.strokeColor).toList(),
-        activePresetIndex: isStrokeMixed ? null : activeStrokePresetIndex,
+        activePresetIndex: isMixed ? null : activeStrokePresetIndex,
         noneEnabled: true,
         onPresetSelected: (index) {
           final color = stylePresets[index].strokeColor;
@@ -181,14 +192,119 @@ class InspectorVerticalTextAlignmentCapability
     BuildContext context,
     void Function(TextVerticalAlignment) onUpdate,
   ) {
-    final activeVerticalAlignment = values.first;
-    final verticalAlignmentMixed = values.toSet().length > 1;
     return InspectorCapabilityFieldShell(
       label: label,
       child: TextVerticalAlignmentSelector(
-        activeAlignment: activeVerticalAlignment,
-        isMixed: verticalAlignmentMixed,
+        activeAlignment: activeValue,
+        isMixed: isMixed,
         onAlignmentSelected: onUpdate,
+      ),
+    );
+  }
+}
+
+class InspectorHorizontalTextAlignmentCapability
+    extends InspectorCapability<TextHorizontalAlignment> {
+  InspectorHorizontalTextAlignmentCapability({
+    required super.fieldKey,
+    required super.label,
+    required TextHorizontalAlignment value,
+    required ValueChanged<TextHorizontalAlignment> onTextAlignChanged,
+  }) : super(values: [value], callbacks: [onTextAlignChanged]);
+
+  @override
+  InspectorCapabilityFieldShell build(
+    BuildContext context,
+    void Function(TextHorizontalAlignment) onUpdate,
+  ) {
+    return InspectorCapabilityFieldShell(
+      label: label,
+      child: TextHorizontalAlignmentSelector(
+        activeAlignment: activeValue,
+        isMixed: isMixed,
+        onAlignmentSelected: onUpdate,
+      ),
+    );
+  }
+}
+
+class InspectorWidthCapability extends InspectorCapability<double> {
+  InspectorWidthCapability({
+    required super.fieldKey,
+    required super.label,
+    required double value,
+    required ValueChanged<double> onWidthChanged,
+  }) : super(values: [value], callbacks: [onWidthChanged]);
+
+  @override
+  InspectorCapabilityFieldShell build(
+    BuildContext context,
+    void Function(double) onUpdate,
+  ) {
+    return InspectorCapabilityFieldShell(
+      label: label,
+      child: StrokeWidthSelector(
+        activePreset: StrokeWidthPreset.fromWidth(activeValue),
+        isMixed: isMixed,
+        onPresetSelected: (StrokeWidthPreset value) {
+          onUpdate(value.width);
+        },
+      ),
+    );
+  }
+}
+
+class InspectorFontSizeCapability extends InspectorCapability<double> {
+  InspectorFontSizeCapability({
+    required super.fieldKey,
+    required super.label,
+    required double value,
+    required ValueChanged<double> onFontSizeChanged,
+  }) : super(values: [value], callbacks: [onFontSizeChanged]);
+
+  @override
+  InspectorCapabilityFieldShell build(
+    BuildContext context,
+    void Function(double) onUpdate,
+  ) {
+    return InspectorCapabilityFieldShell(
+      label: label,
+      child: FontSizeSelector(
+        activePreset: FontSizePreset.fromSize(activeValue),
+        isMixed: isMixed,
+        onPresetSelected: (FontSizePreset value) {
+          onUpdate(value.size);
+        },
+      ),
+    );
+  }
+}
+
+class InspectorEndCapCapability extends InspectorCapability<LineEndCap> {
+  InspectorEndCapCapability({
+    required super.fieldKey,
+    required super.label,
+    required this.isStart,
+    required LineEndCap value,
+    required ValueChanged<LineEndCap> onEndCapChanged,
+  }) : super(values: [value], callbacks: [onEndCapChanged]);
+
+  final bool isStart;
+
+  @override
+  InspectorCapabilityFieldShell build(
+    BuildContext context,
+    void Function(LineEndCap) onUpdate,
+  ) {
+    return InspectorCapabilityFieldShell(
+      label: label,
+      child: LineEndCapSelector(
+        activeEndCap: activeValue,
+        isMixed: isMixed,
+        isStart: isStart,
+        onEndCapSelected: (LineEndCap value) {
+          onUpdate(value);
+        },
       ),
     );
   }

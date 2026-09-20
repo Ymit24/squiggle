@@ -281,6 +281,32 @@ final class FeatureKindPolyline extends FeatureKind
           strokeColor = color;
         },
       ),
+      InspectorWidthCapability(
+        fieldKey: 'strokeWidth',
+        label: 'Stroke Width',
+        value: strokeWidth,
+        onWidthChanged: (width) {
+          strokeWidth = width;
+        },
+      ),
+      InspectorEndCapCapability(
+        fieldKey: 'startEndCap',
+        label: 'Start End Cap',
+        isStart: true,
+        value: startEndCap,
+        onEndCapChanged: (endCap) {
+          startEndCap = endCap;
+        },
+      ),
+      InspectorEndCapCapability(
+        fieldKey: 'endEndCap',
+        label: 'End End Cap',
+        isStart: false,
+        value: endEndCap,
+        onEndCapChanged: (endCap) {
+          endEndCap = endCap;
+        },
+      ),
     ];
   }
 }

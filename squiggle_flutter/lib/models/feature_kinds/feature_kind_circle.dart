@@ -101,6 +101,14 @@ final class FeatureKindCircle extends FeatureKind
           fillColor = color;
         },
       ),
+      InspectorWidthCapability(
+        fieldKey: 'strokeWidth',
+        label: 'Stroke Width',
+        value: strokeWidth,
+        onWidthChanged: (width) {
+          strokeWidth = width;
+        },
+      ),
     ];
   }
 }
