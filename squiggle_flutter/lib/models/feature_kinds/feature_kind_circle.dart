@@ -106,9 +106,9 @@ final class FeatureKindCircle extends FeatureKind
   }
 
   @override
-  Iterable<InspectorCapability> buildInspectorCapabilities() {
+  Iterable<InspectorField> buildInspectorFields() {
     return [
-      InspectorColorCapability(
+      InspectorColorField(
         fieldKey: 'strokeColor',
         label: 'Stroke Color',
         value: strokeColor,
@@ -116,7 +116,7 @@ final class FeatureKindCircle extends FeatureKind
           strokeColor = color;
         },
       ),
-      InspectorColorCapability(
+      InspectorColorField(
         fieldKey: 'fillColor',
         label: 'Fill Color',
         value: fillColor,
@@ -124,7 +124,7 @@ final class FeatureKindCircle extends FeatureKind
           fillColor = color;
         },
       ),
-      InspectorWidthCapability(
+      InspectorWidthField(
         fieldKey: 'strokeWidth',
         label: 'Stroke Width',
         value: strokeWidth,
@@ -132,7 +132,7 @@ final class FeatureKindCircle extends FeatureKind
           strokeWidth = width;
         },
       ),
-      InspectorFontSizeCapability(
+      InspectorFontSizeField(
         fieldKey: 'fontSize',
         label: 'Font Size',
         value: labelFontSize,
@@ -140,7 +140,7 @@ final class FeatureKindCircle extends FeatureKind
           labelFontSize = size;
         },
       ),
-      InspectorVerticalTextAlignmentCapability(
+      InspectorVerticalTextAlignmentField(
         fieldKey: 'verticalAlignment',
         label: 'Vertical Alignment',
         value: labelVerticalAlignment,
@@ -148,7 +148,7 @@ final class FeatureKindCircle extends FeatureKind
           labelVerticalAlignment = alignment;
         },
       ),
-      InspectorHorizontalTextAlignmentCapability(
+      InspectorHorizontalTextAlignmentField(
         fieldKey: 'horizontalAlignment',
         label: 'Horizontal Alignment',
         value: labelHorizontalAlignment,

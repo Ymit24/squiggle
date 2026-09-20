@@ -9,7 +9,7 @@ import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/feature_kinds/inspector_capability.dart';
+import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
@@ -21,7 +21,7 @@ sealed class FeatureKind {
   Map<String, dynamic> toDataModel();
 
   // TODO: Delete me
-  Iterable<InspectorCapability> buildInspectorCapabilities() {
+  Iterable<InspectorField> buildInspectorFields() {
     return [];
   }
 

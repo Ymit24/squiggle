@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/line_end_cap_selector.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_kinds/inspector_capability.dart';
+import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
-class InspectorEndCapCapability extends InspectorCapability<LineEndCap> {
-  InspectorEndCapCapability({
+class InspectorEndCapField extends InspectorField<LineEndCap> {
+  InspectorEndCapField({
     required super.fieldKey,
     required super.label,
     required this.isStart,
@@ -13,10 +13,10 @@ class InspectorEndCapCapability extends InspectorCapability<LineEndCap> {
   }) : super(values: [value], callbacks: [onEndCapChanged]);
   final bool isStart;
   @override
-  InspectorCapabilityFieldShell build(
+  InspectorFieldShell build(
     BuildContext context,
     void Function(LineEndCap) onUpdate,
-  ) => InspectorCapabilityFieldShell(
+  ) => InspectorFieldShell(
     label: label,
     child: LineEndCapSelector(
       activeEndCap: activeValue,

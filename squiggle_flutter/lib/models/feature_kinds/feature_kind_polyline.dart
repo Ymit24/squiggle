@@ -271,9 +271,9 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   @override
-  Iterable<InspectorCapability> buildInspectorCapabilities() {
+  Iterable<InspectorField> buildInspectorFields() {
     return [
-      InspectorColorCapability(
+      InspectorColorField(
         fieldKey: 'strokeColor',
         label: 'Stroke Color',
         value: strokeColor,
@@ -281,7 +281,7 @@ final class FeatureKindPolyline extends FeatureKind
           strokeColor = color;
         },
       ),
-      InspectorWidthCapability(
+      InspectorWidthField(
         fieldKey: 'strokeWidth',
         label: 'Stroke Width',
         value: strokeWidth,
@@ -289,7 +289,7 @@ final class FeatureKindPolyline extends FeatureKind
           strokeWidth = width;
         },
       ),
-      InspectorEndCapCapability(
+      InspectorEndCapField(
         fieldKey: 'startEndCap',
         label: 'Start End Cap',
         isStart: true,
@@ -298,7 +298,7 @@ final class FeatureKindPolyline extends FeatureKind
           startEndCap = endCap;
         },
       ),
-      InspectorEndCapCapability(
+      InspectorEndCapField(
         fieldKey: 'endEndCap',
         label: 'End End Cap',
         isStart: false,

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
-import 'package:squiggle_flutter/models/feature_kinds/inspector_capability.dart';
+import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
-class InspectorColorCapability extends InspectorCapability<Color> {
-  InspectorColorCapability({
+class InspectorColorField extends InspectorField<Color> {
+  InspectorColorField({
     required super.fieldKey,
     required super.label,
     required Color value,
     required ValueChanged<Color> onColorChanged,
   }) : super(values: [value], callbacks: [onColorChanged]);
   @override
-  InspectorCapabilityFieldShell build(
+  InspectorFieldShell build(
     BuildContext context,
     void Function(Color) onUpdate,
-  ) => InspectorCapabilityFieldShell(
+  ) => InspectorFieldShell(
     label: label,
     child: ColorRow(
       presets: stylePresets.map((item) => item.strokeColor).toList(),

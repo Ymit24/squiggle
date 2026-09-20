@@ -142,9 +142,9 @@ final class FeatureKindText extends FeatureKind
   }
 
   @override
-  Iterable<InspectorCapability<dynamic>> buildInspectorCapabilities() {
+  Iterable<InspectorField> buildInspectorFields() {
     return [
-      InspectorColorCapability(
+      InspectorColorField(
         fieldKey: 'strokeColor',
         label: 'Stroke Color',
         value: strokeColor,
@@ -152,7 +152,7 @@ final class FeatureKindText extends FeatureKind
           strokeColor = color;
         },
       ),
-      InspectorColorCapability(
+      InspectorColorField(
         fieldKey: 'fillColor',
         label: 'Fill Color',
         value: fillColor,
@@ -160,7 +160,7 @@ final class FeatureKindText extends FeatureKind
           fillColor = color;
         },
       ),
-      InspectorVerticalTextAlignmentCapability(
+      InspectorVerticalTextAlignmentField(
         fieldKey: 'verticalAlignment',
         label: 'Vertical Alignment',
         value: verticalAlignment,
@@ -168,7 +168,7 @@ final class FeatureKindText extends FeatureKind
           verticalAlignment = value;
         },
       ),
-      InspectorHorizontalTextAlignmentCapability(
+      InspectorHorizontalTextAlignmentField(
         fieldKey: 'horizontalAlignment',
         label: 'Horizontal Alignment',
         value: horizontalAlignment,
@@ -176,7 +176,7 @@ final class FeatureKindText extends FeatureKind
           horizontalAlignment = value;
         },
       ),
-      InspectorFontSizeCapability(
+      InspectorFontSizeField(
         fieldKey: 'fontSize',
         label: 'Font Size',
         value: fontSize,
