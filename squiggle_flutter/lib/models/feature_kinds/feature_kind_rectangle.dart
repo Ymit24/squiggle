@@ -11,6 +11,9 @@ final class FeatureKindRectangle extends FeatureKind
     this.fillColor = defaultFeatureFillColor,
     this.strokeWidth = defaultStrokeWidth,
     this.label = '',
+    this.labelFontSize = _labelFontSize,
+    this.labelVerticalAlignment = TextVerticalAlignment.center,
+    this.labelHorizontalAlignment = TextHorizontalAlignment.center,
   });
 
   @override
@@ -25,12 +28,23 @@ final class FeatureKindRectangle extends FeatureKind
   @override
   String label;
 
+  double labelFontSize;
+  TextVerticalAlignment labelVerticalAlignment;
+  TextHorizontalAlignment labelHorizontalAlignment;
+
   factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindRectangle(
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         fillColor: _colorFromDataModel(content, 'fillColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
         label: content['label'],
+        labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
+        labelVerticalAlignment: TextVerticalAlignment.values.byName(
+          content['verticalAlignment'] as String,
+        ),
+        labelHorizontalAlignment: TextHorizontalAlignment.values.byName(
+          content['labelHorizontalAlignment'] as String,
+        ),
       );
 
   @override
@@ -40,6 +54,9 @@ final class FeatureKindRectangle extends FeatureKind
     'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
     'label': label,
+    'labelFontSize': labelFontSize,
+    'labelVerticalAlignment': labelVerticalAlignment.index,
+    'labelHorizontalAlignment': labelHorizontalAlignment.index,
   };
 
   @override
@@ -76,8 +93,10 @@ final class FeatureKindRectangle extends FeatureKind
       canvas,
       label,
       _paddedLabelBounds(bounds),
-      fontSize: _labelFontSize,
+      fontSize: labelFontSize,
       fillColor: Color.fromARGB(255, 255, 255, 255),
+      horizontalAlignment: labelHorizontalAlignment,
+      verticalAlignment: labelVerticalAlignment,
     );
   }
 
@@ -106,6 +125,30 @@ final class FeatureKindRectangle extends FeatureKind
         value: strokeWidth,
         onWidthChanged: (width) {
           strokeWidth = width;
+        },
+      ),
+      InspectorFontSizeCapability(
+        fieldKey: 'fontSize',
+        label: 'Font Size',
+        value: labelFontSize,
+        onFontSizeChanged: (size) {
+          labelFontSize = size;
+        },
+      ),
+      InspectorVerticalTextAlignmentCapability(
+        fieldKey: 'verticalAlignment',
+        label: 'Vertical Alignment',
+        value: labelVerticalAlignment,
+        onTextAlignChanged: (alignment) {
+          labelVerticalAlignment = alignment;
+        },
+      ),
+      InspectorHorizontalTextAlignmentCapability(
+        fieldKey: 'horizontalAlignment',
+        label: 'Horizontal Alignment',
+        value: labelHorizontalAlignment,
+        onTextAlignChanged: (alignment) {
+          labelHorizontalAlignment = alignment;
         },
       ),
     ];
@@ -160,9 +203,12 @@ class InspectorColorCapability extends InspectorCapability<Color> {
     BuildContext context,
     void Function(Color) onUpdate,
   ) {
-    final activeStrokePresetIndex = stylePresets.indexOf(
-      stylePresets.firstWhere((preset) => preset.strokeColor == activeValue),
+    final stylePreset = stylePresets.firstWhereOrNull(
+      (preset) => preset.strokeColor == activeValue,
     );
+    final activeStrokePresetIndex = stylePreset != null
+        ? stylePresets.indexOf(stylePreset)
+        : null;
     return InspectorCapabilityFieldShell(
       label: label,
       child: ColorRow(
