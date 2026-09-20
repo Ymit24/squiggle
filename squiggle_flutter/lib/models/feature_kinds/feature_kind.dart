@@ -1,15 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/line_end_cap_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
@@ -17,6 +9,7 @@ import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/feature_kinds/inspector_capability.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
