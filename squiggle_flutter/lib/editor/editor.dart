@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
@@ -79,6 +80,10 @@ class Editor extends StatelessWidget {
                           state: textEditState,
                           viewportSize: viewportSize,
                         ),
+                      Positioned(
+                        top: context.squiggleTheme.spacing.overlayTop,
+                        child: BackToContent(editorContext: editorContext),
+                      ),
                     ],
                   );
                 },

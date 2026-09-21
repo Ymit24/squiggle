@@ -1,14 +1,22 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/node.dart';
+
 /// 2D camera mapping world coordinates to canvas-local screen space.
 ///
 /// All [screen] arguments are pixels relative to the [DocumentCanvas] render
 /// box (top-left is `(0, 0)`). Flutter layout offset is applied in paint, not
 /// here.
 class Camera {
-  Camera({this.location = Offset.zero, this.zoom = 1.0});
+  Camera({
+    this.location = Offset.zero,
+    this.screenSize = Size.zero,
+    this.zoom = 1.0,
+  });
 
   Offset location;
+  Size screenSize;
   double zoom;
 
   Offset worldToScreen(Offset world) {
@@ -72,4 +80,15 @@ class Camera {
 
   @override
   int get hashCode => Object.hash(location, zoom);
+
+  // TODO: TEST
+  Iterable<Node> getNodesInViewport(Document document) {
+    if (screenSize == Size.zero) {
+      return [];
+    }
+    final cameraBounds = location & (screenSize * zoom);
+    return document.nodes.where(
+      (node) => node.localBounds().overlaps(cameraBounds),
+    );
+  }
 }
