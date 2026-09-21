@@ -116,9 +116,6 @@ class RenderDocumentCanvas extends RenderBox {
     final document = _context.document;
     final camera = _context.camera;
 
-    // TODO: See if better place to put this.
-    camera.screenSize = size;
-
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
     canvas.clipRect(Offset.zero & size);

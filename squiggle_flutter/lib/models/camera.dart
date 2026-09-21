@@ -9,14 +9,9 @@ import 'package:squiggle_flutter/models/node.dart';
 /// box (top-left is `(0, 0)`). Flutter layout offset is applied in paint, not
 /// here.
 class Camera {
-  Camera({
-    this.location = Offset.zero,
-    this.screenSize = Size.zero,
-    this.zoom = 1.0,
-  });
+  Camera({this.location = Offset.zero, this.zoom = 1.0});
 
   Offset location;
-  Size screenSize;
   double zoom;
 
   Offset worldToScreen(Offset world) {
@@ -81,15 +76,10 @@ class Camera {
   @override
   int get hashCode => Object.hash(location, zoom);
 
-  // TODO: Move this code into document as like 'getNodesInBounds' and then this method here just calls that with the camera bounds.
-  // TODO: TEST whatever is left after previous comment
-  Iterable<Node> getNodesInViewport(Document document) {
-    if (screenSize == Size.zero) {
+  Iterable<Node> getNodesInViewport(Document document, Size viewportSize) {
+    if (viewportSize == Size.zero) {
       return [];
     }
-    final cameraBounds = location & (screenSize * zoom);
-    return document.nodes.where(
-      (node) => node.localBounds().overlaps(cameraBounds),
-    );
+    return document.nodesInBounds(location & (viewportSize * zoom));
   }
 }

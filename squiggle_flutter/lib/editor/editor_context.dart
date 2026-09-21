@@ -51,6 +51,18 @@ class EditorContext extends ChangeNotifier {
   /// Viewport size in screen pixels, written by the viewport widget.
   Size viewportSize = Size.zero;
 
+  VoidCallback? _cancelViewportMotion;
+
+  void attachViewportMotionCanceller(VoidCallback cancel) {
+    _cancelViewportMotion = cancel;
+  }
+
+  void detachViewportMotionCanceller(VoidCallback cancel) {
+    if (_cancelViewportMotion == cancel) _cancelViewportMotion = null;
+  }
+
+  void cancelViewportMotion() => _cancelViewportMotion?.call();
+
   void _forward() => notifyListeners();
 
   /// Notifies observers that the camera or viewport changed.

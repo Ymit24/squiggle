@@ -2,6 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
+void jumpBackToContent(EditorContext context) {
+  final nodes = context.document.nodes;
+  if (nodes.isEmpty || context.viewportSize == Size.zero) return;
+
+  final cameraOrigin = context.camera.location;
+  var closest = nodes.first;
+  var closestDistance = (closest.origin - cameraOrigin).distanceSquared;
+  for (final node in nodes.skip(1)) {
+    final distance = (node.origin - cameraOrigin).distanceSquared;
+    if (distance < closestDistance) {
+      closest = node;
+      closestDistance = distance;
+    }
+  }
+
+  context.cancelViewportMotion();
+  context.camera.location = closest.globalOrigin;
+  context.camera.panByScreenDelta(context.viewportSize.center(Offset.zero));
+  context.notifyViewportChanged();
+}
+
 class BackToContent extends StatefulWidget {
   const BackToContent({super.key, required this.editorContext});
 
@@ -21,6 +42,7 @@ class _BackToContentState extends State<BackToContent> {
       builder: (context, _) {
         final nodesOnScreen = widget.editorContext.camera.getNodesInViewport(
           widget.editorContext.document,
+          widget.editorContext.viewportSize,
         );
 
         if (nodesOnScreen.isNotEmpty ||
@@ -34,7 +56,7 @@ class _BackToContentState extends State<BackToContent> {
           onExit: (_) => setState(() => _hovering = false),
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
-            onTap: onJumpBackToContent,
+            onTap: () => jumpBackToContent(widget.editorContext),
             behavior: HitTestBehavior.opaque,
             child: DecoratedBox(
               decoration: theme.decorations.floatingPanel().copyWith(
@@ -70,33 +92,5 @@ class _BackToContentState extends State<BackToContent> {
         );
       },
     );
-  }
-
-  // TODO: Write tests for this code.
-  void onJumpBackToContent() {
-    final cameraOrigin = widget.editorContext.camera.location;
-    final nodes = widget.editorContext.document.nodes;
-
-    var closest = (
-      nodes.first,
-      (nodes.first.origin - cameraOrigin).distanceSquared,
-    );
-
-    for (final node in nodes) {
-      final distanceSquared = (node.origin - cameraOrigin).distanceSquared;
-      if (distanceSquared < closest.$2) {
-        closest = (node, distanceSquared);
-      }
-    }
-
-    // TODO: Need a way to cancel fling when jumping camera programmatically like this.
-    widget.editorContext.camera.location = closest.$1.globalOrigin;
-    widget.editorContext.camera.panByScreenDelta(
-      Offset(
-        widget.editorContext.camera.screenSize.width / 2,
-        widget.editorContext.camera.screenSize.height / 2,
-      ),
-    );
-    widget.editorContext.notifyViewportChanged();
   }
 }
