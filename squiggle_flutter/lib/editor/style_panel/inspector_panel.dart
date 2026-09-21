@@ -25,8 +25,6 @@ class InspectorPanel extends StatelessWidget {
             .whereType<Feature>();
         if (selectedNodes.isEmpty) return SizedBox.shrink();
 
-        print("Building inspector.");
-
         return DecoratedBox(
           decoration: theme.decorations.floatingPanel(),
           child: ClipRRect(
