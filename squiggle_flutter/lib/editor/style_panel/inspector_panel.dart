@@ -24,7 +24,10 @@ class InspectorPanel extends StatelessWidget {
         final selectedNodes = editorContext.selection.selectedNodeIds.map(
           (nodeId) => editorContext.document.requireNodeById(nodeId),
         );
-        if (selectedNodes.isEmpty) return SizedBox.shrink();
+        final selectedFeatures = selectedNodes.whereType<Feature>().toList();
+        if (selectedFeatures.isEmpty || selectedNodes.length < 2) {
+          return SizedBox.shrink();
+        }
 
         return DecoratedBox(
           decoration: theme.decorations.floatingPanel(),
@@ -39,7 +42,7 @@ class InspectorPanel extends StatelessWidget {
                 children: [
                   InspectorFields(
                     editorContext: editorContext,
-                    features: selectedNodes.whereType<Feature>().toList(),
+                    features: selectedFeatures,
                   ),
                   InspectorLayoutActions(
                     editorContext: editorContext,
