@@ -14,11 +14,15 @@ abstract class InspectorField<T> {
     required this.values,
     required this.callbacks,
   });
+
   String fieldKey;
   String label;
+
   List<T> values;
   List<Function(T)> callbacks;
+
   T get activeValue => values.first;
+
   bool get isMixed => values.toSet().length > 1;
 
   static Map<String, InspectorField> byKeyForFeatures(List<Feature> features) {
@@ -42,6 +46,7 @@ abstract class InspectorField<T> {
   }
 
   InspectorFieldShell build(BuildContext context, void Function(T) onUpdate);
+
   void apply(T value) {
     for (final callback in callbacks) {
       callback(value);

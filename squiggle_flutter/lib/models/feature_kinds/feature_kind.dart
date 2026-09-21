@@ -20,7 +20,7 @@ part 'feature_kind_image.dart';
 sealed class FeatureKind {
   Map<String, dynamic> toDataModel();
 
-  // TODO: Delete me
+  // TODO: port this to reflection
   Iterable<InspectorField> buildInspectorFields() {
     return [];
   }
