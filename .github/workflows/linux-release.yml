@@ -1,15 +1,23 @@
 name: Linux release
 
 on:
-  pull_request_target:
+  push:
     branches:
       - main
-    types:
-      - closed
   workflow_dispatch:
+    inputs:
+      bump:
+        description: Version component to increment
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: linux-release
@@ -18,10 +26,6 @@ concurrency:
 jobs:
   release:
     name: Build and release Linux app
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'release:minor'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -36,7 +40,84 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Resolve version bump
+        id: bump
+        shell: bash
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          MANUAL_BUMP: ${{ inputs.bump }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          bump="patch"
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            bump="$MANUAL_BUMP"
+          else
+            labels="$(
+              gh api \
+                -H "Accept: application/vnd.github+json" \
+                "repos/${REPOSITORY}/commits/${COMMIT_SHA}/pulls" \
+                --jq '.[].labels[].name'
+            )"
+
+            if grep -Fxq "release:minor" <<< "$labels"; then
+              bump="minor"
+            fi
+          fi
+
+          case "$bump" in
+            patch|minor) ;;
+            *)
+              echo "Unsupported version bump: '$bump'." >&2
+              exit 1
+              ;;
+          esac
+
+          echo "Using $bump version bump."
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+          if [[ "$bump" == "minor" ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Increment pre-1.0 version
+        id: version
+        shell: bash
+        env:
+          BUMP: ${{ steps.bump.outputs.bump }}
+        run: |
+          set -euo pipefail
+
+          current_version="$(sed -nE 's/^version: ([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)$/\1+\2/p' pubspec.yaml)"
+          if [[ ! "$current_version" =~ ^0\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
+            echo "Expected a zero-based Flutter version such as 0.0.1+2; found '$current_version'." >&2
+            exit 1
+          fi
+
+          minor="${BASH_REMATCH[1]}"
+          patch="${BASH_REMATCH[2]}"
+          build="${BASH_REMATCH[3]}"
+
+          if [[ "$BUMP" == "minor" ]]; then
+            next_version="0.$((minor + 1)).0+$((build + 1))"
+          else
+            next_version="0.${minor}.$((patch + 1))+$((build + 1))"
+          fi
+
+          release_version="${next_version%%+*}"
+
+          sed -i -E "s/^version: .+$/version: ${next_version}/" pubspec.yaml
+          echo "flutter_version=${next_version}" >> "$GITHUB_OUTPUT"
+          echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${release_version}" >> "$GITHUB_OUTPUT"
+
       - name: Install Linux build dependencies
+        if: steps.bump.outputs.release == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -48,45 +129,27 @@ jobs:
             libstdc++-12-dev
 
       - name: Set up Flutter
+        if: steps.bump.outputs.release == 'true'
         uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.44.0
           channel: stable
           cache: true
 
-      - name: Increment pre-1.0 version
-        id: version
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          current_version="$(sed -nE 's/^version: ([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)$/\1+\2/p' pubspec.yaml)"
-          if [[ ! "$current_version" =~ ^0\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
-            echo "Expected a zero-based Flutter version such as 0.0.1+2; found '$current_version'." >&2
-            exit 1
-          fi
-
-          minor="${BASH_REMATCH[1]}"
-          build="${BASH_REMATCH[3]}"
-          next_version="0.$((minor + 1)).0+$((build + 1))"
-
-          release_version="${next_version%%+*}"
-
-          sed -i -E "s/^version: .+$/version: ${next_version}/" pubspec.yaml
-          echo "flutter_version=${next_version}" >> "$GITHUB_OUTPUT"
-          echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
-          echo "tag=v${release_version}" >> "$GITHUB_OUTPUT"
-
       - name: Get dependencies
+        if: steps.bump.outputs.release == 'true'
         run: flutter pub get
 
       - name: Run tests
+        if: steps.bump.outputs.release == 'true'
         run: flutter test
 
       - name: Build Linux release
+        if: steps.bump.outputs.release == 'true'
         run: flutter build linux --release
 
       - name: Package Linux bundle
+        if: steps.bump.outputs.release == 'true'
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
         run: |
@@ -95,8 +158,9 @@ jobs:
             -czf "${GITHUB_WORKSPACE}/squiggle_flutter/squiggle-linux-x64-v${RELEASE_VERSION}.tar.gz" \
             .
 
-      - name: Commit version and tag release
+      - name: Commit version bump
         env:
+          RELEASE: ${{ steps.bump.outputs.release }}
           TAG: ${{ steps.version.outputs.tag }}
           FLUTTER_VERSION: ${{ steps.version.outputs.flutter_version }}
         run: |
@@ -104,10 +168,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml
           git commit -m "chore: bump version to ${FLUTTER_VERSION} [skip ci]"
-          git tag -a "$TAG" -m "Release $TAG"
-          git push origin HEAD:main "$TAG"
+          if [[ "$RELEASE" == "true" ]]; then
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin HEAD:main "$TAG"
+          else
+            git push origin HEAD:main
+          fi
 
       - name: Create GitHub release
+        if: steps.bump.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
