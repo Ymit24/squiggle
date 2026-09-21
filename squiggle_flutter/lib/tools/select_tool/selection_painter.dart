@@ -31,9 +31,15 @@ abstract final class SelectionPainter {
     Camera camera,
     EditorContext context,
   ) {
+    final showResizeHandles = context.selection.selectedNodeIds.length == 1;
     for (final featureId in context.selection.selectedNodeIds) {
       final node = context.document.requireNodeById(featureId);
-      paintSelectionBox(canvas, camera, node.localBounds());
+      paintSelectionBox(
+        canvas,
+        camera,
+        node.localBounds(),
+        showResizeHandles: showResizeHandles,
+      );
     }
   }
 
@@ -57,8 +63,9 @@ abstract final class SelectionPainter {
   static void paintSelectionBox(
     Canvas canvas,
     Camera camera,
-    Rect worldBounds,
-  ) {
+    Rect worldBounds, {
+    bool showResizeHandles = true,
+  }) {
     final inflatedBounds = worldBounds.inflate(boxPadding);
     final worldHandleSize = camera.screenLengthToWorldLength(handleSize);
     final halfWorldHandleSize = worldHandleSize / 2;
@@ -70,6 +77,8 @@ abstract final class SelectionPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = camera.screenLengthToWorldLength(2),
     );
+    if (!showResizeHandles) return;
+
     for (final center in [
       inflatedBounds.topLeft - Offset(halfWorldHandleSize, halfWorldHandleSize),
       inflatedBounds.topRight +
