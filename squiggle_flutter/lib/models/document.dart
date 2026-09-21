@@ -83,6 +83,10 @@ class Document extends NodeContainer {
     return null;
   }
 
+  /// Root nodes whose bounds overlap [worldBounds].
+  Iterable<Node> nodesInBounds(Rect worldBounds) =>
+      _rootNodes.where((node) => node.localBounds().overlaps(worldBounds));
+
   /// Adds [feature], assigning an id when it has [noId].
   ///
   /// Returns the added feature (which may now carry an assigned id).

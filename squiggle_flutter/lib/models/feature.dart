@@ -87,8 +87,6 @@ class Feature extends Node {
   @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
 
-  Offset center() => localBounds().center;
-
   @override
   Feature copyWith({
     NodeId? id,

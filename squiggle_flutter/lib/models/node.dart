@@ -65,4 +65,6 @@ abstract class Node {
   bool hitTest(Offset worldPoint);
 
   void resize(Rect bounds);
+
+  Offset center() => localBounds().center;
 }

@@ -1,5 +1,8 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/node.dart';
+
 /// 2D camera mapping world coordinates to canvas-local screen space.
 ///
 /// All [screen] arguments are pixels relative to the [DocumentCanvas] render
@@ -72,4 +75,11 @@ class Camera {
 
   @override
   int get hashCode => Object.hash(location, zoom);
+
+  Iterable<Node> getNodesInViewport(Document document, Size viewportSize) {
+    if (viewportSize == Size.zero) {
+      return [];
+    }
+    return document.nodesInBounds(location & (viewportSize * zoom));
+  }
 }

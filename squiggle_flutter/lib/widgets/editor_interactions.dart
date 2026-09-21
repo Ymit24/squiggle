@@ -59,10 +59,12 @@ class _EditorInteractionsState extends State<EditorInteractions>
   void initState() {
     super.initState();
     _flingController = FlingController(vsync: this, onPan: _onFlingPan);
+    widget.context.attachViewportMotionCanceller(_flingController.stop);
   }
 
   @override
   void dispose() {
+    widget.context.detachViewportMotionCanceller(_flingController.stop);
     _flingController.dispose();
     super.dispose();
   }
