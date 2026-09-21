@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_pressable.dart';
 
-class Button extends StatefulWidget {
+class Button extends StatelessWidget {
   const Button({
     super.key,
     this.iconAsset,
@@ -21,75 +22,60 @@ class Button extends StatefulWidget {
   final VoidCallback? onPressed;
 
   @override
-  State<Button> createState() => _ButtonState();
-}
-
-class _ButtonState extends State<Button> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final spacing = theme.spacing;
     final colors = theme.colors;
-    final isEnabled = widget.onPressed != null;
+    final isEnabled = onPressed != null;
     final foregroundColor = !isEnabled
         ? colors.surface1
-        : widget.isActive
+        : isActive
         ? colors.text
         : colors.subtext0;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = isEnabled),
-      onExit: (_) => setState(() => _hovering = false),
-      cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: spacing.toolbarButtonSize,
-          height: spacing.toolbarButtonSize,
-          child: DecoratedBox(
-            decoration: theme.decorations.toolbarButton(
-              isActive: widget.isActive,
-              isHovering: _hovering,
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Center(
-                  child: widget.iconAsset != null
-                      ? SvgPicture.asset(
-                          widget.iconAsset!,
-                          width: spacing.toolbarIconSize,
-                          height: spacing.toolbarIconSize,
-                          fit: BoxFit.contain,
-                          colorFilter: ColorFilter.mode(
-                            foregroundColor,
-                            BlendMode.srcIn,
-                          ),
-                        )
-                      : widget.icon != null
-                      ? Icon(
-                          widget.icon,
-                          size: spacing.toolbarIconSize,
-                          color: foregroundColor,
-                        )
-                      : Text(
-                          widget.label!,
-                          style: theme.typography.buttonLabel(
-                            isActive: widget.isActive,
-                          ),
+    return SquigglePressable(
+      onPressed: onPressed,
+      builder: (context, state) => SizedBox(
+        width: spacing.toolbarButtonSize,
+        height: spacing.toolbarButtonSize,
+        child: DecoratedBox(
+          decoration: theme.decorations.toolbarButton(
+            isActive: isActive,
+            isHovering: state.isHighlighted,
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: iconAsset != null
+                    ? SvgPicture.asset(
+                        iconAsset!,
+                        width: spacing.toolbarIconSize,
+                        height: spacing.toolbarIconSize,
+                        fit: BoxFit.contain,
+                        colorFilter: ColorFilter.mode(
+                          foregroundColor,
+                          BlendMode.srcIn,
                         ),
+                      )
+                    : icon != null
+                    ? Icon(
+                        icon,
+                        size: spacing.toolbarIconSize,
+                        color: foregroundColor,
+                      )
+                    : Text(
+                        label!,
+                        style: theme.typography.buttonLabel(isActive: isActive),
+                      ),
+              ),
+              if (hotkey != null)
+                Positioned(
+                  right: 3,
+                  bottom: 2,
+                  child: Text(hotkey!, style: theme.typography.hotkey),
                 ),
-                if (widget.hotkey != null)
-                  Positioned(
-                    right: 3,
-                    bottom: 2,
-                    child: Text(widget.hotkey!, style: theme.typography.hotkey),
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
