@@ -25,7 +25,7 @@ class InspectorPanel extends StatelessWidget {
           (nodeId) => editorContext.document.requireNodeById(nodeId),
         );
         final selectedFeatures = selectedNodes.whereType<Feature>().toList();
-        if (selectedFeatures.isEmpty || selectedNodes.length < 2) {
+        if (selectedFeatures.isEmpty && selectedNodes.length < 2) {
           return SizedBox.shrink();
         }
 
