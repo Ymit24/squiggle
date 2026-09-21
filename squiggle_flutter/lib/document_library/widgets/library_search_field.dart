@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class LibrarySearchField extends StatelessWidget {
   const LibrarySearchField({
@@ -61,18 +62,11 @@ class LibrarySearchField extends StatelessWidget {
             minHeight: libraryHeaderControlHeight,
           ),
           suffixIcon: query.isNotEmpty
-              ? IconButton(
+              ? SquiggleButton.icon(
                   onPressed: onClear,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 42,
-                    height: libraryHeaderControlHeight,
-                  ),
-                  icon: Icon(
-                    Icons.close_rounded,
-                    size: 15,
-                    color: theme.colors.subtext0,
-                  ),
+                  icon: const Icon(Icons.close_rounded, size: 15),
+                  tooltip: 'Clear search',
+                  variant: SquiggleButtonVariant.ghost,
                 )
               : Padding(
                   padding: const EdgeInsets.only(right: 10),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 Future<String?> showDocumentNameDialog(
   BuildContext context, {
@@ -113,34 +114,17 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        SquiggleButton(
+          label: 'Cancel',
+          variant: SquiggleButtonVariant.ghost,
           onPressed: () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(
-            foregroundColor: theme.colors.subtext0,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-          child: const Text('Cancel'),
         ),
         ValueListenableBuilder(
           valueListenable: _controller,
-          builder: (context, value, _) => FilledButton(
+          builder: (context, value, _) => SquiggleButton(
+            label: widget.confirmLabel,
+            variant: SquiggleButtonVariant.primary,
             onPressed: value.text.trim().isEmpty ? null : _submit,
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colors.text,
-              foregroundColor: Colors.black87,
-              disabledBackgroundColor: theme.colors.surface0,
-              disabledForegroundColor: theme.colors.subtext0.withValues(
-                alpha: 0.5,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(9),
-              ),
-            ),
-            child: Text(
-              widget.confirmLabel,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
           ),
         ),
       ],

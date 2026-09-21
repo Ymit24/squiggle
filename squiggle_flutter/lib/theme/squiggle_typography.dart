@@ -31,12 +31,6 @@ class SquiggleTypography {
 
   TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
-  TextStyle panelButtonLabel({required bool isPrimary}) => TextStyle(
-    color: isPrimary ? colors.base : colors.text,
-    fontSize: 13,
-    fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
-  );
-
   TextStyle swatchOverlayLabel({
     required bool isActive,
     required double fontSize,

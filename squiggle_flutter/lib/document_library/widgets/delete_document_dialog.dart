@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class DeleteDocumentDialog extends StatelessWidget {
   const DeleteDocumentDialog({super.key, required this.document});
@@ -56,28 +57,15 @@ class DeleteDocumentDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        SquiggleButton(
+          label: 'Cancel',
+          variant: SquiggleButtonVariant.ghost,
           onPressed: () => Navigator.of(context).pop(false),
-          style: TextButton.styleFrom(
-            foregroundColor: theme.colors.subtext0,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-          child: const Text('Cancel'),
         ),
-        FilledButton(
+        SquiggleButton(
+          label: 'Delete',
+          variant: SquiggleButtonVariant.danger,
           onPressed: () => Navigator.of(context).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFD95F5F),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(9),
-            ),
-          ),
-          child: const Text(
-            'Delete',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
         ),
       ],
     );

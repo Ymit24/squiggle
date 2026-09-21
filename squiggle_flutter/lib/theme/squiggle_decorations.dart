@@ -30,16 +30,6 @@ class SquiggleDecorations {
     borderRadius: BorderRadius.circular(radii.button),
   );
 
-  BoxDecoration panelButton({
-    required bool isPrimary,
-    required bool isHovering,
-  }) => BoxDecoration(
-    color: isPrimary
-        ? colors.accent.withValues(alpha: isHovering ? 0.85 : 1)
-        : (isHovering ? colors.surface0 : colors.surface1),
-    borderRadius: BorderRadius.circular(radii.button),
-  );
-
   InputDecoration textField() => InputDecoration(
     isDense: true,
     filled: true,

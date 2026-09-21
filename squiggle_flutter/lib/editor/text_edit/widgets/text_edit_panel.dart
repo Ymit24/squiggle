@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-import 'package:squiggle_flutter/widgets/squiggle_pressable.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class _AcceptTextIntent extends Intent {
   const _AcceptTextIntent();
@@ -109,53 +109,20 @@ class _TextEditPanelState extends State<TextEditPanel> {
                 spacing: spacing.textEditButtonSpacing,
                 runSpacing: spacing.textEditButtonSpacing,
                 children: [
-                  _PanelButton(label: 'Cancel', onPressed: widget.onCancel),
-                  _PanelButton(
+                  SquiggleButton(
+                    label: 'Cancel',
+                    size: SquiggleButtonSize.compact,
+                    onPressed: widget.onCancel,
+                  ),
+                  SquiggleButton(
                     label: 'Accept',
-                    isPrimary: true,
+                    variant: SquiggleButtonVariant.primary,
+                    size: SquiggleButtonSize.compact,
                     onPressed: _accept,
                   ),
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PanelButton extends StatelessWidget {
-  const _PanelButton({
-    required this.label,
-    required this.onPressed,
-    this.isPrimary = false,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-  final bool isPrimary;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final spacing = theme.spacing;
-
-    return SquigglePressable(
-      onPressed: onPressed,
-      builder: (context, state) => DecoratedBox(
-        decoration: theme.decorations.panelButton(
-          isPrimary: isPrimary,
-          isHovering: state.isHighlighted,
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: spacing.textEditButtonHorizontalPadding,
-            vertical: spacing.textEditButtonVerticalPadding,
-          ),
-          child: Text(
-            label,
-            style: theme.typography.panelButtonLabel(isPrimary: isPrimary),
           ),
         ),
       ),

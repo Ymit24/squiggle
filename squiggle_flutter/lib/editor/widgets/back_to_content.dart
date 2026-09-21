@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-import 'package:squiggle_flutter/widgets/squiggle_pressable.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 void jumpBackToContent(EditorContext context) {
   final nodes = context.document.nodes;
@@ -43,34 +42,10 @@ class BackToContent extends StatelessWidget {
           return SizedBox.shrink();
         }
 
-        final theme = context.squiggleTheme;
-        return SquigglePressable(
+        return SquiggleButton(
+          label: 'Back to content',
+          leading: const Icon(Icons.center_focus_strong_rounded),
           onPressed: () => jumpBackToContent(editorContext),
-          builder: (context, state) => DecoratedBox(
-            decoration: theme.decorations.floatingPanel().copyWith(
-              color: state.isHighlighted
-                  ? theme.colors.surface0.withValues(alpha: 0.85)
-                  : theme.colors.mantle,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.center_focus_strong_rounded,
-                    size: 16,
-                    color: theme.colors.subtext0,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Back to content',
-                    style: theme.typography.panelButtonLabel(isPrimary: false),
-                  ),
-                ],
-              ),
-            ),
-          ),
         );
       },
     );
