@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 
 void main() {
   test('screenToWorld and worldToScreen round-trip', () {
@@ -24,5 +26,23 @@ void main() {
       camera.screenToWorldBounds(screenBounds),
       const Rect.fromLTWH(120, 240, 100, 150),
     );
+  });
+
+  test('getNodesInViewport uses the camera world bounds', () {
+    final visible = Feature(
+      origin: const Offset(120, 220),
+      size: const Size(10, 10),
+      kind: FeatureKindRectangle(),
+    );
+    final hidden = Feature(
+      origin: const Offset(400, 400),
+      size: const Size(10, 10),
+      kind: FeatureKindRectangle(),
+    );
+    final document = Document.fromFeatures([visible, hidden]);
+    final camera = Camera(location: const Offset(100, 200), zoom: 2);
+
+    expect(camera.getNodesInViewport(document, const Size(100, 50)), [visible]);
+    expect(camera.getNodesInViewport(document, Size.zero), isEmpty);
   });
 }

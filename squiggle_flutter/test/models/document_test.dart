@@ -89,6 +89,24 @@ void main() {
     });
   });
 
+  test('nodesInBounds returns overlapping root nodes', () {
+    final overlapping = Feature(
+      origin: const Offset(5, 5),
+      size: const Size(10, 10),
+      kind: FeatureKindRectangle(),
+    );
+    final outside = Feature(
+      origin: const Offset(30, 30),
+      size: const Size(10, 10),
+      kind: FeatureKindRectangle(),
+    );
+    final document = Document.fromFeatures([overlapping, outside]);
+
+    expect(document.nodesInBounds(const Rect.fromLTWH(0, 0, 10, 10)), [
+      overlapping,
+    ]);
+  });
+
   group('Document Serde', () {
     group('Decode', () {
       test('Factory fromDataModel works with empty document', () {
