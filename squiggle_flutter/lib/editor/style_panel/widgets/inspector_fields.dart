@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -31,12 +30,8 @@ class InspectorFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: inspectorFieldWidgets
-          .map(
-            (widget) => [widget, SizedBox(height: spacing.panelSectionSpacing)],
-          )
-          .flattened
-          .toList(),
+      spacing: spacing.panelSectionSpacing,
+      children: inspectorFieldWidgets.toList(),
     );
   }
 }

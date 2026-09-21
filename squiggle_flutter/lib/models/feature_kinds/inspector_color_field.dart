@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
 class InspectorColorField extends InspectorField<Color> {

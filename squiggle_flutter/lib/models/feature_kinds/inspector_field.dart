@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 
 export 'inspector_color_field.dart';
@@ -46,19 +47,4 @@ abstract class InspectorField<T> {
       callback(value);
     }
   }
-}
-
-class InspectorFieldShell extends StatelessWidget {
-  const InspectorFieldShell({
-    super.key,
-    required this.child,
-    required this.label,
-  });
-  final Widget child;
-  final String label;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [Text(label), child],
-  );
 }
