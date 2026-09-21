@@ -40,7 +40,7 @@ final class FeatureKindRectangle extends FeatureKind
         label: content['label'],
         labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
         labelVerticalAlignment: TextVerticalAlignment.values.byName(
-          content['verticalAlignment'] as String,
+          content['labelVerticalAlignment'] as String,
         ),
         labelHorizontalAlignment: TextHorizontalAlignment.values.byName(
           content['labelHorizontalAlignment'] as String,
@@ -55,8 +55,8 @@ final class FeatureKindRectangle extends FeatureKind
     'strokeWidth': strokeWidth,
     'label': label,
     'labelFontSize': labelFontSize,
-    'labelVerticalAlignment': labelVerticalAlignment.index,
-    'labelHorizontalAlignment': labelHorizontalAlignment.index,
+    'labelVerticalAlignment': labelVerticalAlignment.name,
+    'labelHorizontalAlignment': labelHorizontalAlignment.name,
   };
 
   @override
@@ -65,6 +65,9 @@ final class FeatureKindRectangle extends FeatureKind
     fillColor: fillColor,
     strokeWidth: strokeWidth,
     label: label,
+    labelFontSize: labelFontSize,
+    labelVerticalAlignment: labelVerticalAlignment,
+    labelHorizontalAlignment: labelHorizontalAlignment,
   );
 
   @override

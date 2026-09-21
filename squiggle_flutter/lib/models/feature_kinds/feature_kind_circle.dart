@@ -56,8 +56,8 @@ final class FeatureKindCircle extends FeatureKind
     'strokeWidth': strokeWidth,
     'label': label,
     'labelFontSize': labelFontSize,
-    'labelVerticalAlignment': labelVerticalAlignment,
-    'labelHorizontalAlignment': labelHorizontalAlignment,
+    'labelVerticalAlignment': labelVerticalAlignment.name,
+    'labelHorizontalAlignment': labelHorizontalAlignment.name,
   };
 
   @override
