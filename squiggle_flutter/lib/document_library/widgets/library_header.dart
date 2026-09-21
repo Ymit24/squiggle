@@ -41,9 +41,9 @@ class LibraryHeader extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: maxLibraryWidth),
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              libraryHorizontalPadding(context),
+              kLibraryHorizontalPadding,
               14,
-              libraryHorizontalPadding(context),
+              kLibraryHorizontalPadding,
               14,
             ),
             child: LibraryTopBar(

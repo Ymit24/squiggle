@@ -88,7 +88,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                     builder: (context, _) {
                       final documents = _sorted(_filtered(library.documents));
                       final currentId = library.currentDocument?.id;
-                      final hPad = libraryHorizontalPadding(context);
+                      final hPad = kLibraryHorizontalPadding;
                       final query = _query.trim();
                       final isSearching = query.isNotEmpty;
 

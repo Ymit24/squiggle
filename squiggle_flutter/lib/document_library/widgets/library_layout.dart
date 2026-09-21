@@ -7,5 +7,4 @@ const libraryHeaderControlHeight = 38.0;
 bool isCompactLibrary(BuildContext context) =>
     MediaQuery.sizeOf(context).width < compactLibraryBreakpoint;
 
-double libraryHorizontalPadding(BuildContext context) =>
-    isCompactLibrary(context) ? 16.0 : 40.0;
+const double kLibraryHorizontalPadding = 16.0;
