@@ -35,28 +35,10 @@ jobs:
 
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
           fetch-depth: 0
-
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            clang \
-            cmake \
-            ninja-build \
-            pkg-config \
-            libgtk-3-dev \
-            libstdc++-12-dev
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.44.0
-          channel: stable
-          cache: true
 
       - name: Resolve version bump
         id: bump
@@ -97,6 +79,11 @@ jobs:
 
           echo "Using $bump version bump."
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
+          if [[ "$bump" == "minor" ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Increment pre-1.0 version
         id: version
@@ -129,16 +116,40 @@ jobs:
           echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
           echo "tag=v${release_version}" >> "$GITHUB_OUTPUT"
 
+      - name: Install Linux build dependencies
+        if: steps.bump.outputs.release == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            libstdc++-12-dev
+
+      - name: Set up Flutter
+        if: steps.bump.outputs.release == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
       - name: Get dependencies
+        if: steps.bump.outputs.release == 'true'
         run: flutter pub get
 
       - name: Run tests
+        if: steps.bump.outputs.release == 'true'
         run: flutter test
 
       - name: Build Linux release
+        if: steps.bump.outputs.release == 'true'
         run: flutter build linux --release
 
       - name: Package Linux bundle
+        if: steps.bump.outputs.release == 'true'
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
         run: |
@@ -147,8 +158,9 @@ jobs:
             -czf "${GITHUB_WORKSPACE}/squiggle_flutter/squiggle-linux-x64-v${RELEASE_VERSION}.tar.gz" \
             .
 
-      - name: Commit version and tag release
+      - name: Commit version bump
         env:
+          RELEASE: ${{ steps.bump.outputs.release }}
           TAG: ${{ steps.version.outputs.tag }}
           FLUTTER_VERSION: ${{ steps.version.outputs.flutter_version }}
         run: |
@@ -156,10 +168,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml
           git commit -m "chore: bump version to ${FLUTTER_VERSION} [skip ci]"
-          git tag -a "$TAG" -m "Release $TAG"
-          git push origin HEAD:main "$TAG"
+          if [[ "$RELEASE" == "true" ]]; then
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin HEAD:main "$TAG"
+          else
+            git push origin HEAD:main
+          fi
 
       - name: Create GitHub release
+        if: steps.bump.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
