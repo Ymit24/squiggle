@@ -35,7 +35,7 @@ class InspectorLayoutActions extends StatelessWidget {
               _applyOffsets(
                 computeAlignmentOffsets(
                   editorContext.document,
-                  nodes.map((node) => node.id).toList(),
+                  nodes,
                   alignment,
                 ),
               );
@@ -54,7 +54,7 @@ class InspectorLayoutActions extends StatelessWidget {
               _applyOffsets(
                 computeDistributionOffsets(
                   editorContext.document,
-                  nodes.map((node) => node.id).toList(),
+                  nodes,
                   distribute,
                 ),
               );

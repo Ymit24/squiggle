@@ -17,15 +17,13 @@ enum NodeAlignment {
 
 enum NodeDistribution { horizontal, vertical }
 
-/// Computes origin deltas to align [ids] within their selection bounds.
+/// Computes origin deltas to align [nodes] within their selection bounds.
 Map<NodeId, Offset> computeAlignmentOffsets(
   Document document,
-  List<NodeId> ids,
+  List<Node> nodes,
   NodeAlignment alignment,
 ) {
-  if (ids.length < 2) return const {};
-
-  final nodes = ids.map(document.requireNodeById).toList();
+  if (nodes.length < 2) return const {};
 
   var union = Node.localBoundsOfNodes(nodes);
 
@@ -53,16 +51,15 @@ Map<NodeId, Offset> computeAlignmentOffsets(
   return offsets;
 }
 
-/// Computes origin deltas to evenly distribute [ids] between the extremes.
+/// Computes origin deltas to evenly distribute [nodes] between the extremes.
 Map<NodeId, Offset> computeDistributionOffsets(
   Document document,
-  List<NodeId> ids,
+  List<Node> nodes,
   NodeDistribution distribution,
 ) {
-  if (ids.length < 3) return const {};
+  if (nodes.length < 3) return const {};
 
-  final entries = ids
-      .map(document.requireNodeById)
+  final entries = nodes
       .map((node) => (node: node, bounds: node.localBounds()))
       .toList();
 
