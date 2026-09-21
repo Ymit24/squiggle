@@ -80,10 +80,7 @@ class Editor extends StatelessWidget {
                           state: textEditState,
                           viewportSize: viewportSize,
                         ),
-                      Positioned(
-                        top: context.squiggleTheme.spacing.overlayTop,
-                        child: BackToContent(editorContext: editorContext),
-                      ),
+                      BackToContent(editorContext: editorContext),
                     ],
                   );
                 },
