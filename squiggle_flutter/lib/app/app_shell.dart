@@ -50,7 +50,7 @@ class _AppShellState extends State<AppShell> {
         onCreateAndOpen: _createAndOpen,
       ),
       _AppScreen.editor => Editor(
-        context: widget.context,
+        editorContext: widget.context,
         onBackToLibrary: _returnToLibrary,
       ),
     };

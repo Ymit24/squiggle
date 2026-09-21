@@ -16,12 +16,14 @@ void main() {
     ]);
   }
 
-  group('computeAlignmentOffsets', () {
-    test('returns empty map for fewer than two features', () {
+  group('alignNodes', () {
+    test('does nothing for fewer than two features', () {
       final doc = docWithRectangles([Offset.zero]);
-      final id = doc.nodes.first.id;
+      final node = doc.nodes.first;
 
-      expect(computeAlignmentOffsets(doc, [id], NodeAlignment.left), isEmpty);
+      alignNodes([node], NodeAlignment.left);
+
+      expect(node.origin, Offset.zero);
     });
 
     test('aligns left edges to selection bounds', () {
@@ -30,39 +32,37 @@ void main() {
         const Offset(30, 5),
         const Offset(10, 20),
       ]);
-      final ids = doc.nodes.map((feature) => feature.id).toList();
+      final nodes = doc.nodes;
 
-      final offsets = computeAlignmentOffsets(doc, ids, NodeAlignment.left);
+      alignNodes(nodes, NodeAlignment.left);
 
-      expect(offsets[ids[0]], isNull);
-      expect(offsets[ids[1]], const Offset(-30, 0));
-      expect(offsets[ids[2]], const Offset(-10, 0));
+      expect(nodes[0].origin, const Offset(0, 0));
+      expect(nodes[1].origin, const Offset(0, 5));
+      expect(nodes[2].origin, const Offset(0, 20));
     });
 
     test('aligns centers horizontally', () {
       final doc = docWithRectangles([const Offset(0, 0), const Offset(40, 0)]);
-      final ids = doc.nodes.map((feature) => feature.id).toList();
+      final nodes = doc.nodes;
 
-      final offsets = computeAlignmentOffsets(
-        doc,
-        ids,
-        NodeAlignment.centerHorizontal,
-      );
+      alignNodes(nodes, NodeAlignment.centerHorizontal);
 
-      expect(offsets[ids[0]], const Offset(20, 0));
-      expect(offsets[ids[1]], const Offset(-20, 0));
+      expect(nodes[0].origin, const Offset(20, 0));
+      expect(nodes[1].origin, const Offset(20, 0));
     });
   });
 
-  group('computeDistributionOffsets', () {
-    test('returns empty map for fewer than three features', () {
+  group('distributeNodes', () {
+    test('does nothing for fewer than three features', () {
       final doc = docWithRectangles([Offset.zero, const Offset(20, 0)]);
-      final ids = doc.nodes.map((feature) => feature.id).toList();
+      final nodes = doc.nodes;
 
-      expect(
-        computeDistributionOffsets(doc, ids, NodeDistribution.horizontal),
-        isEmpty,
-      );
+      distributeNodes(nodes, NodeDistribution.horizontal);
+
+      expect(nodes.map((node) => node.origin), [
+        Offset.zero,
+        const Offset(20, 0),
+      ]);
     });
 
     test('distributes features with equal spacing horizontally', () {
@@ -71,17 +71,13 @@ void main() {
         const Offset(30, 0),
         const Offset(100, 0),
       ]);
-      final ids = doc.nodes.map((feature) => feature.id).toList();
+      final nodes = doc.nodes;
 
-      final offsets = computeDistributionOffsets(
-        doc,
-        ids,
-        NodeDistribution.horizontal,
-      );
+      distributeNodes(nodes, NodeDistribution.horizontal);
 
-      expect(offsets[ids[0]], isNull);
-      expect(offsets[ids[1]], const Offset(20, 0));
-      expect(offsets[ids[2]], isNull);
+      expect(nodes[0].origin, const Offset(0, 0));
+      expect(nodes[1].origin, const Offset(50, 0));
+      expect(nodes[2].origin, const Offset(100, 0));
     });
 
     test('distributes features with equal spacing vertically', () {
@@ -90,17 +86,13 @@ void main() {
         const Offset(0, 30),
         const Offset(0, 100),
       ]);
-      final ids = doc.nodes.map((feature) => feature.id).toList();
+      final nodes = doc.nodes;
 
-      final offsets = computeDistributionOffsets(
-        doc,
-        ids,
-        NodeDistribution.vertical,
-      );
+      distributeNodes(nodes, NodeDistribution.vertical);
 
-      expect(offsets[ids[0]], isNull);
-      expect(offsets[ids[1]], const Offset(0, 20));
-      expect(offsets[ids[2]], isNull);
+      expect(nodes[0].origin, const Offset(0, 0));
+      expect(nodes[1].origin, const Offset(0, 50));
+      expect(nodes[2].origin, const Offset(0, 100));
     });
   });
 }

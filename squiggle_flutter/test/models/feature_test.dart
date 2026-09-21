@@ -160,7 +160,12 @@ data.Feature _rawFeature(String type) {
     'strokeWidth': 1.0,
   };
   if (type == 'rectangle' || type == 'circle') {
-    content['label'] = '';
+    content.addAll({
+      'label': '',
+      'labelFontSize': 24.0,
+      'labelHorizontalAlignment': 'center',
+      'labelVerticalAlignment': 'center',
+    });
   } else if (type == 'text') {
     content.addAll({
       'contents': 'text',

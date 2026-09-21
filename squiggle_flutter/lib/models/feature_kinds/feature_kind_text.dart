@@ -140,4 +140,50 @@ final class FeatureKindText extends FeatureKind
       clipToBounds: false,
     );
   }
+
+  @override
+  Iterable<InspectorField> buildInspectorFields() {
+    return [
+      InspectorColorField(
+        fieldKey: 'strokeColor',
+        label: 'Stroke Color',
+        value: strokeColor,
+        onColorChanged: (color) {
+          strokeColor = color;
+        },
+      ),
+      InspectorColorField(
+        fieldKey: 'fillColor',
+        label: 'Fill Color',
+        value: fillColor,
+        onColorChanged: (color) {
+          fillColor = color;
+        },
+      ),
+      InspectorVerticalTextAlignmentField(
+        fieldKey: 'verticalAlignment',
+        label: 'Vertical Alignment',
+        value: verticalAlignment,
+        onTextAlignChanged: (value) {
+          verticalAlignment = value;
+        },
+      ),
+      InspectorHorizontalTextAlignmentField(
+        fieldKey: 'horizontalAlignment',
+        label: 'Horizontal Alignment',
+        value: horizontalAlignment,
+        onTextAlignChanged: (value) {
+          horizontalAlignment = value;
+        },
+      ),
+      InspectorFontSizeField(
+        fieldKey: 'fontSize',
+        label: 'Font Size',
+        value: fontSize,
+        onFontSizeChanged: (value) {
+          fontSize = value;
+        },
+      ),
+    ];
+  }
 }
