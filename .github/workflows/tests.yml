@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Flutter tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: squiggle_flutter
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
