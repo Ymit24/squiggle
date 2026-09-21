@@ -309,5 +309,8 @@ data.Feature _rawFeature({required int id, required String type}) =>
         'fillColor': 0xFFFFFFFF,
         'strokeWidth': 1.0,
         'label': '',
+        'labelFontSize': 24.0,
+        'labelHorizontalAlignment': 'center',
+        'labelVerticalAlignment': 'center',
       },
     );

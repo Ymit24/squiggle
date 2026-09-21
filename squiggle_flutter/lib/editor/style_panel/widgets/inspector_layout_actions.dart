@@ -3,7 +3,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
@@ -32,13 +31,7 @@ class InspectorLayoutActions extends StatelessWidget {
           label: "Align",
           child: NodeAlignSelector(
             onAlign: (alignment) {
-              _applyOffsets(
-                computeAlignmentOffsets(
-                  editorContext.document,
-                  nodes,
-                  alignment,
-                ),
-              );
+              _applyLayout(() => alignNodes(nodes, alignment));
             },
           ),
         ),
@@ -51,13 +44,7 @@ class InspectorLayoutActions extends StatelessWidget {
           label: "Distribute",
           child: NodeDistributeSelector(
             onDistribute: (distribute) {
-              _applyOffsets(
-                computeDistributionOffsets(
-                  editorContext.document,
-                  nodes,
-                  distribute,
-                ),
-              );
+              _applyLayout(() => distributeNodes(nodes, distribute));
             },
           ),
         ),
@@ -72,21 +59,14 @@ class InspectorLayoutActions extends StatelessWidget {
     );
   }
 
-  List<Node> _nodesById(Iterable<NodeId> ids) => [
-    for (final id in ids) editorContext.document.requireNodeById(id),
-  ];
-
-  void _applyOffsets(Map<NodeId, Offset> offsets) {
-    final nodes = _nodesById(offsets.keys);
-    if (nodes.isEmpty) return;
+  void _applyLayout(VoidCallback layout) {
     final container = nodes.first.parent;
     if (nodes.any((node) => !identical(node.parent, container))) {
       throw StateError('Selected nodes must share a container');
     }
     editorContext.history.run('Layout selection', (transaction) {
-      for (final node in nodes) {
-        transaction.update(node, (node) => node.origin += offsets[node.id]!);
-      }
+      transaction.watch(nodes);
+      layout();
     }, container: container);
   }
 }

@@ -2,10 +2,6 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/models/node.dart';
 
-import 'package:squiggle_flutter/models/document.dart';
-
-import 'package:squiggle_flutter/models/node_id.dart';
-
 enum NodeAlignment {
   left,
   centerHorizontal,
@@ -17,17 +13,12 @@ enum NodeAlignment {
 
 enum NodeDistribution { horizontal, vertical }
 
-/// Computes origin deltas to align [nodes] within their selection bounds.
-Map<NodeId, Offset> computeAlignmentOffsets(
-  Document document,
-  List<Node> nodes,
-  NodeAlignment alignment,
-) {
-  if (nodes.length < 2) return const {};
+/// Aligns [nodes] within their selection bounds.
+void alignNodes(List<Node> nodes, NodeAlignment alignment) {
+  if (nodes.length < 2) return;
 
-  var union = Node.localBoundsOfNodes(nodes);
+  final union = Node.localBoundsOfNodes(nodes);
 
-  final offsets = <NodeId, Offset>{};
   for (final node in nodes) {
     final bounds = node.localBounds();
     final delta = switch (alignment) {
@@ -44,20 +35,13 @@ Map<NodeId, Offset> computeAlignmentOffsets(
         union.center.dy - bounds.center.dy,
       ),
     };
-    if (delta != Offset.zero) {
-      offsets[node.id] = delta;
-    }
+    node.origin += delta;
   }
-  return offsets;
 }
 
-/// Computes origin deltas to evenly distribute [nodes] between the extremes.
-Map<NodeId, Offset> computeDistributionOffsets(
-  Document document,
-  List<Node> nodes,
-  NodeDistribution distribution,
-) {
-  if (nodes.length < 3) return const {};
+/// Evenly distributes [nodes] between the extremes.
+void distributeNodes(List<Node> nodes, NodeDistribution distribution) {
+  if (nodes.length < 3) return;
 
   final entries = nodes
       .map((node) => (node: node, bounds: node.localBounds()))
@@ -66,14 +50,14 @@ Map<NodeId, Offset> computeDistributionOffsets(
   switch (distribution) {
     case NodeDistribution.horizontal:
       entries.sort((a, b) => a.bounds.left.compareTo(b.bounds.left));
-      return _distributeAlongAxis(entries, horizontal: true);
+      _distributeAlongAxis(entries, horizontal: true);
     case NodeDistribution.vertical:
       entries.sort((a, b) => a.bounds.top.compareTo(b.bounds.top));
-      return _distributeAlongAxis(entries, horizontal: false);
+      _distributeAlongAxis(entries, horizontal: false);
   }
 }
 
-Map<NodeId, Offset> _distributeAlongAxis(
+void _distributeAlongAxis(
   List<({Node node, Rect bounds})> sorted, {
   required bool horizontal,
 }) {
@@ -89,7 +73,6 @@ Map<NodeId, Offset> _distributeAlongAxis(
   final span = horizontal ? last.right - first.left : last.bottom - first.top;
   final gap = (span - totalObjectSize) / (sorted.length - 1);
 
-  final offsets = <NodeId, Offset>{};
   var current = horizontal ? first.left : first.top;
 
   for (final entry in sorted) {
@@ -98,12 +81,8 @@ Map<NodeId, Offset> _distributeAlongAxis(
         ? Offset(current - bounds.left, 0)
         : Offset(0, current - bounds.top);
 
-    if (delta != Offset.zero) {
-      offsets[entry.node.id] = delta;
-    }
+    entry.node.origin += delta;
 
     current += (horizontal ? bounds.width : bounds.height) + gap;
   }
-
-  return offsets;
 }

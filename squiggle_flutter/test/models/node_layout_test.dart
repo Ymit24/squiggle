@@ -16,12 +16,14 @@ void main() {
     ]);
   }
 
-  group('computeAlignmentOffsets', () {
-    test('returns empty map for fewer than two features', () {
+  group('alignNodes', () {
+    test('does nothing for fewer than two features', () {
       final doc = docWithRectangles([Offset.zero]);
       final node = doc.nodes.first;
 
-      expect(computeAlignmentOffsets(doc, [node], NodeAlignment.left), isEmpty);
+      alignNodes([node], NodeAlignment.left);
+
+      expect(node.origin, Offset.zero);
     });
 
     test('aligns left edges to selection bounds', () {
@@ -32,37 +34,35 @@ void main() {
       ]);
       final nodes = doc.nodes;
 
-      final offsets = computeAlignmentOffsets(doc, nodes, NodeAlignment.left);
+      alignNodes(nodes, NodeAlignment.left);
 
-      expect(offsets[nodes[0].id], isNull);
-      expect(offsets[nodes[1].id], const Offset(-30, 0));
-      expect(offsets[nodes[2].id], const Offset(-10, 0));
+      expect(nodes[0].origin, const Offset(0, 0));
+      expect(nodes[1].origin, const Offset(0, 5));
+      expect(nodes[2].origin, const Offset(0, 20));
     });
 
     test('aligns centers horizontally', () {
       final doc = docWithRectangles([const Offset(0, 0), const Offset(40, 0)]);
       final nodes = doc.nodes;
 
-      final offsets = computeAlignmentOffsets(
-        doc,
-        nodes,
-        NodeAlignment.centerHorizontal,
-      );
+      alignNodes(nodes, NodeAlignment.centerHorizontal);
 
-      expect(offsets[nodes[0].id], const Offset(20, 0));
-      expect(offsets[nodes[1].id], const Offset(-20, 0));
+      expect(nodes[0].origin, const Offset(20, 0));
+      expect(nodes[1].origin, const Offset(20, 0));
     });
   });
 
-  group('computeDistributionOffsets', () {
-    test('returns empty map for fewer than three features', () {
+  group('distributeNodes', () {
+    test('does nothing for fewer than three features', () {
       final doc = docWithRectangles([Offset.zero, const Offset(20, 0)]);
       final nodes = doc.nodes;
 
-      expect(
-        computeDistributionOffsets(doc, nodes, NodeDistribution.horizontal),
-        isEmpty,
-      );
+      distributeNodes(nodes, NodeDistribution.horizontal);
+
+      expect(nodes.map((node) => node.origin), [
+        Offset.zero,
+        const Offset(20, 0),
+      ]);
     });
 
     test('distributes features with equal spacing horizontally', () {
@@ -73,15 +73,11 @@ void main() {
       ]);
       final nodes = doc.nodes;
 
-      final offsets = computeDistributionOffsets(
-        doc,
-        nodes,
-        NodeDistribution.horizontal,
-      );
+      distributeNodes(nodes, NodeDistribution.horizontal);
 
-      expect(offsets[nodes[0].id], isNull);
-      expect(offsets[nodes[1].id], const Offset(20, 0));
-      expect(offsets[nodes[2].id], isNull);
+      expect(nodes[0].origin, const Offset(0, 0));
+      expect(nodes[1].origin, const Offset(50, 0));
+      expect(nodes[2].origin, const Offset(100, 0));
     });
 
     test('distributes features with equal spacing vertically', () {
@@ -92,15 +88,11 @@ void main() {
       ]);
       final nodes = doc.nodes;
 
-      final offsets = computeDistributionOffsets(
-        doc,
-        nodes,
-        NodeDistribution.vertical,
-      );
+      distributeNodes(nodes, NodeDistribution.vertical);
 
-      expect(offsets[nodes[0].id], isNull);
-      expect(offsets[nodes[1].id], const Offset(0, 20));
-      expect(offsets[nodes[2].id], isNull);
+      expect(nodes[0].origin, const Offset(0, 0));
+      expect(nodes[1].origin, const Offset(0, 50));
+      expect(nodes[2].origin, const Offset(0, 100));
     });
   });
 }
