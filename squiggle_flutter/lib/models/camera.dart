@@ -81,7 +81,8 @@ class Camera {
   @override
   int get hashCode => Object.hash(location, zoom);
 
-  // TODO: TEST
+  // TODO: Move this code into document as like 'getNodesInBounds' and then this method here just calls that with the camera bounds.
+  // TODO: TEST whatever is left after previous comment
   Iterable<Node> getNodesInViewport(Document document) {
     if (screenSize == Size.zero) {
       return [];
