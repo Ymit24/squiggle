@@ -18,7 +18,7 @@ void jumpBackToContent(EditorContext context) {
   }
 
   context.cancelViewportMotion();
-  context.camera.location = closest.globalOrigin;
+  context.camera.location = closest.center();
   context.camera.panByScreenDelta(context.viewportSize.center(Offset.zero));
   context.notifyViewportChanged();
 }
