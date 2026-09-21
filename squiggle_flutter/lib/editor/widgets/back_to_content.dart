@@ -89,6 +89,7 @@ class _BackToContentState extends State<BackToContent> {
       }
     }
 
+    // TODO: Need a way to cancel fling when jumping camera programmatically like this.
     widget.editorContext.camera.location = closest.$1.globalOrigin;
     widget.editorContext.camera.panByScreenDelta(
       Offset(
