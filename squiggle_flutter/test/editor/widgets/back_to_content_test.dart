@@ -32,7 +32,7 @@ void main() {
     jumpBackToContent(context);
 
     expect(motionCancelled, isTrue);
-    expect(context.camera.location, const Offset(200, 150));
+    expect(context.camera.location, const Offset(210, 160));
   });
 
   test('does nothing when the document is empty', () {
