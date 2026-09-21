@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/section_label.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';

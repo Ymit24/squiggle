@@ -5,8 +5,6 @@ import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/inspector_panel.dart';
-import 'package:squiggle_flutter/editor/style_panel/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/style_panel/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
@@ -32,66 +30,61 @@ class Editor extends StatelessWidget {
 
     return BlocProvider(
       create: (context) =>
-          StylePanelBloc(context: editorContext)
-            ..add(const RequestWatchStylePanelStateEvent()),
+          TextEditBloc(context: editorContext)
+            ..add(const RequestWatchTextEditStateEvent()),
       child: BlocProvider(
         create: (context) =>
-            TextEditBloc(context: editorContext)
-              ..add(const RequestWatchTextEditStateEvent()),
-        child: BlocProvider(
-          create: (context) =>
-              EditorBloc(context: editorContext)
-                ..add(const RequestWatchEditorStateEvent()),
-          child: BlocBuilder<TextEditBloc, TextEditState>(
-            builder: (context, textEditState) {
-              final textEditOpen = textEditState is TextEditOpen;
+            EditorBloc(context: editorContext)
+              ..add(const RequestWatchEditorStateEvent()),
+        child: BlocBuilder<TextEditBloc, TextEditState>(
+          builder: (context, textEditState) {
+            final textEditOpen = textEditState is TextEditOpen;
 
-              return ToolShortcuts(
-                textEditOpen: textEditOpen,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final viewportSize = Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    );
+            return ToolShortcuts(
+              textEditOpen: textEditOpen,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final viewportSize = Size(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                  );
 
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        DocumentViewport(
-                          editorContext: editorContext,
-                          imageRepository: imageRepository,
-                        ),
-                        Positioned(
-                          top: context.squiggleTheme.spacing.overlayTop,
-                          bottom: context.squiggleTheme.spacing.overlayTop,
-                          left: context.squiggleTheme.spacing.overlaySide,
-                          child: Column(
-                            spacing: 8,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              EditorBackButton(onPressed: onBackToLibrary),
-                              Flexible(
-                                child: InspectorPanel(
-                                  editorContext: editorContext,
-                                ),
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      DocumentViewport(
+                        editorContext: editorContext,
+                        imageRepository: imageRepository,
+                      ),
+                      Positioned(
+                        top: context.squiggleTheme.spacing.overlayTop,
+                        bottom: context.squiggleTheme.spacing.overlayTop,
+                        left: context.squiggleTheme.spacing.overlaySide,
+                        child: Column(
+                          spacing: 8,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            EditorBackButton(onPressed: onBackToLibrary),
+                            Flexible(
+                              child: InspectorPanel(
+                                editorContext: editorContext,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const EditorToolbar(),
-                        if (textEditOpen)
-                          TextEditOverlay(
-                            state: textEditState,
-                            viewportSize: viewportSize,
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              );
-            },
-          ),
+                      ),
+                      const EditorToolbar(),
+                      if (textEditOpen)
+                        TextEditOverlay(
+                          state: textEditState,
+                          viewportSize: viewportSize,
+                        ),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );
