@@ -93,6 +93,7 @@ class SquiggleButton extends StatelessWidget {
             : const EdgeInsets.symmetric(horizontal: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         textStyle: TextStyle(fontSize: 13.5, fontWeight: s.weight),
+        visualDensity: VisualDensity.standard,
       ),
       child: compact
           ? Icon(icon, size: 18)
