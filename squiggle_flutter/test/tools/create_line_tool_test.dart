@@ -153,12 +153,15 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
       expect(context.document.nodes, isEmpty);
+      expect(context.tool.activeTool, isA<SelectTool>());
 
+      activateLineTool();
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
 
       expect(finishWithKey(LogicalKeyboardKey.escape), isTrue);
       expect(context.document.nodes, isEmpty);
+      expect(context.tool.activeTool, isA<SelectTool>());
     });
 
     test('drag from idle commits 2-point line on pointer up', () {
@@ -175,6 +178,7 @@ void main() {
         const Offset(0, 0),
         const Offset(50, 50),
       ]);
+      expect(context.tool.activeTool, isA<SelectTool>());
     });
 
     test('click then drag in placing mode adds point at release position', () {

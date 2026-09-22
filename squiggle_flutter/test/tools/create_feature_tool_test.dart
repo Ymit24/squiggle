@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
   group('CreateFeatureTool via EditorContext', () {
@@ -68,6 +69,7 @@ void main() {
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindRectangle>());
       expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
+      expect(context.tool.activeTool, isA<SelectTool>());
     });
 
     test('drag creates circle feature', () {
@@ -82,6 +84,7 @@ void main() {
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindCircle>());
       expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
+      expect(context.tool.activeTool, isA<SelectTool>());
     });
 
     test('shift-drag creates square rectangle from non-square drag', () {
