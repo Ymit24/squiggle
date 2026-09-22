@@ -12,6 +12,9 @@ enum SquiggleButtonVariant {
 
   /// Filled danger-colored button for destructive actions.
   danger,
+
+  /// Borderless button for quiet actions such as Cancel.
+  ghost,
 }
 
 /// Per-variant styling, resolved once per build by [_resolve].
@@ -45,6 +48,12 @@ _VariantStyle _resolve(
     foreground: Colors.white,
     side: null,
     weight: FontWeight.w700,
+  ),
+  SquiggleButtonVariant.ghost => (
+    background: Colors.transparent,
+    foreground: colors.subtext0,
+    side: null,
+    weight: FontWeight.w600,
   ),
 };
 
