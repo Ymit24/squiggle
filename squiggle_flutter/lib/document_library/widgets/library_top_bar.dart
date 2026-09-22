@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_search_field.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
-import 'package:squiggle_flutter/document_library/widgets/new_document_button.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class LibraryTopBar extends StatelessWidget {
   const LibraryTopBar({
@@ -93,7 +93,12 @@ class LibraryTopBar extends StatelessWidget {
           compact: compact,
         ),
         const SizedBox(width: 10),
-        NewDocumentButton(onTap: onCreateNamed, compact: compact),
+        SquiggleButton(
+          onPressed: onCreateNamed,
+          icon: Icons.add_rounded,
+          label: 'New canvas',
+          compact: compact,
+        ),
       ],
     );
   }
