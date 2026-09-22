@@ -60,12 +60,12 @@ class DeleteDocumentDialog extends StatelessWidget {
         SquiggleButton(
           label: 'Cancel',
           variant: SquiggleButtonVariant.ghost,
+          autofocus: true,
           onPressed: () => Navigator.of(context).pop(false),
         ),
         SquiggleButton(
           label: 'Delete',
           variant: SquiggleButtonVariant.danger,
-          autofocus: true,
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],
