@@ -47,13 +47,10 @@ class DeleteDocumentDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        SquiggleButton(
           onPressed: () => Navigator.of(context).pop(false),
-          style: TextButton.styleFrom(
-            foregroundColor: theme.colors.subtext0,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-          child: const Text('Cancel'),
+          label: 'Cancel',
+          variant: SquiggleButtonVariant.ghost,
         ),
         SquiggleButton(
           onPressed: () => Navigator.of(context).pop(true),
