@@ -27,15 +27,7 @@ class LibrarySectionHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        SquigglePill(
-          label: '$count',
-          backgroundColor: theme.colors.surface0,
-          borderColor: theme.colors.surface1,
-          textStyle: theme.typography.hotkey.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        SquigglePill.count(label: '$count'),
         const SizedBox(width: 12),
         Expanded(child: Divider(color: theme.colors.surface0, thickness: 1)),
       ],
