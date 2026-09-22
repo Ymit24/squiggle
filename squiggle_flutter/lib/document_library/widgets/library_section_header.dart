@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_pill.dart';
 
 class LibrarySectionHeader extends StatelessWidget {
   const LibrarySectionHeader({
@@ -26,19 +27,13 @@ class LibrarySectionHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: theme.colors.surface0,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: theme.colors.surface1),
-          ),
-          child: Text(
-            '$count',
-            style: theme.typography.hotkey.copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
+        SquigglePill(
+          label: '$count',
+          backgroundColor: theme.colors.surface0,
+          borderColor: theme.colors.surface1,
+          textStyle: theme.typography.hotkey.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(width: 12),
