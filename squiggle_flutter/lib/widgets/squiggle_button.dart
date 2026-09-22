@@ -7,7 +7,7 @@ enum SquiggleButtonVariant {
   /// Light filled button with a bold label. The default.
   primary,
 
-  /// Dark bordered pill with a regular-weight label.
+  /// Dark bordered button with a semibold label.
   secondary,
 }
 
@@ -32,10 +32,10 @@ _VariantStyle _resolve(
     weight: FontWeight.w700,
   ),
   SquiggleButtonVariant.secondary => (
-    background: colors.mantle,
+    background: colors.surface0,
     foreground: colors.text,
     side: BorderSide(color: colors.surface1),
-    weight: FontWeight.normal,
+    weight: FontWeight.w600,
   ),
 };
 
@@ -89,9 +89,9 @@ class SquiggleButton extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: compact
             ? EdgeInsets.zero
-            : const EdgeInsets.symmetric(horizontal: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-        textStyle: TextStyle(fontSize: 13, fontWeight: s.weight),
+            : const EdgeInsets.symmetric(horizontal: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        textStyle: TextStyle(fontSize: 13.5, fontWeight: s.weight),
       ),
       child: compact
           ? Icon(icon, size: 18)
@@ -99,8 +99,8 @@ class SquiggleButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 17),
-                  const SizedBox(width: 5),
+                  Icon(icon, size: 18),
+                  const SizedBox(width: 7),
                 ],
                 Text(label),
               ],
