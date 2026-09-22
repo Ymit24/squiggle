@@ -12,7 +12,7 @@ const _fieldMinLines = 3;
 const _fieldMaxLines = 5;
 
 /// Minimum width needed for the Cancel/Accept button row, excluding panel padding.
-const textEditPanelButtonRowMinWidth = 154.0;
+const textEditPanelButtonRowMinWidth = 228.0;
 
 /// Minimum width for the positioned edit panel, including padding.
 const textEditPanelMinWidth =
@@ -111,13 +111,11 @@ class _TextEditPanelState extends State<TextEditPanel> {
                 children: [
                   SquiggleButton(
                     label: 'Cancel',
-                    size: SquiggleButtonSize.compact,
                     onPressed: widget.onCancel,
                   ),
                   SquiggleButton(
                     label: 'Accept',
                     variant: SquiggleButtonVariant.primary,
-                    size: SquiggleButtonSize.compact,
                     onPressed: _accept,
                   ),
                 ],

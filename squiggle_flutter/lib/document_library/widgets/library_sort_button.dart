@@ -51,7 +51,7 @@ class LibrarySortButton extends StatelessWidget {
               key: const ValueKey('library-sort'),
               icon: const Icon(Icons.swap_vert_rounded),
               tooltip: 'Sort canvases',
-              isSelected: open,
+              isActive: open,
               onPressed: toggle,
             )
           : Tooltip(
@@ -65,7 +65,7 @@ class LibrarySortButton extends StatelessWidget {
                   duration: const Duration(milliseconds: 160),
                   child: const Icon(Icons.keyboard_arrow_down_rounded),
                 ),
-                isSelected: open,
+                isActive: open,
                 onPressed: toggle,
               ),
             ),
