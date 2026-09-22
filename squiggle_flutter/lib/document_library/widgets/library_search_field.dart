@@ -32,25 +32,12 @@ class LibrarySearchField extends StatelessWidget {
         focusNode: focusNode,
         onTapOutside: onTapOutside,
         onChanged: onChanged,
-        style: theme.typography.inputText.copyWith(fontSize: 13.5),
         hintText: 'Search canvases…',
-        hintStyle: TextStyle(
-          color: theme.colors.subtext0.withValues(alpha: 0.7),
-          fontSize: 13.5,
-        ),
-        contentPadding: EdgeInsets.zero,
+        compact: true,
         prefixIcon: Icon(
           Icons.search_rounded,
           size: 17,
           color: theme.colors.subtext0,
-        ),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 36,
-          minHeight: libraryHeaderControlHeight,
-        ),
-        suffixIconConstraints: const BoxConstraints(
-          minWidth: 42,
-          minHeight: libraryHeaderControlHeight,
         ),
         suffixIcon: query.isNotEmpty
             ? IconButton(

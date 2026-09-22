@@ -81,20 +81,7 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
         child: SquiggleTextField(
           controller: _controller,
           autofocus: true,
-          selectAllOnFocus: true,
-          style: theme.typography.inputText.copyWith(fontSize: 14.5),
           hintText: 'Canvas name',
-          hintStyle: TextStyle(
-            color: theme.colors.subtext0.withValues(alpha: 0.6),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 13,
-            vertical: 11,
-          ),
-          focusBorderSide: BorderSide(
-            color: theme.colors.accent.withValues(alpha: 0.7),
-            width: 1.4,
-          ),
           onSubmitted: (_) => _submit(),
         ),
       ),

@@ -1,44 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-/// A text field with the bordered treatment used by library controls.
+/// A bordered text field for dialogs and compact library controls.
 class SquiggleTextField extends StatelessWidget {
   const SquiggleTextField({
     super.key,
-    this.controller,
+    required this.controller,
+    required this.hintText,
     this.focusNode,
     this.autofocus = false,
-    this.selectAllOnFocus = false,
     this.onTapOutside,
     this.onChanged,
     this.onSubmitted,
-    this.style,
-    this.hintText,
-    this.hintStyle,
-    this.contentPadding,
     this.prefixIcon,
-    this.prefixIconConstraints,
     this.suffixIcon,
-    this.suffixIconConstraints,
-    this.focusBorderSide,
+    this.compact = false,
   });
 
-  final TextEditingController? controller;
+  final TextEditingController controller;
+  final String hintText;
   final FocusNode? focusNode;
+
+  /// Autofocused fields select their initial text for easy replacement.
   final bool autofocus;
-  final bool selectAllOnFocus;
   final VoidCallback? onTapOutside;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
-  final TextStyle? style;
-  final String? hintText;
-  final TextStyle? hintStyle;
-  final EdgeInsetsGeometry? contentPadding;
   final Widget? prefixIcon;
-  final BoxConstraints? prefixIconConstraints;
   final Widget? suffixIcon;
-  final BoxConstraints? suffixIconConstraints;
-  final BorderSide? focusBorderSide;
+
+  /// Uses the library header's smaller text, padding, and focus ring.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -52,28 +44,40 @@ class SquiggleTextField extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       autofocus: autofocus,
-      selectAllOnFocus: selectAllOnFocus,
+      selectAllOnFocus: autofocus,
       onTapOutside: onTapOutside == null ? null : (_) => onTapOutside!(),
       onChanged: onChanged,
       onSubmitted: onSubmitted,
-      style: style ?? theme.typography.inputText,
+      style: theme.typography.inputText.copyWith(
+        fontSize: compact ? 13.5 : 14.5,
+      ),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: hintStyle,
+        hintStyle: TextStyle(
+          color: theme.colors.subtext0.withValues(alpha: compact ? 0.7 : 0.6),
+          fontSize: compact ? 13.5 : null,
+        ),
         isDense: true,
         filled: true,
         fillColor: theme.colors.surface0,
-        contentPadding: contentPadding,
+        contentPadding: compact
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
         prefixIcon: prefixIcon,
-        prefixIconConstraints: prefixIconConstraints,
+        prefixIconConstraints: compact
+            ? const BoxConstraints(minWidth: 36, minHeight: 38)
+            : null,
         suffixIcon: suffixIcon,
-        suffixIconConstraints: suffixIconConstraints,
+        suffixIconConstraints: compact
+            ? const BoxConstraints(minWidth: 42, minHeight: 38)
+            : null,
         border: border,
         enabledBorder: border,
         focusedBorder: border.copyWith(
-          borderSide:
-              focusBorderSide ??
-              BorderSide(color: theme.colors.accent.withValues(alpha: 0.6)),
+          borderSide: BorderSide(
+            color: theme.colors.accent.withValues(alpha: compact ? 0.6 : 0.7),
+            width: compact ? 1 : 1.4,
+          ),
         ),
       ),
     );
