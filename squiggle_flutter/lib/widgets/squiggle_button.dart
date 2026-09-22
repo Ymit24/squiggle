@@ -80,10 +80,6 @@ class SquiggleButton extends StatelessWidget {
   final bool compact;
 
   static const _height = 38.0;
-  static const _dangerShape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.all(Radius.circular(9)),
-  );
-
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
@@ -97,23 +93,14 @@ class SquiggleButton extends StatelessWidget {
         disabledForegroundColor: theme.colors.subtext0.withValues(alpha: 0.5),
         side: s.side,
         splashFactory: NoSplash.splashFactory,
-        minimumSize: variant == SquiggleButtonVariant.danger
-            ? null
-            : const Size(0, _height),
+        minimumSize: const Size(0, _height),
         fixedSize: compact ? const Size.square(_height) : null,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: compact
             ? EdgeInsets.zero
-            : variant == SquiggleButtonVariant.danger
-            ? const EdgeInsets.symmetric(horizontal: 18, vertical: 10)
             : const EdgeInsets.symmetric(horizontal: 14),
-        shape: variant == SquiggleButtonVariant.danger
-            ? _dangerShape
-            : RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        textStyle: TextStyle(
-          fontSize: variant == SquiggleButtonVariant.danger ? 14 : 13.5,
-          fontWeight: s.weight,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        textStyle: TextStyle(fontSize: 13.5, fontWeight: s.weight),
         visualDensity: VisualDensity.standard,
       ),
       child: compact
