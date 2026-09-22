@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/current_document_badge.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card_menu_button.dart';
-import 'package:squiggle_flutter/document_library/widgets/document_open_pill.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
@@ -124,15 +123,6 @@ class _DocumentCardState extends State<DocumentCard> {
                                       Colors.black.withValues(alpha: 0.42),
                                     ],
                                     stops: const [0.45, 1.0],
-                                  ),
-                                ),
-                                child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: DocumentOpenPill(
-                                      isCurrent: widget.isCurrent,
-                                    ),
                                   ),
                                 ),
                               ),

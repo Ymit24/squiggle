@@ -6,6 +6,6 @@ class CurrentDocumentBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SquigglePill.current(label: 'Current');
+    return const SquigglePill(label: 'Current');
   }
 }
