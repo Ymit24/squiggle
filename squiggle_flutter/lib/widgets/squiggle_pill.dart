@@ -9,29 +9,24 @@ class SquigglePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    final style = (
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      color: Colors.black.withValues(alpha: 0.55),
-      border: Border.all(color: theme.colors.accent.withValues(alpha: 0.5)),
-      shadow: null,
-      textStyle: theme.typography.hotkey.copyWith(
-        color: theme.colors.text,
-        fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.3,
-      ),
-    );
-    final text = Text(label, style: style.textStyle);
 
     return Container(
-      padding: style.padding,
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: style.color,
+        color: Colors.black.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(999),
-        border: style.border,
-        boxShadow: style.shadow,
+        border: Border.all(color: theme.colors.accent.withValues(alpha: 0.5)),
+        boxShadow: null,
       ),
-      child: text,
+      child: Text(
+        label,
+        style: theme.typography.hotkey.copyWith(
+          color: theme.colors.text,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
+      ),
     );
   }
 }
