@@ -9,6 +9,7 @@ const squiggleSubtext0Color = Color(0xFFA0A0A0);
 const squiggleTextColor = Color(0xFFE4E4E4);
 const squiggleAccentColor = Color(0xFFA8B3C2);
 const squiggleDangerColor = Color(0xFFD95F5F);
+const squiggleOnDangerColor = Color(0xFFFFFFFF);
 const squiggleScrimColor = Color(0x33000000);
 const squiggleSelectionFillColor = Color(0x1AA8B3C2);
 
@@ -24,6 +25,7 @@ class SquiggleColorScheme {
     required this.text,
     required this.accent,
     required this.danger,
+    required this.onDanger,
     required this.scrim,
     required this.selectionFill,
   });
@@ -36,6 +38,7 @@ class SquiggleColorScheme {
   final Color text;
   final Color accent;
   final Color danger;
+  final Color onDanger;
   final Color scrim;
   final Color selectionFill;
 
@@ -48,6 +51,7 @@ class SquiggleColorScheme {
     text: squiggleTextColor,
     accent: squiggleAccentColor,
     danger: squiggleDangerColor,
+    onDanger: squiggleOnDangerColor,
     scrim: squiggleScrimColor,
     selectionFill: squiggleSelectionFillColor,
   );
@@ -61,6 +65,7 @@ class SquiggleColorScheme {
     Color? text,
     Color? accent,
     Color? danger,
+    Color? onDanger,
     Color? scrim,
     Color? selectionFill,
   }) {
@@ -73,6 +78,7 @@ class SquiggleColorScheme {
       text: text ?? this.text,
       accent: accent ?? this.accent,
       danger: danger ?? this.danger,
+      onDanger: onDanger ?? this.onDanger,
       scrim: scrim ?? this.scrim,
       selectionFill: selectionFill ?? this.selectionFill,
     );
@@ -88,6 +94,7 @@ class SquiggleColorScheme {
       text: Color.lerp(text, other.text, t)!,
       accent: Color.lerp(accent, other.accent, t)!,
       danger: Color.lerp(danger, other.danger, t)!,
+      onDanger: Color.lerp(onDanger, other.onDanger, t)!,
       scrim: Color.lerp(scrim, other.scrim, t)!,
       selectionFill: Color.lerp(selectionFill, other.selectionFill, t)!,
     );

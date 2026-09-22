@@ -46,6 +46,15 @@ class _SquigglePressableState extends State<SquigglePressable> {
   bool get _isEnabled => widget.onPressed != null;
 
   @override
+  void didUpdateWidget(SquigglePressable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isEnabled) {
+      _isHovered = false;
+      _isFocused = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = SquigglePressableState(
       isEnabled: _isEnabled,

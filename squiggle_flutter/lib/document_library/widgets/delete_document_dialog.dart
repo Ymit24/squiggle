@@ -26,13 +26,13 @@ class DeleteDocumentDialog extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFFF28B8B).withValues(alpha: 0.12),
+              color: theme.colors.danger.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.delete_outline_rounded,
               size: 19,
-              color: Color(0xFFF28B8B),
+              color: theme.colors.danger,
             ),
           ),
           const SizedBox(width: 12),
@@ -65,6 +65,7 @@ class DeleteDocumentDialog extends StatelessWidget {
         SquiggleButton(
           label: 'Delete',
           variant: SquiggleButtonVariant.danger,
+          autofocus: true,
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],

@@ -5,7 +5,7 @@ import 'package:squiggle_flutter/widgets/squiggle_pressable.dart';
 const _animationDuration = Duration(milliseconds: 140);
 const _disabledForegroundOpacity = 0.45;
 const _highlightedBackgroundOpacity = 0.9;
-const _selectedBorderOpacity = 0.5;
+const _activeBorderOpacity = 0.5;
 const _disabledBorderOpacity = 0.5;
 
 enum SquiggleButtonVariant { primary, secondary, ghost, danger }
@@ -18,8 +18,10 @@ class SquiggleButton extends StatelessWidget {
     this.leading,
     this.trailing,
     this.variant = SquiggleButtonVariant.secondary,
-    this.isSelected = false,
-  }) : icon = null,
+    this.isActive = false,
+    this.autofocus = false,
+  }) : assert(label != ''),
+       icon = null,
        tooltip = null;
 
   const SquiggleButton.icon({
@@ -28,7 +30,8 @@ class SquiggleButton extends StatelessWidget {
     required this.tooltip,
     required this.onPressed,
     this.variant = SquiggleButtonVariant.secondary,
-    this.isSelected = false,
+    this.isActive = false,
+    this.autofocus = false,
   }) : assert(tooltip != ''),
        label = null,
        leading = null,
@@ -41,14 +44,19 @@ class SquiggleButton extends StatelessWidget {
   final String? tooltip;
   final VoidCallback? onPressed;
   final SquiggleButtonVariant variant;
-  final bool isSelected;
+  final bool isActive;
+  final bool autofocus;
 
   bool get _isIconOnly => icon != null;
+  bool get _emphasized =>
+      variant == SquiggleButtonVariant.primary ||
+      variant == SquiggleButtonVariant.danger;
 
   @override
   Widget build(BuildContext context) {
     final button = SquigglePressable(
       onPressed: onPressed,
+      autofocus: autofocus,
       builder: (context, state) {
         final theme = context.squiggleTheme;
         final spacing = theme.spacing;
@@ -76,14 +84,9 @@ class SquiggleButton extends StatelessWidget {
               size: spacing.buttonIconSize,
             ),
             child: DefaultTextStyle(
-              style: theme.typography.buttonText.copyWith(
-                color: foreground,
-                fontWeight:
-                    variant == SquiggleButtonVariant.primary ||
-                        variant == SquiggleButtonVariant.danger
-                    ? FontWeight.w700
-                    : FontWeight.w600,
-              ),
+              style: theme.typography
+                  .buttonText(emphasized: _emphasized)
+                  .copyWith(color: foreground),
               child: _content(spacing.buttonContentGap),
             ),
           ),
@@ -120,7 +123,7 @@ class SquiggleButton extends StatelessWidget {
       );
     }
     if (variant == SquiggleButtonVariant.primary) return theme.colors.base;
-    if (variant == SquiggleButtonVariant.danger) return Colors.white;
+    if (variant == SquiggleButtonVariant.danger) return theme.colors.onDanger;
     if (variant == SquiggleButtonVariant.ghost && !state.isHighlighted) {
       return theme.colors.subtext0;
     }
@@ -133,7 +136,7 @@ class SquiggleButton extends StatelessWidget {
           ? Colors.transparent
           : theme.colors.surface0;
     }
-    if (isSelected) return theme.colors.surface1;
+    if (isActive) return theme.colors.surface1;
 
     return switch (variant) {
       SquiggleButtonVariant.primary =>
@@ -154,9 +157,9 @@ class SquiggleButton extends StatelessWidget {
   }
 
   Border? _border(SquiggleTheme theme, SquigglePressableState state) {
-    if (isSelected && state.isEnabled) {
+    if ((isActive || state.isFocused) && state.isEnabled) {
       return Border.all(
-        color: theme.colors.accent.withValues(alpha: _selectedBorderOpacity),
+        color: theme.colors.accent.withValues(alpha: _activeBorderOpacity),
       );
     }
     if (variant == SquiggleButtonVariant.secondary) {

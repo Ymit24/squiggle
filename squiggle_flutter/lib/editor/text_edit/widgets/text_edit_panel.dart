@@ -109,7 +109,10 @@ class _TextEditPanelState extends State<TextEditPanel> {
                 spacing: spacing.textEditButtonSpacing,
                 runSpacing: spacing.textEditButtonSpacing,
                 children: [
-                  SquiggleButton(label: 'Cancel', onPressed: widget.onCancel),
+                  SquiggleButton(
+                    label: 'Cancel',
+                    onPressed: widget.onCancel,
+                  ),
                   SquiggleButton(
                     label: 'Accept',
                     variant: SquiggleButtonVariant.primary,
