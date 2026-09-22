@@ -7,7 +7,6 @@ import 'package:squiggle_flutter/document_library/widgets/document_name_dialog.d
 import 'package:squiggle_flutter/document_library/widgets/empty_library_results.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_header.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_section_header.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_card.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
@@ -94,29 +93,6 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
 
                       return CustomScrollView(
                         slivers: [
-                          SliverToBoxAdapter(
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: maxLibraryWidth,
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    hPad,
-                                    28,
-                                    hPad,
-                                    8,
-                                  ),
-                                  child: LibrarySectionHeader(
-                                    title: !isSearching
-                                        ? 'All canvases'
-                                        : 'Results',
-                                    count: documents.length,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
                           if (documents.isEmpty)
                             SliverToBoxAdapter(
                               child: Center(
