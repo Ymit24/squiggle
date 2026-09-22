@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
+import 'package:squiggle_flutter/widgets/squiggle_dialog.dart';
 
 Future<String?> showDocumentNameDialog(
   BuildContext context, {
@@ -58,15 +59,8 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
 
-    return AlertDialog(
-      backgroundColor: theme.colors.base,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colors.surface1),
-      ),
-      titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-      contentPadding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-      actionsPadding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+    return SquiggleDialog(
+      width: 360,
       title: Text(
         widget.title,
         style: theme.typography.inputText.copyWith(
@@ -75,43 +69,40 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
           letterSpacing: -0.2,
         ),
       ),
-      content: SizedBox(
-        width: 360,
-        child: TextField(
-          controller: _controller,
-          autofocus: true,
-          selectAllOnFocus: true,
-          style: theme.typography.inputText.copyWith(fontSize: 14.5),
-          decoration: InputDecoration(
-            hintText: 'Canvas name',
-            hintStyle: TextStyle(
-              color: theme.colors.subtext0.withValues(alpha: 0.6),
-            ),
-            isDense: true,
-            filled: true,
-            fillColor: theme.colors.surface0,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 11,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: theme.colors.surface1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: theme.colors.surface1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
-                color: theme.colors.accent.withValues(alpha: 0.7),
-                width: 1.4,
-              ),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        selectAllOnFocus: true,
+        style: theme.typography.inputText.copyWith(fontSize: 14.5),
+        decoration: InputDecoration(
+          hintText: 'Canvas name',
+          hintStyle: TextStyle(
+            color: theme.colors.subtext0.withValues(alpha: 0.6),
+          ),
+          isDense: true,
+          filled: true,
+          fillColor: theme.colors.surface0,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 13,
+            vertical: 11,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: theme.colors.surface1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: theme.colors.surface1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: theme.colors.accent.withValues(alpha: 0.7),
+              width: 1.4,
             ),
           ),
-          onSubmitted: (_) => _submit(),
         ),
+        onSubmitted: (_) => _submit(),
       ),
       actions: [
         TextButton(
