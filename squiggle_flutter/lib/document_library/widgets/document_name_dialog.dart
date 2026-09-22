@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
+import 'package:squiggle_flutter/widgets/squiggle_dialog.dart';
 import 'package:squiggle_flutter/widgets/squiggle_text_field.dart';
 
 Future<String?> showDocumentNameDialog(
@@ -59,15 +60,7 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
 
-    return AlertDialog(
-      backgroundColor: theme.colors.base,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colors.surface1),
-      ),
-      titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-      contentPadding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-      actionsPadding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+    return SquiggleDialog(
       title: Text(
         widget.title,
         style: theme.typography.inputText.copyWith(
@@ -76,23 +69,17 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
           letterSpacing: -0.2,
         ),
       ),
-      content: SizedBox(
-        width: 360,
-        child: SquiggleTextField(
-          controller: _controller,
-          autofocus: true,
-          hintText: 'Canvas name',
-          onSubmitted: (_) => _submit(),
-        ),
+      content: SquiggleTextField(
+        controller: _controller,
+        autofocus: true,
+        hintText: 'Canvas name',
+        onSubmitted: (_) => _submit(),
       ),
       actions: [
-        TextButton(
+        SquiggleButton(
           onPressed: () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(
-            foregroundColor: theme.colors.subtext0,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-          child: const Text('Cancel'),
+          label: 'Cancel',
+          variant: SquiggleButtonVariant.ghost,
         ),
         ValueListenableBuilder(
           valueListenable: _controller,
