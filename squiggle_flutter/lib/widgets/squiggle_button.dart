@@ -84,6 +84,7 @@ class SquiggleButton extends StatelessWidget {
         disabledBackgroundColor: theme.colors.surface0,
         disabledForegroundColor: theme.colors.subtext0.withValues(alpha: 0.5),
         side: s.side,
+        splashFactory: NoSplash.splashFactory,
         minimumSize: const Size(0, _height),
         fixedSize: compact ? const Size.square(_height) : null,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
