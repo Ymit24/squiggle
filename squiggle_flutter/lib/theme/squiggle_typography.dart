@@ -31,6 +31,8 @@ class SquiggleTypography {
 
   TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
+  TextStyle get buttonText => TextStyle(color: colors.text, fontSize: 13.5);
+
   TextStyle swatchOverlayLabel({
     required bool isActive,
     required double fontSize,

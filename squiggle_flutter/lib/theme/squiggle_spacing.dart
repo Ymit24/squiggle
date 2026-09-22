@@ -7,6 +7,10 @@ const kToolbarGap = 2.0;
 const kToolbarButtonSize = 36.0;
 const kToolbarIconSize = 20.0;
 const kToolbarDividerHeight = 20.0;
+const kButtonHeight = 38.0;
+const kButtonHorizontalPadding = 14.0;
+const kButtonIconSize = 18.0;
+const kButtonContentGap = 7.0;
 const kPanelPadding = 12.0;
 const kPanelSectionSpacing = 12.0;
 const kPanelLabelSpacing = 8.0;
@@ -31,6 +35,10 @@ class SquiggleSpacing {
     required this.toolbarButtonSize,
     required this.toolbarIconSize,
     required this.toolbarDividerHeight,
+    required this.buttonHeight,
+    required this.buttonHorizontalPadding,
+    required this.buttonIconSize,
+    required this.buttonContentGap,
     required this.panelPadding,
     required this.panelSectionSpacing,
     required this.panelLabelSpacing,
@@ -48,6 +56,10 @@ class SquiggleSpacing {
   final double toolbarButtonSize;
   final double toolbarIconSize;
   final double toolbarDividerHeight;
+  final double buttonHeight;
+  final double buttonHorizontalPadding;
+  final double buttonIconSize;
+  final double buttonContentGap;
   final double panelPadding;
   final double panelSectionSpacing;
   final double panelLabelSpacing;
@@ -69,6 +81,10 @@ class SquiggleSpacing {
     toolbarButtonSize: kToolbarButtonSize,
     toolbarIconSize: kToolbarIconSize,
     toolbarDividerHeight: kToolbarDividerHeight,
+    buttonHeight: kButtonHeight,
+    buttonHorizontalPadding: kButtonHorizontalPadding,
+    buttonIconSize: kButtonIconSize,
+    buttonContentGap: kButtonContentGap,
     panelPadding: kPanelPadding,
     panelSectionSpacing: kPanelSectionSpacing,
     panelLabelSpacing: kPanelLabelSpacing,
@@ -87,6 +103,10 @@ class SquiggleSpacing {
     double? toolbarButtonSize,
     double? toolbarIconSize,
     double? toolbarDividerHeight,
+    double? buttonHeight,
+    double? buttonHorizontalPadding,
+    double? buttonIconSize,
+    double? buttonContentGap,
     double? panelPadding,
     double? panelSectionSpacing,
     double? panelLabelSpacing,
@@ -104,6 +124,11 @@ class SquiggleSpacing {
       toolbarButtonSize: toolbarButtonSize ?? this.toolbarButtonSize,
       toolbarIconSize: toolbarIconSize ?? this.toolbarIconSize,
       toolbarDividerHeight: toolbarDividerHeight ?? this.toolbarDividerHeight,
+      buttonHeight: buttonHeight ?? this.buttonHeight,
+      buttonHorizontalPadding:
+          buttonHorizontalPadding ?? this.buttonHorizontalPadding,
+      buttonIconSize: buttonIconSize ?? this.buttonIconSize,
+      buttonContentGap: buttonContentGap ?? this.buttonContentGap,
       panelPadding: panelPadding ?? this.panelPadding,
       panelSectionSpacing: panelSectionSpacing ?? this.panelSectionSpacing,
       panelLabelSpacing: panelLabelSpacing ?? this.panelLabelSpacing,
@@ -131,6 +156,18 @@ class SquiggleSpacing {
       toolbarDividerHeight: _lerpDouble(
         toolbarDividerHeight,
         other.toolbarDividerHeight,
+        t,
+      ),
+      buttonHeight: _lerpDouble(buttonHeight, other.buttonHeight, t),
+      buttonHorizontalPadding: _lerpDouble(
+        buttonHorizontalPadding,
+        other.buttonHorizontalPadding,
+        t,
+      ),
+      buttonIconSize: _lerpDouble(buttonIconSize, other.buttonIconSize, t),
+      buttonContentGap: _lerpDouble(
+        buttonContentGap,
+        other.buttonContentGap,
         t,
       ),
       panelPadding: _lerpDouble(panelPadding, other.panelPadding, t),
