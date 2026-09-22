@@ -9,6 +9,9 @@ enum SquiggleButtonVariant {
 
   /// Dark bordered button with a semibold label.
   secondary,
+
+  /// Filled danger-colored button for destructive actions.
+  danger,
 }
 
 /// Per-variant styling, resolved once per build by [_resolve].
@@ -36,6 +39,12 @@ _VariantStyle _resolve(
     foreground: colors.text,
     side: BorderSide(color: colors.surface1),
     weight: FontWeight.w600,
+  ),
+  SquiggleButtonVariant.danger => (
+    background: colors.onDanger,
+    foreground: Colors.white,
+    side: null,
+    weight: FontWeight.w700,
   ),
 };
 
@@ -71,7 +80,6 @@ class SquiggleButton extends StatelessWidget {
   final bool compact;
 
   static const _height = 38.0;
-
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
