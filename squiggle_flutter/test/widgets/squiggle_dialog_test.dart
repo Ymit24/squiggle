@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_dialog.dart';
 
 void main() {
-  void expectDialogShell(WidgetTester tester, double width) {
+  void expectDialogShell(WidgetTester tester) {
     final dialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
     final colors = SquiggleTheme.dark.colors;
 
@@ -24,7 +24,7 @@ void main() {
     expect(dialog.contentPadding, const EdgeInsets.fromLTRB(22, 12, 22, 0));
     expect(dialog.actionsPadding, const EdgeInsets.fromLTRB(16, 16, 16, 14));
     expect(dialog.content, isA<SizedBox>());
-    expect((dialog.content! as SizedBox).width, width);
+    expect((dialog.content! as SizedBox).width, 360);
   }
 
   testWidgets('delete dialog keeps its shell and confirmation behavior', (
@@ -59,7 +59,7 @@ void main() {
 
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
-    expectDialogShell(tester, 340);
+    expectDialogShell(tester);
     expect(find.textContaining('Sketch'), findsOneWidget);
 
     await tester.tap(find.text('Delete'));
@@ -94,7 +94,7 @@ void main() {
 
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
-    expectDialogShell(tester, 360);
+    expectDialogShell(tester);
     expect(find.text('New canvas'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Sketch');

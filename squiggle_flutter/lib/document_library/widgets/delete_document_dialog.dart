@@ -13,7 +13,6 @@ class DeleteDocumentDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     return SquiggleDialog(
-      width: 340,
       title: Row(
         children: [
           Container(

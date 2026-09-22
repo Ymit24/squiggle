@@ -60,7 +60,6 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
     final theme = context.squiggleTheme;
 
     return SquiggleDialog(
-      width: 360,
       title: Text(
         widget.title,
         style: theme.typography.inputText.copyWith(

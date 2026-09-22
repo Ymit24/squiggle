@@ -7,13 +7,11 @@ class SquiggleDialog extends StatelessWidget {
     required this.title,
     required this.content,
     required this.actions,
-    this.width,
   });
 
   final Widget title;
   final Widget content;
   final List<Widget> actions;
-  final double? width;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +27,7 @@ class SquiggleDialog extends StatelessWidget {
       contentPadding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
       actionsPadding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       title: title,
-      content: width == null ? content : SizedBox(width: width, child: content),
+      content: SizedBox(width: 360, child: content),
       actions: actions,
     );
   }
