@@ -10,6 +10,8 @@ const squiggleTextColor = Color(0xFFE4E4E4);
 const squiggleAccentColor = Color(0xFFA8B3C2);
 const squiggleScrimColor = Color(0x33000000);
 const squiggleSelectionFillColor = Color(0x1AA8B3C2);
+const squiggleDangerColor = Color.fromARGB(255, 242, 139, 139);
+const squiggleOnDangerColor = Color.fromARGB(255, 217, 95, 95);
 
 /// Semantic UI color tokens for Squiggle's dark graphite theme.
 @immutable
@@ -24,6 +26,8 @@ class SquiggleColorScheme {
     required this.accent,
     required this.scrim,
     required this.selectionFill,
+    required this.danger,
+    required this.onDanger,
   });
 
   final Color base;
@@ -35,6 +39,8 @@ class SquiggleColorScheme {
   final Color accent;
   final Color scrim;
   final Color selectionFill;
+  final Color danger;
+  final Color onDanger;
 
   static const dark = SquiggleColorScheme(
     base: squiggleBaseColor,
@@ -46,6 +52,8 @@ class SquiggleColorScheme {
     accent: squiggleAccentColor,
     scrim: squiggleScrimColor,
     selectionFill: squiggleSelectionFillColor,
+    danger: squiggleDangerColor,
+    onDanger: squiggleOnDangerColor,
   );
 
   SquiggleColorScheme copyWith({
@@ -58,6 +66,8 @@ class SquiggleColorScheme {
     Color? accent,
     Color? scrim,
     Color? selectionFill,
+    Color? danger,
+    Color? onDanger,
   }) {
     return SquiggleColorScheme(
       base: base ?? this.base,
@@ -69,6 +79,8 @@ class SquiggleColorScheme {
       accent: accent ?? this.accent,
       scrim: scrim ?? this.scrim,
       selectionFill: selectionFill ?? this.selectionFill,
+      danger: danger ?? this.danger,
+      onDanger: onDanger ?? this.onDanger,
     );
   }
 
@@ -83,6 +95,8 @@ class SquiggleColorScheme {
       accent: Color.lerp(accent, other.accent, t)!,
       scrim: Color.lerp(scrim, other.scrim, t)!,
       selectionFill: Color.lerp(selectionFill, other.selectionFill, t)!,
+      danger: Color.lerp(danger, other.danger, t)!,
+      onDanger: Color.lerp(onDanger, other.onDanger, t)!,
     );
   }
 }
