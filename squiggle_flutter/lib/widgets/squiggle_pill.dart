@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class SquigglePill extends StatelessWidget {
-  const SquigglePill({super.key, required this.label}) : icon = null;
+  const SquigglePill({super.key, required this.label});
 
   final String label;
-  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
