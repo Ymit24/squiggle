@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
-import 'package:squiggle_flutter/widgets/squiggle_pressable.dart';
 
 void main() {
   testWidgets('renders labeled content and invokes onPressed', (tester) async {
@@ -41,12 +40,7 @@ void main() {
     );
 
     expect(tester.widget<Tooltip>(find.byType(Tooltip)).message, 'Close');
-    final container = find.descendant(
-      of: find.byType(SquigglePressable),
-      matching: find.byType(AnimatedContainer),
-    );
-    expect(container, findsOneWidget);
-    expect(tester.getSize(container), const Size(38, 38));
+    expect(tester.getSize(find.byType(TextButton)), const Size(38, 38));
   });
 
   testWidgets('disabled button ignores presses', (tester) async {
@@ -55,12 +49,29 @@ void main() {
     );
 
     expect(
-      tester
-          .widget<SquigglePressable>(find.byType(SquigglePressable))
-          .onPressed,
+      tester.widget<TextButton>(find.byType(TextButton)).onPressed,
       isNull,
     );
     await tester.tap(find.byType(SquiggleButton));
+  });
+
+  testWidgets('exposes a semantic tap action', (tester) async {
+    await tester.pumpWidget(
+      _app(SquiggleButton(label: 'Create', onPressed: () {})),
+    );
+
+    expect(
+      tester.getSemantics(find.text('Create')),
+      matchesSemantics(
+        label: 'Create',
+        isButton: true,
+        isEnabled: true,
+        hasEnabledState: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
+    );
   });
 }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-import 'package:squiggle_flutter/widgets/squiggle_pressable.dart';
 
 const _animationDuration = Duration(milliseconds: 140);
 const _disabledForegroundOpacity = 0.45;
@@ -54,44 +53,49 @@ class SquiggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = SquigglePressable(
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
+    final button = TextButton(
       onPressed: onPressed,
       autofocus: autofocus,
-      builder: (context, state) {
-        final theme = context.squiggleTheme;
-        final spacing = theme.spacing;
-        final foreground = _foregroundColor(theme, state);
-
-        return AnimatedContainer(
-          duration: _animationDuration,
-          constraints: BoxConstraints(
-            minWidth: _isIconOnly ? spacing.buttonHeight : 0,
-            minHeight: spacing.buttonHeight,
-          ),
-          padding: _isIconOnly
+      style: ButtonStyle(
+        animationDuration: _animationDuration,
+        elevation: const WidgetStatePropertyAll(0),
+        shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        minimumSize: WidgetStatePropertyAll(
+          Size(_isIconOnly ? spacing.buttonHeight : 0, spacing.buttonHeight),
+        ),
+        padding: WidgetStatePropertyAll(
+          _isIconOnly
               ? EdgeInsets.zero
               : EdgeInsets.symmetric(
                   horizontal: spacing.buttonHorizontalPadding,
                 ),
-          decoration: BoxDecoration(
-            color: _backgroundColor(theme, state),
-            border: _border(theme, state),
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) => _foregroundColor(theme, states),
+        ),
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => _backgroundColor(theme, states),
+        ),
+        side: WidgetStateProperty.resolveWith(
+          (states) => _borderSide(theme, states),
+        ),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(theme.radii.button),
           ),
-          child: IconTheme.merge(
-            data: IconThemeData(
-              color: foreground,
-              size: spacing.buttonIconSize,
-            ),
-            child: DefaultTextStyle(
-              style: theme.typography
-                  .buttonText(emphasized: _emphasized)
-                  .copyWith(color: foreground),
-              child: _content(spacing.buttonContentGap),
-            ),
-          ),
-        );
-      },
+        ),
+        textStyle: WidgetStatePropertyAll(
+          theme.typography.buttonText(emphasized: _emphasized),
+        ),
+        iconSize: WidgetStatePropertyAll(spacing.buttonIconSize),
+      ),
+      child: _content(spacing.buttonContentGap),
     );
 
     final tooltip = this.tooltip;
@@ -116,22 +120,22 @@ class SquiggleButton extends StatelessWidget {
     );
   }
 
-  Color _foregroundColor(SquiggleTheme theme, SquigglePressableState state) {
-    if (!state.isEnabled) {
+  Color _foregroundColor(SquiggleTheme theme, Set<WidgetState> states) {
+    if (states.contains(WidgetState.disabled)) {
       return theme.colors.subtext0.withValues(
         alpha: _disabledForegroundOpacity,
       );
     }
     if (variant == SquiggleButtonVariant.primary) return theme.colors.base;
     if (variant == SquiggleButtonVariant.danger) return theme.colors.onDanger;
-    if (variant == SquiggleButtonVariant.ghost && !state.isHighlighted) {
+    if (variant == SquiggleButtonVariant.ghost && !_isHighlighted(states)) {
       return theme.colors.subtext0;
     }
     return theme.colors.text;
   }
 
-  Color _backgroundColor(SquiggleTheme theme, SquigglePressableState state) {
-    if (!state.isEnabled) {
+  Color _backgroundColor(SquiggleTheme theme, Set<WidgetState> states) {
+    if (states.contains(WidgetState.disabled)) {
       return variant == SquiggleButtonVariant.ghost
           ? Colors.transparent
           : theme.colors.surface0;
@@ -140,15 +144,15 @@ class SquiggleButton extends StatelessWidget {
 
     return switch (variant) {
       SquiggleButtonVariant.primary =>
-        state.isHighlighted
+        _isHighlighted(states)
             ? theme.colors.text.withValues(alpha: _highlightedBackgroundOpacity)
             : theme.colors.text,
       SquiggleButtonVariant.secondary =>
-        state.isHighlighted ? theme.colors.surface1 : theme.colors.surface0,
+        _isHighlighted(states) ? theme.colors.surface1 : theme.colors.surface0,
       SquiggleButtonVariant.ghost =>
-        state.isHighlighted ? theme.colors.surface0 : Colors.transparent,
+        _isHighlighted(states) ? theme.colors.surface0 : Colors.transparent,
       SquiggleButtonVariant.danger =>
-        state.isHighlighted
+        _isHighlighted(states)
             ? theme.colors.danger.withValues(
                 alpha: _highlightedBackgroundOpacity,
               )
@@ -156,18 +160,25 @@ class SquiggleButton extends StatelessWidget {
     };
   }
 
-  Border? _border(SquiggleTheme theme, SquigglePressableState state) {
-    if ((isActive || state.isFocused) && state.isEnabled) {
-      return Border.all(
+  BorderSide? _borderSide(SquiggleTheme theme, Set<WidgetState> states) {
+    final isEnabled = !states.contains(WidgetState.disabled);
+    if ((isActive || states.contains(WidgetState.focused)) && isEnabled) {
+      return BorderSide(
         color: theme.colors.accent.withValues(alpha: _activeBorderOpacity),
       );
     }
     if (variant == SquiggleButtonVariant.secondary) {
-      final color = state.isEnabled
+      final color = isEnabled
           ? theme.colors.surface1
           : theme.colors.surface1.withValues(alpha: _disabledBorderOpacity);
-      return Border.all(color: color);
+      return BorderSide(color: color);
     }
     return null;
+  }
+
+  bool _isHighlighted(Set<WidgetState> states) {
+    return states.contains(WidgetState.hovered) ||
+        states.contains(WidgetState.focused) ||
+        states.contains(WidgetState.pressed);
   }
 }
