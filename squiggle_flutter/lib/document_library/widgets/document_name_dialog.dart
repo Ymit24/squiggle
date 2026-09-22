@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
+import 'package:squiggle_flutter/widgets/squiggle_text_field.dart';
 
 Future<String?> showDocumentNameDialog(
   BuildContext context, {
@@ -77,39 +78,10 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
       ),
       content: SizedBox(
         width: 360,
-        child: TextField(
+        child: SquiggleTextField(
           controller: _controller,
           autofocus: true,
-          selectAllOnFocus: true,
-          style: theme.typography.inputText.copyWith(fontSize: 14.5),
-          decoration: InputDecoration(
-            hintText: 'Canvas name',
-            hintStyle: TextStyle(
-              color: theme.colors.subtext0.withValues(alpha: 0.6),
-            ),
-            isDense: true,
-            filled: true,
-            fillColor: theme.colors.surface0,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 11,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: theme.colors.surface1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: theme.colors.surface1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
-                color: theme.colors.accent.withValues(alpha: 0.7),
-                width: 1.4,
-              ),
-            ),
-          ),
+          hintText: 'Canvas name',
           onSubmitted: (_) => _submit(),
         ),
       ),
