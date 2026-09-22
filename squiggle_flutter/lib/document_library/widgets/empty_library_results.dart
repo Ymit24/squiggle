@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class EmptyLibraryResults extends StatelessWidget {
   const EmptyLibraryResults({
@@ -63,10 +64,10 @@ class EmptyLibraryResults extends StatelessWidget {
           if (isSearching)
             TextButton(onPressed: onClear, child: const Text('Clear search'))
           else
-            FilledButton.icon(
+            SquiggleButton(
               onPressed: onCreate,
-              icon: const Icon(Icons.add_rounded, size: 17),
-              label: const Text('New canvas'),
+              icon: Icons.add_rounded,
+              label: 'New canvas',
             ),
         ],
       ),
