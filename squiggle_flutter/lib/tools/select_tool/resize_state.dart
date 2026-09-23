@@ -115,11 +115,15 @@ class ResizeState extends InteractionState {
   Rect _asymmetricBounds(Offset cursorWorldPosition, bool lockAspectRatio) =>
       lockAspectRatio
       ? _aspectLockedAsymmetricBounds(cursorWorldPosition)
-      : Rect.fromLTRB(
-          _movesLeft ? cursorWorldPosition.dx : _initialBounds.left,
-          _movesTop ? cursorWorldPosition.dy : _initialBounds.top,
-          _movesRight ? cursorWorldPosition.dx : _initialBounds.right,
-          _movesBottom ? cursorWorldPosition.dy : _initialBounds.bottom,
+      : Rect.fromPoints(
+          Offset(
+            _movesLeft ? cursorWorldPosition.dx : _initialBounds.left,
+            _movesTop ? cursorWorldPosition.dy : _initialBounds.top,
+          ),
+          Offset(
+            _movesRight ? cursorWorldPosition.dx : _initialBounds.right,
+            _movesBottom ? cursorWorldPosition.dy : _initialBounds.bottom,
+          ),
         );
 
   Rect _aspectLockedAsymmetricBounds(Offset cursorWorldPosition) {

@@ -5,6 +5,8 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
+import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -13,6 +15,134 @@ void main() {
     late SelectToolTestHarness harness;
 
     setUp(() => harness = SelectToolTestHarness());
+
+    test('dragging every handle past the opposite edge flips the bounds', () {
+      final cases = <SelectionResizeHandle, (Offset, Rect)>{
+        SelectionResizeHandle.topLeft: (
+          const Offset(150, 150),
+          const Rect.fromLTWH(100, 100, 50, 50),
+        ),
+        SelectionResizeHandle.top: (
+          const Offset(0, 150),
+          const Rect.fromLTWH(0, 100, 100, 50),
+        ),
+        SelectionResizeHandle.topRight: (
+          const Offset(-150, 150),
+          const Rect.fromLTWH(-50, 100, 50, 50),
+        ),
+        SelectionResizeHandle.right: (
+          const Offset(-150, 0),
+          const Rect.fromLTWH(-50, 0, 50, 100),
+        ),
+        SelectionResizeHandle.bottomRight: (
+          const Offset(-150, -150),
+          const Rect.fromLTWH(-50, -50, 50, 50),
+        ),
+        SelectionResizeHandle.bottom: (
+          const Offset(0, -150),
+          const Rect.fromLTWH(0, -50, 100, 50),
+        ),
+        SelectionResizeHandle.bottomLeft: (
+          const Offset(150, -150),
+          const Rect.fromLTWH(100, -50, 50, 50),
+        ),
+        SelectionResizeHandle.left: (
+          const Offset(150, 0),
+          const Rect.fromLTWH(100, 0, 50, 100),
+        ),
+      };
+
+      for (final entry in cases.entries) {
+        final current = SelectToolTestHarness();
+        final feature = current.context.document.nodes.first as Feature;
+        current.context.selection.selectNode(feature.id);
+        final handle = ResizeHandleUtil.getResizeHandles(
+          feature,
+          current.camera,
+        ).firstWhere((handle) => handle.handle == entry.key);
+        final down = handle.geometry.center;
+        final up = down + entry.value.$1;
+
+        current.pointerDown(down);
+        current.pointerMove(up);
+        current.pointerUp(up);
+
+        expect(feature.localBounds(), entry.value.$2, reason: '${entry.key}');
+        expect(feature.size.width, greaterThanOrEqualTo(0));
+        expect(feature.size.height, greaterThanOrEqualTo(0));
+      }
+    });
+
+    test('shift-resizing past an edge keeps the opposite edge fixed', () {
+      for (final (handleType, delta, expected) in [
+        (
+          SelectionResizeHandle.top,
+          const Offset(0, 150),
+          const Rect.fromLTWH(25, 100, 50, 50),
+        ),
+        (
+          SelectionResizeHandle.right,
+          const Offset(-150, 0),
+          const Rect.fromLTWH(-50, 25, 50, 50),
+        ),
+        (
+          SelectionResizeHandle.bottom,
+          const Offset(0, -150),
+          const Rect.fromLTWH(25, -50, 50, 50),
+        ),
+        (
+          SelectionResizeHandle.left,
+          const Offset(150, 0),
+          const Rect.fromLTWH(100, 25, 50, 50),
+        ),
+      ]) {
+        final current = SelectToolTestHarness();
+        final feature = current.context.document.nodes.first as Feature;
+        current.context.selection.selectNode(feature.id);
+        final handle = ResizeHandleUtil.getResizeHandles(
+          feature,
+          current.camera,
+        ).firstWhere((handle) => handle.handle == handleType);
+        final down = handle.geometry.center;
+        final up = down + delta;
+
+        current.pointerDown(down, shift: true);
+        current.pointerMove(up, shift: true);
+        current.pointerUp(up, shift: true);
+
+        expect(feature.localBounds(), expected, reason: '$handleType');
+      }
+    });
+
+    test('crossing a corner keeps nested group geometry positive', () {
+      final document = harness.context.document;
+      document.removeAll(document.nodes.map((node) => node.id).toList());
+      final feature = Feature(
+        origin: Offset.zero,
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      final nested = Group(origin: Offset.zero, children: [feature]);
+      final outer = Group(origin: const Offset(100, 200), children: [nested]);
+      document.addNode(outer);
+      harness.context.selection.selectNode(outer.id);
+      final handle = ResizeHandleUtil.getResizeHandles(outer, harness.camera)
+          .firstWhere(
+            (handle) => handle.handle == SelectionResizeHandle.bottomRight,
+          );
+      final down = handle.geometry.center;
+      final up = down - const Offset(150, 150);
+
+      harness.pointerDown(down);
+      harness.pointerMove(up);
+      harness.pointerUp(up);
+
+      const expected = Rect.fromLTWH(50, 150, 50, 50);
+      expect(outer.localBounds(), expected);
+      expect(nested.globalBounds(), expected);
+      expect(feature.globalBounds(), expected);
+      expect(feature.size, const Size(50, 50));
+    });
 
     test('group drag scales children and restores them through undo/redo', () {
       final document = harness.context.document;
