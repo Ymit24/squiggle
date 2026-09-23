@@ -96,5 +96,9 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Accept'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Cancel')).dy,
+      tester.getTopLeft(find.text('Accept')).dy,
+    );
   });
 }
