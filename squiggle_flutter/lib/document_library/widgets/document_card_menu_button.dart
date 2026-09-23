@@ -41,7 +41,7 @@ class DocumentCardMenuButton extends StatelessWidget {
       offset: const Offset(0, 8),
       tooltip: 'Document actions',
       icon: const Icon(Icons.more_horiz_rounded),
-      iconSize: 18,
+      iconSize: context.squiggleTheme.spacing.buttonIconSize,
       style: SquiggleButton.styleFor(
         context,
         variant: SquiggleButtonVariant.secondary,
