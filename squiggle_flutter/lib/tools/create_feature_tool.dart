@@ -35,11 +35,7 @@ class CreateFeatureTool extends Tool {
     ImageRepository imageRepository,
   ) {
     if (_state case _Dragging(:final bounds)) {
-      Feature(
-        origin: bounds.topLeft,
-        size: bounds.size,
-        kind: kind,
-      ).paint(canvas, imageRepository);
+      _buildFeature(context, bounds).paint(canvas, imageRepository);
     }
   }
 
@@ -100,17 +96,21 @@ class CreateFeatureTool extends Tool {
   }) {
     if (_state case _Dragging(:final bounds)) {
       context.history.run('Create feature', (transaction) {
-        transaction.add(
-          Feature(
-            origin: bounds.topLeft,
-            size: bounds.size,
-            kind: kind.clone(),
-          ),
-        );
+        transaction.add(_buildFeature(context, bounds));
       });
       _state = const _Idle();
     }
     return true;
+  }
+
+  Feature _buildFeature(EditorContext context, Rect bounds) {
+    final feature = Feature(
+      origin: bounds.topLeft,
+      size: bounds.size,
+      kind: kind.clone(),
+    );
+    context.applyInspectorValues(feature);
+    return feature;
   }
 
   Rect _boundsFromDrag(

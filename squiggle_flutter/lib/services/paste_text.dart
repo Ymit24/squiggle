@@ -18,7 +18,11 @@ Future<bool> pasteTextFromClipboard({required EditorContext context}) async {
     return false;
   }
 
-  final feature = createTextFeatureAtCenter(contents: text, center: center);
+  final feature = createTextFeatureAtCenter(
+    contents: text,
+    center: center,
+    context: context,
+  );
   context.cancelInteraction();
   context.history.run('Create feature', (transaction) {
     transaction.add(feature);
@@ -30,8 +34,9 @@ Future<bool> pasteTextFromClipboard({required EditorContext context}) async {
 Feature createTextFeatureAtCenter({
   required String contents,
   required Offset center,
+  EditorContext? context,
 }) {
-  return repositionNodesToCenter([
-    newTextFeatureAt(Offset.zero, contents),
-  ], center).first;
+  final feature = newTextFeatureAt(Offset.zero, contents);
+  context?.applyInspectorValues(feature);
+  return repositionNodesToCenter([feature], center).first;
 }

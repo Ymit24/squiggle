@@ -7,6 +7,8 @@ import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/tool_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
@@ -36,6 +38,7 @@ class EditorContext extends ChangeNotifier {
   final ToolModel _tool;
   final History _history;
   final TextEditModel _textEdit;
+  final Map<String, Object?> _inspectorValues = {};
 
   SelectionModel get selection => _selection;
 
@@ -105,11 +108,37 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
+  void rememberInspectorValue(String fieldKey, Object? value) {
+    _inspectorValues[fieldKey] = value;
+  }
+
+  /// Applies the last inspector choices to a feature being created.
+  void applyInspectorValues(Feature feature) {
+    for (final field in feature.kind.buildInspectorFields()) {
+      if (_inspectorValues.containsKey(field.fieldKey)) {
+        field.applyIfCompatible(_inspectorValues[field.fieldKey]);
+      }
+    }
+    if (feature.kind case FeatureKindText kind) {
+      feature.size = kind.measureContents(
+        width: defaultNewTextWidth,
+        fontSize: kind.fontSize,
+      );
+    }
+  }
+
+  Rect newTextBoundsAt(Offset origin) {
+    final feature = newTextFeatureAt(origin, '');
+    applyInspectorValues(feature);
+    return feature.localBounds();
+  }
+
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
     cancelInteraction();
     document.replaceFrom(newDocument);
     history.clear();
+    _inspectorValues.clear();
     selection.clearSelection();
     endTextEdit();
   }

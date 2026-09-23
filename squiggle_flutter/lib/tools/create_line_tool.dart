@@ -33,7 +33,7 @@ class CreateLineTool extends Tool {
     if (worldPoints == null) {
       return;
     }
-    _buildFeature(worldPoints).paint(canvas, imageRepository);
+    _buildFeature(context, worldPoints).paint(canvas, imageRepository);
   }
 
   List<Offset>? _worldPointsForPaint() {
@@ -237,18 +237,20 @@ class CreateLineTool extends Tool {
 
   void _commit(EditorContext context, List<Offset> worldPoints) {
     context.history.run('Create feature', (transaction) {
-      transaction.add(_buildFeature(worldPoints));
+      transaction.add(_buildFeature(context, worldPoints));
     });
   }
 
-  Feature _buildFeature(List<Offset> worldPoints) {
+  Feature _buildFeature(EditorContext context, List<Offset> worldPoints) {
     final origin = worldPoints.first;
     final localPoints = localPointsFromWorld(worldPoints, origin);
-    return Feature(
+    final feature = Feature(
       origin: origin,
       size: Size.zero,
       kind: FeatureKindPolyline(localPoints),
     );
+    context.applyInspectorValues(feature);
+    return feature;
   }
 
   Offset _constrainedPoint(
