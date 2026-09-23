@@ -20,7 +20,10 @@ void main() {
           Feature(
             origin: const Offset(0, 0),
             size: const Size(200, 48),
-            kind: FeatureKindText('initial text', fillColor: Color(0xFFFFFFFF)),
+            kind: FeatureKindText(
+              'initial text',
+              strokeColor: Color(0xFFFFFFFF),
+            ),
           ),
         ]),
       );

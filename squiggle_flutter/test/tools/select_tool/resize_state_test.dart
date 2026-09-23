@@ -414,7 +414,7 @@ EditorContext _textContext({required String contents, required Size size}) =>
         Feature(
           origin: Offset.zero,
           size: size,
-          kind: FeatureKindText(contents, fillColor: const Color(0xFFFFFFFF)),
+          kind: FeatureKindText(contents, strokeColor: const Color(0xFFFFFFFF)),
         ),
       ]),
     );

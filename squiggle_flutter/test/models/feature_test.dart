@@ -126,11 +126,11 @@ void main() {
     kind
       ..label = 'after'
       ..fontSize = 24
-      ..strokeWidth = 3;
+      ..strokeColor = const Color(0xFF123456);
 
     expect(kind.label, 'after');
     expect(kind.fontSize, 24);
-    expect(kind.strokeWidth, 3);
+    expect(kind.strokeColor, const Color(0xFF123456));
   });
 
   test('copyWith deep-copies mutable kind data', () {
