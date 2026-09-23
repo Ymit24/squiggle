@@ -14,7 +14,6 @@ class LibraryMenuAnchor extends StatelessWidget {
     required this.buttonBuilder,
     this.onOpenChanged,
     this.alignmentOffset = const Offset(0, 8),
-    this.alignEnd = false,
   });
 
   final double menuWidth;
@@ -23,17 +22,14 @@ class LibraryMenuAnchor extends StatelessWidget {
   buttonBuilder;
   final ValueChanged<bool>? onOpenChanged;
   final Offset alignmentOffset;
-  final bool alignEnd;
 
   @override
   Widget build(BuildContext context) {
     return MenuAnchor(
-      alignmentOffset: alignEnd
-          ? alignmentOffset.translate(-menuWidth, 0)
-          : alignmentOffset,
+      alignmentOffset: alignmentOffset,
       onOpen: () => onOpenChanged?.call(true),
       onClose: () => onOpenChanged?.call(false),
-      style: _menuStyle(context, menuWidth, alignEnd),
+      style: _menuStyle(context, menuWidth),
       menuChildren: [
         for (final item in menuItems()) LibraryMenuButton(item: item),
       ],
@@ -85,12 +81,10 @@ void showLibraryContextMenu({
   ).then((item) => item?.onTap());
 }
 
-MenuStyle _menuStyle(BuildContext context, double width, bool alignEnd) {
+MenuStyle _menuStyle(BuildContext context, double width) {
   final colors = context.squiggleTheme.colors;
   return MenuStyle(
-    alignment: alignEnd
-        ? AlignmentDirectional.bottomEnd
-        : AlignmentDirectional.bottomStart,
+    alignment: AlignmentDirectional.bottomStart,
     backgroundColor: WidgetStatePropertyAll(colors.surface0),
     surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
     shadowColor: const WidgetStatePropertyAll(Colors.black),

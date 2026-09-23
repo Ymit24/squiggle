@@ -89,29 +89,38 @@ class SquiggleButton extends StatelessWidget {
   final bool compact;
 
   static const _height = 38.0;
-  @override
-  Widget build(BuildContext context) {
+
+  static ButtonStyle styleFor(
+    BuildContext context, {
+    SquiggleButtonVariant variant = SquiggleButtonVariant.primary,
+    bool compact = false,
+  }) {
     final theme = context.squiggleTheme;
     final s = _resolve(variant, theme.colors);
+    return FilledButton.styleFrom(
+      backgroundColor: s.background,
+      foregroundColor: s.foreground,
+      disabledBackgroundColor: theme.colors.surface0,
+      disabledForegroundColor: theme.colors.subtext0.withValues(alpha: 0.5),
+      side: s.side,
+      splashFactory: NoSplash.splashFactory,
+      minimumSize: const Size(0, _height),
+      fixedSize: compact ? const Size.square(_height) : null,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: compact
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      textStyle: TextStyle(fontSize: 13.5, fontWeight: s.weight),
+      visualDensity: VisualDensity.standard,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final button = FilledButton(
       onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: s.background,
-        foregroundColor: s.foreground,
-        disabledBackgroundColor: theme.colors.surface0,
-        disabledForegroundColor: theme.colors.subtext0.withValues(alpha: 0.5),
-        side: s.side,
-        splashFactory: NoSplash.splashFactory,
-        minimumSize: const Size(0, _height),
-        fixedSize: compact ? const Size.square(_height) : null,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: compact
-            ? EdgeInsets.zero
-            : const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        textStyle: TextStyle(fontSize: 13.5, fontWeight: s.weight),
-        visualDensity: VisualDensity.standard,
-      ),
+      style: styleFor(context, variant: variant, compact: compact),
       child: compact
           ? Icon(icon, size: 18)
           : Row(
