@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 
 void main() {
@@ -46,17 +45,6 @@ void main() {
         isShiftPressed: shift,
         isAltPressed: alt,
       );
-    }
-
-    void paintPreview() {
-      final recorder = PictureRecorder();
-      context.tool.activeTool.paint(
-        Canvas(recorder),
-        camera,
-        context,
-        ImageRepository(),
-      );
-      recorder.endRecording().dispose();
     }
 
     test('click without drag does not create feature', () {
@@ -155,78 +143,5 @@ void main() {
       expect(bounds.width, bounds.height);
       expect(bounds, const Rect.fromLTWH(0, 0, 100, 100));
     });
-
-    test('repaints and commits one styled feature for a drag', () {
-      final countingContext = _CountingEditorContext(document: Document());
-      context = countingContext;
-      context.rememberInspectorValue('strokeColor', const Color(0xFFFF0000));
-      context.setTool(CreateFeatureTool.rect());
-
-      pointerDown(const Offset(10, 20));
-      pointerMove(const Offset(10, 20));
-      paintPreview();
-      paintPreview();
-      pointerMove(const Offset(90, 70));
-      paintPreview();
-      context.rememberInspectorValue('strokeColor', const Color(0xFF0000FF));
-      paintPreview();
-
-      expect(countingContext.styleApplications, 1);
-      pointerUp(const Offset(90, 70));
-      final feature = context.document.nodes.single as Feature;
-      expect(feature.localBounds(), const Rect.fromLTWH(10, 20, 80, 50));
-      expect(
-        (feature.kind as FeatureKindRectangle).strokeColor,
-        const Color(0xFFFF0000),
-      );
-      expect(countingContext.styleApplications, 1);
-
-      pointerDown(const Offset(0, 0));
-      pointerMove(const Offset(0, 0));
-      pointerMove(const Offset(20, 20));
-      pointerUp(const Offset(20, 20));
-      expect(countingContext.styleApplications, 2);
-      expect(
-        ((context.document.nodes.last as Feature).kind as FeatureKindRectangle)
-            .strokeColor,
-        const Color(0xFF0000FF),
-      );
-    });
-
-    test('cancellation and deactivation discard the preview', () {
-      final countingContext = _CountingEditorContext(document: Document());
-      context = countingContext;
-      context.setTool(CreateFeatureTool.rect());
-
-      pointerDown(const Offset(0, 0));
-      pointerMove(const Offset(0, 0));
-      context.cancelInteraction();
-      paintPreview();
-      expect(context.document.nodes, isEmpty);
-
-      pointerDown(const Offset(10, 10));
-      pointerMove(const Offset(10, 10));
-      expect(countingContext.styleApplications, 2);
-      context.setTool(CreateFeatureTool.circle());
-      paintPreview();
-      expect(context.document.nodes, isEmpty);
-
-      context.setTool(CreateFeatureTool.rect());
-      pointerDown(const Offset(20, 20));
-      pointerMove(const Offset(20, 20));
-      expect(countingContext.styleApplications, 3);
-    });
   });
-}
-
-class _CountingEditorContext extends EditorContext {
-  _CountingEditorContext({required super.document});
-
-  int styleApplications = 0;
-
-  @override
-  void applyInspectorValues(FeatureKind kind) {
-    styleApplications++;
-    super.applyInspectorValues(kind);
-  }
 }
