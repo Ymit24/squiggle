@@ -14,12 +14,14 @@ export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.
 class Feature extends Node {
+  // Keep the public argument named size while the field remains private.
   Feature({
     super.id,
     required super.origin,
-    required this.size,
+    required Size size,
     required this.kind,
-  });
+    // ignore: prefer_initializing_formals
+  }) : _size = size;
 
   factory Feature.fromDataModel(data.Feature raw) {
     final content = raw.content;
@@ -58,13 +60,25 @@ class Feature extends Node {
       throw ArgumentError.value(raw, 'raw', 'Feature snapshot does not match');
     }
     final restored = Feature.fromDataModel(raw);
-    origin = restored.origin;
-    size = restored.size;
+    editGeometry((edit) {
+      edit.origin = restored.origin;
+      edit.size = restored.size;
+    });
     kind = restored.kind;
   }
 
-  Size size;
+  Size _size;
+  Size get size => _size;
   FeatureKind kind;
+
+  @override
+  NodeGeometryEdit createGeometryEdit() => NodeGeometryEdit(origin, size: size);
+
+  @override
+  void commitGeometryEdit(NodeGeometryEdit edit) {
+    super.commitGeometryEdit(edit);
+    _size = edit.size!;
+  }
 
   double get width => size.width;
 
@@ -76,10 +90,10 @@ class Feature extends Node {
   @override
   void resize(Rect bounds) => kind.applyBounds(this, bounds);
 
-  void setBounds(Rect bounds) {
-    origin = bounds.topLeft;
-    size = bounds.size;
-  }
+  void setBounds(Rect bounds) => editGeometry((edit) {
+    edit.origin = bounds.topLeft;
+    edit.size = bounds.size;
+  });
 
   @override
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);

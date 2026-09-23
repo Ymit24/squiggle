@@ -27,17 +27,25 @@ abstract class InspectorField<T> {
 
   static Map<String, InspectorField> byKeyForFeatures(List<Feature> features) {
     final inspectorFieldByKey = <String, InspectorField>{};
-    for (final field in features.expand(
-      (feature) => feature.kind.buildInspectorFields(),
-    )) {
-      final fieldKey = field.fieldKey;
-      if (inspectorFieldByKey.containsKey(fieldKey)) {
-        inspectorFieldByKey[fieldKey]!.merge(field);
-      } else {
-        inspectorFieldByKey[fieldKey] = field;
+    for (final feature in features) {
+      for (final field in feature.kind.buildInspectorFields()) {
+        field.bindToFeature(feature);
+        final fieldKey = field.fieldKey;
+        if (inspectorFieldByKey.containsKey(fieldKey)) {
+          inspectorFieldByKey[fieldKey]!.merge(field);
+        } else {
+          inspectorFieldByKey[fieldKey] = field;
+        }
       }
     }
     return inspectorFieldByKey;
+  }
+
+  void bindToFeature(Feature feature) {
+    callbacks = [
+      for (final callback in callbacks)
+        (value) => feature.editGeometry((_) => callback(value)),
+    ];
   }
 
   void merge(InspectorField<T> other) {

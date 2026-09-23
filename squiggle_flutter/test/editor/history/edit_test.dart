@@ -20,7 +20,7 @@ void main() {
       final edit = DocumentTransaction(document: document, label: 'Move');
 
       edit.watch([moved]);
-      moved.origin = const Offset(40, 50);
+      moved.editGeometry((edit) => edit.origin = const Offset(40, 50));
       final change = edit.commit()!;
 
       expect(change.affectedNodeCount, 1);
@@ -51,7 +51,7 @@ void main() {
       final edit = DocumentTransaction(document: document, label: 'Duplicate');
 
       edit.watch([original]);
-      original.origin = const Offset(30, 30);
+      original.editGeometry((edit) => edit.origin = const Offset(30, 30));
       edit.add(_rectangle(0, const Offset(50, 50)));
       edit.cancel();
 
@@ -92,7 +92,10 @@ void main() {
       final feature = document.nodes.single;
       final edit = DocumentTransaction(document: document, label: 'Move');
 
-      edit.update(feature, (node) => node.origin = const Offset(5, 8));
+      edit.update(
+        feature,
+        (node) => node.editGeometry((edit) => edit.origin = const Offset(5, 8)),
+      );
       final change = edit.commit()!;
       change.undo(document);
 
@@ -108,7 +111,11 @@ void main() {
       final document = Document()..addNode(group);
       final edit = DocumentTransaction(document: document, label: 'Move group');
 
-      edit.update(group, (node) => node.origin = const Offset(40, 50));
+      edit.update(
+        group,
+        (node) =>
+            node.editGeometry((edit) => edit.origin = const Offset(40, 50)),
+      );
       final change = edit.commit()!;
       change.undo(document);
 

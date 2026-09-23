@@ -262,7 +262,9 @@ void main() {
       ]);
       final id = doc.nodes.first.id;
 
-      doc.featureById(id)!.origin = const Offset(5, 5);
+      doc
+          .featureById(id)!
+          .editGeometry((edit) => edit.origin = const Offset(5, 5));
 
       expect(doc.nodes.first.origin, const Offset(5, 5));
     });

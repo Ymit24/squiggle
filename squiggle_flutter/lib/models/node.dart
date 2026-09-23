@@ -40,11 +40,42 @@ abstract class Node {
   NodeId id;
 
   /// Relative to parent node.
-  Offset origin;
+  Offset _origin;
+  Offset get origin => _origin;
+
+  final Set<NodeId> _boundFeatureIds = {};
+  late final Set<NodeId> boundFeatureIds = UnmodifiableSetView(
+    _boundFeatureIds,
+  );
+
+  void addBoundFeature(NodeId id) => _boundFeatureIds.add(id);
+  void removeBoundFeature(NodeId id) => _boundFeatureIds.remove(id);
+  void clearBoundFeatures() => _boundFeatureIds.clear();
 
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
 
-  Node({this.id = noId, required this.origin});
+  // Keep the public argument named origin while the field remains private.
+  // ignore: prefer_initializing_formals
+  Node({this.id = noId, required Offset origin}) : _origin = origin;
+
+  void editGeometry(void Function(NodeGeometryEdit edit) change) {
+    void apply() {
+      final edit = createGeometryEdit();
+      change(edit);
+      commitGeometryEdit(edit);
+    }
+
+    final owner = document;
+    if (owner == null) {
+      apply();
+    } else {
+      owner.editGeometry(this, apply);
+    }
+  }
+
+  NodeGeometryEdit createGeometryEdit() => NodeGeometryEdit(_origin);
+
+  void commitGeometryEdit(NodeGeometryEdit edit) => _origin = edit.origin;
 
   Rect globalBounds() {
     return localBounds().shift(parent?.globalOrigin ?? Offset.zero);
@@ -67,4 +98,11 @@ abstract class Node {
   void resize(Rect bounds);
 
   Offset center() => localBounds().center;
+}
+
+class NodeGeometryEdit {
+  NodeGeometryEdit(this.origin, {this.size});
+
+  Offset origin;
+  Size? size;
 }

@@ -59,7 +59,11 @@ class IdleInteractionState extends InteractionState {
         break;
       case PolylineHandleTarget(handle: var handle):
         parent.transition(
-          DragPolylineHandleState(parent: parent, handle: handle),
+          DragPolylineHandleState(
+            parent: parent,
+            handle: handle,
+            pointerDownWorld: cursorWorldPosition,
+          ),
           context,
         );
         break;
@@ -194,7 +198,7 @@ class IdleInteractionState extends InteractionState {
       final bounds = Node.localBoundsOfNodes(selectedNodes);
 
       for (final node in selectedNodes) {
-        node.origin -= bounds.center;
+        node.editGeometry((edit) => edit.origin -= bounds.center);
       }
       final group = Group(
         children: selectedNodes.toList(),
@@ -234,7 +238,7 @@ class IdleInteractionState extends InteractionState {
         final children = group.children.toList();
         group.removeAll(children.map((child) => child.id));
         for (final child in children) {
-          child.origin += group.origin;
+          child.editGeometry((edit) => edit.origin += group.origin);
           transaction.add(child);
         }
         replacementIds[group.id] = children.map((child) => child.id).toList();

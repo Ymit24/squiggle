@@ -41,7 +41,7 @@ class DuplicateState extends InteractionState {
         .toList();
 
     for (final node in _selectedNodes) {
-      node.origin = _originsAtDragStart[node.id]!;
+      node.editGeometry((edit) => edit.origin = _originsAtDragStart[node.id]!);
     }
     for (final clone in clones) {
       context.history.active.add(clone);

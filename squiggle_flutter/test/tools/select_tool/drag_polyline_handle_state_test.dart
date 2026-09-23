@@ -87,5 +87,70 @@ void main() {
       expect(features.first.origin, isNot(Offset.zero));
       expect(features.last.origin, isNot(const Offset(200, 0)));
     });
+
+    test('attaches, changes angle, and detaches an endpoint', () {
+      final line = harness.context.document.nodes.first as Feature;
+      final target = Feature(
+        origin: const Offset(200, 0),
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      harness.context.document.addNode(target);
+      final kind = line.kind as FeatureKindPolyline;
+
+      harness.pointerDown(const Offset(100, 100));
+      harness.pointerMove(const Offset(280, 50));
+      harness.pointerUp(const Offset(280, 50));
+      expect(kind.endBinding?.targetId, target.id);
+      expect(polylineWorldPoints(line).last, const Offset(300, 50));
+
+      harness.pointerDown(const Offset(300, 50));
+      harness.pointerMove(const Offset(250, 20));
+      harness.pointerUp(const Offset(250, 20));
+      expect(kind.endBinding?.targetId, target.id);
+      expect(polylineWorldPoints(line).last.dx, closeTo(250, 0.001));
+      expect(polylineWorldPoints(line).last.dy, closeTo(0, 0.001));
+
+      harness.pointerDown(const Offset(250, 0));
+      harness.pointerMove(const Offset(400, 150));
+      harness.pointerUp(const Offset(400, 150));
+      expect(kind.endBinding, isNull);
+      expect(target.boundFeatureIds, isEmpty);
+      expect(polylineWorldPoints(line).last, const Offset(400, 150));
+    });
+
+    test('binding survives undo and redo and click without drag', () {
+      final line = harness.context.document.nodes.first as Feature;
+      final target = Feature(
+        origin: const Offset(200, 0),
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      harness.context.document.addNode(target);
+
+      harness.pointerDown(const Offset(100, 100));
+      harness.pointerMove(const Offset(280, 50));
+      harness.pointerUp(const Offset(280, 50));
+      expect(
+        (line.kind as FeatureKindPolyline).endBinding?.targetId,
+        target.id,
+      );
+
+      harness.click(const Offset(300, 50));
+      expect(
+        (line.kind as FeatureKindPolyline).endBinding?.targetId,
+        target.id,
+      );
+
+      harness.context.history.undo();
+      expect((line.kind as FeatureKindPolyline).endBinding, isNull);
+      expect(target.boundFeatureIds, isEmpty);
+      harness.context.history.redo();
+      expect(
+        (line.kind as FeatureKindPolyline).endBinding?.targetId,
+        target.id,
+      );
+      expect(target.boundFeatureIds, contains(line.id));
+    });
   });
 }

@@ -1,13 +1,15 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable {
+    with StrokeColorCapable, StrokeWidthCapable, BindCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
     this.strokeWidth = defaultStrokeWidth,
     this.startEndCap = LineEndCap.rounded,
     this.endEndCap = LineEndCap.rounded,
+    this.startBinding,
+    this.endBinding,
   }) : localPoints = List.of(localPoints);
 
   factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
@@ -20,6 +22,16 @@ final class FeatureKindPolyline extends FeatureKind
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
         startEndCap: _endCapFromDataModel(content, 'startEndCap'),
         endEndCap: _endCapFromDataModel(content, 'endEndCap'),
+        startBinding: content['startBinding'] == null
+            ? null
+            : NodeBinding.fromJson(
+                Map<String, dynamic>.from(content['startBinding'] as Map),
+              ),
+        endBinding: content['endBinding'] == null
+            ? null
+            : NodeBinding.fromJson(
+                Map<String, dynamic>.from(content['endBinding'] as Map),
+              ),
       );
 
   @override
@@ -32,6 +44,8 @@ final class FeatureKindPolyline extends FeatureKind
     'strokeWidth': strokeWidth,
     'startEndCap': startEndCap.name,
     'endEndCap': endEndCap.name,
+    if (startBinding != null) 'startBinding': startBinding!.toJson(),
+    if (endBinding != null) 'endBinding': endBinding!.toJson(),
   };
 
   @override
@@ -41,6 +55,8 @@ final class FeatureKindPolyline extends FeatureKind
     strokeWidth: strokeWidth,
     startEndCap: startEndCap,
     endEndCap: endEndCap,
+    startBinding: startBinding,
+    endBinding: endBinding,
   );
 
   List<Offset> localPoints;
@@ -51,6 +67,33 @@ final class FeatureKindPolyline extends FeatureKind
   double strokeWidth;
   LineEndCap startEndCap;
   LineEndCap endEndCap;
+  NodeBinding? startBinding;
+  NodeBinding? endBinding;
+
+  @override
+  Iterable<NodeBinding> get bindings sync* {
+    if (startBinding case final binding?) yield binding;
+    if (endBinding case final binding?) yield binding;
+  }
+
+  @override
+  void onBoundNodeBoundsUpdate(Feature feature, Node target) {
+    final parentOrigin = feature.parent?.globalOrigin ?? Offset.zero;
+    if (startBinding?.targetId == target.id && localPoints.isNotEmpty) {
+      setPoint(
+        feature,
+        0,
+        startBinding!.pointOn(target.globalBounds()) - parentOrigin,
+      );
+    }
+    if (endBinding?.targetId == target.id && localPoints.isNotEmpty) {
+      setPoint(
+        feature,
+        localPoints.length - 1,
+        endBinding!.pointOn(target.globalBounds()) - parentOrigin,
+      );
+    }
+  }
 
   static LineEndCap _endCapFromDataModel(
     Map<String, dynamic> content,
@@ -62,10 +105,17 @@ final class FeatureKindPolyline extends FeatureKind
     required Offset origin,
     required List<Offset> localPoints,
   }) {
-    feature.origin = origin;
-    this.localPoints = List.of(localPoints);
-    feature.size = feature.localBounds().size;
+    feature.editGeometry((edit) {
+      edit.origin = origin;
+      this.localPoints = List.of(localPoints);
+      edit.size = boundsForOrigin(origin).size;
+    });
   }
+
+  Rect boundsForOrigin(Offset origin) => envelopeOfPoints(
+    worldPoints(origin, localPoints),
+    strokePadding: _boundsPadding,
+  );
 
   void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
     final points = worldPoints(feature.origin, localPoints);
@@ -186,8 +236,11 @@ final class FeatureKindPolyline extends FeatureKind
       return newWorld - bounds.topLeft;
     }).toList();
 
-    feature.setBounds(bounds);
-    localPoints = scaledLocalPoints;
+    feature.editGeometry((edit) {
+      edit.origin = bounds.topLeft;
+      edit.size = bounds.size;
+      localPoints = scaledLocalPoints;
+    });
   }
 
   @override

@@ -207,7 +207,7 @@ void main() {
     context.selection.selectNode(feature.id);
     context.history.run('Move Feature', (transaction) {
       transaction.watch([feature]);
-      feature.origin = const Offset(40, 40);
+      feature.editGeometry((edit) => edit.origin = const Offset(40, 40));
     });
 
     await tester.pumpWidget(

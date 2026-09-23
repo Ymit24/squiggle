@@ -48,7 +48,7 @@ class Group extends Node with NodeContainer {
     for (final child in restored) {
       insert(child);
     }
-    origin = Offset(raw.originX, raw.originY);
+    editGeometry((edit) => edit.origin = Offset(raw.originX, raw.originY));
   }
 
   @override
@@ -73,6 +73,15 @@ class Group extends Node with NodeContainer {
 
   @override
   void resize(Rect bounds) {
+    final owner = document;
+    if (owner != null) {
+      owner.editGeometry(this, () => _resizeChildren(bounds));
+    } else {
+      _resizeChildren(bounds);
+    }
+  }
+
+  void _resizeChildren(Rect bounds) {
     final childBounds = Node.localBoundsOfNodes(children);
     final scaleX = childBounds.width == 0
         ? 1.0
@@ -92,6 +101,6 @@ class Group extends Node with NodeContainer {
         ),
       );
     }
-    origin = bounds.topLeft;
+    editGeometry((edit) => edit.origin = bounds.topLeft);
   }
 }

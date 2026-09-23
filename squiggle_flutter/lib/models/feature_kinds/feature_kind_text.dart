@@ -79,15 +79,19 @@ final class FeatureKindText extends FeatureKind
     required Offset origin,
     required double fontSize,
   }) {
-    feature.origin = origin;
-    feature.size = measureContents(width: width, fontSize: fontSize);
-    this.fontSize = fontSize;
+    feature.editGeometry((edit) {
+      edit.origin = origin;
+      edit.size = measureContents(width: width, fontSize: fontSize);
+      this.fontSize = fontSize;
+    });
   }
 
   @override
   void setLabel(Feature feature, String value) {
-    label = value;
-    feature.size = measureContents(width: feature.width, fontSize: fontSize);
+    feature.editGeometry((edit) {
+      label = value;
+      edit.size = measureContents(width: feature.width, fontSize: fontSize);
+    });
   }
 
   @override
@@ -98,13 +102,15 @@ final class FeatureKindText extends FeatureKind
     final clampedHeight = bounds.height < kMinEnvelopeDimension
         ? kMinEnvelopeDimension
         : bounds.height;
-    feature.origin = bounds.topLeft;
-    feature.size = Size(clampedWidth, clampedHeight);
-    if (label.isNotEmpty) {
-      fontSize =
-          fontSizeFillingBounds(width: clampedWidth, height: clampedHeight) ??
-          text_painter.kMinTextFontSize;
-    }
+    feature.editGeometry((edit) {
+      edit.origin = bounds.topLeft;
+      edit.size = Size(clampedWidth, clampedHeight);
+      if (label.isNotEmpty) {
+        fontSize =
+            fontSizeFillingBounds(width: clampedWidth, height: clampedHeight) ??
+            text_painter.kMinTextFontSize;
+      }
+    });
   }
 
   @override
