@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 import 'package:squiggle_flutter/widgets/squiggle_dialog.dart';
 import 'package:squiggle_flutter/widgets/squiggle_text_field.dart';
@@ -58,17 +57,8 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-
     return SquiggleDialog(
-      title: Text(
-        widget.title,
-        style: theme.typography.inputText.copyWith(
-          fontWeight: FontWeight.w700,
-          fontSize: 17,
-          letterSpacing: -0.2,
-        ),
-      ),
+      title: widget.title,
       content: SquiggleTextField(
         controller: _controller,
         autofocus: true,
