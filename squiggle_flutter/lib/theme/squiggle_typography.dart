@@ -31,6 +31,8 @@ class SquiggleTypography {
 
   TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
+  TextStyle get actionButtonLabel => const TextStyle(fontSize: 13.5);
+
   TextStyle panelButtonLabel({required bool isPrimary}) => TextStyle(
     color: isPrimary ? colors.base : colors.text,
     fontSize: 13,
