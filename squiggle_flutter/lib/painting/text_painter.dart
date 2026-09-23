@@ -91,7 +91,7 @@ Paragraph _layoutTextParagraph(
 
 /// Paints wrapped text at a fixed font size in the canvas's current coordinates.
 ///
-/// Null colors omit that pass; zero stroke width disables the outline.
+/// A null fill color omits painting.
 /// [bounds] is the content area; callers supply any desired padding.
 void paintText(
   Canvas canvas,
@@ -99,15 +99,12 @@ void paintText(
   Rect bounds, {
   double fontSize = defaultFontSize,
   Color? fillColor = defaultNewTextFillColor,
-  Color? strokeColor,
-  double strokeWidth = 1,
   TextHorizontalAlignment horizontalAlignment = TextHorizontalAlignment.center,
   TextVerticalAlignment verticalAlignment = TextVerticalAlignment.center,
   bool clipToBounds = true,
 }) {
   assert(bounds.isFinite);
   assert(fontSize.isFinite && fontSize > 0);
-  assert(strokeWidth.isFinite && strokeWidth >= 0);
   if (text.isEmpty || bounds.isEmpty) return;
 
   void paintParagraph(Paint foreground) {
@@ -137,14 +134,6 @@ void paintText(
     canvas.clipRect(bounds);
   }
   try {
-    if (strokeColor != null && strokeColor.a > 0 && strokeWidth > 0) {
-      paintParagraph(
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..color = strokeColor,
-      );
-    }
     if (fillColor != null && fillColor.a > 0) {
       paintParagraph(Paint()..color = fillColor);
     }

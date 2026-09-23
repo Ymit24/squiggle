@@ -1,19 +1,13 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindText extends FeatureKind
-    with
-        StrokeColorCapable,
-        FillColorCapable,
-        StrokeWidthCapable,
-        LabelCapable {
+    with StrokeColorCapable, LabelCapable {
   FeatureKindText(
     this.label, {
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
     this.verticalAlignment = TextVerticalAlignment.top,
     this.strokeColor = defaultFeatureStrokeColor,
-    this.fillColor = defaultFeatureFillColor,
-    this.strokeWidth = defaultStrokeWidth,
   });
 
   factory FeatureKindText.fromDataModel(Map<String, dynamic> content) =>
@@ -27,8 +21,6 @@ final class FeatureKindText extends FeatureKind
           content['verticalAlignment'] as String,
         ),
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
-        fillColor: _colorFromDataModel(content, 'fillColor'),
-        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
   @override
@@ -40,8 +32,6 @@ final class FeatureKindText extends FeatureKind
       'horizontalAlignment': horizontalAlignment.name,
       'verticalAlignment': verticalAlignment.name,
       'strokeColor': strokeColor.toARGB32(),
-      'fillColor': fillColor.toARGB32(),
-      'strokeWidth': strokeWidth,
     };
   }
 
@@ -52,18 +42,10 @@ final class FeatureKindText extends FeatureKind
     horizontalAlignment: horizontalAlignment,
     verticalAlignment: verticalAlignment,
     strokeColor: strokeColor,
-    fillColor: fillColor,
-    strokeWidth: strokeWidth,
   );
 
   @override
   Color strokeColor;
-
-  @override
-  Color fillColor;
-
-  @override
-  double strokeWidth;
 
   @override
   String label;
@@ -132,9 +114,7 @@ final class FeatureKindText extends FeatureKind
       label,
       feature.localBounds(),
       fontSize: fontSize,
-      fillColor: fillColor,
-      strokeColor: strokeColor,
-      strokeWidth: strokeWidth,
+      fillColor: strokeColor,
       horizontalAlignment: horizontalAlignment,
       verticalAlignment: verticalAlignment,
       clipToBounds: false,
@@ -150,14 +130,6 @@ final class FeatureKindText extends FeatureKind
         value: strokeColor,
         onColorChanged: (color) {
           strokeColor = color;
-        },
-      ),
-      InspectorColorField(
-        fieldKey: 'fillColor',
-        label: 'Fill Color',
-        value: fillColor,
-        onColorChanged: (color) {
-          fillColor = color;
         },
       ),
       InspectorVerticalTextAlignmentField(
