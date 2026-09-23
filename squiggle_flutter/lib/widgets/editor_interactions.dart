@@ -349,6 +349,13 @@ class _EditorInteractionsState extends State<EditorInteractions>
     // TODO: tune this if needed.
     if (distance < 5) {
       print("Havent moved too much for a context menu! distance: $distance");
+
+      // TODO: consider ! here.
+      widget.context.openContextMenuAt(
+        _canvasLocal(event)!,
+        _screenToWorld(event)!,
+      );
+
       return;
     } else {
       print("we HAVE moved too much for a context menu! distance: $distance");
