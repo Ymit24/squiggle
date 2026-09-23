@@ -1,4 +1,4 @@
-import 'dart:math' show atan2, cos, max, pi, sin;
+import 'dart:math' show atan2, cos, max, min, pi, sin;
 import 'dart:ui';
 
 /// Extra world-space tolerance when hit-testing polyline segments.
@@ -252,7 +252,7 @@ Rect edgeResizeWithAspectRatio(
     final newHeight = (dragged.dy - fixedY).abs();
     final newWidth = newHeight * aspectRatio;
     final centerX = bounds.center.dx;
-    final top = resizeTop ? fixedY - newHeight : fixedY;
+    final top = min(fixedY, dragged.dy);
     return Rect.fromLTWH(centerX - newWidth / 2, top, newWidth, newHeight);
   }
 
@@ -260,7 +260,7 @@ Rect edgeResizeWithAspectRatio(
   final newWidth = (dragged.dx - fixedX).abs();
   final newHeight = newWidth / aspectRatio;
   final centerY = bounds.center.dy;
-  final left = resizeLeft ? fixedX - newWidth : fixedX;
+  final left = min(fixedX, dragged.dx);
   return Rect.fromLTWH(left, centerY - newHeight / 2, newWidth, newHeight);
 }
 
