@@ -1,6 +1,7 @@
 part of 'feature_kind.dart';
 
-final class FeatureKindText extends FeatureKind with LabelCapable {
+final class FeatureKindText extends FeatureKind
+    with StrokeColorCapable, LabelCapable {
   FeatureKindText(
     this.label, {
     this.fontSize = defaultFontSize,
@@ -48,6 +49,7 @@ final class FeatureKindText extends FeatureKind with LabelCapable {
     strokeColor: strokeColor,
   );
 
+  @override
   Color strokeColor;
 
   @override
