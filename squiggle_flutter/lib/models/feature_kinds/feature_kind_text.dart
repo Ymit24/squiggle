@@ -20,12 +20,7 @@ final class FeatureKindText extends FeatureKind
         verticalAlignment: TextVerticalAlignment.values.byName(
           content['verticalAlignment'] as String,
         ),
-        // Older text features stored separate fill and outline colors. The
-        // outline color now supplies the single text color.
-        strokeColor: _colorFromDataModel(
-          content,
-          content.containsKey('strokeColor') ? 'strokeColor' : 'fillColor',
-        ),
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
       );
 
   @override
