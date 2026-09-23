@@ -14,6 +14,7 @@ class CreateLineTool extends Tool {
   CreateLineTool() : _state = const _Idle();
 
   _LineState _state;
+  Feature? _previewFeature;
 
   @override
   EditorCursor resolveCursor(
@@ -29,14 +30,10 @@ class CreateLineTool extends Tool {
     EditorContext context,
     ImageRepository imageRepository,
   ) {
-    final worldPoints = _worldPointsForPaint();
-    if (worldPoints == null) {
-      return;
-    }
-    _buildFeature(context, worldPoints).paint(canvas, imageRepository);
+    _previewFeature?.paint(canvas, imageRepository);
   }
 
-  List<Offset>? _worldPointsForPaint() {
+  List<Offset>? _worldPointsForPreview() {
     return switch (_state) {
       _Dragging(:final start, :final end) => [start, end],
       _Placing(:final points, :final previewTip) =>
@@ -52,7 +49,7 @@ class CreateLineTool extends Tool {
 
   @override
   void cancelInteraction(EditorContext context) {
-    _state = const _Idle();
+    _reset();
   }
 
   @override
@@ -72,6 +69,7 @@ class CreateLineTool extends Tool {
       placedPoints: placedPoints,
       previewTip: worldPosition,
     );
+    _updatePreview(context);
     return true;
   }
 
@@ -100,10 +98,12 @@ class CreateLineTool extends Tool {
           );
         }
         if (didDrag) {
+          _updatePreview(context);
           return true;
         }
         final threshold = camera.screenLengthToWorldLength(kTouchSlop);
         if ((worldPosition - start).distance <= threshold) {
+          _updatePreview(context);
           return true;
         }
         if (placedPoints.isEmpty) {
@@ -137,6 +137,7 @@ class CreateLineTool extends Tool {
       case _Idle() || _Placing():
         break;
     }
+    _updatePreview(context);
     return true;
   }
 
@@ -156,7 +157,7 @@ class CreateLineTool extends Tool {
           isShiftPressed: isShiftPressed,
         );
         _commit(context, [start, snappedEnd]);
-        _state = const _Idle();
+        _reset();
       case _PendingPointer(:final start, :final placedPoints, :final didDrag):
         if (didDrag) {
           final origin = placedPoints.isNotEmpty ? placedPoints.last : start;
@@ -169,6 +170,7 @@ class CreateLineTool extends Tool {
             points: [...placedPoints, point],
             previewTip: worldPosition,
           );
+          _updatePreview(context);
           return true;
         }
         final point = placedPoints.isEmpty
@@ -185,6 +187,7 @@ class CreateLineTool extends Tool {
       case _Idle() || _Placing():
         break;
     }
+    _updatePreview(context);
     return true;
   }
 
@@ -204,6 +207,7 @@ class CreateLineTool extends Tool {
         isShiftPressed: isShiftPressed,
       );
       _state = _Placing(points: points, previewTip: preview);
+      _updatePreview(context);
     }
     return true;
   }
@@ -232,13 +236,36 @@ class CreateLineTool extends Tool {
     if (points.length >= 2) {
       _commit(context, points);
     }
-    _state = const _Idle();
+    _reset();
   }
 
   void _commit(EditorContext context, List<Offset> worldPoints) {
+    final feature = _previewFeature ?? _buildFeature(context, worldPoints);
+    _setFeaturePoints(feature, worldPoints);
     context.history.run('Create feature', (transaction) {
-      transaction.add(_buildFeature(context, worldPoints));
+      transaction.add(feature);
     });
+  }
+
+  void _updatePreview(EditorContext context) {
+    final worldPoints = _worldPointsForPreview();
+    if (worldPoints == null) return;
+
+    final feature = _previewFeature ??= _buildFeature(context, worldPoints);
+    _setFeaturePoints(feature, worldPoints);
+  }
+
+  void _setFeaturePoints(Feature feature, List<Offset> worldPoints) {
+    (feature.kind as FeatureKindPolyline).setGeometry(
+      feature,
+      origin: worldPoints.first,
+      localPoints: localPointsFromWorld(worldPoints, worldPoints.first),
+    );
+  }
+
+  void _reset() {
+    _state = const _Idle();
+    _previewFeature = null;
   }
 
   Feature _buildFeature(EditorContext context, List<Offset> worldPoints) {
