@@ -14,7 +14,42 @@ enum SquiggleButtonVariant {
   danger,
 
   /// Borderless button for quiet actions such as Cancel.
-  ghost,
+  ghost;
+
+  _VariantStyle _resolve(SquiggleColorScheme colors) => switch (this) {
+    SquiggleButtonVariant.primary => (
+      background: colors.text,
+      hoverBackground: Color.lerp(colors.text, colors.base, 0.12)!,
+      pressedBackground: colors.subtext0,
+      foreground: colors.base,
+      side: null,
+      weight: FontWeight.w700,
+    ),
+    SquiggleButtonVariant.secondary => (
+      background: colors.surface0,
+      hoverBackground: colors.surface1,
+      pressedBackground: colors.mantle,
+      foreground: colors.text,
+      side: BorderSide(color: colors.surface1),
+      weight: FontWeight.w600,
+    ),
+    SquiggleButtonVariant.danger => (
+      background: colors.onDanger,
+      hoverBackground: Color.lerp(colors.onDanger, colors.base, 0.12)!,
+      pressedBackground: Color.lerp(colors.onDanger, colors.base, 0.2)!,
+      foreground: Colors.white,
+      side: null,
+      weight: FontWeight.w700,
+    ),
+    SquiggleButtonVariant.ghost => (
+      background: Colors.transparent,
+      hoverBackground: colors.surface0,
+      pressedBackground: colors.surface1,
+      foreground: colors.subtext0,
+      side: null,
+      weight: FontWeight.w600,
+    ),
+  };
 }
 
 typedef _VariantStyle = ({
@@ -26,50 +61,12 @@ typedef _VariantStyle = ({
   FontWeight weight,
 });
 
-_VariantStyle _resolve(
-  SquiggleButtonVariant variant,
-  SquiggleColorScheme colors,
-) => switch (variant) {
-  SquiggleButtonVariant.primary => (
-    background: colors.text,
-    hoverBackground: Color.lerp(colors.text, colors.base, 0.12)!,
-    pressedBackground: colors.subtext0,
-    foreground: colors.base,
-    side: null,
-    weight: FontWeight.w700,
-  ),
-  SquiggleButtonVariant.secondary => (
-    background: colors.surface0,
-    hoverBackground: colors.surface1,
-    pressedBackground: colors.mantle,
-    foreground: colors.text,
-    side: BorderSide(color: colors.surface1),
-    weight: FontWeight.w600,
-  ),
-  SquiggleButtonVariant.danger => (
-    background: colors.onDanger,
-    hoverBackground: Color.lerp(colors.onDanger, colors.base, 0.12)!,
-    pressedBackground: Color.lerp(colors.onDanger, colors.base, 0.2)!,
-    foreground: Colors.white,
-    side: null,
-    weight: FontWeight.w700,
-  ),
-  SquiggleButtonVariant.ghost => (
-    background: Colors.transparent,
-    hoverBackground: colors.surface0,
-    pressedBackground: colors.surface1,
-    foreground: colors.subtext0,
-    side: null,
-    weight: FontWeight.w600,
-  ),
-};
-
 extension SquiggleButtonStyle on SquiggleTheme {
   ButtonStyle buttonStyle({
     SquiggleButtonVariant variant = SquiggleButtonVariant.primary,
     bool compact = false,
   }) {
-    final s = _resolve(variant, colors);
+    final s = variant._resolve(colors);
     final isGhost = variant == SquiggleButtonVariant.ghost;
     return FilledButton.styleFrom(
       splashFactory: NoSplash.splashFactory,
