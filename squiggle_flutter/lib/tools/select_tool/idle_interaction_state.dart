@@ -148,15 +148,22 @@ class IdleInteractionState extends InteractionState {
   }
 
   void _onDeletePress(EditorContext context) {
+    final selectedIds = context.selection.selectedNodeIds.toList();
     final container = context.document
-        .requireNodeById(context.selection.selectedNodeIds.first)
+        .requireNodeById(selectedIds.first)
         .parent;
 
-    context.history.run('Delete Selected Nodes', (transaction) {
-      transaction.removeAll(context.selection.selectedNodeIds);
-    }, container: container);
-
     context.selection.clearSelection();
+    try {
+      context.history.run('Delete Selected Nodes', (transaction) {
+        transaction.removeAll(selectedIds);
+      }, container: container);
+    } catch (_) {
+      context.selection.setSelection(
+        selectedIds.where((id) => context.document.nodeById(id) != null),
+      );
+      rethrow;
+    }
   }
 
   void _onCtrlCmdGPress(EditorContext context) {

@@ -98,8 +98,17 @@ void main() {
       test('${key.keyLabel} deletes selected nodes as one undo entry', () {
         final feature = harness.context.document.nodes.first;
         harness.context.selection.selectNode(feature.id);
+        final missingSelectedIds = <int>[];
+        harness.context.addListener(() {
+          for (final id in harness.context.selection.selectedNodeIds) {
+            if (harness.context.document.nodeById(id) == null) {
+              missingSelectedIds.add(id.value);
+            }
+          }
+        });
 
         expect(harness.keyDown(key), isTrue);
+        expect(missingSelectedIds, isEmpty);
         expect(harness.context.document.featureById(feature.id), isNull);
         expect(harness.context.selection.selectedNodeIds, isEmpty);
 
@@ -107,6 +116,19 @@ void main() {
         expect(harness.context.document.featureById(feature.id), isNotNull);
       });
     }
+
+    test('restores selection when delete cannot start a transaction', () {
+      final feature = harness.context.document.nodes.first;
+      harness.context.selection.selectNode(feature.id);
+      harness.context.history.begin('Pending edit');
+
+      expect(
+        () => harness.keyDown(LogicalKeyboardKey.delete),
+        throwsStateError,
+      );
+      expect(harness.context.selection.selectedNodeIds, [feature.id]);
+      expect(harness.context.document.nodeById(feature.id), same(feature));
+    });
 
     test('ignores unrelated keys', () {
       harness.context.selection.selectNode(
