@@ -62,4 +62,20 @@ final class FeatureKindImage extends FeatureKind
       );
     }
   }
+
+  @override
+  Iterable<InspectorField> buildInspectorFields() => [
+    InspectorColorField(
+      fieldKey: 'strokeColor',
+      label: 'Stroke Color',
+      value: strokeColor,
+      onColorChanged: (color) => strokeColor = color,
+    ),
+    InspectorWidthField(
+      fieldKey: 'strokeWidth',
+      label: 'Stroke Width',
+      value: strokeWidth,
+      onWidthChanged: (width) => strokeWidth = width,
+    ),
+  ];
 }

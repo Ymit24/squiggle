@@ -52,4 +52,8 @@ abstract class InspectorField<T> {
       callback(value);
     }
   }
+
+  void applyIfCompatible(Object? value) {
+    if (value is T) apply(value);
+  }
 }
