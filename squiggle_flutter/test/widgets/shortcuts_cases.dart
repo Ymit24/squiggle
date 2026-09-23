@@ -13,8 +13,15 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 void main() {
+  final previousDebugCheckInvalidValueType =
+      Provider.debugCheckInvalidValueType;
+
   setUpAll(() {
     Provider.debugCheckInvalidValueType = null;
+  });
+
+  tearDownAll(() {
+    Provider.debugCheckInvalidValueType = previousDebugCheckInvalidValueType;
   });
 
   testWidgets('ToolShortcuts activates tools on V, R, C, L, T and 1-5 keys', (

@@ -2,6 +2,19 @@
 
 A new Flutter project.
 
+## Tests
+
+Run the full suite from this directory with `flutter test`. Related test cases
+live in `test/**/*_cases.dart`; the eight `test/*_test.dart` files import them
+and are the runner entry points. This keeps the existing test coverage while
+reducing the number of Flutter test processes and compilations.
+
+When adding test cases, put them in the appropriate cases file and keep its
+`main()` registered in the corresponding runner. To run one group, pass its
+runner path to `flutter test`, for example `flutter test test/models_core_test.dart`.
+You can also pass a cases file explicitly to run just that file, for example
+`flutter test test/models/document_cases.dart`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
