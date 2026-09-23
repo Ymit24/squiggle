@@ -7,11 +7,7 @@ export 'package:squiggle_flutter/theme/document_colors.dart'
     show defaultNewTextWidth;
 
 Rect newTextBoundsAt(Offset origin) {
-  final kind = FeatureKindText(
-    '',
-    fillColor: defaultNewTextFillColor,
-    strokeColor: defaultNewTextStrokeColor,
-  );
+  final kind = FeatureKindText('');
   final size = kind.measureContents(
     width: defaultNewTextWidth,
     fontSize: defaultFontSize,
@@ -24,11 +20,7 @@ Feature newTextFeatureAt(
   String contents, {
   void Function(FeatureKindText)? configureKind,
 }) {
-  final kind = FeatureKindText(
-    contents,
-    fillColor: defaultNewTextFillColor,
-    strokeColor: defaultNewTextStrokeColor,
-  );
+  final kind = FeatureKindText(contents);
   configureKind?.call(kind);
   final size = kind.measureContents(
     width: defaultNewTextWidth,

@@ -11,7 +11,6 @@ const transparentStrokeColor = Color(0x00000000);
 
 const defaultNewTextWidth = 200.0;
 const defaultNewTextFillColor = defaultFeatureStrokeColor;
-const defaultNewTextStrokeColor = transparentStrokeColor;
 
 class StylePreset {
   const StylePreset({required this.strokeColor, required this.fillColor});
