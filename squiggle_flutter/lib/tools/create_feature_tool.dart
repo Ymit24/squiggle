@@ -34,8 +34,8 @@ class CreateFeatureTool extends Tool {
     EditorContext context,
     ImageRepository imageRepository,
   ) {
-    if (_state case _Dragging(:final bounds)) {
-      _buildFeature(context, bounds).paint(canvas, imageRepository);
+    if (_state case _Dragging(:final feature)) {
+      feature.paint(canvas, imageRepository);
     }
   }
 
@@ -66,16 +66,16 @@ class CreateFeatureTool extends Tool {
   }) {
     switch (_state) {
       case _Idle():
+        final bounds = isAltPressed
+            ? Rect.fromCenter(center: worldPosition, width: 1, height: 1)
+            : Rect.fromLTWH(worldPosition.dx, worldPosition.dy, 1, 1);
         _state = _Dragging(
           start: worldPosition,
-          bounds: isAltPressed
-              ? Rect.fromCenter(center: worldPosition, width: 1, height: 1)
-              : Rect.fromLTWH(worldPosition.dx, worldPosition.dy, 1, 1),
+          feature: _buildFeature(context, bounds),
         );
-      case _Dragging(:final start):
-        _state = _Dragging(
-          start: start,
-          bounds: _boundsFromDrag(
+      case _Dragging(:final start, :final feature):
+        feature.setBounds(
+          _boundsFromDrag(
             start,
             worldPosition,
             isShiftPressed: isShiftPressed,
@@ -94,9 +94,9 @@ class CreateFeatureTool extends Tool {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    if (_state case _Dragging(:final bounds)) {
+    if (_state case _Dragging(:final feature)) {
       context.history.run('Create feature', (transaction) {
-        transaction.add(_buildFeature(context, bounds));
+        transaction.add(feature);
       });
       _state = const _Idle();
     }
@@ -106,11 +106,7 @@ class CreateFeatureTool extends Tool {
   Feature _buildFeature(EditorContext context, Rect bounds) {
     final styledKind = kind.clone();
     context.applyInspectorValues(styledKind);
-    return Feature(
-      origin: bounds.topLeft,
-      size: bounds.size,
-      kind: styledKind,
-    );
+    return Feature(origin: bounds.topLeft, size: bounds.size, kind: styledKind);
   }
 
   Rect _boundsFromDrag(
@@ -141,8 +137,8 @@ final class _Idle extends _CreateState {
 }
 
 final class _Dragging extends _CreateState {
-  const _Dragging({required this.start, required this.bounds});
+  const _Dragging({required this.start, required this.feature});
 
   final Offset start;
-  final Rect bounds;
+  final Feature feature;
 }
