@@ -73,7 +73,7 @@ class SquiggleTextField extends StatelessWidget {
     final theme = context.squiggleTheme;
     final fieldStyle = _resolveStyles(compact);
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(theme.radii.input),
       borderSide: BorderSide(color: theme.colors.surface1),
     );
 
