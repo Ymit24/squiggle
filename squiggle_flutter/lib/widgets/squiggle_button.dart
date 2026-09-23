@@ -35,7 +35,7 @@ _VariantStyle _resolve(
 ) => switch (variant) {
   SquiggleButtonVariant.primary => (
     background: colors.text,
-    hoverBackground: colors.accent,
+    hoverBackground: Color.lerp(colors.text, colors.base, 0.12)!,
     pressedBackground: colors.subtext0,
     foreground: colors.base,
     side: null,
@@ -51,7 +51,7 @@ _VariantStyle _resolve(
   ),
   SquiggleButtonVariant.danger => (
     background: colors.onDanger,
-    hoverBackground: colors.danger,
+    hoverBackground: Color.lerp(colors.onDanger, colors.base, 0.12)!,
     pressedBackground: Color.lerp(colors.onDanger, colors.base, 0.2)!,
     foreground: Colors.white,
     side: null,

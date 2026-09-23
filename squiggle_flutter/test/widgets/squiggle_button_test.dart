@@ -39,7 +39,7 @@ void main() {
     final expected = <SquiggleButtonVariant, (Color, Color, Color)>{
       SquiggleButtonVariant.primary: (
         colors.text,
-        colors.accent,
+        Color.lerp(colors.text, colors.base, 0.12)!,
         colors.subtext0,
       ),
       SquiggleButtonVariant.secondary: (
@@ -49,7 +49,7 @@ void main() {
       ),
       SquiggleButtonVariant.danger: (
         colors.onDanger,
-        colors.danger,
+        Color.lerp(colors.onDanger, colors.base, 0.12)!,
         Color.lerp(colors.onDanger, colors.base, 0.2)!,
       ),
       SquiggleButtonVariant.ghost: (
