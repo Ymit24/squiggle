@@ -22,7 +22,7 @@ Future<void> pasteImageFromClipboard({
   final feature = repositionNodesToCenter([
     createImageFeatureAtCenter(imported: imported, center: center),
   ], center).first;
-  context.applyInspectorValues(feature);
+  context.applyInspectorValues(feature.kind);
 
   context.cancelInteraction();
   context.history.run('Create feature', (transaction) {

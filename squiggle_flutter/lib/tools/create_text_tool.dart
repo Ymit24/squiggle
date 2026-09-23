@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
@@ -57,7 +58,7 @@ class CreateTextTool extends Tool {
         worldOrigin: worldPosition,
         initialContents: '',
         canvasLocalBounds: camera.worldToScreenBounds(
-          context.newTextBoundsAt(worldPosition),
+          newTextBoundsAt(worldPosition),
         ),
       ),
     );

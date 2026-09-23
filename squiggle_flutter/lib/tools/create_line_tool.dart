@@ -244,13 +244,9 @@ class CreateLineTool extends Tool {
   Feature _buildFeature(EditorContext context, List<Offset> worldPoints) {
     final origin = worldPoints.first;
     final localPoints = localPointsFromWorld(worldPoints, origin);
-    final feature = Feature(
-      origin: origin,
-      size: Size.zero,
-      kind: FeatureKindPolyline(localPoints),
-    );
-    context.applyInspectorValues(feature);
-    return feature;
+    final kind = FeatureKindPolyline(localPoints);
+    context.applyInspectorValues(kind);
+    return Feature(origin: origin, size: Size.zero, kind: kind);
   }
 
   Offset _constrainedPoint(

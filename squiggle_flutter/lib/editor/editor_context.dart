@@ -8,7 +8,6 @@ import 'package:squiggle_flutter/editor/tool_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
@@ -113,24 +112,12 @@ class EditorContext extends ChangeNotifier {
   }
 
   /// Applies the last inspector choices to a feature being created.
-  void applyInspectorValues(Feature feature) {
-    for (final field in feature.kind.buildInspectorFields()) {
+  void applyInspectorValues(FeatureKind kind) {
+    for (final field in kind.buildInspectorFields()) {
       if (_inspectorValues.containsKey(field.fieldKey)) {
         field.applyIfCompatible(_inspectorValues[field.fieldKey]);
       }
     }
-    if (feature.kind case FeatureKindText kind) {
-      feature.size = kind.measureContents(
-        width: defaultNewTextWidth,
-        fontSize: kind.fontSize,
-      );
-    }
-  }
-
-  Rect newTextBoundsAt(Offset origin) {
-    final feature = newTextFeatureAt(origin, '');
-    applyInspectorValues(feature);
-    return feature.localBounds();
   }
 
   /// Replaces the document contents and resets transient state.

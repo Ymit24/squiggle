@@ -104,13 +104,13 @@ class CreateFeatureTool extends Tool {
   }
 
   Feature _buildFeature(EditorContext context, Rect bounds) {
-    final feature = Feature(
+    final styledKind = kind.clone();
+    context.applyInspectorValues(styledKind);
+    return Feature(
       origin: bounds.topLeft,
       size: bounds.size,
-      kind: kind.clone(),
+      kind: styledKind,
     );
-    context.applyInspectorValues(feature);
-    return feature;
   }
 
   Rect _boundsFromDrag(

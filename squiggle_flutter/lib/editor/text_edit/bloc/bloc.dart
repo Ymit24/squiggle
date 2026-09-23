@@ -64,8 +64,11 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
       case CreateTextEditOpen(:final worldOrigin):
         if (event.contents.isNotEmpty) {
           context.history.run('Create text', (transaction) {
-            final feature = newTextFeatureAt(worldOrigin, event.contents);
-            context.applyInspectorValues(feature);
+            final feature = newTextFeatureAt(
+              worldOrigin,
+              event.contents,
+              configureKind: context.applyInspectorValues,
+            );
             transaction.add(feature);
           });
         }

@@ -19,15 +19,20 @@ Rect newTextBoundsAt(Offset origin) {
   return Rect.fromLTWH(origin.dx, origin.dy, size.width, size.height);
 }
 
-Feature newTextFeatureAt(Offset origin, String contents) {
+Feature newTextFeatureAt(
+  Offset origin,
+  String contents, {
+  void Function(FeatureKindText)? configureKind,
+}) {
   final kind = FeatureKindText(
     contents,
     fillColor: defaultNewTextFillColor,
     strokeColor: defaultNewTextStrokeColor,
   );
+  configureKind?.call(kind);
   final size = kind.measureContents(
     width: defaultNewTextWidth,
-    fontSize: defaultFontSize,
+    fontSize: kind.fontSize,
   );
   return Feature(origin: origin, size: size, kind: kind);
 }
