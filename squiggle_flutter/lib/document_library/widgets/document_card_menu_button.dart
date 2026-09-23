@@ -26,6 +26,8 @@ class _DocumentCardMenuButtonState extends State<DocumentCardMenuButton> {
   Widget build(BuildContext context) {
     return LibraryMenuAnchor(
       menuWidth: 200,
+      // Align the 200px menu's right edge with the 30px button's right edge.
+      alignmentOffset: const Offset(-170, 8),
       onOpenChanged: widget.onOpenChanged,
       menuItems: () => [
         LibraryMenuItem(
