@@ -1,4 +1,5 @@
 export 'package:squiggle_flutter/theme/document_colors.dart';
+export 'package:squiggle_flutter/theme/squiggle_button_style.dart';
 export 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 export 'package:squiggle_flutter/theme/squiggle_colors.dart';
 export 'package:squiggle_flutter/theme/squiggle_decorations.dart';

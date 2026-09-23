@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_content.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_item.dart';
+import 'package:squiggle_flutter/theme/squiggle_button_style.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-class DocumentCardMenuButton extends StatefulWidget {
+class DocumentCardMenuButton extends StatelessWidget {
   const DocumentCardMenuButton({
     super.key,
     required this.canDelete,
@@ -16,59 +19,58 @@ class DocumentCardMenuButton extends StatefulWidget {
   final ValueChanged<bool> onOpenChanged;
 
   @override
-  State<DocumentCardMenuButton> createState() => _DocumentCardMenuButtonState();
-}
-
-class _DocumentCardMenuButtonState extends State<DocumentCardMenuButton> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    return LibraryMenuAnchor(
-      menuWidth: 200,
-      onOpenChanged: widget.onOpenChanged,
-      menuItems: () => [
+    final colors = context.squiggleTheme.colors;
+    final items = [
+      LibraryMenuItem(
+        label: 'Rename',
+        icon: Icons.drive_file_rename_outline,
+        onTap: onRename,
+      ),
+      if (canDelete)
         LibraryMenuItem(
-          label: 'Rename',
-          icon: Icons.drive_file_rename_outline,
-          onTap: widget.onRename,
+          label: 'Delete',
+          icon: Icons.delete_outline_rounded,
+          danger: true,
+          onTap: onDelete,
         ),
-        if (widget.canDelete)
-          LibraryMenuItem(
-            label: 'Delete',
-            icon: Icons.delete_outline_rounded,
-            danger: true,
-            onTap: widget.onDelete,
+    ];
+
+    return PopupMenuButton<LibraryMenuItem>(
+      position: PopupMenuPosition.under,
+      offset: const Offset(0, 8),
+      tooltip: 'Document actions',
+      icon: const Icon(Icons.more_horiz_rounded),
+      iconSize: context.squiggleTheme.spacing.buttonIconSize,
+      style: context.squiggleTheme.buttonStyle(
+        variant: SquiggleButtonVariant.secondary,
+        compact: true,
+      ),
+      color: colors.surface0,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.black,
+      elevation: 16,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colors.surface1),
+      ),
+      menuPadding: const EdgeInsets.all(6),
+      constraints: const BoxConstraints.tightFor(width: 200),
+      onOpened: () => onOpenChanged(true),
+      onCanceled: () => onOpenChanged(false),
+      onSelected: (item) {
+        onOpenChanged(false);
+        item.onTap();
+      },
+      itemBuilder: (_) => [
+        for (final item in items)
+          PopupMenuItem<LibraryMenuItem>(
+            value: item,
+            height: 40,
+            padding: EdgeInsets.zero,
+            child: LibraryMenuContent(item: item),
           ),
       ],
-      buttonBuilder: (context, open, toggle) => MouseRegion(
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: toggle,
-          child: Tooltip(
-            message: 'Document actions',
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(
-                  alpha: _hovering || open ? 0.72 : 0.55,
-                ),
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-              ),
-              child: const Icon(
-                Icons.more_horiz_rounded,
-                size: 17,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
