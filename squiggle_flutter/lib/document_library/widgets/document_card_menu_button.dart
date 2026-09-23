@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu_content.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_menu_item.dart';
+import 'package:squiggle_flutter/theme/squiggle_button_style.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class DocumentCardMenuButton extends StatelessWidget {
   const DocumentCardMenuButton({
@@ -42,8 +42,7 @@ class DocumentCardMenuButton extends StatelessWidget {
       tooltip: 'Document actions',
       icon: const Icon(Icons.more_horiz_rounded),
       iconSize: context.squiggleTheme.spacing.buttonIconSize,
-      style: SquiggleButton.styleFor(
-        context,
+      style: context.squiggleTheme.buttonStyle(
         variant: SquiggleButtonVariant.secondary,
         compact: true,
       ),
