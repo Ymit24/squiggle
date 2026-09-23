@@ -56,14 +56,13 @@ void main() {
   });
 
   group('paintText', () {
-    test('does not paint when both color passes are disabled', () async {
+    test('does not paint when the fill color is disabled', () async {
       final pixels = await _render((canvas) {
         paintText(
           canvas,
           'label',
           const Rect.fromLTWH(20, 20, 60, 40),
           fillColor: null,
-          strokeColor: null,
         );
       });
 

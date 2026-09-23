@@ -20,7 +20,7 @@ void main() {
         name: 'text',
         kind: FeatureKindText(
           'hello world',
-          fillColor: const Color(0xFFFFFFFF),
+          strokeColor: const Color(0xFFFFFFFF),
         ),
       ),
       (name: 'rectangle', kind: FeatureKindRectangle(label: 'hello world')),
