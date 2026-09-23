@@ -18,6 +18,10 @@ const kTextEditPanelPadding = 12.0;
 const kTextEditButtonSpacing = 8.0;
 const kTextEditButtonHorizontalPadding = 12.0;
 const kTextEditButtonVerticalPadding = 6.0;
+const kButtonHeight = 38.0;
+const kButtonHorizontalPadding = 14.0;
+const kButtonIconSize = 18.0;
+const kButtonIconGap = 7.0;
 
 const kSwatchGridWidth =
     kSwatchColumns * kSwatchSize + (kSwatchColumns - 1) * kSwatchGap;
@@ -43,6 +47,10 @@ class SquiggleSpacing {
     required this.textEditButtonSpacing,
     required this.textEditButtonHorizontalPadding,
     required this.textEditButtonVerticalPadding,
+    required this.buttonHeight,
+    required this.buttonHorizontalPadding,
+    required this.buttonIconSize,
+    required this.buttonIconGap,
   });
 
   final double overlayTop;
@@ -62,6 +70,10 @@ class SquiggleSpacing {
   final double textEditButtonSpacing;
   final double textEditButtonHorizontalPadding;
   final double textEditButtonVerticalPadding;
+  final double buttonHeight;
+  final double buttonHorizontalPadding;
+  final double buttonIconSize;
+  final double buttonIconGap;
 
   int get swatchColumns => kSwatchColumns;
 
@@ -85,6 +97,10 @@ class SquiggleSpacing {
     textEditButtonSpacing: kTextEditButtonSpacing,
     textEditButtonHorizontalPadding: kTextEditButtonHorizontalPadding,
     textEditButtonVerticalPadding: kTextEditButtonVerticalPadding,
+    buttonHeight: kButtonHeight,
+    buttonHorizontalPadding: kButtonHorizontalPadding,
+    buttonIconSize: kButtonIconSize,
+    buttonIconGap: kButtonIconGap,
   );
 
   SquiggleSpacing copyWith({
@@ -105,6 +121,10 @@ class SquiggleSpacing {
     double? textEditButtonSpacing,
     double? textEditButtonHorizontalPadding,
     double? textEditButtonVerticalPadding,
+    double? buttonHeight,
+    double? buttonHorizontalPadding,
+    double? buttonIconSize,
+    double? buttonIconGap,
   }) {
     return SquiggleSpacing(
       overlayTop: overlayTop ?? this.overlayTop,
@@ -128,6 +148,11 @@ class SquiggleSpacing {
           this.textEditButtonHorizontalPadding,
       textEditButtonVerticalPadding:
           textEditButtonVerticalPadding ?? this.textEditButtonVerticalPadding,
+      buttonHeight: buttonHeight ?? this.buttonHeight,
+      buttonHorizontalPadding:
+          buttonHorizontalPadding ?? this.buttonHorizontalPadding,
+      buttonIconSize: buttonIconSize ?? this.buttonIconSize,
+      buttonIconGap: buttonIconGap ?? this.buttonIconGap,
     );
   }
 
@@ -186,6 +211,14 @@ class SquiggleSpacing {
         other.textEditButtonVerticalPadding,
         t,
       ),
+      buttonHeight: _lerpDouble(buttonHeight, other.buttonHeight, t),
+      buttonHorizontalPadding: _lerpDouble(
+        buttonHorizontalPadding,
+        other.buttonHorizontalPadding,
+        t,
+      ),
+      buttonIconSize: _lerpDouble(buttonIconSize, other.buttonIconSize, t),
+      buttonIconGap: _lerpDouble(buttonIconGap, other.buttonIconGap, t),
     );
   }
 
