@@ -49,6 +49,9 @@ class Document extends NodeContainer {
 
   /// ID lookup index, carrying no parent or paint-order information.
   final Map<NodeId, Node> _nodesById = {};
+
+  /// Includes bindings whose target is temporarily absent during history replay.
+  final Map<NodeId, Set<NodeId>> _bindingSourcesByTarget = {};
   final Map<Node, Rect> _boundsBeforeEdit = {};
   int _geometryEditDepth = 0;
 
@@ -130,11 +133,17 @@ class Document extends NodeContainer {
     required bool start,
     NodeBinding? binding,
   }) {
+    if (!identical(feature.document, this)) {
+      throw ArgumentError.value(
+        feature,
+        'feature',
+        'Feature is not in document',
+      );
+    }
     final kind = feature.kind;
     if (kind is! FeatureKindPolyline) {
       throw ArgumentError.value(feature, 'feature', 'Feature cannot bind');
     }
-    final previous = start ? kind.startBinding : kind.endBinding;
     if (binding != null && nodeById(binding.targetId) == null) {
       throw StateError('Binding target does not exist');
     }
@@ -144,37 +153,48 @@ class Document extends NodeContainer {
     if (binding != null && _wouldCycle(feature, nodeById(binding.targetId)!)) {
       throw StateError('Binding would create a cycle');
     }
+    final previousTargets = kind.bindings.map((item) => item.targetId).toSet();
     if (start) {
       kind.startBinding = binding;
     } else {
       kind.endBinding = binding;
     }
-    if (previous != null &&
-        !kind.bindings.any((item) => item.targetId == previous.targetId)) {
-      nodeById(previous.targetId)?.removeBoundFeature(feature.id);
-    }
-    if (binding != null) {
-      nodeById(binding.targetId)?.addBoundFeature(feature.id);
-    }
+    updateFeatureBindings(feature, previousTargets: previousTargets);
   }
 
-  void rebuildBindings() {
-    for (final node in _nodesById.values) {
-      node.clearBoundFeatures();
+  Set<NodeId> bindingTargetsOf(Feature feature) => feature.kind is BindCapable
+      ? (feature.kind as BindCapable).bindings
+            .map((binding) => binding.targetId)
+            .toSet()
+      : {};
+
+  void updateFeatureBindings(
+    Feature feature, {
+    required Set<NodeId> previousTargets,
+    bool updateEndpoint = true,
+  }) {
+    final nextTargets = bindingTargetsOf(feature);
+    for (final id in previousTargets.difference(nextTargets)) {
+      final sources = _bindingSourcesByTarget[id];
+      sources?.remove(feature.id);
+      if (sources?.isEmpty ?? false) _bindingSourcesByTarget.remove(id);
+      nodeById(id)?.removeBoundFeature(feature.id);
     }
-    for (final node in _nodesById.values) {
-      if (node is Feature && node.kind is BindCapable) {
-        final kind = node.kind as BindCapable;
-        for (final binding in kind.bindings) {
-          final target = nodeById(binding.targetId);
-          if (target != null && !_wouldCycle(node, target)) {
-            target.addBoundFeature(node.id);
-          }
-        }
+    for (final id in nextTargets.difference(previousTargets)) {
+      _bindingSourcesByTarget.putIfAbsent(id, () => {}).add(feature.id);
+      final target = nodeById(id);
+      if (target != null && !_wouldCycle(feature, target)) {
+        target.addBoundFeature(feature.id);
       }
     }
-    for (final node in _nodesById.values.toList()) {
-      if (node.boundFeatureIds.isNotEmpty) notifyBoundFeatures(node);
+    if (updateEndpoint && feature.kind is BindCapable) {
+      final kind = feature.kind as BindCapable;
+      for (final id in nextTargets) {
+        final target = nodeById(id);
+        if (target != null && target.boundFeatureIds.contains(feature.id)) {
+          kind.onBoundNodeBoundsUpdate(feature, target);
+        }
+      }
     }
   }
 
@@ -190,16 +210,18 @@ class Document extends NodeContainer {
 
   Node? bindingTargetAt(Offset worldPoint, {required Feature source}) {
     Node? search(Node node) {
+      if (!node.globalBounds().contains(worldPoint)) return null;
       if (node is Group) {
         for (final child in node.children.reversed) {
           final found = search(child);
           if (found != null) return found;
         }
       }
-      if (identical(node, source) || _wouldCycle(source, node)) return null;
+      if (identical(node, source)) return null;
       final localPoint =
           worldPoint - (node.parent?.globalOrigin ?? Offset.zero);
-      return node.hitTest(localPoint) ? node : null;
+      if (!node.hitTest(localPoint) || _wouldCycle(source, node)) return null;
+      return node;
     }
 
     for (final node in _rootNodes.reversed) {
@@ -240,9 +262,7 @@ class Document extends NodeContainer {
   ///
   /// Returns the added feature (which may now carry an assigned id).
   Node addNode(Node feature) {
-    final added = insert(feature);
-    rebuildBindings();
-    return added;
+    return insert(feature);
   }
 
   /// Container bookkeeping: validate all IDs before registering a subtree.
@@ -262,11 +282,53 @@ class Document extends NodeContainer {
       if (node.id == noId) node.id = generateId();
       _nodesById[node.id] = node;
     }
+    for (final node in nodes) {
+      for (final sourceId
+          in _bindingSourcesByTarget[node.id] ?? const <NodeId>{}) {
+        final source = featureById(sourceId);
+        if (source != null && !_wouldCycle(source, node)) {
+          node.addBoundFeature(sourceId);
+        }
+      }
+      if (node is Feature) {
+        updateFeatureBindings(node, previousTargets: {}, updateEndpoint: false);
+      }
+    }
+  }
+
+  /// Complete binding placement after the subtree has its parent coordinates.
+  void onSubtreeInserted(Node root) {
+    final inserted = _subtree(root).toList();
+    final insertedIds = inserted.map((node) => node.id).toSet();
+    for (final node in inserted) {
+      if (node.boundFeatureIds.isNotEmpty) notifyBoundFeatures(node);
+      if (node is Feature && node.kind is BindCapable) {
+        final kind = node.kind as BindCapable;
+        for (final binding in kind.bindings) {
+          if (insertedIds.contains(binding.targetId)) continue;
+          final target = nodeById(binding.targetId);
+          if (target != null && target.boundFeatureIds.contains(node.id)) {
+            kind.onBoundNodeBoundsUpdate(node, target);
+          }
+        }
+      }
+    }
   }
 
   /// Container bookkeeping: descendants leave the index with their root.
   void unregisterSubtree(Node root) {
-    for (final node in _subtree(root)) {
+    final nodes = _subtree(root).toList();
+    for (final node in nodes) {
+      if (node is Feature) {
+        for (final id in bindingTargetsOf(node)) {
+          final sources = _bindingSourcesByTarget[id];
+          sources?.remove(node.id);
+          if (sources?.isEmpty ?? false) _bindingSourcesByTarget.remove(id);
+          nodeById(id)?.removeBoundFeature(node.id);
+        }
+      }
+    }
+    for (final node in nodes) {
       node.clearBoundFeatures();
       _nodesById.remove(node.id);
     }
@@ -286,18 +348,15 @@ class Document extends NodeContainer {
     for (final node in nodes) {
       insert(node);
     }
-    rebuildBindings();
   }
 
   // TODO: Change this to return bool
   void removeFeature(NodeId id) {
     removeAll([id]);
-    rebuildBindings();
   }
 
   void removeFeatures(Iterable<NodeId> ids) {
     removeAll(ids);
-    rebuildBindings();
   }
 
   /// Reorders all nodes without changing their contents.

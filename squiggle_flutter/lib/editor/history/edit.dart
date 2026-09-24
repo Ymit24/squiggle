@@ -134,7 +134,6 @@ final class DocumentTransaction implements Transaction {
         _orderBefore != null &&
         !const ListEquality<NodeId>().equals(_orderBefore, orderAfter);
     _isOpen = false;
-    document.rebuildBindings();
     if (before.isEmpty && !orderChanged) return null;
 
     return DocumentCommit._(
@@ -219,7 +218,6 @@ void _apply(
 }) {
   if (order == null) {
     _restoreInPlace(container, states);
-    container.document?.rebuildBindings();
     return;
   }
   final restored = <NodeId, Node>{
@@ -231,7 +229,6 @@ void _apply(
     container.insert(node);
   }
   container.reorder(order);
-  container.document?.rebuildBindings();
 }
 
 void _restoreInPlace(NodeContainer container, Map<NodeId, data.Node?> states) {

@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/group.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 
 void main() {
   Feature rectangle(Offset origin) => Feature(
@@ -142,5 +143,80 @@ void main() {
 
     InspectorField.byKeyForFeatures([target])['strokeWidth']!.apply(20.0);
     expect(end(connector).dx, 310);
+  });
+
+  test('connects a source inserted before its target', () {
+    final targetId = NodeId.newId(2);
+    final connector = Feature(
+      id: NodeId.newId(1),
+      origin: Offset.zero,
+      size: Size.zero,
+      kind: FeatureKindPolyline([
+        Offset.zero,
+        const Offset(100, 50),
+      ], endBinding: RadialBinding(targetId, 0)),
+    );
+    final target = Feature(
+      id: targetId,
+      origin: const Offset(200, 0),
+      size: const Size(100, 100),
+      kind: FeatureKindRectangle(),
+    );
+    final document = Document();
+    document.addNode(connector);
+    expect(end(connector), const Offset(100, 50));
+
+    document.addNode(target);
+    expect(target.boundFeatureIds, {connector.id});
+    expect(end(connector), const Offset(300, 50));
+
+    document.removeFeature(target.id);
+    expect(target.boundFeatureIds, isEmpty);
+    document.addNode(target);
+    expect(target.boundFeatureIds, {connector.id});
+  });
+
+  test('undo and redo update only changed binding links', () {
+    final first = rectangle(const Offset(200, 0));
+    final second = rectangle(const Offset(400, 0));
+    final connector = line();
+    final document = Document.fromFeatures([first, second, connector]);
+    final history = History(document: document);
+
+    history.run('Attach', (edit) {
+      edit.update(
+        connector,
+        (node) => document.setFeatureBinding(
+          node,
+          start: false,
+          binding: RadialBinding(first.id, 0),
+        ),
+      );
+    });
+    expect(first.boundFeatureIds, {connector.id});
+    expect(end(connector), const Offset(300, 50));
+
+    history.run('Retarget', (edit) {
+      edit.update(
+        connector,
+        (node) => document.setFeatureBinding(
+          node,
+          start: false,
+          binding: RadialBinding(second.id, 0),
+        ),
+      );
+    });
+    expect(first.boundFeatureIds, isEmpty);
+    expect(second.boundFeatureIds, {connector.id});
+    expect(end(connector), const Offset(500, 50));
+
+    history.undo();
+    expect(first.boundFeatureIds, {connector.id});
+    expect(second.boundFeatureIds, isEmpty);
+    expect(end(connector), const Offset(300, 50));
+    history.redo();
+    expect(first.boundFeatureIds, isEmpty);
+    expect(second.boundFeatureIds, {connector.id});
+    expect(end(connector), const Offset(500, 50));
   });
 }

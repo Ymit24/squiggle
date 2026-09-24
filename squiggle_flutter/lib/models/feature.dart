@@ -60,11 +60,22 @@ class Feature extends Node {
       throw ArgumentError.value(raw, 'raw', 'Feature snapshot does not match');
     }
     final restored = Feature.fromDataModel(raw);
-    editGeometry((edit) {
-      edit.origin = restored.origin;
-      edit.size = restored.size;
-    });
-    kind = restored.kind;
+    final owner = document;
+    final previousTargets = owner?.bindingTargetsOf(this) ?? <NodeId>{};
+    void restore() {
+      editGeometry((edit) {
+        edit.origin = restored.origin;
+        edit.size = restored.size;
+      });
+      kind = restored.kind;
+      owner?.updateFeatureBindings(this, previousTargets: previousTargets);
+    }
+
+    if (owner == null) {
+      restore();
+    } else {
+      owner.editGeometry(this, restore);
+    }
   }
 
   Size _size;
