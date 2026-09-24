@@ -110,95 +110,108 @@ class _ContextMenuState extends State<ContextMenu> {
 
     // Clamp the menu into the viewport: flip above/left near edges, and
     // scroll internally when the window is shorter than the menu.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final viewport = constraints.biggest;
-        final marginH = spacing.overlaySide;
-        final marginV = spacing.overlayTop;
+    //
+    // Positioned.fill stays the Stack child; the menu itself is anchored
+    // in an inner Stack so measuring the viewport can't break ParentData.
+    return Positioned.fill(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewport = constraints.biggest;
+          final marginH = spacing.overlaySide;
+          final marginV = spacing.overlayTop;
 
-        final menuWidth = min(
-          spacing.menuWidth,
-          max(viewport.width - marginH * 2, 0.0),
-        );
-        final dx = widget.state.localScreenPosition.dx
-            .clamp(marginH, max(marginH, viewport.width - menuWidth - marginH))
-            .toDouble();
-
-        final estimatedHeight = _estimatedHeight(
-          context,
-          headerLabel: headerLabel,
-          menuWidth: menuWidth,
-        );
-
-        final y = widget.state.localScreenPosition.dy;
-        final spaceBelow = viewport.height - y - marginV;
-        final spaceAbove = y - marginV;
-
-        double? top;
-        double? bottom;
-        late final double maxHeight;
-        if (estimatedHeight <= spaceBelow) {
-          top = max(y, marginV);
-          maxHeight = max(viewport.height - top - marginV, 0.0);
-        } else if (estimatedHeight <= spaceAbove) {
-          bottom = viewport.height - y;
-          maxHeight = max(spaceAbove, 0.0);
-        } else if (spaceBelow >= spaceAbove) {
-          top = y
-              .clamp(marginV, max(marginV, viewport.height - marginV))
+          final menuWidth = min(
+            spacing.menuWidth,
+            max(viewport.width - marginH * 2, 0.0),
+          );
+          final dx = widget.state.localScreenPosition.dx
+              .clamp(
+                marginH,
+                max(marginH, viewport.width - menuWidth - marginH),
+              )
               .toDouble();
-          maxHeight = max(viewport.height - top - marginV, 0.0);
-        } else {
-          final anchoredY = y
-              .clamp(marginV, max(marginV, viewport.height - marginV))
-              .toDouble();
-          bottom = viewport.height - anchoredY;
-          maxHeight = max(anchoredY - marginV, 0.0);
-        }
 
-        return Positioned(
-          left: dx,
-          top: top,
-          bottom: bottom,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: SizedBox(
-              width: menuWidth,
-              child: DecoratedBox(
-                decoration: theme.decorations.floatingPanel(),
-                child: Padding(
-                  padding: EdgeInsets.all(spacing.toolbarPadding),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: spacing.toolbarGap,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: spacing.panelPadding,
-                            vertical: spacing.panelLabelSpacing,
-                          ),
-                          child: Text(
-                            headerLabel,
-                            style: typography.sectionLabel,
+          final estimatedHeight = _estimatedHeight(
+            context,
+            headerLabel: headerLabel,
+            menuWidth: menuWidth,
+          );
+
+          final y = widget.state.localScreenPosition.dy;
+          final spaceBelow = viewport.height - y - marginV;
+          final spaceAbove = y - marginV;
+
+          double? top;
+          double? bottom;
+          late final double maxHeight;
+          if (estimatedHeight <= spaceBelow) {
+            top = max(y, marginV);
+            maxHeight = max(viewport.height - top - marginV, 0.0);
+          } else if (estimatedHeight <= spaceAbove) {
+            bottom = viewport.height - y;
+            maxHeight = max(spaceAbove, 0.0);
+          } else if (spaceBelow >= spaceAbove) {
+            top = y
+                .clamp(marginV, max(marginV, viewport.height - marginV))
+                .toDouble();
+            maxHeight = max(viewport.height - top - marginV, 0.0);
+          } else {
+            final anchoredY = y
+                .clamp(marginV, max(marginV, viewport.height - marginV))
+                .toDouble();
+            bottom = viewport.height - anchoredY;
+            maxHeight = max(anchoredY - marginV, 0.0);
+          }
+
+          return Stack(
+            children: [
+              Positioned(
+                left: dx,
+                top: top,
+                bottom: bottom,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxHeight),
+                  child: SizedBox(
+                    width: menuWidth,
+                    child: DecoratedBox(
+                      decoration: theme.decorations.floatingPanel(),
+                      child: Padding(
+                        padding: EdgeInsets.all(spacing.toolbarPadding),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            spacing: spacing.toolbarGap,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: spacing.panelPadding,
+                                  vertical: spacing.panelLabelSpacing,
+                                ),
+                                child: Text(
+                                  headerLabel,
+                                  style: typography.sectionLabel,
+                                ),
+                              ),
+                              _divider(context),
+                              for (final (index, entry)
+                                  in _entries.indexed) ...[
+                                if (entry.sectionBefore && index > 0)
+                                  _divider(context),
+                                _row(context, index: index, entry: entry),
+                              ],
+                            ],
                           ),
                         ),
-                        _divider(context),
-                        for (final (index, entry) in _entries.indexed) ...[
-                          if (entry.sectionBefore && index > 0)
-                            _divider(context),
-                          _row(context, index: index, entry: entry),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 
