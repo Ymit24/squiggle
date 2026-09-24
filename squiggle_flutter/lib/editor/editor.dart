@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
+import 'package:squiggle_flutter/editor/context_menu.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
@@ -11,6 +12,7 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
+import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
@@ -107,27 +109,6 @@ class Editor extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class ContextMenu extends StatelessWidget {
-  final ContextMenuState state;
-
-  const ContextMenu({super.key, required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: state.localScreenPosition.dx,
-      top: state.localScreenPosition.dy,
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.squiggleTheme.colors.base,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Column(children: [Text("Yo")]),
       ),
     );
   }
