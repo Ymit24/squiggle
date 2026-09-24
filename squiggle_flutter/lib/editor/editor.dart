@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
-import 'package:squiggle_flutter/editor/context_menu.dart';
+import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
