@@ -18,10 +18,7 @@ void main() {
   });
 
   void move(double x) => history.run('Move', (transaction) {
-    transaction.update(
-      node,
-      (node) => node.editGeometry((edit) => edit.origin = Offset(x, 0)),
-    );
+    transaction.update(node, (node) => node.origin = Offset(x, 0));
   });
 
   test('clears undo and redo stacks', () {
@@ -43,10 +40,7 @@ void main() {
     history.undo();
     history.begin('Pending');
     final transaction = history.active;
-    transaction.update(
-      node,
-      (node) => node.editGeometry((edit) => edit.origin = const Offset(30, 0)),
-    );
+    transaction.update(node, (node) => node.origin = const Offset(30, 0));
 
     expect(history.clear, throwsStateError);
     expect(history.active, same(transaction));
@@ -109,10 +103,7 @@ void main() {
     move(10);
     history.undo();
     history.begin('Cancelled move');
-    history.active.update(
-      node,
-      (node) => node.editGeometry((edit) => edit.origin = const Offset(30, 0)),
-    );
+    history.active.update(node, (node) => node.origin = const Offset(30, 0));
     history.cancel();
     expect(node.origin, Offset.zero);
     expect(history.isActive, isFalse);
@@ -126,11 +117,7 @@ void main() {
     final error = Exception('Failed action');
     expect(
       () => history.run('Fail', (transaction) {
-        transaction.update(
-          node,
-          (node) =>
-              node.editGeometry((edit) => edit.origin = const Offset(30, 0)),
-        );
+        transaction.update(node, (node) => node.origin = const Offset(30, 0));
         transaction.add(_rectangle());
         throw error;
       }),
@@ -190,18 +177,11 @@ void main() {
       Group(origin: Offset.zero, children: [child]),
     );
     history.begin('Move child', container: container);
-    history.active.update(
-      child,
-      (node) => node.editGeometry((edit) => edit.origin = const Offset(5, 0)),
-    );
+    history.active.update(child, (node) => node.origin = const Offset(5, 0));
     history.commit();
     move(10);
     history.run('Move child again', (transaction) {
-      transaction.update(
-        child,
-        (node) =>
-            node.editGeometry((edit) => edit.origin = const Offset(15, 0)),
-      );
+      transaction.update(child, (node) => node.origin = const Offset(15, 0));
     }, container: container);
 
     history.undo();

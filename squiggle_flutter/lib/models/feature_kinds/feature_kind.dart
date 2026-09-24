@@ -9,9 +9,9 @@ import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/node.dart';
-export 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
+
+export 'package:squiggle_flutter/models/node_binding.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
@@ -47,10 +47,12 @@ sealed class FeatureKind {
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }
 
-mixin BindCapable on FeatureKind {
+mixin BindingSourceCapable on FeatureKind {
   Iterable<NodeBinding> get bindings;
+}
 
-  void onBoundNodeBoundsUpdate(Feature feature, Node target);
+mixin BindingTargetCapable on FeatureKind {
+  Rect bindingBoundsFor(Feature feature) => feature.globalBounds();
 }
 
 mixin StrokeColorCapable {
@@ -111,9 +113,7 @@ void _growHeightToFitLabel(
       (_measuredLabelHeight(label, labelBounds.width) + 2 * _labelPadding) *
       outerHeightScale;
   if (requiredHeight > feature.height) {
-    feature.editGeometry(
-      (edit) => edit.size = Size(feature.width, requiredHeight),
-    );
+    feature.size = Size(feature.width, requiredHeight);
   }
 }
 

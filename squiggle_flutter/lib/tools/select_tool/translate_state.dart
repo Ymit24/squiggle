@@ -70,9 +70,7 @@ class TranslateState extends InteractionState {
     }
 
     for (var node in selectedNodes) {
-      node.editGeometry(
-        (edit) => edit.origin = _initialOrigins[node.id]! + totalMotion,
-      );
+      node.origin = _initialOrigins[node.id]! + totalMotion;
     }
   }
 

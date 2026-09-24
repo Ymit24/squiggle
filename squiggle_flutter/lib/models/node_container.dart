@@ -29,7 +29,6 @@ abstract mixin class NodeContainer {
     document?.registerSubtree(node);
     _children.insert(position, node);
     node._parent = this;
-    document?.onSubtreeInserted(node);
     return node;
   }
 

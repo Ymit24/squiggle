@@ -198,7 +198,7 @@ class IdleInteractionState extends InteractionState {
       final bounds = Node.localBoundsOfNodes(selectedNodes);
 
       for (final node in selectedNodes) {
-        node.editGeometry((edit) => edit.origin -= bounds.center);
+        node.origin -= bounds.center;
       }
       final group = Group(
         children: selectedNodes.toList(),
@@ -238,7 +238,7 @@ class IdleInteractionState extends InteractionState {
         final children = group.children.toList();
         group.removeAll(children.map((child) => child.id));
         for (final child in children) {
-          child.editGeometry((edit) => edit.origin += group.origin);
+          child.origin += group.origin;
           transaction.add(child);
         }
         replacementIds[group.id] = children.map((child) => child.id).toList();

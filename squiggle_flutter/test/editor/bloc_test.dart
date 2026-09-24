@@ -38,9 +38,7 @@ void main() {
       context.history.run('Move feature', (transaction) {
         transaction.update(
           feature,
-          (feature) => feature.editGeometry(
-            (edit) => edit.origin = const Offset(10, 10),
-          ),
+          (feature) => feature.origin = const Offset(10, 10),
         );
       });
       await Future<void>.delayed(Duration.zero);

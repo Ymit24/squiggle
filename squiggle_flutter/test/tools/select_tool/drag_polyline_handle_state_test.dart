@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/group.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -115,7 +116,6 @@ void main() {
       harness.pointerMove(const Offset(400, 150));
       harness.pointerUp(const Offset(400, 150));
       expect(kind.endBinding, isNull);
-      expect(target.boundFeatureIds, isEmpty);
       expect(polylineWorldPoints(line).last, const Offset(400, 150));
     });
 
@@ -144,13 +144,47 @@ void main() {
 
       harness.context.history.undo();
       expect((line.kind as FeatureKindPolyline).endBinding, isNull);
-      expect(target.boundFeatureIds, isEmpty);
       harness.context.history.redo();
       expect(
         (line.kind as FeatureKindPolyline).endBinding?.targetId,
         target.id,
       );
-      expect(target.boundFeatureIds, contains(line.id));
+      expect(polylineWorldPoints(line).last, const Offset(300, 50));
+    });
+
+    test('grouped line handles use global positions for attach and detach', () {
+      final line = Feature(
+        origin: Offset.zero,
+        size: const Size(100, 100),
+        kind: FeatureKindPolyline([Offset.zero, const Offset(100, 100)]),
+      );
+      final group = Group(origin: const Offset(100, 100), children: [line]);
+      final target = Feature(
+        origin: const Offset(300, 100),
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      harness.context = EditorContext(
+        document: Document()
+          ..addNode(group)
+          ..addNode(target),
+      );
+      harness.context.selection.setSelection([line.id]);
+
+      harness.pointerDown(const Offset(200, 200));
+      harness.pointerMove(const Offset(350, 150));
+      harness.pointerUp(const Offset(350, 150));
+      expect(
+        (line.kind as FeatureKindPolyline).endBinding?.targetId,
+        target.id,
+      );
+      expect(polylineWorldPoints(line).last, const Offset(400, 150));
+
+      harness.pointerDown(const Offset(400, 150));
+      harness.pointerMove(const Offset(450, 250));
+      harness.pointerUp(const Offset(450, 250));
+      expect((line.kind as FeatureKindPolyline).endBinding, isNull);
+      expect(polylineWorldPoints(line).last, const Offset(450, 250));
     });
   });
 }

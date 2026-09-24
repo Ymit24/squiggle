@@ -5,147 +5,134 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 void main() {
-  Feature rectangle(Offset origin) => Feature(
+  Feature rectangle(Offset origin, {NodeId id = noId}) => Feature(
+    id: id,
     origin: origin,
     size: const Size(100, 100),
     kind: FeatureKindRectangle(),
   );
-  Feature line() => Feature(
+  Feature line({NodeBinding? start, NodeBinding? end}) => Feature(
     origin: Offset.zero,
     size: Size.zero,
-    kind: FeatureKindPolyline([Offset.zero, const Offset(100, 50)]),
+    kind: FeatureKindPolyline(
+      [Offset.zero, const Offset(100, 50)],
+      startBinding: start,
+      endBinding: end,
+    ),
   );
-  Offset end(Feature feature) {
-    final kind = feature.kind as FeatureKindPolyline;
-    return feature.origin + kind.localPoints.last;
-  }
+  List<Offset> points(Feature feature) =>
+      (feature.kind as FeatureKindPolyline).resolvedPoints(feature);
 
-  test('radial binding follows target movement and history replay', () {
+  test('bound point resolves through movement, history and reload', () {
     final target = rectangle(const Offset(200, 0));
     final connector = line();
     final document = Document.fromFeatures([target, connector]);
+    final kind = connector.kind as FeatureKindPolyline;
+    kind.endBinding = RadialBinding(target.id, 0);
     final history = History(document: document);
 
-    document.setFeatureBinding(
-      connector,
-      start: false,
-      binding: RadialBinding(target.id, 0),
-    );
-    document.notifyBoundFeatures(target);
-    expect(end(connector), const Offset(300, 50));
-    expect(target.boundFeatureIds, contains(connector.id));
+    expect(points(connector).last, const Offset(300, 50));
+    expect(connector.origin + kind.localPoints.last, const Offset(100, 50));
+    expect(connector.localBounds().right, greaterThan(300));
+    expect(connector.hitTest(const Offset(250, 42)), isTrue);
 
     history.run('Move', (edit) {
-      edit.update(
-        target,
-        (node) => node.editGeometry(
-          (geometry) => geometry.origin = const Offset(250, 0),
-        ),
-      );
+      edit.update(target, (feature) => feature.origin = const Offset(250, 0));
     });
-    expect(end(connector), const Offset(350, 50));
-
+    expect(points(connector).last, const Offset(350, 50));
     history.undo();
-    expect(end(connector), const Offset(300, 50));
+    expect(points(connector).last, const Offset(300, 50));
     history.redo();
-    expect(end(connector), const Offset(350, 50));
+    expect(points(connector).last, const Offset(350, 50));
 
     final restored = Document.fromDataModel(document.toDataModel());
-    final restoredLine = restored.featureById(connector.id)!;
     expect(
-      (restoredLine.kind as FeatureKindPolyline).endBinding?.targetId,
-      target.id,
+      points(restored.featureById(connector.id)!).last,
+      const Offset(350, 50),
     );
-    expect(end(restoredLine), const Offset(350, 50));
   });
 
-  test('group movement updates bindings to descendants', () {
+  test('nested target follows group movement without line mutation', () {
     final child = rectangle(const Offset(10, 0));
     final group = Group(origin: const Offset(200, 0), children: [child]);
     final connector = line();
     final document = Document();
     document.addNodes([group, connector]);
-    document.setFeatureBinding(
-      connector,
-      start: false,
-      binding: RadialBinding(child.id, 0),
+    (connector.kind as FeatureKindPolyline).endBinding = RadialBinding(
+      child.id,
+      0,
     );
-    document.notifyBoundFeatures(child);
-    expect(end(connector), const Offset(310, 50));
+    expect(points(connector).last, const Offset(310, 50));
 
-    group.editGeometry((edit) => edit.origin = const Offset(250, 0));
-    expect(end(connector), const Offset(360, 50));
+    group.origin = const Offset(250, 0);
+    expect(points(connector).last, const Offset(360, 50));
   });
 
-  test('child resize updates bindings to ancestor group once', () {
-    final child = rectangle(const Offset(10, 0));
-    final group = Group(origin: const Offset(200, 0), children: [child]);
+  test('only eligible feature kinds are binding targets', () {
+    final shape = rectangle(const Offset(200, 0));
+    final nested = rectangle(const Offset(0, 0));
+    final otherChild = rectangle(const Offset(200, 0));
+    final group = Group(
+      origin: const Offset(400, 0),
+      children: [nested, otherChild],
+    );
     final connector = line();
     final document = Document();
-    document.addNodes([group, connector]);
-    document.setFeatureBinding(
-      connector,
-      start: false,
-      binding: RadialBinding(group.id, 0),
-    );
-    document.notifyBoundFeatures(group);
-    expect(end(connector), const Offset(310, 50));
+    document.addNodes([shape, group, connector]);
 
-    child.resize(const Rect.fromLTWH(10, 0, 150, 100));
-    expect(end(connector), const Offset(360, 50));
+    expect(document.bindingTargetAt(const Offset(250, 50)), same(shape));
+    expect(document.bindingTargetAt(const Offset(450, 50)), same(nested));
+    expect(document.bindingTargetAt(const Offset(550, 50)), isNull);
+    expect(document.bindingTargetAt(const Offset(50, 25)), isNull);
+    expect(connector.kind is BindingTargetCapable, isFalse);
+    expect(shape.kind is BindingTargetCapable, isTrue);
+
+    (connector.kind as FeatureKindPolyline).endBinding = RadialBinding(
+      group.id,
+      0,
+    );
+    expect(points(connector).last, const Offset(100, 50));
+    (connector.kind as FeatureKindPolyline).endBinding = RadialBinding(
+      connector.id,
+      0,
+    );
+    expect(points(connector).last, const Offset(100, 50));
   });
 
-  test('both ends can bind to one target and detach separately', () {
+  test('both endpoints resolve independently and retain fallbacks', () {
     final target = rectangle(const Offset(200, 0));
     final connector = line();
-    final document = Document.fromFeatures([target, connector]);
-    document.setFeatureBinding(
-      connector,
-      start: true,
-      binding: RadialBinding(target.id, math.pi),
-    );
-    document.setFeatureBinding(
-      connector,
-      start: false,
-      binding: RadialBinding(target.id, 0),
-    );
-    expect(target.boundFeatureIds, {connector.id});
+    Document.fromFeatures([target, connector]);
+    final kind = connector.kind as FeatureKindPolyline;
+    kind.startBinding = RadialBinding(target.id, math.pi);
+    kind.endBinding = RadialBinding(target.id, 0);
+    expect(points(connector).first.dx, closeTo(200, 0.001));
+    expect(points(connector).last, const Offset(300, 50));
 
-    document.setFeatureBinding(connector, start: true);
-    expect(target.boundFeatureIds, {connector.id});
-    document.setFeatureBinding(connector, start: false);
-    expect(target.boundFeatureIds, isEmpty);
+    kind.startBinding = null;
+    expect(points(connector).first, Offset.zero);
+    expect(points(connector).last, const Offset(300, 50));
   });
 
-  test('inspector changes that affect bounds notify bound features', () {
-    final target = Feature(
-      origin: const Offset(200, 0),
-      size: Size.zero,
-      kind: FeatureKindPolyline([
-        Offset.zero,
-        const Offset(100, 0),
-      ], strokeWidth: 2),
-    );
+  test('target geometry changes are visible without notification', () {
+    final target = rectangle(const Offset(200, 0));
     final connector = line();
-    final document = Document.fromFeatures([target, connector]);
-    document.setFeatureBinding(
-      connector,
-      start: false,
-      binding: RadialBinding(target.id, 0),
+    Document.fromFeatures([target, connector]);
+    (connector.kind as FeatureKindPolyline).endBinding = RadialBinding(
+      target.id,
+      0,
     );
-    document.notifyBoundFeatures(target);
-    expect(end(connector).dx, 301);
+    expect(points(connector).last, const Offset(300, 50));
 
-    InspectorField.byKeyForFeatures([target])['strokeWidth']!.apply(20.0);
-    expect(end(connector).dx, 310);
+    target.size = const Size(150, 100);
+    expect(points(connector).last, const Offset(350, 50));
   });
 
-  test('connects a source inserted before its target', () {
+  test('missing target uses fallback and resolves when restored', () {
     final targetId = NodeId.newId(2);
     final connector = Feature(
       id: NodeId.newId(1),
@@ -156,27 +143,19 @@ void main() {
         const Offset(100, 50),
       ], endBinding: RadialBinding(targetId, 0)),
     );
-    final target = Feature(
-      id: targetId,
-      origin: const Offset(200, 0),
-      size: const Size(100, 100),
-      kind: FeatureKindRectangle(),
-    );
+    final target = rectangle(const Offset(200, 0), id: targetId);
     final document = Document();
     document.addNode(connector);
-    expect(end(connector), const Offset(100, 50));
-
+    expect(points(connector).last, const Offset(100, 50));
     document.addNode(target);
-    expect(target.boundFeatureIds, {connector.id});
-    expect(end(connector), const Offset(300, 50));
-
+    expect(points(connector).last, const Offset(300, 50));
     document.removeFeature(target.id);
-    expect(target.boundFeatureIds, isEmpty);
+    expect(points(connector).last, const Offset(100, 50));
     document.addNode(target);
-    expect(target.boundFeatureIds, {connector.id});
+    expect(points(connector).last, const Offset(300, 50));
   });
 
-  test('undo and redo update only changed binding links', () {
+  test('undo and redo restore binding choice', () {
     final first = rectangle(const Offset(200, 0));
     final second = rectangle(const Offset(400, 0));
     final connector = line();
@@ -186,37 +165,22 @@ void main() {
     history.run('Attach', (edit) {
       edit.update(
         connector,
-        (node) => document.setFeatureBinding(
-          node,
-          start: false,
-          binding: RadialBinding(first.id, 0),
-        ),
+        (feature) => (feature.kind as FeatureKindPolyline).endBinding =
+            RadialBinding(first.id, 0),
       );
     });
-    expect(first.boundFeatureIds, {connector.id});
-    expect(end(connector), const Offset(300, 50));
-
+    expect(points(connector).last, const Offset(300, 50));
     history.run('Retarget', (edit) {
       edit.update(
         connector,
-        (node) => document.setFeatureBinding(
-          node,
-          start: false,
-          binding: RadialBinding(second.id, 0),
-        ),
+        (feature) => (feature.kind as FeatureKindPolyline).endBinding =
+            RadialBinding(second.id, 0),
       );
     });
-    expect(first.boundFeatureIds, isEmpty);
-    expect(second.boundFeatureIds, {connector.id});
-    expect(end(connector), const Offset(500, 50));
-
+    expect(points(connector).last, const Offset(500, 50));
     history.undo();
-    expect(first.boundFeatureIds, {connector.id});
-    expect(second.boundFeatureIds, isEmpty);
-    expect(end(connector), const Offset(300, 50));
+    expect(points(connector).last, const Offset(300, 50));
     history.redo();
-    expect(first.boundFeatureIds, isEmpty);
-    expect(second.boundFeatureIds, {connector.id});
-    expect(end(connector), const Offset(500, 50));
+    expect(points(connector).last, const Offset(500, 50));
   });
 }

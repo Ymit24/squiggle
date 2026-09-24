@@ -35,7 +35,7 @@ void alignNodes(List<Node> nodes, NodeAlignment alignment) {
         union.center.dy - bounds.center.dy,
       ),
     };
-    node.editGeometry((edit) => edit.origin += delta);
+    node.origin += delta;
   }
 }
 
@@ -81,7 +81,7 @@ void _distributeAlongAxis(
         ? Offset(current - bounds.left, 0)
         : Offset(0, current - bounds.top);
 
-    entry.node.editGeometry((edit) => edit.origin += delta);
+    entry.node.origin += delta;
 
     current += (horizontal ? bounds.width : bounds.height) + gap;
   }

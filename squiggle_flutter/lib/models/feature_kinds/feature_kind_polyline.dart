@@ -1,7 +1,7 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable, BindCapable {
+    with StrokeColorCapable, StrokeWidthCapable, BindingSourceCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
@@ -76,23 +76,20 @@ final class FeatureKindPolyline extends FeatureKind
     if (endBinding case final binding?) yield binding;
   }
 
-  @override
-  void onBoundNodeBoundsUpdate(Feature feature, Node target) {
+  /// Geometry used for painting, bounds, hit tests and selection handles.
+  /// Stored points remain available as fallbacks while a target is absent.
+  List<Offset> resolvedPoints(Feature feature) {
+    final points = worldPoints(feature.origin, localPoints);
+    if (points.isEmpty) return points;
+    points[0] = startBinding?.resolvePoint(feature) ?? points[0];
+    points[points.length - 1] =
+        endBinding?.resolvePoint(feature) ?? points.last;
+    return points;
+  }
+
+  List<Offset> resolvedGlobalPoints(Feature feature) {
     final parentOrigin = feature.parent?.globalOrigin ?? Offset.zero;
-    if (startBinding?.targetId == target.id && localPoints.isNotEmpty) {
-      setPoint(
-        feature,
-        0,
-        startBinding!.pointOn(target.globalBounds()) - parentOrigin,
-      );
-    }
-    if (endBinding?.targetId == target.id && localPoints.isNotEmpty) {
-      setPoint(
-        feature,
-        localPoints.length - 1,
-        endBinding!.pointOn(target.globalBounds()) - parentOrigin,
-      );
-    }
+    return [for (final point in resolvedPoints(feature)) point + parentOrigin];
   }
 
   static LineEndCap _endCapFromDataModel(
@@ -105,17 +102,10 @@ final class FeatureKindPolyline extends FeatureKind
     required Offset origin,
     required List<Offset> localPoints,
   }) {
-    feature.editGeometry((edit) {
-      edit.origin = origin;
-      this.localPoints = List.of(localPoints);
-      edit.size = boundsForOrigin(origin).size;
-    });
+    feature.origin = origin;
+    this.localPoints = List.of(localPoints);
+    feature.size = feature.localBounds().size;
   }
-
-  Rect boundsForOrigin(Offset origin) => envelopeOfPoints(
-    worldPoints(origin, localPoints),
-    strokePadding: _boundsPadding,
-  );
 
   void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
     final points = worldPoints(feature.origin, localPoints);
@@ -140,7 +130,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     return envelopeOfPoints(
-      worldPoints(feature.origin, localPoints),
+      resolvedPoints(feature),
       strokePadding: _boundsPadding,
     );
   }
@@ -161,7 +151,7 @@ final class FeatureKindPolyline extends FeatureKind
       return path;
     }
 
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
       if (direction != null) {
@@ -190,7 +180,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     final threshold = _selectionTolerance;
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     for (var i = 0; i < points.length - 1; i++) {
       if (distanceToSegment(worldPoint, points[i], points[i + 1]) <=
           threshold) {
@@ -207,7 +197,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     final padded = rect.inflate(_selectionTolerance);
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     for (var i = 0; i < points.length - 1; i++) {
       if (segmentIntersectsRect(points[i], points[i + 1], padded)) {
         return true;
@@ -221,8 +211,7 @@ final class FeatureKindPolyline extends FeatureKind
     final oldBounds = boundsFor(feature);
     final oldCenterlineBounds = oldBounds.deflate(_boundsPadding);
     final newCenterlineBounds = bounds.deflate(_boundsPadding);
-    final scaledLocalPoints = localPoints.map((local) {
-      final world = feature.origin + local;
+    final scaledLocalPoints = resolvedPoints(feature).map((world) {
       final nx = oldCenterlineBounds.width == 0
           ? 0.0
           : (world.dx - oldCenterlineBounds.left) / oldCenterlineBounds.width;
@@ -236,11 +225,8 @@ final class FeatureKindPolyline extends FeatureKind
       return newWorld - bounds.topLeft;
     }).toList();
 
-    feature.editGeometry((edit) {
-      edit.origin = bounds.topLeft;
-      edit.size = bounds.size;
-      localPoints = scaledLocalPoints;
-    });
+    feature.setBounds(bounds);
+    localPoints = scaledLocalPoints;
   }
 
   @override
@@ -317,7 +303,7 @@ final class FeatureKindPolyline extends FeatureKind
   double get _arrowLength => math.max(12.0, strokeWidth * 3);
 
   void _paintArrowHeads(Canvas canvas, Feature feature) {
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     for (final arrow in _arrowPaths(points)) {
       canvas.drawPath(arrow, Paint()..color = strokeColor);
     }

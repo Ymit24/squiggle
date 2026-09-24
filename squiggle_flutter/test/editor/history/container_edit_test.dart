@@ -58,16 +58,14 @@ void main() {
   });
 
   test('group, edit child, ungroup and replay recreated containers', () {
-    final a = rect(1)
-      ..editGeometry((edit) => edit.origin = const Offset(20, 30));
-    final b = rect(2)
-      ..editGeometry((edit) => edit.origin = const Offset(40, 50));
+    final a = rect(1)..origin = const Offset(20, 30);
+    final b = rect(2)..origin = const Offset(40, 50);
     final untouched = rect(3);
     final doc = Document.fromFeatures([a, untouched, b]);
     final grouping = DocumentTransaction(document: doc, label: 'Group');
     grouping.removeAll([a.id, b.id]);
-    a.editGeometry((edit) => edit.origin -= const Offset(10, 10));
-    b.editGeometry((edit) => edit.origin -= const Offset(10, 10));
+    a.origin -= const Offset(10, 10);
+    b.origin -= const Offset(10, 10);
     final group = grouping.add(
       Group(origin: const Offset(10, 10), children: [a, b]),
     );
@@ -78,17 +76,14 @@ void main() {
       container: group,
       label: 'Move',
     );
-    move.update(
-      a,
-      (node) => node.editGeometry((edit) => edit.origin = const Offset(90, 90)),
-    );
+    move.update(a, (node) => node.origin = const Offset(90, 90));
     final moved = move.commit()!;
     final ungroup = DocumentTransaction(document: doc, label: 'Ungroup');
     ungroup.removeAll([group.id]);
     final children = group.children.toList();
     group.removeAll(children.map((node) => node.id));
     for (final child in children) {
-      child.editGeometry((edit) => edit.origin += group.origin);
+      child.origin += group.origin;
       ungroup.add(child);
     }
     final ungrouped = ungroup.commit()!;
@@ -168,7 +163,7 @@ void main() {
     final doc = Document()..insert(node);
     final edit = DocumentTransaction(document: doc, label: 'Move');
     edit.watch([node]);
-    node.editGeometry((edit) => edit.origin = const Offset(5, 5));
+    node.origin = const Offset(5, 5);
     node.fail = true;
     expect(edit.commit, throwsStateError);
     expect(edit.isOpen, isTrue);

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 sealed class NodeBinding {
@@ -9,6 +10,16 @@ sealed class NodeBinding {
   final NodeId targetId;
 
   Offset pointOn(Rect bounds);
+
+  /// Resolves into the owner's parent coordinates; null keeps the fallback point.
+  Offset? resolvePoint(Feature owner) {
+    final target = owner.document?.featureById(targetId);
+    if (target == null || target.kind is! BindingTargetCapable) return null;
+    final bounds = (target.kind as BindingTargetCapable).bindingBoundsFor(
+      target,
+    );
+    return pointOn(bounds) - (owner.parent?.globalOrigin ?? Offset.zero);
+  }
 
   Map<String, dynamic> toJson();
 

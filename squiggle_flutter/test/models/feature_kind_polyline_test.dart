@@ -195,9 +195,7 @@ void main() {
       ]);
       final beforeEnd = worldPoint((doc.nodes.first as Feature), 1);
 
-      doc.nodes.first.editGeometry(
-        (edit) => edit.origin = const Offset(20, 30),
-      );
+      doc.nodes.first.origin = const Offset(20, 30);
 
       final moved = (doc.nodes.first as Feature);
       final kind = moved.kind as FeatureKindPolyline;

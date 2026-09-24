@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -23,8 +22,9 @@ class DragPolylineHandleState extends InteractionState {
 
   final PolylineHandle _handle;
   final Offset pointerDownWorld;
-  Node? _hoveredTarget;
+  Feature? _hoveredTarget;
   RadialBinding? _proposedBinding;
+  NodeBinding? _initialBinding;
   bool _didDrag = false;
 
   bool get _isEndpoint {
@@ -36,6 +36,10 @@ class DragPolylineHandleState extends InteractionState {
   @override
   void onEnter(EditorContext context) {
     parent.beginTransaction(context, 'Move point', [_handle.feature]);
+    final kind = _handle.feature.kind as FeatureKindPolyline;
+    _initialBinding = _handle.pointIndex == 0
+        ? kind.startBinding
+        : kind.endBinding;
   }
 
   @override
@@ -69,19 +73,24 @@ class DragPolylineHandleState extends InteractionState {
       return;
     }
     final kind = _handle.feature.kind as FeatureKindPolyline;
+    if (!_didDrag && _isEndpoint) {
+      if (_handle.pointIndex == 0) {
+        kind.startBinding = null;
+      } else {
+        kind.endBinding = null;
+      }
+    }
     _didDrag = true;
     if (_isEndpoint) {
-      _hoveredTarget = context.document.bindingTargetAt(
-        pointer,
-        source: _handle.feature,
-      );
+      _hoveredTarget = context.document.bindingTargetAt(pointer);
     }
     final target = _hoveredTarget;
     if (target != null) {
-      final delta = pointer - target.globalBounds().center;
-      final previous = _handle.pointIndex == 0
-          ? kind.startBinding
-          : kind.endBinding;
+      final bounds = (target.kind as BindingTargetCapable).bindingBoundsFor(
+        target,
+      );
+      final delta = pointer - bounds.center;
+      final previous = _initialBinding;
       final angle =
           delta.distanceSquared < 1e-8 &&
               previous is RadialBinding &&
@@ -93,14 +102,16 @@ class DragPolylineHandleState extends InteractionState {
       kind.setPoint(
         _handle.feature,
         _handle.pointIndex,
-        _proposedBinding!.pointOn(target.globalBounds()) - parentOrigin,
+        _proposedBinding!.pointOn(bounds) - parentOrigin,
       );
     } else {
       _proposedBinding = null;
+      final parentOrigin = _handle.feature.parent?.globalOrigin ?? Offset.zero;
       kind.setPoint(
         _handle.feature,
         _handle.pointIndex,
-        _targetPosition(kind, pointer, isShiftPressed: isShiftPressed),
+        _targetPosition(kind, pointer, isShiftPressed: isShiftPressed) -
+            parentOrigin,
       );
     }
   }
@@ -114,9 +125,9 @@ class DragPolylineHandleState extends InteractionState {
   ) {
     final target = _hoveredTarget;
     if (target == null) return;
-    final bounds = target.globalBounds().inflate(
-      camera.screenLengthToWorldLength(4),
-    );
+    final bounds = (target.kind as BindingTargetCapable)
+        .bindingBoundsFor(target)
+        .inflate(camera.screenLengthToWorldLength(4));
     final outline = Paint()
       ..color = SquiggleColors.accent
       ..style = PaintingStyle.stroke
@@ -131,7 +142,7 @@ class DragPolylineHandleState extends InteractionState {
   }) {
     if (!isShiftPressed) return cursorWorldPosition;
 
-    final points = worldPoints(_handle.feature.origin, kind.localPoints);
+    final points = kind.resolvedGlobalPoints(_handle.feature);
     final origin = _snapOrigin(points, cursorWorldPosition);
     return snapPointTo45DegreeAngle(origin, cursorWorldPosition);
   }
@@ -153,11 +164,12 @@ class DragPolylineHandleState extends InteractionState {
     _updateDrag(context, cursorWorldPosition, isShiftPressed: isShiftPressed);
     if (_didDrag) {
       if (_isEndpoint) {
-        context.document.setFeatureBinding(
-          _handle.feature,
-          start: _handle.pointIndex == 0,
-          binding: _proposedBinding,
-        );
+        final kind = _handle.feature.kind as FeatureKindPolyline;
+        if (_handle.pointIndex == 0) {
+          kind.startBinding = _proposedBinding;
+        } else {
+          kind.endBinding = _proposedBinding;
+        }
       }
     }
     parent.transition(IdleInteractionState(parent: parent), context);

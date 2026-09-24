@@ -14,14 +14,12 @@ export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.
 class Feature extends Node {
-  // Keep the public argument named size while the field remains private.
   Feature({
     super.id,
     required super.origin,
-    required Size size,
+    required this.size,
     required this.kind,
-    // ignore: prefer_initializing_formals
-  }) : _size = size;
+  });
 
   factory Feature.fromDataModel(data.Feature raw) {
     final content = raw.content;
@@ -60,36 +58,13 @@ class Feature extends Node {
       throw ArgumentError.value(raw, 'raw', 'Feature snapshot does not match');
     }
     final restored = Feature.fromDataModel(raw);
-    final owner = document;
-    final previousTargets = owner?.bindingTargetsOf(this) ?? <NodeId>{};
-    void restore() {
-      editGeometry((edit) {
-        edit.origin = restored.origin;
-        edit.size = restored.size;
-      });
-      kind = restored.kind;
-      owner?.updateFeatureBindings(this, previousTargets: previousTargets);
-    }
-
-    if (owner == null) {
-      restore();
-    } else {
-      owner.editGeometry(this, restore);
-    }
+    origin = restored.origin;
+    size = restored.size;
+    kind = restored.kind;
   }
 
-  Size _size;
-  Size get size => _size;
+  Size size;
   FeatureKind kind;
-
-  @override
-  NodeGeometryEdit createGeometryEdit() => NodeGeometryEdit(origin, size: size);
-
-  @override
-  void commitGeometryEdit(NodeGeometryEdit edit) {
-    super.commitGeometryEdit(edit);
-    _size = edit.size!;
-  }
 
   double get width => size.width;
 
@@ -101,10 +76,10 @@ class Feature extends Node {
   @override
   void resize(Rect bounds) => kind.applyBounds(this, bounds);
 
-  void setBounds(Rect bounds) => editGeometry((edit) {
-    edit.origin = bounds.topLeft;
-    edit.size = bounds.size;
-  });
+  void setBounds(Rect bounds) {
+    origin = bounds.topLeft;
+    size = bounds.size;
+  }
 
   @override
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
