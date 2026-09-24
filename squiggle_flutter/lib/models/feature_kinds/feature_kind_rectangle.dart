@@ -5,7 +5,8 @@ final class FeatureKindRectangle extends FeatureKind
         StrokeColorCapable,
         FillColorCapable,
         StrokeWidthCapable,
-        LabelCapable {
+        LabelCapable,
+        BindingTargetCapable {
   FeatureKindRectangle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,

@@ -59,7 +59,11 @@ class IdleInteractionState extends InteractionState {
         break;
       case PolylineHandleTarget(handle: var handle):
         parent.transition(
-          DragPolylineHandleState(parent: parent, handle: handle),
+          DragPolylineHandleState(
+            parent: parent,
+            handle: handle,
+            pointerDownWorld: cursorWorldPosition,
+          ),
           context,
         );
         break;

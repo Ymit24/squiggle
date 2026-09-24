@@ -5,6 +5,7 @@ import 'package:data_models/data_models.dart' as data;
 
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/models/group.dart';
 
 /// Editable document tree with document-wide node IDs.
 ///
@@ -79,6 +80,29 @@ class Document extends NodeContainer {
       if (node.hitTest(worldPoint)) {
         return node;
       }
+    }
+    return null;
+  }
+
+  /// Topmost eligible feature, descending through groups to their children.
+  Feature? bindingTargetAt(Offset worldPoint) {
+    Feature? search(Node node) {
+      if (!node.globalBounds().contains(worldPoint)) return null;
+      if (node is Group) {
+        for (final child in node.children.reversed) {
+          final found = search(child);
+          if (found != null) return found;
+        }
+      }
+      if (node is! Feature || node.kind is! BindingTargetCapable) return null;
+      final localPoint =
+          worldPoint - (node.parent?.globalOrigin ?? Offset.zero);
+      return node.hitTest(localPoint) ? node : null;
+    }
+
+    for (final node in _rootNodes.reversed) {
+      final found = search(node);
+      if (found != null) return found;
     }
     return null;
   }

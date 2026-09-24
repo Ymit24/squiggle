@@ -11,6 +11,8 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
+export 'package:squiggle_flutter/models/node_binding.dart';
+
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
 part 'feature_kind_text.dart';
@@ -43,6 +45,14 @@ sealed class FeatureKind {
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
+}
+
+mixin BindingSourceCapable on FeatureKind {
+  Iterable<NodeBinding> get bindings;
+}
+
+mixin BindingTargetCapable on FeatureKind {
+  Rect bindingBoundsFor(Feature feature) => feature.globalBounds();
 }
 
 mixin StrokeColorCapable {
