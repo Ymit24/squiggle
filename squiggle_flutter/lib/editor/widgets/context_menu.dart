@@ -49,28 +49,31 @@ class _ContextMenuState extends State<ContextMenu> {
     return Positioned(
       left: widget.state.localScreenPosition.dx,
       top: widget.state.localScreenPosition.dy,
-      child: DecoratedBox(
-        decoration: theme.decorations.floatingPanel(),
-        child: Padding(
-          padding: EdgeInsets.all(spacing.toolbarPadding),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: spacing.toolbarGap,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: spacing.panelPadding,
-                  vertical: spacing.panelLabelSpacing,
+      child: SizedBox(
+        width: spacing.menuWidth,
+        child: DecoratedBox(
+          decoration: theme.decorations.floatingPanel(),
+          child: Padding(
+            padding: EdgeInsets.all(spacing.toolbarPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: spacing.toolbarGap,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: spacing.panelPadding,
+                    vertical: spacing.panelLabelSpacing,
+                  ),
+                  child: Text(headerLabel, style: typography.sectionLabel),
                 ),
-                child: Text(headerLabel, style: typography.sectionLabel),
-              ),
-              _divider(context),
-              for (final (index, entry) in _entries.indexed) ...[
-                if (entry.sectionBefore && index > 0) _divider(context),
-                _row(context, index: index, entry: entry),
+                _divider(context),
+                for (final (index, entry) in _entries.indexed) ...[
+                  if (entry.sectionBefore && index > 0) _divider(context),
+                  _row(context, index: index, entry: entry),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
