@@ -88,6 +88,18 @@ class Editor extends StatelessWidget {
                           child: BackToContent(editorContext: editorContext),
                         ),
                       ),
+                      ListenableBuilder(
+                        listenable: editorContext.contextMenu,
+                        builder: (context, _) {
+                          if (editorContext.contextMenu.state == null) {
+                            return SizedBox.shrink();
+                          }
+
+                          return ContextMenu(
+                            state: editorContext.contextMenu.state!,
+                          );
+                        },
+                      ),
                     ],
                   );
                 },
@@ -95,6 +107,27 @@ class Editor extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class ContextMenu extends StatelessWidget {
+  final ContextMenuState state;
+
+  const ContextMenu({super.key, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: state.localScreenPosition.dx,
+      top: state.localScreenPosition.dy,
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.squiggleTheme.colors.base,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(children: [Text("Yo")]),
       ),
     );
   }
