@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
@@ -22,6 +23,7 @@ class ResizeState extends InteractionState {
   final ResizeHandle _handle;
   final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.localBounds();
+  bool _detachedBindings = false;
 
   @override
   void onEnter(EditorContext context) {
@@ -50,6 +52,13 @@ class ResizeState extends InteractionState {
       lockAspectRatio: isShiftPressed,
       symmetric: isAltPressed,
     );
+    if (!_detachedBindings && newBounds != _initialBounds) {
+      final node = _handle.node;
+      if (node is Feature && node.kind is FeatureKindPolyline) {
+        (node.kind as FeatureKindPolyline).detachBindings(node);
+      }
+      _detachedBindings = true;
+    }
     _handle.node.resize(newBounds);
   }
 

@@ -177,6 +177,61 @@ void main() {
       ]);
     });
 
+    test('single-segment drag binds both endpoints to hovered features', () {
+      final startTarget = Feature(
+        origin: Offset.zero,
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      final endTarget = Feature(
+        origin: const Offset(200, 0),
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      context.document.addNode(startTarget);
+      context.document.addNode(endTarget);
+      activateLineTool();
+
+      pointerHover(const Offset(80, 50));
+      pointerDown(const Offset(80, 50));
+      pointerMove(const Offset(220, 50));
+      pointerUp(const Offset(220, 50));
+
+      final line = context.document.nodes.last as Feature;
+      final kind = line.kind as FeatureKindPolyline;
+      expect(kind.startBinding?.targetId, startTarget.id);
+      expect(kind.endBinding?.targetId, endTarget.id);
+      final points = kind.resolvedGlobalPoints(line);
+      expect(points.first, const Offset(100, 50));
+      expect(points.last.dx, closeTo(200, 0.001));
+      expect(points.last.dy, closeTo(50, 0.001));
+      startTarget.origin = const Offset(10, 0);
+      expect(kind.resolvedGlobalPoints(line).first, const Offset(110, 50));
+    });
+
+    test('click-to-place line does not attach endpoints', () {
+      context.document.addNode(
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        ),
+      );
+      activateLineTool();
+
+      pointerHover(const Offset(80, 50));
+      pointerDown(const Offset(80, 50));
+      pointerUp(const Offset(80, 50));
+      pointerDown(const Offset(150, 50));
+      pointerUp(const Offset(150, 50));
+      finishWithKey(LogicalKeyboardKey.enter);
+
+      final kind =
+          (context.document.nodes.last as Feature).kind as FeatureKindPolyline;
+      expect(kind.startBinding, isNull);
+      expect(kind.endBinding, isNull);
+    });
+
     test('click then drag in placing mode adds point at release position', () {
       activateLineTool();
 

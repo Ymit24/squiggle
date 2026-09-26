@@ -92,6 +92,19 @@ final class FeatureKindPolyline extends FeatureKind
     return [for (final point in resolvedPoints(feature)) point + parentOrigin];
   }
 
+  void detachBindings(Feature feature) {
+    if (startBinding == null && endBinding == null) return;
+    final points = resolvedPoints(feature);
+    startBinding = null;
+    endBinding = null;
+    if (points.isEmpty) return;
+    setGeometry(
+      feature,
+      origin: points.first,
+      localPoints: localPointsFromWorld(points, points.first),
+    );
+  }
+
   static LineEndCap _endCapFromDataModel(
     Map<String, dynamic> content,
     String key,

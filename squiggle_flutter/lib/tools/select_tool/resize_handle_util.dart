@@ -1,12 +1,18 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 
 class ResizeHandleUtil {
+  static bool canResize(Node node) =>
+      node is! Feature ||
+      node.kind is! FeatureKindPolyline ||
+      (node.kind as FeatureKindPolyline).localPoints.length > 2;
+
   static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {
     final resizeHandles = getResizeHandles(node, camera);
     final screenPoint = camera.worldToScreen(worldPoint);
@@ -19,6 +25,7 @@ class ResizeHandleUtil {
   }
 
   static List<ResizeHandle> getResizeHandles(Node node, Camera camera) {
+    if (!canResize(node)) return [];
     const kSelectionBoxPadding = 8.0;
     const kSelectionHandleHitSize = 20.0;
 

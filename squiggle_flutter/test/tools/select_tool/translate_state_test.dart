@@ -112,5 +112,42 @@ void main() {
       expect(harness.context.history.isActive, isFalse);
       expect(harness.context.history.canUndo, isFalse);
     });
+
+    test(
+      'moving a bound line detaches without jumping and undo restores it',
+      () {
+        final target = Feature(
+          origin: const Offset(200, 0),
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        );
+        final line = Feature(
+          origin: const Offset(0, 50),
+          size: const Size(150, 1),
+          kind: FeatureKindPolyline([Offset.zero, const Offset(150, 0)]),
+        );
+        harness.context = EditorContext(
+          document: Document.fromFeatures([target, line]),
+        );
+        final kind = line.kind as FeatureKindPolyline;
+        kind.endBinding = RadialBinding(target.id, 3.141592653589793);
+        harness.context.selection.setSelection([line.id]);
+
+        harness.pointerDown(const Offset(100, 50));
+        harness.pointerMove(const Offset(120, 50));
+        harness.pointerUp(const Offset(120, 50));
+
+        expect(kind.endBinding, isNull);
+        expect(kind.resolvedGlobalPoints(line).last.dx, closeTo(220, 0.001));
+        expect(kind.resolvedGlobalPoints(line).last.dy, closeTo(50, 0.001));
+        harness.context.history.undo();
+        expect((line.kind as FeatureKindPolyline).endBinding, isNotNull);
+        final restored = (line.kind as FeatureKindPolyline)
+            .resolvedGlobalPoints(line)
+            .last;
+        expect(restored.dx, closeTo(200, 0.001));
+        expect(restored.dy, closeTo(50, 0.001));
+      },
+    );
   });
 }
