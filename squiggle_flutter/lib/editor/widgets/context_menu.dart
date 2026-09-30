@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/grouping_commands.dart';
+import 'package:squiggle_flutter/editor/layout_commands.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
@@ -70,6 +75,41 @@ class ContextMenu extends StatelessWidget {
     ),
   ];
 
+  List<Widget> _buildLayoutItems(BuildContext context) {
+    final nodes = editorContext.selection.selectedNodeIds
+        .map(editorContext.document.nodeById)
+        .whereType<Node>()
+        .toList();
+    final canAlign =
+        nodes.length >= 2 &&
+        nodes.length == editorContext.selection.selectedNodeIds.length &&
+        nodes.first.parent != null &&
+        nodes.every((node) => identical(node.parent, nodes.first.parent));
+
+    void apply(VoidCallback layout) {
+      applyNodeLayout(editorContext, nodes, layout);
+      Navigator.of(context).pop();
+    }
+
+    return [
+      InspectorFieldShell(
+        label: 'Align',
+        child: NodeAlignSelector(
+          enabled: canAlign,
+          onAlign: (alignment) => apply(() => alignNodes(nodes, alignment)),
+        ),
+      ),
+      InspectorFieldShell(
+        label: 'Distribute',
+        child: NodeDistributeSelector(
+          enabled: canAlign && nodes.length >= 3,
+          onDistribute: (distribution) =>
+              apply(() => distributeNodes(nodes, distribution)),
+        ),
+      ),
+    ];
+  }
+
   List<Widget> _buildMenuItems(BuildContext context) {
     final selection = editorContext.selection;
 
@@ -133,6 +173,8 @@ class ContextMenu extends StatelessWidget {
       const SquiggleMenuDivider(),
 
       ..._buildGroupingItems(context),
+      const SquiggleMenuDivider(),
+      ..._buildLayoutItems(context),
       const SquiggleMenuDivider(),
       SquiggleMenuItem(
         label: 'Bring backward',

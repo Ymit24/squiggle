@@ -4,9 +4,14 @@ import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class NodeAlignSelector extends StatelessWidget {
-  const NodeAlignSelector({super.key, required this.onAlign});
+  const NodeAlignSelector({
+    super.key,
+    required this.onAlign,
+    this.enabled = true,
+  });
 
   final ValueChanged<NodeAlignment> onAlign;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +31,7 @@ class NodeAlignSelector extends StatelessWidget {
               NodeAlignment.right,
             ])
               _LayoutSwatch(
+                enabled: enabled,
                 icon: switch (alignment) {
                   NodeAlignment.left => Icons.align_horizontal_left,
                   NodeAlignment.centerHorizontal =>
@@ -54,6 +60,7 @@ class NodeAlignSelector extends StatelessWidget {
               NodeAlignment.bottom,
             ])
               _LayoutSwatch(
+                enabled: enabled,
                 icon: switch (alignment) {
                   NodeAlignment.top => Icons.align_vertical_top,
                   NodeAlignment.centerVertical => Icons.align_vertical_center,
@@ -76,9 +83,14 @@ class NodeAlignSelector extends StatelessWidget {
 }
 
 class NodeDistributeSelector extends StatelessWidget {
-  const NodeDistributeSelector({super.key, required this.onDistribute});
+  const NodeDistributeSelector({
+    super.key,
+    required this.onDistribute,
+    this.enabled = true,
+  });
 
   final ValueChanged<NodeDistribution> onDistribute;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +102,7 @@ class NodeDistributeSelector extends StatelessWidget {
       children: [
         for (final distribution in NodeDistribution.values)
           _LayoutSwatch(
+            enabled: enabled,
             icon: switch (distribution) {
               NodeDistribution.horizontal => Icons.horizontal_distribute,
               NodeDistribution.vertical => Icons.vertical_distribute,
@@ -109,9 +122,11 @@ class _LayoutSwatch extends StatelessWidget {
   const _LayoutSwatch({
     required this.icon,
     required this.tooltip,
+    required this.enabled,
     required this.onPressed,
   });
 
+  final bool enabled;
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
@@ -124,6 +139,7 @@ class _LayoutSwatch extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: StyleColorSwatch(
+        enabled: enabled,
         color: colors.base,
         isActive: false,
         onPressed: onPressed,
