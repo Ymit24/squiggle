@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
-import 'package:squiggle_flutter/editor/context_menu.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
@@ -12,7 +11,6 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
-import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
@@ -89,18 +87,6 @@ class Editor extends StatelessWidget {
                         child: Center(
                           child: BackToContent(editorContext: editorContext),
                         ),
-                      ),
-                      ListenableBuilder(
-                        listenable: editorContext.contextMenu,
-                        builder: (context, _) {
-                          if (editorContext.contextMenu.state == null) {
-                            return SizedBox.shrink();
-                          }
-
-                          return ContextMenu(
-                            state: editorContext.contextMenu.state!,
-                          );
-                        },
                       ),
                     ],
                   );

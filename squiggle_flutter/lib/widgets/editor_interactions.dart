@@ -145,7 +145,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
           if (_isPrimaryDragging) {
             _onLeftPointerUp(event);
           } else if (_secondaryPointerDownAt != null) {
-            _onRightPointerUp(event);
+            _onRightPointerUp(context, event);
           }
 
           _checkForDoubleClick(event);
@@ -344,7 +344,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     widget.context.notifyViewportChanged();
   }
 
-  void _onRightPointerUp(PointerUpEvent event) {
+  void _onRightPointerUp(BuildContext context, PointerUpEvent event) {
     final distance = (event.position - _secondaryPointerDownAt!).distance;
     // TODO: tune this if needed.
     if (distance < 5) {
@@ -352,6 +352,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
       // TODO: consider ! here.
       widget.context.openContextMenuAt(
+        context,
         _canvasLocal(event)!,
         _screenToWorld(event)!,
       );

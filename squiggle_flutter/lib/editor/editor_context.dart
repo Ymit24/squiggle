@@ -1,10 +1,12 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/tool_model.dart';
+import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -65,11 +67,29 @@ class EditorContext extends ChangeNotifier {
 
   final ContextMenuModel contextMenu;
 
-  void openContextMenuAt(Offset localScreenPosition, Offset worldPosition) {
-    contextMenu.setState(
-      ContextMenuState(
-        localScreenPosition: localScreenPosition,
-        selectedNodeIds: _selection.selectedNodeIds,
+  void openContextMenuAt(
+    BuildContext context,
+    Offset localScreenPosition,
+    Offset worldPosition,
+  ) {
+    print("OPENING CONTEXT MENU");
+    Navigator.of(context, rootNavigator: true).push(
+      PageRouteBuilder(
+        barrierDismissible: true,
+        opaque: false,
+        barrierColor: null,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (_, __, ___) {
+          return Stack(
+            children: [
+              ContextMenu(
+                localScreenPosition: localScreenPosition,
+                editorContext: this,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
