@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
+import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_divider.dart';
@@ -82,7 +83,12 @@ class ContextMenu extends StatelessWidget {
         label: 'Duplicate',
         icon: LucideIcons.copy,
         shortcut: '⌘D',
-        onPressed: null,
+        onPressed: canDuplicateSelectedNodes(widget.editorContext)
+            ? () {
+                duplicateSelectedNodes(widget.editorContext);
+                Navigator.of(context).pop();
+              }
+            : null,
       ),
       SquiggleMenuItem(
         label: 'Copy',

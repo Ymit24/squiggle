@@ -39,3 +39,7 @@ class UndoDocumentIntent extends Intent {
 class RedoDocumentIntent extends Intent {
   const RedoDocumentIntent();
 }
+
+class DuplicateSelectedFeaturesIntent extends Intent {
+  const DuplicateSelectedFeaturesIntent();
+}
