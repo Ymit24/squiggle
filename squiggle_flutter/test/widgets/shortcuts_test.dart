@@ -10,12 +10,117 @@ import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 void main() {
   setUpAll(() {
     Provider.debugCheckInvalidValueType = null;
   });
+
+  testWidgets(
+    'layer order shortcuts move selection and stay off during text edit',
+    (tester) async {
+      final context = EditorContext(
+        document: Document.fromFeatures([
+          for (var i = 0; i < 3; i++)
+            Feature(
+              origin: Offset(i * 10.0, 0),
+              size: const Size(10, 10),
+              kind: FeatureKindRectangle(),
+            ),
+        ]),
+      );
+      addTearDown(context.dispose);
+      final original = context.document.nodes.map((node) => node.id).toList();
+      context.selection.setSelection([original[1]]);
+
+      Future<void> pumpShortcuts({bool textEditOpen = false}) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MultiRepositoryProvider(
+                providers: [
+                  RepositoryProvider<EditorContext>.value(value: context),
+                  RepositoryProvider<ImageRepository>.value(
+                    value: ImageRepository(),
+                  ),
+                ],
+                child: MultiBlocProvider(
+                  providers: [
+                    BlocProvider(create: (_) => ToolbarBloc(context: context)),
+                    BlocProvider(create: (_) => EditorBloc(context: context)),
+                  ],
+                  child: ToolShortcuts(
+                    textEditOpen: textEditOpen,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      Future<void> pressOrderKey(
+        LogicalKeyboardKey modifier,
+        LogicalKeyboardKey key, {
+        bool alt = false,
+      }) async {
+        await tester.sendKeyDownEvent(modifier, platform: 'macos');
+        if (alt) {
+          await tester.sendKeyDownEvent(
+            LogicalKeyboardKey.alt,
+            platform: 'macos',
+          );
+        }
+        await tester.sendKeyEvent(key, platform: 'macos');
+        if (alt) {
+          await tester.sendKeyUpEvent(
+            LogicalKeyboardKey.alt,
+            platform: 'macos',
+          );
+        }
+        await tester.sendKeyUpEvent(modifier, platform: 'macos');
+        await tester.pump();
+      }
+
+      List<NodeId> currentOrder() =>
+          context.document.nodes.map((node) => node.id).toList();
+
+      await pumpShortcuts();
+      await pressOrderKey(
+        LogicalKeyboardKey.meta,
+        LogicalKeyboardKey.bracketRight,
+      );
+      expect(currentOrder(), [original[0], original[2], original[1]]);
+      await pressOrderKey(
+        LogicalKeyboardKey.control,
+        LogicalKeyboardKey.bracketLeft,
+      );
+      expect(currentOrder(), original);
+      await pressOrderKey(
+        LogicalKeyboardKey.meta,
+        LogicalKeyboardKey.bracketLeft,
+        alt: true,
+      );
+      expect(currentOrder(), [original[1], original[0], original[2]]);
+      await pressOrderKey(
+        LogicalKeyboardKey.control,
+        LogicalKeyboardKey.bracketRight,
+        alt: true,
+      );
+      expect(currentOrder(), [original[0], original[2], original[1]]);
+
+      await pumpShortcuts(textEditOpen: true);
+      await pressOrderKey(
+        LogicalKeyboardKey.meta,
+        LogicalKeyboardKey.bracketLeft,
+      );
+      expect(currentOrder(), [original[0], original[2], original[1]]);
+    },
+  );
 
   testWidgets('ToolShortcuts activates tools on V, R, C, L, T and 1-5 keys', (
     tester,

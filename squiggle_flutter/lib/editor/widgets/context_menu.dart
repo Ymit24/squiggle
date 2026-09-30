@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/grouping_commands.dart';
 import 'package:squiggle_flutter/editor/layout_commands.dart';
+import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -199,25 +200,45 @@ class ContextMenu extends StatelessWidget {
         label: 'Bring backward',
         icon: LucideIcons.layers,
         shortcut: '⌘[',
-        onPressed: null,
+        onPressed: canReorderSelectedNodes(editorContext, LayerOrder.backward)
+            ? () {
+                reorderSelectedNodes(editorContext, LayerOrder.backward);
+                Navigator.of(context).pop();
+              }
+            : null,
       ),
       SquiggleMenuItem(
         label: 'Bring forward',
         icon: LucideIcons.layers,
         shortcut: '⌘]',
-        onPressed: null,
+        onPressed: canReorderSelectedNodes(editorContext, LayerOrder.forward)
+            ? () {
+                reorderSelectedNodes(editorContext, LayerOrder.forward);
+                Navigator.of(context).pop();
+              }
+            : null,
       ),
       SquiggleMenuItem(
         label: 'Send to Back',
         icon: LucideIcons.layers,
         shortcut: '⌘⌥[',
-        onPressed: null,
+        onPressed: canReorderSelectedNodes(editorContext, LayerOrder.back)
+            ? () {
+                reorderSelectedNodes(editorContext, LayerOrder.back);
+                Navigator.of(context).pop();
+              }
+            : null,
       ),
       SquiggleMenuItem(
         label: 'Bring to Front',
         icon: LucideIcons.layers,
         shortcut: '⌘⌥]',
-        onPressed: null,
+        onPressed: canReorderSelectedNodes(editorContext, LayerOrder.front)
+            ? () {
+                reorderSelectedNodes(editorContext, LayerOrder.front);
+                Navigator.of(context).pop();
+              }
+            : null,
       ),
       const SquiggleMenuDivider(),
       ..._buildLayoutItems(context),
