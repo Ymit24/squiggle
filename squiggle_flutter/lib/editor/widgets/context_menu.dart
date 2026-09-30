@@ -62,6 +62,83 @@ class _ContextMenuState extends State<ContextMenu> {
     });
   }
 
+  List<Widget> _buildMenuItems() {
+    final selection = widget.editorContext.selection;
+
+    if (selection.isEmpty) {
+      return [
+        const SquiggleMenuItem(
+          label: 'Select All',
+          icon: LucideIcons.mousePointer,
+          shortcut: '⌘A',
+          onPressed: null,
+        ),
+        SquiggleMenuDivider(),
+
+        const SquiggleMenuItem(
+          label: 'Paste',
+          icon: LucideIcons.clipboard,
+          shortcut: '⌘V',
+          onPressed: null,
+        ),
+      ];
+    }
+
+    return [
+      SquiggleMenuItem(
+        label: 'Duplicate',
+        icon: LucideIcons.copy,
+        shortcut: '⌘D',
+        onPressed: () => debugPrint('clicked DUPLICATE'),
+      ),
+      SquiggleMenuItem(
+        label: 'Copy',
+        icon: LucideIcons.file,
+        shortcut: '⌘C',
+        onPressed: () => debugPrint('clicked COPY'),
+      ),
+      const SquiggleMenuItem(
+        label: 'Paste',
+        icon: LucideIcons.clipboard,
+        shortcut: '⌘V',
+        onPressed: null,
+      ),
+      const SquiggleMenuDivider(),
+
+      SquiggleMenuItem(
+        label: 'Bring backward',
+        icon: LucideIcons.layers,
+        shortcut: '⌘[',
+        onPressed: () => debugPrint('clicked BRING BACKWARD'),
+      ),
+      SquiggleMenuItem(
+        label: 'Bring forward',
+        icon: LucideIcons.layers,
+        shortcut: '⌘]',
+        onPressed: () => debugPrint('clicked BRING FORWARD'),
+      ),
+      SquiggleMenuItem(
+        label: 'Send to Back',
+        icon: LucideIcons.layers, // command option [
+        shortcut: '⌘⌥[',
+        onPressed: () => debugPrint('clicked SEND TO BACK'),
+      ),
+      SquiggleMenuItem(
+        label: 'Bring to Front',
+        icon: LucideIcons.layers,
+        shortcut: '⌘⌥]',
+        onPressed: () => debugPrint('clicked BRING TO FRONT'),
+      ),
+      const SquiggleMenuDivider(),
+      SquiggleMenuItem(
+        label: 'Delete',
+        icon: LucideIcons.trash2,
+        shortcut: '⌫',
+        onPressed: () => debugPrint('clicked DELETE'),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
@@ -79,52 +156,7 @@ class _ContextMenuState extends State<ContextMenu> {
             type: MaterialType.transparency,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                SquiggleMenuItem(
-                  label: 'Duplicate',
-                  icon: LucideIcons.copy,
-                  shortcut: '⌘D',
-                  onPressed: () => debugPrint('clicked DUPLICATE'),
-                ),
-                SquiggleMenuItem(
-                  label: 'Copy',
-                  icon: LucideIcons.file,
-                  shortcut: '⌘C',
-                  onPressed: () => debugPrint('clicked COPY'),
-                ),
-                const SquiggleMenuItem(
-                  label: 'Paste',
-                  icon: LucideIcons.clipboard,
-                  shortcut: '⌘V',
-                  onPressed: null,
-                ),
-                const SquiggleMenuDivider(),
-                SquiggleMenuItem(
-                  label: 'Bring to Front',
-                  icon: LucideIcons.layers,
-                  shortcut: '⌘⇧]',
-                  onPressed: () => debugPrint('clicked BRING TO FRONT'),
-                ),
-                SquiggleMenuItem(
-                  label: 'Send to Back',
-                  icon: LucideIcons.layers,
-                  shortcut: '⌘⇧[',
-                  onPressed: () => debugPrint('clicked SEND TO BACK'),
-                ),
-                const SquiggleMenuDivider(),
-                SquiggleMenuItem(
-                  label: 'Lock',
-                  icon: LucideIcons.lock,
-                  shortcut: '⌘L',
-                  onPressed: () => debugPrint('clicked LOCK'),
-                ),
-                SquiggleMenuItem(
-                  label: 'Delete',
-                  icon: LucideIcons.trash2,
-                  shortcut: '⌫',
-                  onPressed: () => debugPrint('clicked DELETE'),
-                ),
-              ],
+              children: _buildMenuItems(),
             ),
           ),
         ),

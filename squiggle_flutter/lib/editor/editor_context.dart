@@ -1,7 +1,4 @@
-import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
@@ -10,29 +7,7 @@ import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
-
-class ContextMenuState {
-  final Offset localScreenPosition;
-  final List<NodeId> selectedNodeIds;
-
-  ContextMenuState({
-    required this.localScreenPosition,
-    required this.selectedNodeIds,
-  });
-}
-
-class ContextMenuModel extends ChangeNotifier {
-  ContextMenuState? _state;
-
-  ContextMenuState? get state => _state;
-
-  void setState(ContextMenuState state) {
-    _state = state;
-    notifyListeners();
-  }
-}
 
 /// Top-level editor state, owned by the document UI and passed around to
 /// tools, render objects, blocs, and services.
@@ -46,12 +21,10 @@ class EditorContext extends ChangeNotifier {
     ToolModel? tool,
     History? history,
     TextEditModel? textEdit,
-    ContextMenuModel? contextMenu,
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
        _history = history ?? History(document: document),
-       _textEdit = textEdit ?? TextEditModel(),
-       contextMenu = contextMenu ?? ContextMenuModel() {
+       _textEdit = textEdit ?? TextEditModel() {
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -64,8 +37,6 @@ class EditorContext extends ChangeNotifier {
   final History _history;
   final TextEditModel _textEdit;
   final Map<String, Object?> _inspectorValues = {};
-
-  final ContextMenuModel contextMenu;
 
   void openContextMenuAt(
     BuildContext context,
