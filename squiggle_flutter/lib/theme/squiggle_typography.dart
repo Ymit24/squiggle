@@ -33,6 +33,11 @@ class SquiggleTypography {
 
   TextStyle get actionButtonLabel => const TextStyle(fontSize: 13.5);
 
+  TextStyle get menuItemLabel => actionButtonLabel.copyWith(
+    fontWeight: FontWeight.normal,
+    letterSpacing: 0,
+  );
+
   TextStyle panelButtonLabel({required bool isPrimary}) => TextStyle(
     color: isPrimary ? colors.base : colors.text,
     fontSize: 13,

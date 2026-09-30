@@ -45,6 +45,7 @@ dependencies:
   package_info_plus: ^8.3.0
   super_clipboard: ^0.9.1
   window_manager: ^0.5.2
+  lucide_icons_flutter: ^3.1.20
 dev_dependencies:
   flutter_test:
     sdk: flutter

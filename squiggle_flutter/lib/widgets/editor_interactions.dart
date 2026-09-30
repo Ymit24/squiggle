@@ -76,18 +76,23 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _resetPointerState() {
     _isPrimaryDragging = false;
+    _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
     _pointerDownButtons = null;
     _pointerInCanvas = null;
     _flingController.stop();
   }
 
   static const _pinchScaleThreshold = 0.02;
+  static const _secondaryDragThreshold = 5.0;
 
   double _initialZoom = 1.0;
   Offset _initialLocation = Offset.zero;
   Offset? _pointerInCanvas;
   int? _pointerDownButtons;
   bool _isPrimaryDragging = false;
+
+  Offset? _secondaryPointerDownAt;
   bool _isSecondaryDragging = false;
   bool _panZoomHadSignificantPinch = false;
 
@@ -120,7 +125,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
           // TODO: This sucks for state machine
           if (_isPrimaryDragging) {
             _onLeftPointerUpdate(event);
-          } else if (_isSecondaryDragging) {
+          } else if (_secondaryPointerDownAt != null) {
             _onRightPointerUpdate(event);
           }
         },
@@ -143,34 +148,11 @@ class _EditorInteractionsState extends State<EditorInteractions>
           // TODO: This sucks for state machine
           if (_isPrimaryDragging) {
             _onLeftPointerUp(event);
-          } else if (_isSecondaryDragging) {
-            _onRightPointerUp(event);
+          } else if (_secondaryPointerDownAt != null) {
+            _onRightPointerUp(context, event);
           }
 
-          final pointerDownButtons = _pointerDownButtons;
-          if (pointerDownButtons != null && lastPointerRecord != null) {
-            final recentEnough =
-                event.timeStamp - lastPointerRecord!.timeStamp <=
-                kDoubleClickInterval;
-            final sameButton = pointerDownButtons == lastPointerRecord!.buttons;
-            final closeEnough =
-                (event.position - lastPointerRecord!.screenPosition).distance <
-                10;
-            final isLeftClick = pointerDownButtons == kPrimaryButton;
-
-            if (recentEnough && sameButton && closeEnough && isLeftClick) {
-              _onLeftPointerDouble(event);
-            }
-          }
-          if (pointerDownButtons != null) {
-            lastPointerRecord = PointerRecord(
-              pointer: event.pointer,
-              buttons: pointerDownButtons,
-              screenPosition: event.position,
-              timeStamp: event.timeStamp,
-            );
-          }
-          _pointerDownButtons = null;
+          _checkForDoubleClick(event);
         },
         onPointerCancel: (event) {
           if (!widget.canvasInteractionsEnabled) return;
@@ -178,7 +160,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
           _pointerDownButtons = null;
           if (_isPrimaryDragging) {
             _onLeftPointerCancel(event);
-          } else if (_isSecondaryDragging) {
+          } else if (_secondaryPointerDownAt != null) {
             _onRightPointerCancel(event);
           }
         },
@@ -235,6 +217,32 @@ class _EditorInteractionsState extends State<EditorInteractions>
         child: widget.child,
       ),
     );
+  }
+
+  void _checkForDoubleClick(PointerUpEvent event) {
+    final pointerDownButtons = _pointerDownButtons;
+    if (pointerDownButtons != null && lastPointerRecord != null) {
+      final recentEnough =
+          event.timeStamp - lastPointerRecord!.timeStamp <=
+          kDoubleClickInterval;
+      final sameButton = pointerDownButtons == lastPointerRecord!.buttons;
+      final closeEnough =
+          (event.position - lastPointerRecord!.screenPosition).distance < 10;
+      final isLeftClick = pointerDownButtons == kPrimaryButton;
+
+      if (recentEnough && sameButton && closeEnough && isLeftClick) {
+        _onLeftPointerDouble(event);
+      }
+    }
+    if (pointerDownButtons != null) {
+      lastPointerRecord = PointerRecord(
+        pointer: event.pointer,
+        buttons: pointerDownButtons,
+        screenPosition: event.position,
+        timeStamp: event.timeStamp,
+      );
+    }
+    _pointerDownButtons = null;
   }
 
   Offset? _canvasLocal(PointerEvent event) {
@@ -324,21 +332,39 @@ class _EditorInteractionsState extends State<EditorInteractions>
     ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
     _flingController.stop();
 
-    _isSecondaryDragging = true;
+    _secondaryPointerDownAt = event.position;
+    _isSecondaryDragging = false;
   }
 
   void _onRightPointerUpdate(PointerMoveEvent event) {
     if (event.synthesized) return;
 
+    final distance = (event.position - _secondaryPointerDownAt!).distance;
+    if (!_isSecondaryDragging && distance < _secondaryDragThreshold) return;
+    _isSecondaryDragging = true;
+
     _camera.panByScreenDelta(event.delta);
     widget.context.notifyViewportChanged();
   }
 
-  void _onRightPointerUp(PointerUpEvent event) {
+  void _onRightPointerUp(BuildContext context, PointerUpEvent event) {
+    final distance = (event.position - _secondaryPointerDownAt!).distance;
+    final isClick = !_isSecondaryDragging && distance < _secondaryDragThreshold;
+    _secondaryPointerDownAt = null;
     _isSecondaryDragging = false;
+    if (!isClick) return;
+
+    final local = _canvasLocal(event);
+    if (local == null) return;
+    widget.context.openContextMenuAt(
+      context,
+      local,
+      _camera.screenToWorld(local),
+    );
   }
 
   void _onRightPointerCancel(PointerCancelEvent event) {
+    _secondaryPointerDownAt = null;
     _isSecondaryDragging = false;
   }
 }
