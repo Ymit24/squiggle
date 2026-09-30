@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/grouping_commands.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
@@ -44,6 +45,31 @@ class ContextMenu extends StatelessWidget {
     Navigator.of(context).pop();
   }
 
+  List<Widget> _buildGroupingItems(BuildContext context) => [
+    SquiggleMenuItem(
+      label: 'Group',
+      icon: LucideIcons.group,
+      shortcut: '⌘G',
+      onPressed: canGroupSelectedNodes(editorContext)
+          ? () {
+              groupSelectedNodes(editorContext);
+              Navigator.of(context).pop();
+            }
+          : null,
+    ),
+    SquiggleMenuItem(
+      label: 'Ungroup',
+      icon: LucideIcons.ungroup,
+      shortcut: '⇧⌘G',
+      onPressed: canUngroupSelectedNodes(editorContext)
+          ? () {
+              ungroupSelectedNodes(editorContext);
+              Navigator.of(context).pop();
+            }
+          : null,
+    ),
+  ];
+
   List<Widget> _buildMenuItems(BuildContext context) {
     final selection = editorContext.selection;
 
@@ -69,6 +95,8 @@ class ContextMenu extends StatelessWidget {
           shortcut: '⌘V',
           onPressed: () => _paste(context),
         ),
+        const SquiggleMenuDivider(),
+        ..._buildGroupingItems(context),
       ];
     }
 
@@ -83,9 +111,9 @@ class ContextMenu extends StatelessWidget {
         label: 'Duplicate',
         icon: LucideIcons.copy,
         shortcut: '⌘D',
-        onPressed: canDuplicateSelectedNodes(widget.editorContext)
+        onPressed: canDuplicateSelectedNodes(editorContext)
             ? () {
-                duplicateSelectedNodes(widget.editorContext);
+                duplicateSelectedNodes(editorContext);
                 Navigator.of(context).pop();
               }
             : null,
@@ -104,6 +132,8 @@ class ContextMenu extends StatelessWidget {
       ),
       const SquiggleMenuDivider(),
 
+      ..._buildGroupingItems(context),
+      const SquiggleMenuDivider(),
       SquiggleMenuItem(
         label: 'Bring backward',
         icon: LucideIcons.layers,
