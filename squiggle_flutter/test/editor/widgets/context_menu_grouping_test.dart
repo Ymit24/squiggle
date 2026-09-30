@@ -141,6 +141,7 @@ void main() {
   for (final selection in [
     'empty',
     'single',
+    'missing nodes',
     'different parents',
     'groups with different parents',
   ]) {
@@ -151,6 +152,11 @@ void main() {
       final document = context.document;
       final nodes = document.nodes.toList();
       switch (selection) {
+        case 'missing nodes':
+          context.selection.setSelection([
+            NodeId.newId(998),
+            NodeId.newId(999),
+          ]);
         case 'single':
           context.selection.setSelection([nodes.first.id]);
         case 'different parents':

@@ -8,9 +8,14 @@ import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
+import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
 
 const _toolShortcuts = {
+  SingleActivator(LogicalKeyboardKey.keyD, meta: true):
+      DuplicateSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyD, control: true):
+      DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
@@ -140,6 +145,14 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                       context: context.read<EditorContext>(),
                       imageRepository: context.read<ImageRepository>(),
                     );
+                    return null;
+                  },
+                ),
+            DuplicateSelectedFeaturesIntent:
+                CallbackAction<DuplicateSelectedFeaturesIntent>(
+                  onInvoke: (_) {
+                    if (textEditOpen) return null;
+                    duplicateSelectedNodes(context.read<EditorContext>());
                     return null;
                   },
                 ),

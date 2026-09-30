@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/translate_state.dart';
@@ -36,17 +37,15 @@ class DuplicateState extends InteractionState {
       cursorWorldPosition,
       constrainToAxis: isShiftPressed,
     );
-    final clones = _selectedNodes
-        .map((node) => node.copyWith(id: noId))
-        .toList();
+    final clones = duplicateNodes(
+      nodes: _selectedNodes,
+      transaction: context.history.active,
+      selection: context.selection,
+    );
 
     for (final node in _selectedNodes) {
       node.origin = _originsAtDragStart[node.id]!;
     }
-    for (final clone in clones) {
-      context.history.active.add(clone);
-    }
-    context.selection.setSelection(clones.map((node) => node.id).toList());
 
     final state = TranslateState(
       parent: parent,

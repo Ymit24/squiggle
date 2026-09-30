@@ -6,18 +6,18 @@ import 'package:squiggle_flutter/models/node_id.dart';
 /// Whether the selection contains at least two direct siblings.
 bool canGroupSelectedNodes(EditorContext context) {
   final nodes = context.selection.selectedNodeIds
-      .map(context.document.requireNodeById)
+      .map(context.document.nodeById)
       .toList();
-  if (nodes.length < 2) return false;
-  final container = nodes.first.parent;
+  if (nodes.length < 2 || nodes.any((node) => node == null)) return false;
+  final container = nodes.first!.parent;
   return container != null &&
-      nodes.every((node) => identical(node.parent, container));
+      nodes.every((node) => identical(node!.parent, container));
 }
 
 List<Group> _selectedGroups(EditorContext context) => context
     .selection
     .selectedNodeIds
-    .map(context.document.requireNodeById)
+    .map(context.document.nodeById)
     .whereType<Group>()
     .toList();
 
