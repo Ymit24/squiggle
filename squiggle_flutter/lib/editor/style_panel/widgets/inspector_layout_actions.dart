@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/layout_commands.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
 import 'package:squiggle_flutter/models/node.dart';
@@ -31,7 +32,11 @@ class InspectorLayoutActions extends StatelessWidget {
           label: "Align",
           child: NodeAlignSelector(
             onAlign: (alignment) {
-              _applyLayout(() => alignNodes(nodes, alignment));
+              applyNodeLayout(
+                editorContext,
+                nodes,
+                () => alignNodes(nodes, alignment),
+              );
             },
           ),
         ),
@@ -44,7 +49,11 @@ class InspectorLayoutActions extends StatelessWidget {
           label: "Distribute",
           child: NodeDistributeSelector(
             onDistribute: (distribute) {
-              _applyLayout(() => distributeNodes(nodes, distribute));
+              applyNodeLayout(
+                editorContext,
+                nodes,
+                () => distributeNodes(nodes, distribute),
+              );
             },
           ),
         ),
@@ -57,16 +66,5 @@ class InspectorLayoutActions extends StatelessWidget {
       spacing: spacing.panelSectionSpacing,
       children: widgets,
     );
-  }
-
-  void _applyLayout(VoidCallback layout) {
-    final container = nodes.first.parent;
-    if (nodes.any((node) => !identical(node.parent, container))) {
-      throw StateError('Selected nodes must share a container');
-    }
-    editorContext.history.run('Layout selection', (transaction) {
-      transaction.watch(nodes);
-      layout();
-    }, container: container);
   }
 }

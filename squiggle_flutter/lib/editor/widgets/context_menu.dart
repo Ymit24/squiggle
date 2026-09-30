@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/grouping_commands.dart';
+import 'package:squiggle_flutter/editor/layout_commands.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
@@ -9,6 +12,7 @@ import 'package:squiggle_flutter/services/paste_clipboard.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_divider.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
+import 'package:squiggle_flutter/widgets/squiggle_menu_group_label.dart';
 
 class ContextMenu extends StatelessWidget {
   final Offset localScreenPosition;
@@ -69,6 +73,63 @@ class ContextMenu extends StatelessWidget {
           : null,
     ),
   ];
+
+  List<Widget> _buildLayoutItems(BuildContext context) {
+    final nodes = editorContext.selection.selectedNodeIds
+        .map(editorContext.document.nodeById)
+        .whereType<Node>()
+        .toList();
+    final canAlign =
+        nodes.length >= 2 &&
+        nodes.length == editorContext.selection.selectedNodeIds.length &&
+        nodes.first.parent != null &&
+        nodes.every((node) => identical(node.parent, nodes.first.parent));
+
+    void apply(VoidCallback layout) {
+      applyNodeLayout(editorContext, nodes, layout);
+      Navigator.of(context).pop();
+    }
+
+    return [
+      const SquiggleMenuGroupLabel(label: 'Align'),
+      for (final (alignment, label, icon) in [
+        (NodeAlignment.left, 'Left', Icons.align_horizontal_left),
+        (
+          NodeAlignment.centerHorizontal,
+          'Center',
+          Icons.align_horizontal_center,
+        ),
+        (NodeAlignment.right, 'Right', Icons.align_horizontal_right),
+        (NodeAlignment.top, 'Top', Icons.align_vertical_top),
+        (NodeAlignment.centerVertical, 'Middle', Icons.align_vertical_center),
+        (NodeAlignment.bottom, 'Bottom', Icons.align_vertical_bottom),
+      ])
+        SquiggleMenuItem(
+          label: label,
+          icon: icon,
+          onPressed: canAlign
+              ? () => apply(() => alignNodes(nodes, alignment))
+              : null,
+        ),
+      const SquiggleMenuDivider(),
+      const SquiggleMenuGroupLabel(label: 'Distribute'),
+      for (final (distribution, label, icon) in [
+        (
+          NodeDistribution.horizontal,
+          'Horizontally',
+          Icons.horizontal_distribute,
+        ),
+        (NodeDistribution.vertical, 'Vertically', Icons.vertical_distribute),
+      ])
+        SquiggleMenuItem(
+          label: label,
+          icon: icon,
+          onPressed: canAlign && nodes.length >= 3
+              ? () => apply(() => distributeNodes(nodes, distribution))
+              : null,
+        ),
+    ];
+  }
 
   List<Widget> _buildMenuItems(BuildContext context) {
     final selection = editorContext.selection;
@@ -158,6 +219,8 @@ class ContextMenu extends StatelessWidget {
         shortcut: '⌘⌥]',
         onPressed: null,
       ),
+      const SquiggleMenuDivider(),
+      ..._buildLayoutItems(context),
       const SquiggleMenuDivider(),
       SquiggleMenuItem(
         label: 'Delete',

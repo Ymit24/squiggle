@@ -204,6 +204,8 @@ void main() {
 
     await _rightClick(tester, const Offset(300, 300));
     expect(editor.selection.selectedNodeIds, [target.id]);
+    await tester.ensureVisible(find.text('Delete'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(editor.document.nodeById(target.id), isNull);
