@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/grouping_commands.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
@@ -90,6 +91,31 @@ class _ContextMenuState extends State<ContextMenu> {
     Navigator.of(context).pop();
   }
 
+  List<Widget> _buildGroupingItems() => [
+    SquiggleMenuItem(
+      label: 'Group',
+      icon: LucideIcons.group,
+      shortcut: '⌘G',
+      onPressed: canGroupSelectedNodes(widget.editorContext)
+          ? () {
+              groupSelectedNodes(widget.editorContext);
+              Navigator.of(context).pop();
+            }
+          : null,
+    ),
+    SquiggleMenuItem(
+      label: 'Ungroup',
+      icon: LucideIcons.ungroup,
+      shortcut: '⇧⌘G',
+      onPressed: canUngroupSelectedNodes(widget.editorContext)
+          ? () {
+              ungroupSelectedNodes(widget.editorContext);
+              Navigator.of(context).pop();
+            }
+          : null,
+    ),
+  ];
+
   List<Widget> _buildMenuItems() {
     final selection = widget.editorContext.selection;
 
@@ -115,6 +141,8 @@ class _ContextMenuState extends State<ContextMenu> {
           shortcut: '⌘V',
           onPressed: _paste,
         ),
+        const SquiggleMenuDivider(),
+        ..._buildGroupingItems(),
       ];
     }
 
@@ -145,6 +173,8 @@ class _ContextMenuState extends State<ContextMenu> {
       ),
       const SquiggleMenuDivider(),
 
+      ..._buildGroupingItems(),
+      const SquiggleMenuDivider(),
       SquiggleMenuItem(
         label: 'Bring backward',
         icon: LucideIcons.layers,
