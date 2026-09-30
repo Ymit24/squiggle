@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_menu_divider.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 
 class ContextMenu extends StatefulWidget {
@@ -61,20 +62,6 @@ class _ContextMenuState extends State<ContextMenu> {
     });
   }
 
-  Widget _divider() {
-    final theme = context.squiggleTheme;
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: theme.spacing.menuItemHorizontalPadding,
-      ),
-      child: Divider(
-        height: theme.spacing.menuDividerHeight,
-        thickness: 1,
-        color: theme.colors.surface1,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
@@ -111,7 +98,7 @@ class _ContextMenuState extends State<ContextMenu> {
                   shortcut: '⌘V',
                   onPressed: null,
                 ),
-                _divider(),
+                const SquiggleMenuDivider(),
                 SquiggleMenuItem(
                   label: 'Bring to Front',
                   icon: LucideIcons.layers,
@@ -124,7 +111,7 @@ class _ContextMenuState extends State<ContextMenu> {
                   shortcut: '⌘⇧[',
                   onPressed: () => debugPrint('clicked SEND TO BACK'),
                 ),
-                _divider(),
+                const SquiggleMenuDivider(),
                 SquiggleMenuItem(
                   label: 'Lock',
                   icon: LucideIcons.lock,
