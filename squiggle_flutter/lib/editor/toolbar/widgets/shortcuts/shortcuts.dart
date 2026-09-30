@@ -32,6 +32,10 @@ const _toolShortcuts = {
       CopySelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, control: true):
       CopySelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyX, meta: true):
+      CutSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyX, control: true):
+      CutSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyZ, meta: true): UndoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyZ, control: true): UndoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true):
@@ -142,6 +146,17 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                       return null;
                     }
                     copySelectedNodesToClipboard(
+                      context: context.read<EditorContext>(),
+                      imageRepository: context.read<ImageRepository>(),
+                    );
+                    return null;
+                  },
+                ),
+            CutSelectedFeaturesIntent:
+                CallbackAction<CutSelectedFeaturesIntent>(
+                  onInvoke: (_) {
+                    if (textEditOpen) return null;
+                    cutSelectedNodesToClipboard(
                       context: context.read<EditorContext>(),
                       imageRepository: context.read<ImageRepository>(),
                     );
