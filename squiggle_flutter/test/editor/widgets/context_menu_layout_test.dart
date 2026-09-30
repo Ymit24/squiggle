@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/node_layout_selector.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
-import 'context_menu_grouping_test.dart' show openMenu;
+import 'context_menu_grouping_test.dart' show openMenu, menuItem;
 
 EditorContext layoutContext() => EditorContext(
   document: Document.fromFeatures([
@@ -40,22 +39,21 @@ void main() {
         expect(find.text('Align'), findsNothing);
         expect(find.text('Distribute'), findsNothing);
       } else {
-        expect(
-          tester
-              .widget<NodeAlignSelector>(find.byType(NodeAlignSelector))
-              .enabled,
-          count >= 2,
-        );
-        expect(
-          tester
-              .widget<NodeDistributeSelector>(
-                find.byType(NodeDistributeSelector),
-              )
-              .enabled,
-          count >= 3,
-        );
+        for (final label in [
+          'Left',
+          'Center',
+          'Right',
+          'Top',
+          'Middle',
+          'Bottom',
+        ]) {
+          expect(menuItem(tester, label).onPressed != null, count >= 2);
+        }
+        for (final label in ['Horizontally', 'Vertically']) {
+          expect(menuItem(tester, label).onPressed != null, count >= 3);
+        }
         if (count < 3) {
-          await tester.tap(find.byTooltip('Distribute horizontally'));
+          await tester.tap(find.text('Horizontally'));
           await tester.pumpAndSettle();
           expect(find.byType(ContextMenu), findsOneWidget);
           expect(context.history.canUndo, isFalse);
@@ -63,6 +61,24 @@ void main() {
       }
     });
   }
+
+  testWidgets('menu scrolls to Delete on a short viewport', (tester) async {
+    final context = layoutContext();
+    addTearDown(context.dispose);
+    context.selection.setSelection(
+      context.document.nodes.map((node) => node.id),
+    );
+    await openMenu(tester, context);
+    tester.view.physicalSize = const Size(800, 600);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(context.document.nodes, isEmpty);
+    expect(find.byType(ContextMenu), findsNothing);
+  });
 
   for (final invalidSelection in ['different parents', 'missing node']) {
     testWidgets('$invalidSelection disables layout controls', (tester) async {
@@ -80,35 +96,31 @@ void main() {
         if (invalidSelection == 'missing node') NodeId.newId(999),
       ]);
       await openMenu(tester, context);
-      expect(
-        tester
-            .widget<NodeAlignSelector>(find.byType(NodeAlignSelector))
-            .enabled,
-        isFalse,
-      );
-      expect(
-        tester
-            .widget<NodeDistributeSelector>(find.byType(NodeDistributeSelector))
-            .enabled,
-        isFalse,
-      );
+      for (final label in [
+        'Left',
+        'Center',
+        'Right',
+        'Top',
+        'Middle',
+        'Bottom',
+        'Horizontally',
+        'Vertically',
+      ]) {
+        expect(menuItem(tester, label).onPressed, isNull);
+      }
     });
   }
 
   for (final (_, action, expected) in [
-    (
-      'Align',
-      'Align left',
-      [Offset.zero, const Offset(0, 20), const Offset(0, 100)],
-    ),
+    ('Align', 'Left', [Offset.zero, const Offset(0, 20), const Offset(0, 100)]),
     (
       'Distribute',
-      'Distribute horizontally',
+      'Horizontally',
       [Offset.zero, const Offset(50, 20), const Offset(100, 100)],
     ),
     (
       'Distribute',
-      'Distribute vertically',
+      'Vertically',
       [Offset.zero, const Offset(30, 50), const Offset(100, 100)],
     ),
   ]) {
@@ -126,7 +138,7 @@ void main() {
         final selectedIds = context.selection.selectedNodeIds;
         final before = context.document.toDataModel().nodes;
         await openMenu(tester, context);
-        await tester.tap(find.byTooltip(action));
+        await tester.tap(find.text(action));
         await tester.pumpAndSettle();
         expect(find.byType(ContextMenu), findsNothing);
         expect(nodes.map((node) => node.origin), expected);

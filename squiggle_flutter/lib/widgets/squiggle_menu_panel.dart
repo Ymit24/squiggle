@@ -11,11 +11,17 @@ class SquiggleMenuPanel extends StatelessWidget {
     final theme = context.squiggleTheme;
     return Container(
       width: theme.spacing.menuWidth,
+      constraints: BoxConstraints(
+        maxHeight:
+            MediaQuery.sizeOf(context).height - theme.spacing.panelPadding * 2,
+      ),
       decoration: theme.decorations.floatingPanel(),
       padding: EdgeInsets.all(theme.spacing.menuPadding),
       child: Material(
         type: MaterialType.transparency,
-        child: Column(mainAxisSize: MainAxisSize.min, children: children),
+        child: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: children),
+        ),
       ),
     );
   }
