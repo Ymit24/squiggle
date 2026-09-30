@@ -55,21 +55,11 @@ void showLibraryContextMenu({
   final navigator = Navigator.of(context, rootNavigator: true);
   final box = navigator.context.findRenderObject()! as RenderBox;
   final localPosition = box.globalToLocal(position);
-  navigator.push(
-    PageRouteBuilder<void>(
-      barrierDismissible: true,
-      opaque: false,
-      barrierColor: null,
-      transitionDuration: Duration.zero,
-      reverseTransitionDuration: Duration.zero,
-      pageBuilder: (context, _, _) => Stack(
-        children: [
-          SquiggleContextMenu(
-            position: localPosition,
-            children: _menuItems(items, () => Navigator.of(context).pop()),
-          ),
-        ],
-      ),
+  showSquiggleContextMenu(
+    context: context,
+    builder: (context) => SquiggleContextMenu(
+      position: localPosition,
+      children: _menuItems(items, () => Navigator.of(context).pop()),
     ),
   );
 }

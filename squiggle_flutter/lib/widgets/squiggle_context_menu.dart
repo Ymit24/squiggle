@@ -2,6 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_panel.dart';
 
+/// Opens a positioned menu on the root navigator with no transition or scrim.
+Future<void> showSquiggleContextMenu({
+  required BuildContext context,
+  required WidgetBuilder builder,
+}) => Navigator.of(context, rootNavigator: true).push<void>(
+  PageRouteBuilder<void>(
+    barrierDismissible: true,
+    opaque: false,
+    barrierColor: null,
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+    pageBuilder: (context, _, _) => Stack(children: [builder(context)]),
+  ),
+);
+
 class SquiggleContextMenu extends StatefulWidget {
   const SquiggleContextMenu({
     super.key,
