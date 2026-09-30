@@ -51,7 +51,7 @@ void expectDuplicationAndReplay(EditorContext context) {
   );
   for (var i = 0; i < 2; i++) {
     expect(nodes[i + 2].id, isNot(nodes[i].id));
-    expect(nodes[i + 2].origin, nodes[i].origin);
+    expect(nodes[i + 2].origin, nodes[i].origin + const Offset(16, 16));
   }
   final after = context.document.toDataModel().toJson();
   context.undo();

@@ -1,16 +1,21 @@
+import 'dart:ui';
+
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/history/edit.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
-/// Copies nodes into the supplied edit, preserving their local positions.
+/// Copies nodes into the supplied edit, applying [offset] in parent coordinates.
 List<Node> duplicateNodes({
   required List<Node> nodes,
   required Transaction transaction,
   required SelectionModel selection,
+  Offset offset = Offset.zero,
 }) {
-  final clones = nodes.map((node) => node.copyWith(id: noId)).toList();
+  final clones = nodes
+      .map((node) => node.copyWith(id: noId, origin: node.origin + offset))
+      .toList();
   for (final clone in clones) {
     transaction.add(clone);
   }
@@ -35,6 +40,7 @@ bool canDuplicateSelectedNodes(EditorContext context) =>
     _duplicableSelection(context).isNotEmpty;
 
 /// Cancels the current interaction and duplicates sibling nodes in one edit.
+/// Copies are offset 16 canvas units right and down.
 bool duplicateSelectedNodes(EditorContext context) {
   if (!canDuplicateSelectedNodes(context)) return false;
   context.cancelInteraction();
@@ -46,6 +52,7 @@ bool duplicateSelectedNodes(EditorContext context) {
       nodes: nodes,
       transaction: transaction,
       selection: context.selection,
+      offset: const Offset(16, 16),
     );
   }, container: nodes.first.parent);
   return true;
