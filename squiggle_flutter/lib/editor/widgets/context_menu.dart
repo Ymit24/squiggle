@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/theme/theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class ContextMenu extends StatefulWidget {
   final Offset localScreenPosition;
@@ -60,26 +62,18 @@ class _ContextMenuState extends State<ContextMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
     return Positioned(
       left: _localPosition.dx,
       top: _localPosition.dy,
       child: Opacity(
         opacity: _isVisible ? 1.0 : 0.0,
         child: Container(
+          decoration: theme.decorations.floatingPanel(),
           key: _key,
-          child: Column(
-            children: [
-              Text("Cut"),
-              Text("Copy"),
-              Text("Paste"),
-              Text("Send to front"),
-              Text("Send to back"),
-              Text("Send Forward"),
-              Text("Send Backward"),
-              Text("Group"),
-              Text("Ungroup"),
-              Text("Delete"),
-            ],
+          child: Padding(
+            padding: EdgeInsets.all(theme.spacing.panelPadding),
+            child: Column(children: [Text("Cut"), Text("Copy"), Text("Paste")]),
           ),
         ),
       ),
