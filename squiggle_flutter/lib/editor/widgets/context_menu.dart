@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
+import 'package:squiggle_flutter/services/paste_clipboard.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_divider.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
@@ -8,11 +11,13 @@ import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 class ContextMenu extends StatefulWidget {
   final Offset localScreenPosition;
   final EditorContext editorContext;
+  final ImageRepository imageRepository;
 
   const ContextMenu({
     super.key,
     required this.localScreenPosition,
     required this.editorContext,
+    required this.imageRepository,
   });
 
   @override
@@ -62,6 +67,29 @@ class _ContextMenuState extends State<ContextMenu> {
     });
   }
 
+  void _copy({bool cut = false}) {
+    if (cut) {
+      cutSelectedNodesToClipboard(
+        context: widget.editorContext,
+        imageRepository: widget.imageRepository,
+      );
+    } else {
+      copySelectedNodesToClipboard(
+        context: widget.editorContext,
+        imageRepository: widget.imageRepository,
+      );
+    }
+    Navigator.of(context).pop();
+  }
+
+  void _paste() {
+    pasteFromClipboard(
+      context: widget.editorContext,
+      imageRepository: widget.imageRepository,
+    );
+    Navigator.of(context).pop();
+  }
+
   List<Widget> _buildMenuItems() {
     final selection = widget.editorContext.selection;
 
@@ -81,16 +109,22 @@ class _ContextMenuState extends State<ContextMenu> {
         ),
         SquiggleMenuDivider(),
 
-        const SquiggleMenuItem(
+        SquiggleMenuItem(
           label: 'Paste',
           icon: LucideIcons.clipboard,
           shortcut: '⌘V',
-          onPressed: null,
+          onPressed: _paste,
         ),
       ];
     }
 
     return [
+      SquiggleMenuItem(
+        label: 'Cut',
+        icon: LucideIcons.scissors,
+        shortcut: '⌘X',
+        onPressed: () => _copy(cut: true),
+      ),
       SquiggleMenuItem(
         label: 'Duplicate',
         icon: LucideIcons.copy,
@@ -101,13 +135,13 @@ class _ContextMenuState extends State<ContextMenu> {
         label: 'Copy',
         icon: LucideIcons.file,
         shortcut: '⌘C',
-        onPressed: null,
+        onPressed: _copy,
       ),
-      const SquiggleMenuItem(
+      SquiggleMenuItem(
         label: 'Paste',
         icon: LucideIcons.clipboard,
         shortcut: '⌘V',
-        onPressed: null,
+        onPressed: _paste,
       ),
       const SquiggleMenuDivider(),
 
