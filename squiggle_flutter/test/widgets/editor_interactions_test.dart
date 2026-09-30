@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -59,6 +60,56 @@ Feature _rectangle(Offset origin) => Feature(
 );
 
 void main() {
+  testWidgets('Select All selects the document and dismisses the menu', (
+    tester,
+  ) async {
+    final first = _rectangle(const Offset(100, 100));
+    final second = _rectangle(const Offset(300, 300));
+    final editor = await _pumpEditor(
+      tester,
+      document: Document.fromFeatures([first, second]),
+    );
+    await _rightClick(tester, const Offset(600, 400));
+    await tester.tap(find.text('Select All'));
+    await tester.pumpAndSettle();
+
+    expect(editor.selection.selectedNodeIds, [first.id, second.id]);
+    expect(find.byType(ContextMenu), findsNothing);
+    expect(editor.history.canUndo, isFalse);
+  });
+
+  testWidgets('Escape dismisses the menu without changing the selection', (
+    tester,
+  ) async {
+    final feature = _rectangle(const Offset(100, 100));
+    final editor = await _pumpEditor(
+      tester,
+      document: Document.fromFeatures([feature]),
+    );
+    await _rightClick(tester, const Offset(150, 150));
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ContextMenu), findsNothing);
+    expect(editor.selection.selectedNodeIds, [feature.id]);
+    expect(editor.document.nodeById(feature.id), same(feature));
+    expect(editor.history.canUndo, isFalse);
+  });
+
+  testWidgets('menu stays within the viewport near its bottom right corner', (
+    tester,
+  ) async {
+    final feature = _rectangle(const Offset(680, 480));
+    await _pumpEditor(tester, document: Document.fromFeatures([feature]));
+    await _rightClick(tester, const Offset(750, 550));
+
+    final menuBounds = tester.getRect(find.byType(ContextMenu));
+    expect(menuBounds.left, greaterThanOrEqualTo(0));
+    expect(menuBounds.top, greaterThanOrEqualTo(0));
+    expect(menuBounds.right, lessThanOrEqualTo(800));
+    expect(menuBounds.bottom, lessThanOrEqualTo(600));
+  });
+
   testWidgets('releasing a context click clears secondary pointer state', (
     tester,
   ) async {
@@ -158,8 +209,14 @@ void main() {
     expect(editor.document.nodeById(target.id), isNull);
     expect(editor.document.nodeById(original.id), same(original));
     expect(editor.document.nodeById(underneath.id), same(underneath));
+    expect(editor.selection.isEmpty, isTrue);
+    expect(find.byType(ContextMenu), findsNothing);
     editor.undo();
     expect(editor.document.nodeById(target.id), isNotNull);
+    editor.redo();
+    expect(editor.document.nodeById(target.id), isNull);
+    expect(editor.document.nodeById(original.id), same(original));
+    expect(editor.document.nodeById(underneath.id), same(underneath));
   });
 
   testWidgets('right-click preserves selection on selected nodes and canvas', (

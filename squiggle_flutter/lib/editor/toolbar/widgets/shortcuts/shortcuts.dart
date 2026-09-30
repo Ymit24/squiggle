@@ -8,8 +8,7 @@ import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
-import 'package:squiggle_flutter/services/paste_image.dart';
-import 'package:squiggle_flutter/services/paste_text.dart';
+import 'package:squiggle_flutter/services/paste_clipboard.dart';
 
 const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
@@ -149,7 +148,10 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 if (textEditOpen) {
                   return null;
                 }
-                _pasteFromClipboard(context);
+                pasteFromClipboard(
+                  context: context.read<EditorContext>(),
+                  imageRepository: context.read<ImageRepository>(),
+                );
                 return null;
               },
             ),
@@ -185,27 +187,4 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
       ),
     );
   }
-}
-
-Future<void> _pasteFromClipboard(BuildContext context) async {
-  final editorContext = context.read<EditorContext>();
-  final imageRepository = context.read<ImageRepository>();
-
-  final pastedNodes = await pasteNodesFromClipboard(
-    context: editorContext,
-    imageRepository: imageRepository,
-  );
-  if (pastedNodes) {
-    return;
-  }
-
-  final pastedText = await pasteTextFromClipboard(context: editorContext);
-  if (pastedText) {
-    return;
-  }
-
-  await pasteImageFromClipboard(
-    imageRepository: imageRepository,
-    context: editorContext,
-  );
 }
