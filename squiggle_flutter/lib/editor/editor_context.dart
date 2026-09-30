@@ -43,7 +43,11 @@ class EditorContext extends ChangeNotifier {
     Offset localScreenPosition,
     Offset worldPosition,
   ) {
-    print("OPENING CONTEXT MENU");
+    final node = document.nodeAtPoint(worldPosition);
+    if (node != null && !selection.isNodeSelected(node.id)) {
+      selection.setSelection([node.id]);
+    }
+
     Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder(
         barrierDismissible: true,
@@ -51,7 +55,7 @@ class EditorContext extends ChangeNotifier {
         barrierColor: null,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
-        pageBuilder: (_, __, ___) {
+        pageBuilder: (_, _, _) {
           return Stack(
             children: [
               ContextMenu(

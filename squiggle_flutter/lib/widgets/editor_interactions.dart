@@ -76,12 +76,15 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _resetPointerState() {
     _isPrimaryDragging = false;
+    _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
     _pointerDownButtons = null;
     _pointerInCanvas = null;
     _flingController.stop();
   }
 
   static const _pinchScaleThreshold = 0.02;
+  static const _secondaryDragThreshold = 5.0;
 
   double _initialZoom = 1.0;
   Offset _initialLocation = Offset.zero;
@@ -89,7 +92,8 @@ class _EditorInteractionsState extends State<EditorInteractions>
   int? _pointerDownButtons;
   bool _isPrimaryDragging = false;
 
-  Offset? _secondaryPointerDownAt = null;
+  Offset? _secondaryPointerDownAt;
+  bool _isSecondaryDragging = false;
   bool _panZoomHadSignificantPinch = false;
 
   VelocityTracker _panVelocityTracker = VelocityTracker.withKind(
@@ -329,16 +333,15 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _flingController.stop();
 
     _secondaryPointerDownAt = event.position;
+    _isSecondaryDragging = false;
   }
 
   void _onRightPointerUpdate(PointerMoveEvent event) {
     if (event.synthesized) return;
 
     final distance = (event.position - _secondaryPointerDownAt!).distance;
-    // TODO: tune this if needed.
-    if (distance < 5) {
-      return;
-    }
+    if (!_isSecondaryDragging && distance < _secondaryDragThreshold) return;
+    _isSecondaryDragging = true;
 
     _camera.panByScreenDelta(event.delta);
     widget.context.notifyViewportChanged();
@@ -346,26 +349,22 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _onRightPointerUp(BuildContext context, PointerUpEvent event) {
     final distance = (event.position - _secondaryPointerDownAt!).distance;
-    // TODO: tune this if needed.
-    if (distance < 5) {
-      print("Havent moved too much for a context menu! distance: $distance");
-
-      // TODO: consider ! here.
-      widget.context.openContextMenuAt(
-        context,
-        _canvasLocal(event)!,
-        _screenToWorld(event)!,
-      );
-
-      return;
-    } else {
-      print("we HAVE moved too much for a context menu! distance: $distance");
-    }
-
+    final isClick = !_isSecondaryDragging && distance < _secondaryDragThreshold;
     _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
+    if (!isClick) return;
+
+    final local = _canvasLocal(event);
+    if (local == null) return;
+    widget.context.openContextMenuAt(
+      context,
+      local,
+      _camera.screenToWorld(local),
+    );
   }
 
   void _onRightPointerCancel(PointerCancelEvent event) {
     _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
   }
 }
