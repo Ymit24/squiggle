@@ -25,7 +25,6 @@ class LibrarySortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LibraryMenuAnchor(
-      menuWidth: 216,
       menuItems: () => [
         LibraryMenuItem(
           label: 'Last edited',

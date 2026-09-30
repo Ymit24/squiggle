@@ -4,11 +4,11 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
-import 'package:squiggle_flutter/theme/theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_divider.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 
-class ContextMenu extends StatefulWidget {
+class ContextMenu extends StatelessWidget {
   final Offset localScreenPosition;
   final EditorContext editorContext;
   final ImageRepository imageRepository;
@@ -20,78 +20,31 @@ class ContextMenu extends StatefulWidget {
     required this.imageRepository,
   });
 
-  @override
-  State<ContextMenu> createState() => _ContextMenuState();
-}
-
-class _ContextMenuState extends State<ContextMenu> {
-  final GlobalKey _key = GlobalKey();
-
-  Offset _localPosition = Offset.zero;
-  bool _isVisible = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final RenderBox? box =
-          _key.currentContext?.findRenderObject() as RenderBox?;
-      if (box != null) {
-        final size = box.size;
-        final position = widget.localScreenPosition;
-        final screenSize = MediaQuery.of(context).size;
-
-        final padding = Offset(
-          context.squiggleTheme.spacing.panelPadding,
-          context.squiggleTheme.spacing.panelPadding,
-        );
-
-        final clampedScreenPosition = Offset(
-          position.dx.clamp(
-            padding.dx,
-            screenSize.width - size.width - padding.dx,
-          ),
-          position.dy.clamp(
-            padding.dy,
-            screenSize.height - size.height - padding.dy,
-          ),
-        );
-
-        setState(() {
-          _localPosition = clampedScreenPosition;
-          _isVisible = true;
-        });
-      }
-    });
-  }
-
-  void _copy({bool cut = false}) {
+  void _copy(BuildContext context, {bool cut = false}) {
     if (cut) {
       cutSelectedNodesToClipboard(
-        context: widget.editorContext,
-        imageRepository: widget.imageRepository,
+        context: editorContext,
+        imageRepository: imageRepository,
       );
     } else {
       copySelectedNodesToClipboard(
-        context: widget.editorContext,
-        imageRepository: widget.imageRepository,
+        context: editorContext,
+        imageRepository: imageRepository,
       );
     }
     Navigator.of(context).pop();
   }
 
-  void _paste() {
+  void _paste(BuildContext context) {
     pasteFromClipboard(
-      context: widget.editorContext,
-      imageRepository: widget.imageRepository,
+      context: editorContext,
+      imageRepository: imageRepository,
     );
     Navigator.of(context).pop();
   }
 
-  List<Widget> _buildMenuItems() {
-    final selection = widget.editorContext.selection;
+  List<Widget> _buildMenuItems(BuildContext context) {
+    final selection = editorContext.selection;
 
     if (selection.isEmpty) {
       return [
@@ -100,8 +53,8 @@ class _ContextMenuState extends State<ContextMenu> {
           icon: LucideIcons.mousePointer,
           shortcut: '⌘A',
           onPressed: () {
-            widget.editorContext.selection.setSelection(
-              widget.editorContext.document.nodes.map((node) => node.id),
+            editorContext.selection.setSelection(
+              editorContext.document.nodes.map((node) => node.id),
             );
             // dismiss the context menu
             Navigator.of(context).pop();
@@ -113,7 +66,7 @@ class _ContextMenuState extends State<ContextMenu> {
           label: 'Paste',
           icon: LucideIcons.clipboard,
           shortcut: '⌘V',
-          onPressed: _paste,
+          onPressed: () => _paste(context),
         ),
       ];
     }
@@ -123,7 +76,7 @@ class _ContextMenuState extends State<ContextMenu> {
         label: 'Cut',
         icon: LucideIcons.scissors,
         shortcut: '⌘X',
-        onPressed: () => _copy(cut: true),
+        onPressed: () => _copy(context, cut: true),
       ),
       SquiggleMenuItem(
         label: 'Duplicate',
@@ -135,13 +88,13 @@ class _ContextMenuState extends State<ContextMenu> {
         label: 'Copy',
         icon: LucideIcons.file,
         shortcut: '⌘C',
-        onPressed: _copy,
+        onPressed: () => _copy(context),
       ),
       SquiggleMenuItem(
         label: 'Paste',
         icon: LucideIcons.clipboard,
         shortcut: '⌘V',
-        onPressed: _paste,
+        onPressed: () => _paste(context),
       ),
       const SquiggleMenuDivider(),
 
@@ -175,12 +128,10 @@ class _ContextMenuState extends State<ContextMenu> {
         icon: LucideIcons.trash2,
         shortcut: '⌫',
         onPressed: () {
-          widget.editorContext.history.run("Delete", (transaction) {
-            transaction.removeAll(
-              widget.editorContext.selection.selectedNodeIds,
-            );
+          editorContext.history.run("Delete", (transaction) {
+            transaction.removeAll(editorContext.selection.selectedNodeIds);
           });
-          widget.editorContext.selection.clearSelection();
+          editorContext.selection.clearSelection();
           Navigator.of(context).pop();
         },
       ),
@@ -188,27 +139,8 @@ class _ContextMenuState extends State<ContextMenu> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    return Positioned(
-      left: _localPosition.dx,
-      top: _localPosition.dy,
-      child: Opacity(
-        opacity: _isVisible ? 1.0 : 0.0,
-        child: Container(
-          key: _key,
-          width: theme.spacing.menuWidth,
-          decoration: theme.decorations.floatingPanel(),
-          padding: EdgeInsets.all(theme.spacing.menuPadding),
-          child: Material(
-            type: MaterialType.transparency,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: _buildMenuItems(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SquiggleContextMenu(
+    position: localScreenPosition,
+    children: _buildMenuItems(context),
+  );
 }

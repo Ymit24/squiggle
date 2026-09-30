@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
+import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
 /// tools, render objects, blocs, and services.
@@ -50,24 +51,12 @@ class EditorContext extends ChangeNotifier {
       selection.setSelection([node.id]);
     }
 
-    Navigator.of(context, rootNavigator: true).push(
-      PageRouteBuilder(
-        barrierDismissible: true,
-        opaque: false,
-        barrierColor: null,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-        pageBuilder: (_, _, _) {
-          return Stack(
-            children: [
-              ContextMenu(
-                localScreenPosition: localScreenPosition,
-                editorContext: this,
-                imageRepository: imageRepository,
-              ),
-            ],
-          );
-        },
+    showSquiggleContextMenu(
+      context: context,
+      builder: (_) => ContextMenu(
+        localScreenPosition: localScreenPosition,
+        editorContext: this,
+        imageRepository: imageRepository,
       ),
     );
   }
