@@ -1,4 +1,11 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/editor/layer_order_commands.dart';
+
+class ReorderSelectedNodesIntent extends Intent {
+  const ReorderSelectedNodesIntent(this.action);
+
+  final LayerOrder action;
+}
 
 class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();

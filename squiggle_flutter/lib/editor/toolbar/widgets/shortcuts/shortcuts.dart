@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
@@ -12,6 +13,22 @@ import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
 
 const _toolShortcuts = {
+  SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true):
+      ReorderSelectedNodesIntent(LayerOrder.backward),
+  SingleActivator(LogicalKeyboardKey.bracketLeft, control: true):
+      ReorderSelectedNodesIntent(LayerOrder.backward),
+  SingleActivator(LogicalKeyboardKey.bracketRight, meta: true):
+      ReorderSelectedNodesIntent(LayerOrder.forward),
+  SingleActivator(LogicalKeyboardKey.bracketRight, control: true):
+      ReorderSelectedNodesIntent(LayerOrder.forward),
+  SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.back),
+  SingleActivator(LogicalKeyboardKey.bracketLeft, control: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.back),
+  SingleActivator(LogicalKeyboardKey.bracketRight, meta: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.front),
+  SingleActivator(LogicalKeyboardKey.bracketRight, control: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.front),
   SingleActivator(LogicalKeyboardKey.keyD, meta: true):
       DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyD, control: true):
@@ -95,6 +112,18 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
         shortcuts: textEditOpen ? const {} : _toolShortcuts,
         child: Actions(
           actions: {
+            ReorderSelectedNodesIntent:
+                CallbackAction<ReorderSelectedNodesIntent>(
+                  onInvoke: (intent) {
+                    if (!textEditOpen) {
+                      reorderSelectedNodes(
+                        context.read<EditorContext>(),
+                        intent.action,
+                      );
+                    }
+                    return null;
+                  },
+                ),
             ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
               onInvoke: (_) {
                 context.read<ToolbarBloc>().add(
