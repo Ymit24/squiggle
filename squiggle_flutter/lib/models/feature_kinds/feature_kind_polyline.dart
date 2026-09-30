@@ -1,11 +1,12 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable {
+    with StrokeColorCapable, StrokeWidthCapable, StrokeTypeCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
     this.strokeWidth = defaultStrokeWidth,
+    this.strokeType = StrokeType.solid,
     this.startEndCap = LineEndCap.rounded,
     this.endEndCap = LineEndCap.rounded,
   }) : localPoints = List.of(localPoints);
@@ -18,6 +19,7 @@ final class FeatureKindPolyline extends FeatureKind
         ],
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        strokeType: _strokeTypeFromDataModel(content),
         startEndCap: _endCapFromDataModel(content, 'startEndCap'),
         endEndCap: _endCapFromDataModel(content, 'endEndCap'),
       );
@@ -30,6 +32,7 @@ final class FeatureKindPolyline extends FeatureKind
     ],
     'strokeColor': strokeColor.toARGB32(),
     'strokeWidth': strokeWidth,
+    'strokeType': strokeType.name,
     'startEndCap': startEndCap.name,
     'endEndCap': endEndCap.name,
   };
@@ -39,6 +42,7 @@ final class FeatureKindPolyline extends FeatureKind
     localPoints,
     strokeColor: strokeColor,
     strokeWidth: strokeWidth,
+    strokeType: strokeType,
     startEndCap: startEndCap,
     endEndCap: endEndCap,
   );
@@ -49,6 +53,9 @@ final class FeatureKindPolyline extends FeatureKind
 
   @override
   double strokeWidth;
+
+  @override
+  StrokeType strokeType;
   LineEndCap startEndCap;
   LineEndCap endEndCap;
 
@@ -199,7 +206,8 @@ final class FeatureKindPolyline extends FeatureKind
     final path = _pathFor(feature);
 
     if (hasVisibleStroke) {
-      canvas.drawPath(
+      paintStroke(
+        canvas,
         path,
         Paint()
           ..color = strokeColor
@@ -207,6 +215,7 @@ final class FeatureKindPolyline extends FeatureKind
           ..strokeWidth = strokeWidth
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
+        strokeType,
       );
       _paintArrowHeads(canvas, feature);
     }
