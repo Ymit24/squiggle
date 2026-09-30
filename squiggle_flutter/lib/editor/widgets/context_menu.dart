@@ -157,8 +157,6 @@ class ContextMenu extends StatelessWidget {
           shortcut: '⌘V',
           onPressed: () => _paste(context),
         ),
-        const SquiggleMenuDivider(),
-        ..._buildGroupingItems(context),
       ];
     }
 
