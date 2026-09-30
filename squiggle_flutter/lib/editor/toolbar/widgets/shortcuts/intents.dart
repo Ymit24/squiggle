@@ -32,6 +32,10 @@ class CopySelectedFeaturesIntent extends Intent {
   const CopySelectedFeaturesIntent();
 }
 
+class CutSelectedFeaturesIntent extends Intent {
+  const CutSelectedFeaturesIntent();
+}
+
 class UndoDocumentIntent extends Intent {
   const UndoDocumentIntent();
 }
