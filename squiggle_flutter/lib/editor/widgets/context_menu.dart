@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
-import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class ContextMenu extends StatefulWidget {
   final Offset localScreenPosition;
@@ -25,10 +25,10 @@ class _ContextMenuState extends State<ContextMenu> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final RenderBox? box =
           _key.currentContext?.findRenderObject() as RenderBox?;
       if (box != null) {
@@ -36,9 +36,10 @@ class _ContextMenuState extends State<ContextMenu> {
         final position = widget.localScreenPosition;
         final screenSize = MediaQuery.of(context).size;
 
-        print("Real size $size, position $position, window size: $screenSize");
-
-        const padding = Offset(12, 12);
+        final padding = Offset(
+          context.squiggleTheme.spacing.panelPadding,
+          context.squiggleTheme.spacing.panelPadding,
+        );
 
         final clampedScreenPosition = Offset(
           position.dx.clamp(
@@ -51,13 +52,98 @@ class _ContextMenuState extends State<ContextMenu> {
           ),
         );
 
-        print("Clamped position: $clampedScreenPosition");
         setState(() {
           _localPosition = clampedScreenPosition;
           _isVisible = true;
         });
       }
     });
+  }
+
+  Widget _action({
+    required String label,
+    required String icon,
+    required String shortcut,
+    bool enabled = true,
+  }) {
+    final theme = context.squiggleTheme;
+    final spacing = theme.spacing;
+    final foreground = enabled
+        ? theme.colors.text
+        : theme.colors.subtext0.withValues(alpha: 0.5);
+
+    return TextButton(
+      onPressed: enabled
+          ? () => debugPrint('clicked ${label.toUpperCase()}')
+          : null,
+      style: ButtonStyle(
+        textStyle: WidgetStatePropertyAll(
+          theme.typography.actionButtonLabel.copyWith(
+            fontWeight: FontWeight.normal,
+            letterSpacing: 0,
+          ),
+        ),
+        padding: WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: spacing.buttonIconGap),
+        ),
+        minimumSize: WidgetStatePropertyAll(
+          Size(0, spacing.toolbarButtonSize - spacing.panelLabelSpacing),
+        ),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.standard,
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(theme.radii.button),
+          ),
+        ),
+        overlayColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused) ||
+                  states.contains(WidgetState.pressed)
+              ? theme.colors.surface0
+              : Colors.transparent,
+        ),
+      ),
+      child: Row(
+        children: [
+          SvgPicture.asset(
+            'assets/icons/$icon.svg',
+            width: spacing.buttonIconSize,
+            height: spacing.buttonIconSize,
+            colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
+          ),
+          SizedBox(width: spacing.panelPadding),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.typography.actionButtonLabel.copyWith(
+                color: foreground,
+              ),
+            ),
+          ),
+          SizedBox(width: spacing.panelLabelSpacing),
+          Text(
+            shortcut,
+            style: theme.typography.actionButtonLabel.copyWith(
+              color: enabled ? theme.colors.subtext0 : foreground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider() {
+    final theme = context.squiggleTheme;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: theme.spacing.buttonIconGap),
+      child: Divider(
+        height: theme.spacing.panelSectionSpacing + 2,
+        thickness: 1,
+        color: theme.colors.surface1,
+      ),
+    );
   }
 
   @override
@@ -69,11 +155,35 @@ class _ContextMenuState extends State<ContextMenu> {
       child: Opacity(
         opacity: _isVisible ? 1.0 : 0.0,
         child: Container(
-          decoration: theme.decorations.floatingPanel(),
           key: _key,
-          child: Padding(
-            padding: EdgeInsets.all(theme.spacing.panelPadding),
-            child: Column(children: [Text("Cut"), Text("Copy"), Text("Paste")]),
+          width: 188,
+          decoration: theme.decorations.floatingPanel(),
+          padding: EdgeInsets.all(theme.spacing.panelPadding / 2),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _action(label: 'Duplicate', icon: 'duplicate', shortcut: '⌘D'),
+                _action(label: 'Copy', icon: 'copy', shortcut: '⌘C'),
+                _action(
+                  label: 'Paste',
+                  icon: 'paste',
+                  shortcut: '⌘V',
+                  enabled: false,
+                ),
+                _divider(),
+                _action(
+                  label: 'Bring to Front',
+                  icon: 'layers',
+                  shortcut: '⌘⇧]',
+                ),
+                _action(label: 'Send to Back', icon: 'layers', shortcut: '⌘⇧['),
+                _divider(),
+                _action(label: 'Lock', icon: 'lock', shortcut: '⌘L'),
+                _action(label: 'Delete', icon: 'delete', shortcut: '⌫'),
+              ],
+            ),
           ),
         ),
       ),
