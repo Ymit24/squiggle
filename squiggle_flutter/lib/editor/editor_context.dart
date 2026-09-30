@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
@@ -42,8 +43,9 @@ class EditorContext extends ChangeNotifier {
   void openContextMenuAt(
     BuildContext context,
     Offset localScreenPosition,
-    Offset worldPosition,
-  ) {
+    Offset worldPosition, {
+    required ImageRepository imageRepository,
+  }) {
     final node = document.nodeAtPoint(worldPosition);
     if (node != null && !selection.isNodeSelected(node.id)) {
       selection.setSelection([node.id]);
@@ -54,6 +56,7 @@ class EditorContext extends ChangeNotifier {
       builder: (_) => ContextMenu(
         localScreenPosition: localScreenPosition,
         editorContext: this,
+        imageRepository: imageRepository,
       ),
     );
   }

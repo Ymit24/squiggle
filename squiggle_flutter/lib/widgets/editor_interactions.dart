@@ -360,6 +360,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
       context,
       local,
       _camera.screenToWorld(local),
+      imageRepository: widget.imageRepository,
     );
   }
 

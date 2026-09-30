@@ -53,23 +53,41 @@ Future<List<Node>?> decodeNodesFromClipboard(
   }
 }
 
-Future<void> copySelectedNodesToClipboard({
+Future<bool> copySelectedNodesToClipboard({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
   final selectedIds = context.selection.selectedNodeIds;
-  if (selectedIds.isEmpty) {
-    return;
-  }
+  if (selectedIds.isEmpty) return false;
 
   final selected = selectedIds.toSet();
   final nodes = context.document.nodes
       .where((node) => selected.contains(node.id))
       .toList();
-  if (nodes.isEmpty) return;
+  if (nodes.isEmpty) return false;
 
   final payload = await encodeNodesForClipboard(nodes, imageRepository);
-  await _writePlainText('$_clipboardPrefix$payload');
+  return _writePlainText('$_clipboardPrefix$payload');
+}
+
+Future<void> cutSelectedNodesToClipboard({
+  required EditorContext context,
+  required ImageRepository imageRepository,
+}) async {
+  final selectedIds = context.selection.selectedNodeIds.toSet();
+  final copied = await copySelectedNodesToClipboard(
+    context: context,
+    imageRepository: imageRepository,
+  );
+  if (!copied) return;
+
+  context.cancelInteraction();
+  context.history.run('Cut', (transaction) {
+    transaction.removeAll(selectedIds);
+  });
+  context.selection.setSelection(
+    context.selection.selectedNodeIds.where((id) => !selectedIds.contains(id)),
+  );
 }
 
 Future<bool> pasteNodesFromClipboard({
@@ -158,15 +176,14 @@ Future<String?> readClipboardPlainText() => _readPlainText();
 bool isSquiggleNodesClipboardText(String text) =>
     text.startsWith(_clipboardPrefix);
 
-Future<void> _writePlainText(String text) async {
+Future<bool> _writePlainText(String text) async {
   final clipboard = SystemClipboard.instance;
-  if (clipboard == null) {
-    return;
-  }
+  if (clipboard == null) return false;
 
   final item = DataWriterItem(suggestedName: 'squiggle-nodes');
   item.add(Formats.plainText(text));
   await clipboard.write([item]);
+  return true;
 }
 
 Future<String?> _readPlainText() async {
