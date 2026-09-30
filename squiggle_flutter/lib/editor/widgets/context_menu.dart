@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 
 class ContextMenu extends StatefulWidget {
   final Offset localScreenPosition;
@@ -60,86 +61,14 @@ class _ContextMenuState extends State<ContextMenu> {
     });
   }
 
-  Widget _action({
-    required String label,
-    required String icon,
-    required String shortcut,
-    bool enabled = true,
-  }) {
-    final theme = context.squiggleTheme;
-    final spacing = theme.spacing;
-    final foreground = enabled
-        ? theme.colors.text
-        : theme.colors.subtext0.withValues(alpha: 0.5);
-
-    return TextButton(
-      onPressed: enabled
-          ? () => debugPrint('clicked ${label.toUpperCase()}')
-          : null,
-      style: ButtonStyle(
-        textStyle: WidgetStatePropertyAll(
-          theme.typography.actionButtonLabel.copyWith(
-            fontWeight: FontWeight.normal,
-            letterSpacing: 0,
-          ),
-        ),
-        padding: WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: spacing.buttonIconGap),
-        ),
-        minimumSize: WidgetStatePropertyAll(
-          Size(0, spacing.toolbarButtonSize - spacing.panelLabelSpacing),
-        ),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.standard,
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(theme.radii.button),
-          ),
-        ),
-        overlayColor: WidgetStateProperty.resolveWith(
-          (states) =>
-              states.contains(WidgetState.hovered) ||
-                  states.contains(WidgetState.focused) ||
-                  states.contains(WidgetState.pressed)
-              ? theme.colors.surface0
-              : Colors.transparent,
-        ),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            'assets/icons/$icon.svg',
-            width: spacing.buttonIconSize,
-            height: spacing.buttonIconSize,
-            colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
-          ),
-          SizedBox(width: spacing.panelPadding),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.typography.actionButtonLabel.copyWith(
-                color: foreground,
-              ),
-            ),
-          ),
-          SizedBox(width: spacing.panelLabelSpacing),
-          Text(
-            shortcut,
-            style: theme.typography.actionButtonLabel.copyWith(
-              color: enabled ? theme.colors.subtext0 : foreground,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _divider() {
     final theme = context.squiggleTheme;
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: theme.spacing.buttonIconGap),
+      padding: EdgeInsets.symmetric(
+        horizontal: theme.spacing.menuItemHorizontalPadding,
+      ),
       child: Divider(
-        height: theme.spacing.panelSectionSpacing + 2,
+        height: theme.spacing.menuDividerHeight,
         thickness: 1,
         color: theme.colors.surface1,
       ),
@@ -156,32 +85,58 @@ class _ContextMenuState extends State<ContextMenu> {
         opacity: _isVisible ? 1.0 : 0.0,
         child: Container(
           key: _key,
-          width: 188,
+          width: theme.spacing.menuWidth,
           decoration: theme.decorations.floatingPanel(),
-          padding: EdgeInsets.all(theme.spacing.panelPadding / 2),
+          padding: EdgeInsets.all(theme.spacing.menuPadding),
           child: Material(
             type: MaterialType.transparency,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _action(label: 'Duplicate', icon: 'duplicate', shortcut: '⌘D'),
-                _action(label: 'Copy', icon: 'copy', shortcut: '⌘C'),
-                _action(
+                SquiggleMenuItem(
+                  label: 'Duplicate',
+                  icon: LucideIcons.copy,
+                  shortcut: '⌘D',
+                  onPressed: () => debugPrint('clicked DUPLICATE'),
+                ),
+                SquiggleMenuItem(
+                  label: 'Copy',
+                  icon: LucideIcons.file,
+                  shortcut: '⌘C',
+                  onPressed: () => debugPrint('clicked COPY'),
+                ),
+                const SquiggleMenuItem(
                   label: 'Paste',
-                  icon: 'paste',
+                  icon: LucideIcons.clipboard,
                   shortcut: '⌘V',
-                  enabled: false,
+                  onPressed: null,
                 ),
                 _divider(),
-                _action(
+                SquiggleMenuItem(
                   label: 'Bring to Front',
-                  icon: 'layers',
+                  icon: LucideIcons.layers,
                   shortcut: '⌘⇧]',
+                  onPressed: () => debugPrint('clicked BRING TO FRONT'),
                 ),
-                _action(label: 'Send to Back', icon: 'layers', shortcut: '⌘⇧['),
+                SquiggleMenuItem(
+                  label: 'Send to Back',
+                  icon: LucideIcons.layers,
+                  shortcut: '⌘⇧[',
+                  onPressed: () => debugPrint('clicked SEND TO BACK'),
+                ),
                 _divider(),
-                _action(label: 'Lock', icon: 'lock', shortcut: '⌘L'),
-                _action(label: 'Delete', icon: 'delete', shortcut: '⌫'),
+                SquiggleMenuItem(
+                  label: 'Lock',
+                  icon: LucideIcons.lock,
+                  shortcut: '⌘L',
+                  onPressed: () => debugPrint('clicked LOCK'),
+                ),
+                SquiggleMenuItem(
+                  label: 'Delete',
+                  icon: LucideIcons.trash2,
+                  shortcut: '⌫',
+                  onPressed: () => debugPrint('clicked DELETE'),
+                ),
               ],
             ),
           ),
