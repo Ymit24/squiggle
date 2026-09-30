@@ -47,8 +47,8 @@ void main() {
       expect(clones, hasLength(2));
       expect(context.selection.selectedNodeIds, clones.map((node) => node.id));
       expect(clones.map((node) => node.origin), [
-        nested.origin + const Offset(16, 16),
-        second.origin + const Offset(16, 16),
+        nested.origin + const Offset(64, 64),
+        second.origin + const Offset(64, 64),
       ]);
       expect(clones.every((node) => identical(node.parent, parent)), isTrue);
       expect((clones.first as Group).children.single.origin, first.origin);
@@ -103,7 +103,7 @@ void main() {
     final copy = harness.context.document.nodeById(
       harness.context.selection.selectedNodeIds.single,
     )!;
-    expect(copy.origin, const Offset(16, 16));
+    expect(copy.origin, const Offset(64, 64));
     harness.pointerUp(const Offset(70, 80));
     harness.context.undo();
     expect(harness.context.document.nodes, hasLength(2));

@@ -40,7 +40,7 @@ bool canDuplicateSelectedNodes(EditorContext context) =>
     _duplicableSelection(context).isNotEmpty;
 
 /// Cancels the current interaction and duplicates sibling nodes in one edit.
-/// Copies are offset 16 canvas units right and down.
+/// Copies are offset 64 canvas units right and down.
 bool duplicateSelectedNodes(EditorContext context) {
   if (!canDuplicateSelectedNodes(context)) return false;
   context.cancelInteraction();
@@ -52,7 +52,7 @@ bool duplicateSelectedNodes(EditorContext context) {
       nodes: nodes,
       transaction: transaction,
       selection: context.selection,
-      offset: const Offset(16, 16),
+      offset: const Offset(64, 64),
     );
   }, container: nodes.first.parent);
   return true;
