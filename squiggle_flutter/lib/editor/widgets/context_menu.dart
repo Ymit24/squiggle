@@ -67,11 +67,17 @@ class _ContextMenuState extends State<ContextMenu> {
 
     if (selection.isEmpty) {
       return [
-        const SquiggleMenuItem(
+        SquiggleMenuItem(
           label: 'Select All',
           icon: LucideIcons.mousePointer,
           shortcut: '⌘A',
-          onPressed: null,
+          onPressed: () {
+            widget.editorContext.selection.setSelection(
+              widget.editorContext.document.nodes.map((node) => node.id),
+            );
+            // dismiss the context menu
+            Navigator.of(context).pop();
+          },
         ),
         SquiggleMenuDivider(),
 
@@ -89,13 +95,13 @@ class _ContextMenuState extends State<ContextMenu> {
         label: 'Duplicate',
         icon: LucideIcons.copy,
         shortcut: '⌘D',
-        onPressed: () => debugPrint('clicked DUPLICATE'),
+        onPressed: null,
       ),
       SquiggleMenuItem(
         label: 'Copy',
         icon: LucideIcons.file,
         shortcut: '⌘C',
-        onPressed: () => debugPrint('clicked COPY'),
+        onPressed: null,
       ),
       const SquiggleMenuItem(
         label: 'Paste',
@@ -109,32 +115,40 @@ class _ContextMenuState extends State<ContextMenu> {
         label: 'Bring backward',
         icon: LucideIcons.layers,
         shortcut: '⌘[',
-        onPressed: () => debugPrint('clicked BRING BACKWARD'),
+        onPressed: null,
       ),
       SquiggleMenuItem(
         label: 'Bring forward',
         icon: LucideIcons.layers,
         shortcut: '⌘]',
-        onPressed: () => debugPrint('clicked BRING FORWARD'),
+        onPressed: null,
       ),
       SquiggleMenuItem(
         label: 'Send to Back',
-        icon: LucideIcons.layers, // command option [
+        icon: LucideIcons.layers,
         shortcut: '⌘⌥[',
-        onPressed: () => debugPrint('clicked SEND TO BACK'),
+        onPressed: null,
       ),
       SquiggleMenuItem(
         label: 'Bring to Front',
         icon: LucideIcons.layers,
         shortcut: '⌘⌥]',
-        onPressed: () => debugPrint('clicked BRING TO FRONT'),
+        onPressed: null,
       ),
       const SquiggleMenuDivider(),
       SquiggleMenuItem(
         label: 'Delete',
         icon: LucideIcons.trash2,
         shortcut: '⌫',
-        onPressed: () => debugPrint('clicked DELETE'),
+        onPressed: () {
+          widget.editorContext.history.run("Delete", (transaction) {
+            transaction.removeAll(
+              widget.editorContext.selection.selectedNodeIds,
+            );
+          });
+          widget.editorContext.selection.clearSelection();
+          Navigator.of(context).pop();
+        },
       ),
     ];
   }
