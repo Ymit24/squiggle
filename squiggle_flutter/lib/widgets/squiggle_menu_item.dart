@@ -35,15 +35,12 @@ class SquiggleMenuItem extends StatelessWidget {
             Icon(icon),
             SizedBox(width: theme.spacing.menuIconGap),
           ],
-          Expanded(child: Text(label)),
+          Expanded(
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
           if (shortcut != null) ...[
             SizedBox(width: theme.spacing.menuShortcutGap),
-            Flexible(
-              child: SquiggleShortcutHint(
-                label: shortcut!,
-                enabled: onPressed != null,
-              ),
-            ),
+            SquiggleShortcutHint(label: shortcut!, enabled: onPressed != null),
           ],
           if (checked) ...[
             SizedBox(width: theme.spacing.menuShortcutGap),
