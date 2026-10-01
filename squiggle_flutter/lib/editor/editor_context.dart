@@ -7,6 +7,10 @@ import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/brush_profile.dart';
+import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
@@ -38,7 +42,10 @@ class EditorContext extends ChangeNotifier {
   final ToolModel _tool;
   final History _history;
   final TextEditModel _textEdit;
-  final Map<String, Object?> _inspectorValues = {};
+
+  /// Persisted session changes are separate from pointer/camera notifications.
+  final ChangeNotifier sessionChanges = ChangeNotifier();
+  int _brushSequence = 0;
 
   void openContextMenuAt(
     BuildContext context,
@@ -129,17 +136,89 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  void rememberInspectorValue(String fieldKey, Object? value) {
-    _inspectorValues[fieldKey] = value;
+  BrushProfile get activeBrush => document.session.activeBrush;
+
+  void activateBrush(String id) {
+    if (document.session.activeBrushId == id) return;
+    if (!document.session.brushes.any((brush) => brush.id == id)) return;
+    document.session.activeBrushId = id;
+    _sessionChanged();
   }
 
-  /// Applies the last inspector choices to a feature being created.
-  void applyInspectorValues(FeatureKind kind) {
-    for (final field in kind.buildInspectorFields()) {
-      if (_inspectorValues.containsKey(field.fieldKey)) {
-        field.applyIfCompatible(_inspectorValues[field.fieldKey]);
-      }
+  BrushProfile createBrush(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) throw ArgumentError.value(name, 'name');
+    String id;
+    do {
+      id = 'brush-${DateTime.now().microsecondsSinceEpoch}-${_brushSequence++}';
+    } while (document.session.brushes.any((brush) => brush.id == id));
+    final brush = BrushProfile(
+      id: id,
+      name: trimmed,
+      values: activeBrush.values,
+    );
+    document.session.brushes.add(brush);
+    document.session.activeBrushId = brush.id;
+    _sessionChanged();
+    return brush;
+  }
+
+  void renameBrush(String id, String name) {
+    final brush = document.session.brushes
+        .where((brush) => brush.id == id)
+        .firstOrNull;
+    if (brush == null || brush.isScratch || name.trim().isEmpty) return;
+    brush.name = name.trim();
+    _sessionChanged();
+  }
+
+  void deleteBrush(String id) {
+    final brush = document.session.brushes
+        .where((brush) => brush.id == id)
+        .firstOrNull;
+    if (brush == null || brush.isScratch) return;
+    if (activeBrush.id == id) {
+      document.session.scratch.values
+        ..clear()
+        ..addAll(brush.values);
+      document.session.activeBrushId = BrushProfile.scratchId;
     }
+    document.session.brushes.remove(brush);
+    _sessionChanged();
+  }
+
+  void setDrawingField(String key, Object? value) {
+    activeBrush.values[key] = value;
+    _sessionChanged();
+  }
+
+  void clearDrawingField(String key) {
+    if (!activeBrush.values.containsKey(key)) return;
+    activeBrush.values.remove(key);
+    _sessionChanged();
+  }
+
+  void _sessionChanged() {
+    sessionChanges.notifyListeners();
+    notifyListeners();
+  }
+
+  /// Kept as an alias for creation call sites; selection edits never call this.
+  void rememberInspectorValue(String fieldKey, Object? value) =>
+      setDrawingField(fieldKey, value);
+
+  void applyInspectorValues(FeatureKind kind) => activeBrush.applyTo(kind);
+
+  /// Fresh defaults for the active creation tool, never its mutable template.
+  FeatureKind? get drawingInspectorKind {
+    final kind = switch (tool.activeTool) {
+      CreateFeatureTool(:final kind) => kind.clone(),
+      CreateLineTool() => FeatureKindPolyline([]),
+      CreateTextTool() => FeatureKindText(''),
+      _ => null,
+    };
+    if (kind != null) activeBrush.applyTo(kind);
+    return kind;
   }
 
   /// Replaces the document contents and resets transient state.
@@ -147,7 +226,7 @@ class EditorContext extends ChangeNotifier {
     cancelInteraction();
     document.replaceFrom(newDocument);
     history.clear();
-    _inspectorValues.clear();
+
     selection.clearSelection();
     endTextEdit();
   }
@@ -158,6 +237,7 @@ class EditorContext extends ChangeNotifier {
     _tool.removeListener(_forward);
     _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
+    sessionChanges.dispose();
     super.dispose();
   }
 }

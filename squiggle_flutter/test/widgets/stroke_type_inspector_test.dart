@@ -67,7 +67,7 @@ void main() {
   });
 
   testWidgets(
-    'inspector updates mixed shapes, supports history and remembers type',
+    'selection inspector updates mixed shapes without changing drawing defaults',
     (tester) async {
       final kinds = <FeatureKind>[
         FeatureKindRectangle(),
@@ -126,7 +126,7 @@ void main() {
         FeatureKindPolyline([Offset.zero, const Offset(100, 0)]),
       ]) {
         context.applyInspectorValues(kind);
-        expect((kind as StrokeTypeCapable).strokeType, StrokeType.dotted);
+        expect((kind as StrokeTypeCapable).strokeType, StrokeType.solid);
       }
     },
   );

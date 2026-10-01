@@ -1,5 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
@@ -56,6 +60,36 @@ void main() {
       expect(await storage.listDocuments(), hasLength(1));
       expect(await storage.loadDocument(second.id), isNull);
     });
+
+    test(
+      'brush snapshots are ordered and survive save, rename and reload',
+      () async {
+        final created = await storage.createDocument(name: 'Brushes');
+        final editor = EditorContext(document: Document());
+        addTearDown(editor.dispose);
+        final brush = editor.createBrush('Construction');
+        editor.setDrawingField('strokeColor', const Color(0xFFFFAA00));
+        editor.setDrawingField('strokeType', StrokeType.dashed);
+        final first = storage.saveDocument(
+          created.id,
+          editor.document,
+          'Brushes',
+        );
+        editor.setDrawingField('strokeWidth', 3.0);
+        final second = storage.saveDocument(
+          created.id,
+          editor.document,
+          'Brushes',
+        );
+        await Future.wait([first, second]);
+        await storage.renameDocument(created.id, 'Renamed');
+        final restored = (await storage.loadDocument(created.id))!.document;
+        expect(restored.name, 'Renamed');
+        expect(restored.session.activeBrushId, brush.id);
+        expect(restored.session.activeBrush.values, brush.values);
+        expect(restored.session.scratch.values, isEmpty);
+      },
+    );
 
     test('persists and restores active document id', () async {
       final created = await storage.createDocument(name: 'Active');
