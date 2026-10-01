@@ -17,12 +17,18 @@ class DocumentSession {
       );
     }
     scratch.name = 'Scratch';
+    final scratchBrush = scratch;
+    this.brushes
+      ..remove(scratchBrush)
+      ..insert(0, scratchBrush);
     if (!this.brushes.any((brush) => brush.id == this.activeBrushId)) {
       this.activeBrushId = BrushProfile.scratchId;
     }
   }
 
+  static const maxBrushes = 9;
   final List<BrushProfile> brushes;
+  bool get canCreateBrush => brushes.length < maxBrushes;
   String activeBrushId;
   BrushProfile get scratch => brushes.firstWhere((brush) => brush.isScratch);
   BrushProfile get activeBrush =>

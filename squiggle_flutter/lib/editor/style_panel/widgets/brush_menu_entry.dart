@@ -11,12 +11,14 @@ class BrushMenuEntry extends StatelessWidget {
     required this.selected,
     required this.imageRepository,
     required this.onPressed,
+    this.shortcutNumber,
   });
 
   final BrushProfile brush;
   final bool selected;
   final ImageRepository imageRepository;
   final VoidCallback onPressed;
+  final int? shortcutNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +50,16 @@ class BrushMenuEntry extends StatelessWidget {
                   ),
                 ),
                 if (selected) const Icon(Icons.check, size: 14),
+                if (shortcutNumber != null) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '${Theme.of(context).platform == TargetPlatform.macOS || Theme.of(context).platform == TargetPlatform.iOS ? '⌘' : 'Ctrl+'}$shortcutNumber',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colors.subtext0,
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 3),

@@ -3,6 +3,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/brush_menu_entry.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/brush_name_dialog.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/delete_brush_dialog.dart';
+import 'package:squiggle_flutter/models/document_session.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
@@ -31,7 +32,12 @@ class _BrushPickerState extends State<BrushPicker> {
       context: context,
       builder: (_) => const BrushNameDialog(creating: true),
     );
-    if (!mounted || name == null || editor.activeBrush.id != sourceId) return;
+    if (!mounted ||
+        name == null ||
+        editor.activeBrush.id != sourceId ||
+        !editor.document.session.canCreateBrush) {
+      return;
+    }
     editor.createBrush(name);
   }
 
@@ -85,9 +91,13 @@ class _BrushPickerState extends State<BrushPicker> {
                   fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
                 ),
                 menuChildren: [
-                  for (final item in editor.document.session.brushes)
+                  for (final (index, item)
+                      in editor.document.session.brushes.indexed)
                     BrushMenuEntry(
                       brush: item,
+                      shortcutNumber: index < DocumentSession.maxBrushes
+                          ? index + 1
+                          : null,
                       selected: item.id == brush.id,
                       imageRepository: widget.imageRepository,
                       onPressed: () => editor.activateBrush(item.id),
@@ -96,7 +106,9 @@ class _BrushPickerState extends State<BrushPicker> {
                   SquiggleMenuItem(
                     label: 'Create brush',
                     icon: Icons.add,
-                    onPressed: _create,
+                    onPressed: editor.document.session.canCreateBrush
+                        ? _create
+                        : null,
                   ),
                 ],
                 builder: (context, controller, _) => TextButton(

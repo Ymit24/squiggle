@@ -12,7 +12,23 @@ import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
 
-const _toolShortcuts = {
+const _brushKeys = [
+  LogicalKeyboardKey.digit1,
+  LogicalKeyboardKey.digit2,
+  LogicalKeyboardKey.digit3,
+  LogicalKeyboardKey.digit4,
+  LogicalKeyboardKey.digit5,
+  LogicalKeyboardKey.digit6,
+  LogicalKeyboardKey.digit7,
+  LogicalKeyboardKey.digit8,
+  LogicalKeyboardKey.digit9,
+];
+
+final _toolShortcuts = <ShortcutActivator, Intent>{
+  for (final (index, key) in _brushKeys.indexed)
+    SingleActivator(key, meta: true): ActivateBrushIntent(index),
+  for (final (index, key) in _brushKeys.indexed)
+    SingleActivator(key, control: true): ActivateBrushIntent(index),
   SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true):
       ReorderSelectedNodesIntent(LayerOrder.backward),
   SingleActivator(LogicalKeyboardKey.bracketLeft, control: true):
@@ -112,6 +128,20 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
         shortcuts: textEditOpen ? const {} : _toolShortcuts,
         child: Actions(
           actions: {
+            ActivateBrushIntent: CallbackAction<ActivateBrushIntent>(
+              onInvoke: (intent) {
+                final editor = context.read<EditorContext>();
+                if (!textEditOpen &&
+                    editor.selection.selectedNodeIds.isEmpty &&
+                    editor.drawingInspectorKind != null &&
+                    intent.index < editor.document.session.brushes.length) {
+                  editor.activateBrush(
+                    editor.document.session.brushes[intent.index].id,
+                  );
+                }
+                return null;
+              },
+            ),
             ReorderSelectedNodesIntent:
                 CallbackAction<ReorderSelectedNodesIntent>(
                   onInvoke: (intent) {

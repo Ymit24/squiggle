@@ -146,6 +146,9 @@ class EditorContext extends ChangeNotifier {
   }
 
   BrushProfile createBrush(String name) {
+    if (!document.session.canCreateBrush) {
+      throw StateError('A document can have at most nine brushes.');
+    }
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw ArgumentError.value(name, 'name');
     String id;

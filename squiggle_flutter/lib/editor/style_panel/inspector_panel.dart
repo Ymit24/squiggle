@@ -35,6 +35,10 @@ class InspectorPanel extends StatelessWidget {
             ? editorContext.drawingInspectorKind
             : null;
 
+        if (selectedNodes.isEmpty && drawingKind == null) {
+          return const SizedBox.shrink();
+        }
+
         return SizedBox(
           width: spacing.menuWidth,
           child: DecoratedBox(
@@ -48,10 +52,11 @@ class InspectorPanel extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   spacing: spacing.panelSectionSpacing,
                   children: [
-                    BrushPicker(
-                      editorContext: editorContext,
-                      imageRepository: context.read<ImageRepository>(),
-                    ),
+                    if (drawingKind != null)
+                      BrushPicker(
+                        editorContext: editorContext,
+                        imageRepository: context.read<ImageRepository>(),
+                      ),
                     if (selectedFeatures.isNotEmpty)
                       InspectorFields(
                         editorContext: editorContext,

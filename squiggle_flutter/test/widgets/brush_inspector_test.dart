@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +15,8 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 
 void main() {
   setUpAll(() async {
@@ -54,6 +57,96 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'brush shortcuts follow menu order and only switch before drawing',
+    (tester) async {
+      final editor = EditorContext(document: Document());
+      addTearDown(editor.dispose);
+      editor.setTool(CreateFeatureTool.rect());
+      final actual = editor.createBrush('Actual');
+      final construction = editor.createBrush('Construction');
+      await mount(tester, editor, GlobalKey());
+      Future<void> shortcut(LogicalKeyboardKey key, {bool meta = true}) async {
+        final modifier = meta
+            ? LogicalKeyboardKey.metaLeft
+            : LogicalKeyboardKey.controlLeft;
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyEvent(key);
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pumpAndSettle();
+      }
+
+      await shortcut(LogicalKeyboardKey.digit1);
+      expect(editor.activeBrush.isScratch, isTrue);
+      await shortcut(LogicalKeyboardKey.digit2, meta: false);
+      expect(editor.activeBrush.id, actual.id);
+      await shortcut(LogicalKeyboardKey.digit9);
+      expect(editor.activeBrush.id, actual.id);
+      expect(editor.tool.activeTool, isA<CreateFeatureTool>());
+      final feature = editor.document.addNode(
+        Feature(
+          origin: const Offset(400, 200),
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        ),
+      );
+      editor.selection.setSelection([feature.id]);
+      await tester.pumpAndSettle();
+      await shortcut(LogicalKeyboardKey.digit3);
+      expect(editor.activeBrush.id, actual.id);
+      editor.selection.clearSelection();
+      editor.setTool(SelectTool());
+      await tester.pumpAndSettle();
+      await shortcut(LogicalKeyboardKey.digit3);
+      expect(editor.activeBrush.id, actual.id);
+      editor.setTool(CreateFeatureTool.rect());
+      editor.deleteBrush(actual.id);
+      await tester.pumpAndSettle();
+      await shortcut(LogicalKeyboardKey.digit2);
+      expect(editor.activeBrush.id, construction.id);
+      expect(editor.history.canUndo, isFalse);
+    },
+  );
+
+  testWidgets('nine brushes disable Create until a brush is deleted', (
+    tester,
+  ) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    for (var index = 1; index < 9; index++) {
+      editor.createBrush('Brush $index');
+    }
+    final last = editor.activeBrush;
+    expect(editor.document.session.brushes, hasLength(9));
+    expect(() => editor.createBrush('Overflow'), throwsStateError);
+    await mount(tester, editor, GlobalKey());
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BrushMenuEntry), findsNWidgets(9));
+    expect(
+      tester
+          .widget<BrushMenuEntry>(find.byType(BrushMenuEntry).first)
+          .shortcutNumber,
+      1,
+    );
+    expect(
+      tester
+          .widget<BrushMenuEntry>(find.byType(BrushMenuEntry).last)
+          .shortcutNumber,
+      9,
+    );
+    final create = find.widgetWithText(SquiggleMenuItem, 'Create brush');
+    expect(tester.widget<SquiggleMenuItem>(create).onPressed, isNull);
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    editor.deleteBrush(last.id);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<SquiggleMenuItem>(create).onPressed, isNotNull);
+  });
 
   testWidgets(
     'creating from picker copies active values and switching restores them',
@@ -113,6 +206,7 @@ void main() {
               as Feature;
       editor.selection.setSelection([feature.id]);
       await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('brush-picker-trigger')), findsNothing);
       tester
           .widget<StrokeWidthSelector>(find.byType(StrokeWidthSelector))
           .onPresetSelected(StrokeWidthPreset.thick);
@@ -126,6 +220,18 @@ void main() {
         (feature.kind as FeatureKindRectangle).strokeWidth,
         defaultStrokeWidth,
       );
+      editor.setTool(SelectTool());
+      editor.selection.clearSelection();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('brush-picker-trigger')), findsNothing);
+      expect(find.byType(StrokeWidthSelector), findsNothing);
+      editor.setTool(CreateFeatureTool.rect());
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('brush-picker-trigger')),
+        findsOneWidget,
+      );
+      expect(find.byType(StrokeWidthSelector), findsOneWidget);
     },
   );
 
