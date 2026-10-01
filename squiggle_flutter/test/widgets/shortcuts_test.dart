@@ -5,13 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/state.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
   setUpAll(() {
@@ -48,7 +50,6 @@ void main() {
                 ],
                 child: MultiBlocProvider(
                   providers: [
-                    BlocProvider(create: (_) => ToolbarBloc(context: context)),
                     BlocProvider(create: (_) => EditorBloc(context: context)),
                   ],
                   child: ToolShortcuts(
@@ -147,7 +148,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -158,44 +158,56 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final toolbarBloc = tester
-        .element(find.byType(ToolShortcuts))
-        .read<ToolbarBloc>();
-
     Future<void> pressKey(LogicalKeyboardKey key) async {
       await tester.sendKeyEvent(key, platform: 'macos');
       await tester.pump();
     }
 
     await pressKey(LogicalKeyboardKey.keyR);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createRect);
+    expect(context.tool.activeTool, isA<CreateFeatureTool>());
+    expect(
+      (context.tool.activeTool as CreateFeatureTool).kind,
+      isA<FeatureKindRectangle>(),
+    );
 
     await pressKey(LogicalKeyboardKey.keyC);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createCircle);
+    expect(context.tool.activeTool, isA<CreateFeatureTool>());
+    expect(
+      (context.tool.activeTool as CreateFeatureTool).kind,
+      isA<FeatureKindCircle>(),
+    );
 
     await pressKey(LogicalKeyboardKey.keyL);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createLine);
+    expect(context.tool.activeTool, isA<CreateLineTool>());
 
     await pressKey(LogicalKeyboardKey.keyT);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createText);
+    expect(context.tool.activeTool, isA<CreateTextTool>());
 
     await pressKey(LogicalKeyboardKey.keyV);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
+    expect(context.tool.activeTool, isA<SelectTool>());
 
     await pressKey(LogicalKeyboardKey.digit1);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
+    expect(context.tool.activeTool, isA<SelectTool>());
 
     await pressKey(LogicalKeyboardKey.digit2);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createRect);
+    expect(context.tool.activeTool, isA<CreateFeatureTool>());
+    expect(
+      (context.tool.activeTool as CreateFeatureTool).kind,
+      isA<FeatureKindRectangle>(),
+    );
 
     await pressKey(LogicalKeyboardKey.digit3);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createCircle);
+    expect(context.tool.activeTool, isA<CreateFeatureTool>());
+    expect(
+      (context.tool.activeTool as CreateFeatureTool).kind,
+      isA<FeatureKindCircle>(),
+    );
 
     await pressKey(LogicalKeyboardKey.digit4);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createLine);
+    expect(context.tool.activeTool, isA<CreateLineTool>());
 
     await pressKey(LogicalKeyboardKey.digit5);
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.createText);
+    expect(context.tool.activeTool, isA<CreateTextTool>());
   });
 
   testWidgets('ToolShortcuts deletes selected features on backspace', (
@@ -225,7 +237,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -270,7 +281,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -327,7 +337,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -374,7 +383,6 @@ void main() {
               ],
               child: MultiBlocProvider(
                 providers: [
-                  BlocProvider(create: (_) => ToolbarBloc(context: context)),
                   BlocProvider(create: (_) => EditorBloc(context: context)),
                 ],
                 child: ToolShortcuts(
@@ -399,12 +407,9 @@ void main() {
     await pumpShortcuts(textEditOpen: false);
     expect(textFocusNode.hasFocus, isFalse);
 
-    final toolbarBloc = tester
-        .element(find.byType(ToolShortcuts))
-        .read<ToolbarBloc>();
     await tester.sendKeyEvent(LogicalKeyboardKey.keyV, platform: 'macos');
     await tester.pump();
 
-    expect(toolbarBloc.state.activeTool, ActiveToolKind.select);
+    expect(context.tool.activeTool, isA<SelectTool>());
   });
 }

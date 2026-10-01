@@ -94,7 +94,7 @@ class PlacingState extends InteractionState<CreateLineTool> {
         event.logicalKey != LogicalKeyboardKey.escape) {
       return false;
     }
-    parent.finishPlacing(context, points);
+    parent.finish(context, points);
     return true;
   }
 }

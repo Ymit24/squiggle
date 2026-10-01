@@ -88,6 +88,7 @@ void main() {
         pointerUp(const Offset(0, 0));
 
         expect(context.document.nodes, isEmpty);
+        expect(context.tool.activeTool, isA<CreateLineTool>());
       },
     );
 
@@ -101,7 +102,9 @@ void main() {
 
       expect(context.document.nodes, isEmpty);
 
+      expect(context.tool.activeTool, isA<CreateLineTool>());
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
+      expect(context.tool.activeTool, isA<SelectTool>());
 
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
@@ -142,6 +145,7 @@ void main() {
       pointerUp(const Offset(100, 100));
 
       expect(finishWithKey(LogicalKeyboardKey.escape), isTrue);
+      expect(context.tool.activeTool, isA<SelectTool>());
 
       expect(context.document.nodes, hasLength(1));
     });
@@ -154,6 +158,9 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
       expect(context.document.nodes, isEmpty);
+      expect(context.tool.activeTool, isA<SelectTool>());
+
+      activateLineTool();
 
       pointerDown(const Offset(0, 0));
       pointerUp(const Offset(0, 0));
@@ -168,6 +175,7 @@ void main() {
       pointerDown(const Offset(0, 0));
       pointerMove(const Offset(50, 50));
       pointerUp(const Offset(50, 50));
+      expect(context.tool.activeTool, isA<SelectTool>());
 
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
@@ -332,6 +340,7 @@ void main() {
         activateLineTool();
         pointerDown(Offset.zero);
         expect(finishWithKey(key), isTrue);
+        expect(context.tool.activeTool, isA<SelectTool>());
         pointerUp(const Offset(100, 0));
         expect(context.document.nodes, isEmpty);
         expect(finishWithKey(key), isFalse);

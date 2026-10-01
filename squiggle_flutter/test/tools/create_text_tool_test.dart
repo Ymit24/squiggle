@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
@@ -52,6 +53,7 @@ void main() {
         );
 
         expect(context.document.nodes, isEmpty);
+        expect(context.tool.activeTool, isA<SelectTool>());
 
         final openState =
             await textEditBloc.stream.firstWhere(

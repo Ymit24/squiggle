@@ -55,7 +55,7 @@ class PendingPointerState extends InteractionState<CreateLineTool> {
         event.logicalKey != LogicalKeyboardKey.escape) {
       return false;
     }
-    parent.cancelInteraction(context);
+    parent.finish(context, const []);
     return true;
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -133,11 +134,12 @@ class CreateLineTool extends Tool {
     required bool isShiftPressed,
   }) => isShiftPressed ? snapPointTo45DegreeAngle(origin, point) : point;
 
-  void finishPlacing(EditorContext context, List<Offset> points) {
+  void finish(EditorContext context, List<Offset> points) {
     if (points.length >= 2) {
       commit(context, points);
     }
     _reset();
+    context.setTool(SelectTool());
   }
 
   void commit(EditorContext context, List<Offset> worldPoints) {

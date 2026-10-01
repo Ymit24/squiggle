@@ -39,7 +39,6 @@ class DraggingState extends InteractionState<CreateLineTool> {
       worldPosition,
       isShiftPressed: isShiftPressed,
     );
-    parent.commit(context, [start, end]);
-    parent.cancelInteraction(context);
+    parent.finish(context, [start, end]);
   }
 }
