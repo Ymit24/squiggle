@@ -36,6 +36,7 @@ const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.keyD, control: true):
       DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyQ): ToggleToolLockIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
@@ -114,6 +115,14 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
         shortcuts: textEditOpen ? const {} : _toolShortcuts,
         child: Actions(
           actions: {
+            ToggleToolLockIntent: CallbackAction<ToggleToolLockIntent>(
+              onInvoke: (_) {
+                if (!textEditOpen) {
+                  context.read<EditorContext>().tool.toggleLock();
+                }
+                return null;
+              },
+            ),
             ReorderSelectedNodesIntent:
                 CallbackAction<ReorderSelectedNodesIntent>(
                   onInvoke: (intent) {

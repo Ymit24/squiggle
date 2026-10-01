@@ -41,18 +41,16 @@ class EditorToolbar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Tooltip(
-                        message: 'Keep drawing tool active',
-                        child: Semantics(
-                          label: 'Keep drawing tool active',
-                          toggled: editor.tool.isLocked,
-                          child: Button(
-                            icon: editor.tool.isLocked
-                                ? LucideIcons.lock
-                                : LucideIcons.lockOpen,
-                            isActive: editor.tool.isLocked,
-                            onPressed: editor.tool.toggleLock,
-                          ),
+                      Semantics(
+                        label: 'Keep drawing tool active',
+                        toggled: editor.tool.isLocked,
+                        child: Button(
+                          icon: editor.tool.isLocked
+                              ? LucideIcons.lock
+                              : LucideIcons.lockOpen,
+                          hotkey: 'Q',
+                          isActive: editor.tool.isLocked,
+                          onPressed: editor.tool.toggleLock,
                         ),
                       ),
                       const Gap(),

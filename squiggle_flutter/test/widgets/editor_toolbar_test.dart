@@ -37,6 +37,8 @@ void main() {
       tester.widget<Button>(lockButton(LucideIcons.lockOpen)).isActive,
       isFalse,
     );
+    expect(tester.widget<Button>(lockButton(LucideIcons.lockOpen)).hotkey, 'Q');
+    expect(find.byType(Tooltip), findsNothing);
     await tester.tap(lockButton(LucideIcons.lockOpen));
     await tester.pump();
     expect(editor.tool.isLocked, isTrue);
