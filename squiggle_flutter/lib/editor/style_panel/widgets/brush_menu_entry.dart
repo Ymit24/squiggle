@@ -14,6 +14,7 @@ class BrushMenuEntry extends StatelessWidget {
     required this.imageRepository,
     required this.onPressed,
     this.shortcutNumber,
+    this.mouseCursor,
   });
 
   final BrushProfile brush;
@@ -21,6 +22,7 @@ class BrushMenuEntry extends StatelessWidget {
   final ImageRepository imageRepository;
   final VoidCallback onPressed;
   final int? shortcutNumber;
+  final MouseCursor? mouseCursor;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,9 @@ class BrushMenuEntry extends StatelessWidget {
           onPressed: onPressed,
           requestFocusOnHover: false,
           style: theme.menuItemStyle().copyWith(
+            mouseCursor: mouseCursor == null
+                ? null
+                : WidgetStatePropertyAll(mouseCursor!),
             backgroundColor: selected
                 ? WidgetStatePropertyAll(theme.colors.surface0)
                 : null,

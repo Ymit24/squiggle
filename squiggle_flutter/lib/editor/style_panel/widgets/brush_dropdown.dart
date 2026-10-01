@@ -68,15 +68,12 @@ class BrushDropdown extends StatelessWidget {
             children: [
               SizedBox(
                 height: rowHeight,
-                child: Padding(
-                  padding: EdgeInsets.only(left: spacing.buttonIconSize),
-                  child: BrushMenuEntry(
-                    brush: scratch,
-                    selected: scratch.id == brushes.active.id,
-                    shortcutNumber: 1,
-                    imageRepository: imageRepository,
-                    onPressed: () => brushes.activate(scratch.id),
-                  ),
+                child: BrushMenuEntry(
+                  brush: scratch,
+                  selected: scratch.id == brushes.active.id,
+                  shortcutNumber: 1,
+                  imageRepository: imageRepository,
+                  onPressed: () => brushes.activate(scratch.id),
                 ),
               ),
               if (named.isNotEmpty)
@@ -96,7 +93,10 @@ class BrushDropdown extends StatelessWidget {
                         borderRadius: BorderRadius.circular(theme.radii.button),
                         side: BorderSide(color: theme.colors.surface1),
                       ),
-                      child: child,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.grabbing,
+                        child: IgnorePointer(child: child),
+                      ),
                     ),
                     itemBuilder: (context, index) {
                       final brush = named[index];

@@ -1,7 +1,6 @@
-import 'dart:ui' show PointerDeviceKind;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
@@ -26,8 +25,9 @@ void main() {
   Future<void> mount(
     WidgetTester tester,
     EditorContext editor,
-    GlobalKey capture,
-  ) async {
+    GlobalKey capture, {
+    TargetPlatform platform = TargetPlatform.macOS,
+  }) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -36,7 +36,7 @@ void main() {
       RepaintBoundary(
         key: capture,
         child: MaterialApp(
-          theme: SquiggleThemeData.dark(),
+          theme: SquiggleThemeData.dark().copyWith(platform: platform),
           debugShowCheckedModeBanner: false,
           home: MultiProvider(
             providers: [
@@ -53,7 +53,95 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('repeated mouse drags while hovering handles keep rows mounted', (
+  testWidgets('a small mouse movement still clicks the entry', (tester) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    final actual = editor.brushes.create('Actual');
+    final notes = editor.brushes.create('Notes');
+    await mount(tester, editor, GlobalKey());
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    final click = await tester.startGesture(
+      tester.getCenter(find.byKey(ValueKey(actual.id))),
+      kind: PointerDeviceKind.mouse,
+    );
+    await click.moveBy(const Offset(0.5, 0.5));
+    await tester.pump();
+    expect(editor.brushes.active.id, notes.id);
+    await click.up();
+    await tester.pumpAndSettle();
+    expect(editor.brushes.active.id, actual.id);
+    expect(editor.brushes.profiles.map((brush) => brush.id), [
+      'scratch',
+      actual.id,
+      notes.id,
+    ]);
+    expect(find.byType(BrushDropdown), findsNothing);
+  });
+
+  testWidgets('touch long press reorders without selecting the entry', (
+    tester,
+  ) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    final actual = editor.brushes.create('Actual');
+    final notes = editor.brushes.create('Notes');
+    editor.brushes.activate(actual.id);
+    await mount(tester, editor, GlobalKey(), platform: TargetPlatform.android);
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    final target = tester.getCenter(find.byKey(ValueKey(actual.id)));
+    final drag = await tester.startGesture(
+      tester.getCenter(find.text('Notes')),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    await drag.moveTo(target);
+    await tester.pump(const Duration(milliseconds: 400));
+    await drag.up();
+    await tester.pumpAndSettle();
+    expect(editor.brushes.profiles.map((brush) => brush.id), [
+      'scratch',
+      notes.id,
+      actual.id,
+    ]);
+    expect(editor.brushes.active.id, actual.id);
+    expect(find.byType(BrushDropdown), findsOneWidget);
+    await tester.tap(find.text('Notes'));
+    await tester.pumpAndSettle();
+    expect(editor.brushes.active.id, notes.id);
+    expect(find.byType(BrushDropdown), findsNothing);
+  });
+
+  testWidgets('touch swipe scrolls entries without reordering them', (
+    tester,
+  ) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    for (var index = 1; index < 9; index++) {
+      editor.brushes.create('Brush $index');
+    }
+    final original = editor.brushes.profiles.map((brush) => brush.id).toList();
+    await mount(tester, editor, GlobalKey(), platform: TargetPlatform.android);
+    tester.view.physicalSize = const Size(1280, 400);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byKey(const ValueKey('brush-reorder-list')),
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Brush 8').hitTestable(), findsOneWidget);
+    expect(editor.brushes.profiles.map((brush) => brush.id), original);
+    expect(editor.brushes.active.id, original.last);
+    expect(find.byType(BrushDropdown), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('repeated mouse drags while hovering entries keep rows mounted', (
     tester,
   ) async {
     final editor = EditorContext(document: Document());
@@ -74,7 +162,7 @@ void main() {
       final source = tester.getCenter(
         find.byKey(ValueKey('brush-drag-${named.last.id}')),
       );
-      // Keep hovering the handle after dropping, rather than the row label.
+      // Keep hovering the entry after dropping.
       final target = Offset(source.dx, targetRow.dy);
       await mouse.moveTo(source);
       await tester.pump(const Duration(milliseconds: 800));
@@ -98,7 +186,7 @@ void main() {
   });
 
   testWidgets(
-    'handle drag commits on drop without selecting or closing the menu',
+    'entry drag commits on drop without selecting or closing the menu',
     (tester) async {
       final editor = EditorContext(document: Document());
       addTearDown(editor.dispose);
@@ -201,7 +289,12 @@ void main() {
     expect(find.text('Scratch').hitTestable(), findsOneWidget);
     expect(find.text('Create brush').hitTestable(), findsOneWidget);
     final list = find.byKey(const ValueKey('brush-reorder-list'));
-    await tester.drag(list, const Offset(0, -300));
+    await tester.sendEventToBinding(
+      PointerScrollEvent(
+        position: tester.getCenter(list),
+        scrollDelta: const Offset(0, 300),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Brush 8').hitTestable(), findsOneWidget);
     expect(find.text('Scratch').hitTestable(), findsOneWidget);
