@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/button.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
@@ -251,14 +252,12 @@ void main() {
       expect(editor.tool.isLocked, locked);
       expect(editor.tool.activeTool, same(tool));
       expect(find.byType(Tooltip), findsNothing);
-      final semantics = tester.widget<Semantics>(
+      final button = tester.widget<Button>(
         find.byWidgetPredicate(
-          (widget) =>
-              widget is Semantics &&
-              widget.properties.label == 'Keep drawing tool active',
+          (widget) => widget is Button && widget.hotkey == 'Q',
         ),
       );
-      expect(semantics.properties.toggled, locked);
+      expect(button.isActive, locked);
     }
 
     await pumpShortcuts(textEditOpen: true);
