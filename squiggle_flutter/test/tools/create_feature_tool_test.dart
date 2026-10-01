@@ -63,9 +63,13 @@ void main() {
       }
 
       draw(Offset.zero);
+      expect(context.selection.isEmpty, isTrue);
+      final previousId = context.document.nodes.first.id;
+      context.selection.setSelection([previousId]);
       draw(const Offset(200, 200));
       expect(context.tool.activeTool, same(rectangleTool));
       expect(context.document.nodes, hasLength(2));
+      expect(context.selection.selectedNodeIds, [previousId]);
       expect(
         context.document.nodes.last.localBounds(),
         const Rect.fromLTWH(200, 200, 100, 50),
@@ -88,6 +92,9 @@ void main() {
       draw(const Offset(600, 600));
       expect(context.document.nodes, hasLength(4));
       expect(context.tool.activeTool, isA<SelectTool>());
+      expect(context.selection.selectedNodeIds, [
+        context.document.nodes.last.id,
+      ]);
     });
 
     test('click without drag does not create feature', () {
@@ -101,6 +108,13 @@ void main() {
     });
 
     test('drag creates rectangle feature', () {
+      final previous = Feature(
+        origin: const Offset(200, 200),
+        size: const Size(50, 50),
+        kind: FeatureKindRectangle(),
+      );
+      context.document.addNode(previous);
+      context.selection.setSelection([previous.id]);
       context.setTool(CreateFeatureTool.rect());
 
       pointerDown(const Offset(0, 0));
@@ -108,9 +122,10 @@ void main() {
       pointerMove(const Offset(100, 100));
       pointerUp(const Offset(100, 100));
 
-      final features = context.document.nodes.cast<Feature>();
+      final features = context.document.nodes.skip(1).cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindRectangle>());
+      expect(context.selection.selectedNodeIds, [features.first.id]);
       expect(context.tool.activeTool, isA<SelectTool>());
       expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
@@ -126,6 +141,7 @@ void main() {
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindCircle>());
+      expect(context.selection.selectedNodeIds, [features.first.id]);
       expect(context.tool.activeTool, isA<SelectTool>());
       expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
