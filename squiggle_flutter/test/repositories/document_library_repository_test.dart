@@ -37,6 +37,8 @@ void main() {
 
     tearDown(() async {
       library.dispose();
+      // Let queued autosaves finish before removing their storage directory.
+      await library.documentStorage.loadDocument(library.currentDocument!.id);
       context.dispose();
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
