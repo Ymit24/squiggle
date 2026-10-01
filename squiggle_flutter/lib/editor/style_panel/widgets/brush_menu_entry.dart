@@ -53,10 +53,7 @@ class BrushMenuEntry extends StatelessWidget {
                 if (selected) const Icon(Icons.check, size: 14),
                 if (shortcutNumber != null) ...[
                   const SizedBox(width: 6),
-                  SquiggleShortcutHint(
-                    label: '⌘$shortcutNumber',
-                    compact: true,
-                  ),
+                  SquiggleShortcutHint(label: '⌘$shortcutNumber'),
                 ],
               ],
             ),

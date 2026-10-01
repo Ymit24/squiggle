@@ -17,9 +17,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: SquiggleThemeData.dark().copyWith(platform: platform),
-          home: const Scaffold(
-            body: SquiggleShortcutHint(label: '⇧⌘1', compact: true),
-          ),
+          home: const Scaffold(body: SquiggleShortcutHint(label: '⇧⌘1')),
         ),
       );
       await tester.pumpAndSettle();

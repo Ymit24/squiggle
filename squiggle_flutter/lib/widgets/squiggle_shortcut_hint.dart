@@ -7,12 +7,10 @@ class SquiggleShortcutHint extends StatelessWidget {
     super.key,
     required this.label,
     this.enabled = true,
-    this.compact = false,
   });
 
   final String label;
   final bool enabled;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +29,7 @@ class SquiggleShortcutHint extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: Text(
         formatted,
-        style: TextStyle(
-          fontSize: compact ? 11 : null,
+        style: context.squiggleTheme.typography.menuItemLabel.copyWith(
           color: enabled ? context.squiggleTheme.colors.subtext0 : null,
         ),
       ),
