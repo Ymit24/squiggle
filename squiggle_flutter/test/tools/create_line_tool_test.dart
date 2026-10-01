@@ -102,6 +102,9 @@ void main() {
       pointerUp(const Offset(100, 100));
       expect(context.tool.activeTool, same(lineTool));
       expect(context.document.nodes, hasLength(1));
+      expect(context.selection.isEmpty, isTrue);
+      final previousId = context.document.nodes.first.id;
+      context.selection.setSelection([previousId]);
 
       for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.escape]) {
         pointerDown(const Offset(200, 200));
@@ -116,6 +119,7 @@ void main() {
         ]);
       }
       expect(context.document.nodes, hasLength(3));
+      expect(context.selection.selectedNodeIds, [previousId]);
     });
 
     test('two clicks then Enter commits polyline with 2 points', () {
@@ -135,6 +139,7 @@ void main() {
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindPolyline>());
+      expect(context.selection.selectedNodeIds, [features.first.id]);
       expect(worldPointsFor(features.first), [
         const Offset(0, 0),
         const Offset(100, 100),
@@ -184,6 +189,7 @@ void main() {
 
       expect(finishWithKey(LogicalKeyboardKey.enter), isTrue);
       expect(context.document.nodes, isEmpty);
+      expect(context.selection.isEmpty, isTrue);
       expect(context.tool.activeTool, isA<SelectTool>());
 
       activateLineTool();
@@ -206,6 +212,7 @@ void main() {
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindPolyline>());
+      expect(context.selection.selectedNodeIds, [features.first.id]);
       expect(worldPointsFor(features.first), [
         const Offset(0, 0),
         const Offset(50, 50),

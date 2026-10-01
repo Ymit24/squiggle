@@ -147,6 +147,7 @@ class CreateLineTool extends Tool {
     context.history.run('Create feature', (transaction) {
       transaction.add(feature);
     });
+    context.selectCreatedFeature(feature);
   }
 
   void updatePreview(EditorContext context, List<Offset> worldPoints) {
