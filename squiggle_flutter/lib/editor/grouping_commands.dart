@@ -47,7 +47,7 @@ void groupSelectedNodes(EditorContext context) {
       .length;
 
   context.history.run('Group Selected Nodes', (transaction) {
-    transaction.removeAll(selectedIds);
+    transaction.removeAll(selectedIds, preserveBindings: true);
     final bounds = Node.localBoundsOfNodes(selectedNodes);
 
     for (final node in selectedNodes) {
@@ -70,7 +70,7 @@ void ungroupSelectedNodes(EditorContext context) {
   final originalOrder = container.children.toList();
   final newSelection = <NodeId>[];
   context.history.run('Ungroup Selected Nodes', (transaction) {
-    transaction.removeAll(selectedIds);
+    transaction.removeAll(selectedIds, preserveBindings: true);
     final replacementIds = <NodeId, List<NodeId>>{};
     for (final group in selectedNodes) {
       final children = group.children.toList();

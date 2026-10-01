@@ -104,10 +104,20 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   void detachBindings(Feature feature) {
-    if (startBinding == null && endBinding == null) return;
+    onBindingTargetsDeleted(
+      feature,
+      bindings.map((binding) => binding.targetId).toSet(),
+    );
+  }
+
+  @override
+  void onBindingTargetsDeleted(Feature feature, Set<NodeId> targetIds) {
+    final detachStart = targetIds.contains(startBinding?.targetId);
+    final detachEnd = targetIds.contains(endBinding?.targetId);
+    if (!detachStart && !detachEnd) return;
     final points = resolvedPoints(feature);
-    startBinding = null;
-    endBinding = null;
+    if (detachStart) startBinding = null;
+    if (detachEnd) endBinding = null;
     if (points.isEmpty) return;
     setGeometry(
       feature,

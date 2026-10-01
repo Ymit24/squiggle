@@ -50,6 +50,9 @@ class Document extends NodeContainer {
   /// ID lookup index, carrying no parent or paint-order information.
   final Map<NodeId, Node> _nodesById = {};
 
+  /// All indexed nodes, including descendants; independent of paint order.
+  Iterable<Node> get allNodes => _nodesById.values;
+
   List<Node> get nodes => _rootNodes;
 
   NodeId _nextId;
