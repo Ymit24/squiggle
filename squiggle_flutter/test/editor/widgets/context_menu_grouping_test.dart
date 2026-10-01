@@ -138,8 +138,15 @@ void main() {
     expect(document.toDataModel().nodes, ungrouped);
   });
 
+  testWidgets('empty selection omits grouping actions', (tester) async {
+    final context = SelectToolTestHarness.defaultContext();
+    addTearDown(context.dispose);
+    await openMenu(tester, context);
+    expect(find.text('Group'), findsNothing);
+    expect(find.text('Ungroup'), findsNothing);
+  });
+
   for (final selection in [
-    'empty',
     'single',
     'missing nodes',
     'different parents',
