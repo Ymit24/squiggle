@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/widgets/squiggle_shortcut_hint.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/brush_preview.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
@@ -52,12 +53,9 @@ class BrushMenuEntry extends StatelessWidget {
                 if (selected) const Icon(Icons.check, size: 14),
                 if (shortcutNumber != null) ...[
                   const SizedBox(width: 6),
-                  Text(
-                    '${Theme.of(context).platform == TargetPlatform.macOS || Theme.of(context).platform == TargetPlatform.iOS ? '⌘' : 'Ctrl+'}$shortcutNumber',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colors.subtext0,
-                    ),
+                  SquiggleShortcutHint(
+                    label: '⌘$shortcutNumber',
+                    compact: true,
                   ),
                 ],
               ],
