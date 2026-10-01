@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -18,6 +19,7 @@ class CreateFeatureTool extends Tool {
       CreateFeatureTool(kind: FeatureKindCircle());
 
   final FeatureKind kind;
+
   _CreateState _state;
 
   @override
@@ -99,6 +101,7 @@ class CreateFeatureTool extends Tool {
         transaction.add(feature);
       });
       _state = const _Idle();
+      context.setTool(SelectTool());
     }
     return true;
   }

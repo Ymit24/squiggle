@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -158,6 +159,7 @@ class CreateLineTool extends Tool {
         );
         _commit(context, [start, snappedEnd]);
         _reset();
+        context.setTool(SelectTool());
       case _PendingPointer(:final start, :final placedPoints, :final didDrag):
         if (didDrag) {
           final origin = placedPoints.isNotEmpty ? placedPoints.last : start;
@@ -237,6 +239,7 @@ class CreateLineTool extends Tool {
       _commit(context, points);
     }
     _reset();
+    context.setTool(SelectTool());
   }
 
   void _commit(EditorContext context, List<Offset> worldPoints) {
