@@ -10,7 +10,7 @@ import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
 
-class DragPolylineHandleState extends InteractionState {
+class DragPolylineHandleState extends SelectInteractionState {
   DragPolylineHandleState({required super.parent, required this._handle});
 
   final PolylineHandle _handle;
@@ -31,7 +31,7 @@ class DragPolylineHandleState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
@@ -39,7 +39,7 @@ class DragPolylineHandleState extends InteractionState {
     final kind = _handle.feature.kind as FeatureKindPolyline;
     final target = _targetPosition(
       kind,
-      cursorWorldPosition,
+      worldPosition,
       isShiftPressed: isShiftPressed,
     );
     kind.setPoint(_handle.feature, _handle.pointIndex, target);
@@ -47,14 +47,14 @@ class DragPolylineHandleState extends InteractionState {
 
   Offset _targetPosition(
     FeatureKindPolyline kind,
-    Offset cursorWorldPosition, {
+    Offset worldPosition, {
     required bool isShiftPressed,
   }) {
-    if (!isShiftPressed) return cursorWorldPosition;
+    if (!isShiftPressed) return worldPosition;
 
     final points = worldPoints(_handle.feature.origin, kind.localPoints);
-    final origin = _snapOrigin(points, cursorWorldPosition);
-    return snapPointTo45DegreeAngle(origin, cursorWorldPosition);
+    final origin = _snapOrigin(points, worldPosition);
+    return snapPointTo45DegreeAngle(origin, worldPosition);
   }
 
   Offset _snapOrigin(List<Offset> points, Offset fallback) {
@@ -66,7 +66,7 @@ class DragPolylineHandleState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,

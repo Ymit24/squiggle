@@ -10,7 +10,7 @@ import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/translate_state.dart';
 
-class DuplicateState extends InteractionState {
+class DuplicateState extends SelectInteractionState {
   DuplicateState({
     required super.parent,
     required this._start,
@@ -27,14 +27,14 @@ class DuplicateState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
     final totalMotion = constrainedMoveDelta(
       _start,
-      cursorWorldPosition,
+      worldPosition,
       constrainToAxis: isShiftPressed,
     );
     final clones = duplicateNodes(
@@ -62,7 +62,7 @@ class DuplicateState extends InteractionState {
     parent.transition(state, context);
     state.onPointerMove(
       context,
-      cursorWorldPosition,
+      worldPosition,
       camera,
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,

@@ -15,7 +15,7 @@ import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_state.dart';
 
-class IdleInteractionState extends InteractionState {
+class IdleInteractionState extends SelectInteractionState {
   IdleInteractionState({required super.parent});
 
   @override
@@ -38,19 +38,19 @@ class IdleInteractionState extends InteractionState {
   @override
   void onPointerDown(
     EditorContext context,
-    HitTarget target,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    final target = getTargetUnderCursor(context, worldPosition);
     switch (target) {
       case ResizeHandleTarget(handle: var handle):
         parent.transition(
           ResizeState(
             parent: parent,
             handle: handle,
-            pointerDownWorld: cursorWorldPosition,
+            pointerDownWorld: worldPosition,
           ),
           context,
         );
@@ -68,7 +68,7 @@ class IdleInteractionState extends InteractionState {
         parent.transition(
           ClickNodeState(
             parent: parent,
-            start: cursorWorldPosition,
+            start: worldPosition,
             chase: chaseNode,
             selectedNodes: selectedNodes.toList(),
             isShiftPressed: isShiftPressed,
@@ -78,7 +78,7 @@ class IdleInteractionState extends InteractionState {
         break;
       case CanvasTarget():
         parent.transition(
-          ClickCanvasState(parent: parent, start: cursorWorldPosition),
+          ClickCanvasState(parent: parent, start: worldPosition),
           context,
         );
         break;
@@ -88,10 +88,10 @@ class IdleInteractionState extends InteractionState {
   @override
   void onDoubleClick(
     EditorContext context,
-    HitTarget target,
     Offset worldPosition,
     Camera camera,
   ) {
+    final target = getTargetUnderCursor(context, worldPosition);
     if (target case NodeTarget(
       node: final Feature feature,
     ) when feature.kind is LabelCapable) {

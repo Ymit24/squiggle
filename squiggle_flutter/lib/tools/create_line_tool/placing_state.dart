@@ -1,9 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/tools/create_line_tool/interaction_state.dart';
+import 'package:squiggle_flutter/tools/interaction_state.dart';
+import 'package:squiggle_flutter/tools/create_line_tool.dart';
 
-class PlacingState extends InteractionState {
+class PlacingState extends InteractionState<CreateLineTool> {
   PlacingState({
     required super.parent,
     required this.points,
