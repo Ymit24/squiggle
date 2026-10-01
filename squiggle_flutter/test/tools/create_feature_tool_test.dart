@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
@@ -54,6 +55,7 @@ void main() {
       pointerUp(const Offset(0, 0));
 
       expect(context.document.nodes, isEmpty);
+      expect(context.tool.activeTool, isA<CreateFeatureTool>());
     });
 
     test('drag creates rectangle feature', () {
@@ -67,6 +69,7 @@ void main() {
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindRectangle>());
+      expect(context.tool.activeTool, isA<SelectTool>());
       expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 
@@ -81,6 +84,7 @@ void main() {
       final features = context.document.nodes.cast<Feature>();
       expect(features, hasLength(1));
       expect(features.first.kind, isA<FeatureKindCircle>());
+      expect(context.tool.activeTool, isA<SelectTool>());
       expect(features.first.localBounds(), const Rect.fromLTWH(0, 0, 100, 100));
     });
 

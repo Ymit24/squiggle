@@ -13,7 +13,7 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     : // Public named parameters keep call sites readable while fields stay private.
       // ignore: prefer_initializing_formals
       _context = context,
-      super(const ToolbarState(activeTool: ActiveToolKind.select)) {
+      super(const ToolbarState()) {
     on<RequestWatchToolbarStateEvent>(_onRequestWatchToolbarState);
     on<ActivateSelectToolEvent>(_onActivateSelectTool);
     on<ActivateCreateRectToolEvent>(_onActivateCreateRectTool);
@@ -43,7 +43,6 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     Emitter<ToolbarState> emit,
   ) {
     _context.setTool(SelectTool());
-    emit(state.copyWith(activeTool: ActiveToolKind.select));
   }
 
   void _onActivateCreateRectTool(
@@ -51,7 +50,6 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     Emitter<ToolbarState> emit,
   ) {
     _context.setTool(CreateFeatureTool.rect());
-    emit(state.copyWith(activeTool: ActiveToolKind.createRect));
   }
 
   void _onActivateCreateCircleTool(
@@ -59,7 +57,6 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     Emitter<ToolbarState> emit,
   ) {
     _context.setTool(CreateFeatureTool.circle());
-    emit(state.copyWith(activeTool: ActiveToolKind.createCircle));
   }
 
   void _onActivateCreateLineTool(
@@ -67,7 +64,6 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     Emitter<ToolbarState> emit,
   ) {
     _context.setTool(CreateLineTool());
-    emit(state.copyWith(activeTool: ActiveToolKind.createLine));
   }
 
   void _onActivateCreateTextTool(
@@ -75,7 +71,6 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     Emitter<ToolbarState> emit,
   ) {
     _context.setTool(CreateTextTool());
-    emit(state.copyWith(activeTool: ActiveToolKind.createText));
   }
 
   void _onUndoDocument(UndoDocumentEvent event, Emitter<ToolbarState> emit) {
