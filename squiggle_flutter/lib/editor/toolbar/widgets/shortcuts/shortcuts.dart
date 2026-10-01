@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
+import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _toolShortcuts = {
   SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true):
@@ -126,17 +128,15 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 ),
             ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
               onInvoke: (_) {
-                context.read<ToolbarBloc>().add(
-                  const ActivateSelectToolEvent(),
-                );
+                context.read<EditorContext>().setTool(SelectTool());
                 return null;
               },
             ),
             ActivateCreateRectToolIntent:
                 CallbackAction<ActivateCreateRectToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateRectToolEvent(),
+                    context.read<EditorContext>().setTool(
+                      CreateFeatureTool.rect(),
                     );
                     return null;
                   },
@@ -144,8 +144,8 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ActivateCreateCircleToolIntent:
                 CallbackAction<ActivateCreateCircleToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateCircleToolEvent(),
+                    context.read<EditorContext>().setTool(
+                      CreateFeatureTool.circle(),
                     );
                     return null;
                   },
@@ -153,18 +153,14 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ActivateCreateLineToolIntent:
                 CallbackAction<ActivateCreateLineToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateLineToolEvent(),
-                    );
+                    context.read<EditorContext>().setTool(CreateLineTool());
                     return null;
                   },
                 ),
             ActivateCreateTextToolIntent:
                 CallbackAction<ActivateCreateTextToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateTextToolEvent(),
-                    );
+                    context.read<EditorContext>().setTool(CreateTextTool());
                     return null;
                   },
                 ),
@@ -214,13 +210,13 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ),
             UndoDocumentIntent: CallbackAction<UndoDocumentIntent>(
               onInvoke: (_) {
-                context.read<ToolbarBloc>().add(const UndoDocumentEvent());
+                context.read<EditorContext>().undo();
                 return null;
               },
             ),
             RedoDocumentIntent: CallbackAction<RedoDocumentIntent>(
               onInvoke: (_) {
-                context.read<ToolbarBloc>().add(const RedoDocumentEvent());
+                context.read<EditorContext>().redo();
                 return null;
               },
             ),

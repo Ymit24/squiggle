@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -51,7 +50,6 @@ void main() {
                 ],
                 child: MultiBlocProvider(
                   providers: [
-                    BlocProvider(create: (_) => ToolbarBloc(context: context)),
                     BlocProvider(create: (_) => EditorBloc(context: context)),
                   ],
                   child: ToolShortcuts(
@@ -150,7 +148,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -240,7 +237,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -285,7 +281,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -342,7 +337,6 @@ void main() {
             ],
             child: MultiBlocProvider(
               providers: [
-                BlocProvider(create: (_) => ToolbarBloc(context: context)),
                 BlocProvider(create: (_) => EditorBloc(context: context)),
               ],
               child: ToolShortcuts(child: const SizedBox.expand()),
@@ -389,7 +383,6 @@ void main() {
               ],
               child: MultiBlocProvider(
                 providers: [
-                  BlocProvider(create: (_) => ToolbarBloc(context: context)),
                   BlocProvider(create: (_) => EditorBloc(context: context)),
                 ],
                 child: ToolShortcuts(
