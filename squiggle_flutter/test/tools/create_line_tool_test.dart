@@ -198,21 +198,77 @@ void main() {
       ]);
     });
 
-    test('click uses press position when movement stays within slop', () {
+    test(
+      'initial click uses press position; placement uses release position',
+      () {
+        activateLineTool();
+        camera.zoom = 2;
+        final movement = camera.screenLengthToWorldLength(kTouchSlop);
+
+        pointerDown(Offset.zero);
+        pointerMove(Offset(movement, 0));
+        pointerUp(Offset(movement, 0));
+        expect(context.document.nodes, isEmpty);
+
+        pointerDown(const Offset(100, 0));
+        pointerMove(Offset(100 + movement, 0));
+        pointerUp(Offset(100 + movement, 0));
+        finishWithKey(LogicalKeyboardKey.enter);
+
+        expect(worldPointsFor(context.document.nodes.single as Feature), [
+          Offset.zero,
+          Offset(100 + movement, 0),
+        ]);
+      },
+    );
+
+    test('placement uses release position without a move event', () {
       activateLineTool();
-      camera.zoom = 2;
-      final movement = camera.screenLengthToWorldLength(kTouchSlop);
-
       pointerDown(Offset.zero);
-      pointerMove(Offset(movement, 0));
-      pointerUp(Offset(movement, 0));
-      expect(context.document.nodes, isEmpty);
-
+      pointerUp(Offset.zero);
       pointerDown(const Offset(100, 0));
-      pointerMove(Offset(100 + movement, 0));
-      pointerUp(Offset(100 + movement, 0));
+      pointerUp(const Offset(103, 0));
+      pointerDown(const Offset(200, 0));
+      pointerUp(const Offset(203, 0));
+      expect(context.document.nodes, isEmpty);
       finishWithKey(LogicalKeyboardKey.enter);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        const Offset(103, 0),
+        const Offset(203, 0),
+      ]);
+    });
 
+    test('placement snaps using release position and release-time Shift', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(103, 95), shift: true);
+      final snapped = snapPointTo45DegreeAngle(
+        Offset.zero,
+        const Offset(103, 95),
+      );
+      pointerDown(const Offset(200, 100), shift: true);
+      pointerMove(const Offset(250, 195), shift: true);
+      pointerUp(const Offset(253, 195));
+      finishWithKey(LogicalKeyboardKey.enter);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        snapped,
+        const Offset(253, 195),
+      ]);
+    });
+
+    test('unmatched releases do not place vertices', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerUp(const Offset(50, 0));
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(100, 0));
+      pointerUp(const Offset(150, 0));
+      finishWithKey(LogicalKeyboardKey.enter);
       expect(worldPointsFor(context.document.nodes.single as Feature), [
         Offset.zero,
         const Offset(100, 0),
@@ -232,7 +288,7 @@ void main() {
       ]);
     });
 
-    test('placement remains a drag after moving back inside slop', () {
+    test('placement uses release after moving away and back', () {
       activateLineTool();
       pointerDown(Offset.zero);
       pointerUp(Offset.zero);
@@ -250,7 +306,7 @@ void main() {
     for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.escape]) {
       for (final drag in [false, true]) {
         test(
-          'finish with ${key.keyLabel} during pending press (drag: $drag)',
+          'finish with ${key.keyLabel} during placement press (drag: $drag)',
           () {
             activateLineTool();
             pointerDown(Offset.zero);
@@ -269,6 +325,17 @@ void main() {
           },
         );
       }
+    }
+
+    for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.escape]) {
+      test('${key.keyLabel} discards the pending initial press', () {
+        activateLineTool();
+        pointerDown(Offset.zero);
+        expect(finishWithKey(key), isTrue);
+        pointerUp(const Offset(100, 0));
+        expect(context.document.nodes, isEmpty);
+        expect(finishWithKey(key), isFalse);
+      });
     }
 
     test('finish keys are unhandled while idle or dragging a new line', () {

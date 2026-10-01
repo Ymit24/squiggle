@@ -5,13 +5,9 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/interaction_state.dart';
 
 class DraggingState extends InteractionState {
-  DraggingState({required super.parent, required this.start}) : _end = start;
+  DraggingState({required super.parent, required this.start});
 
   final Offset start;
-  Offset _end;
-
-  @override
-  List<Offset> get previewPoints => [start, _end];
 
   @override
   void onPointerMove(
@@ -21,11 +17,12 @@ class DraggingState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _end = constrainedPoint(
+    final end = constrainedPoint(
       start,
       worldPosition,
       isShiftPressed: isShiftPressed,
     );
+    parent.updatePreview(context, [start, end]);
   }
 
   @override

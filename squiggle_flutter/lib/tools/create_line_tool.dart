@@ -60,7 +60,6 @@ class CreateLineTool extends Tool {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
-    _updatePreview(context);
     return true;
   }
 
@@ -79,7 +78,6 @@ class CreateLineTool extends Tool {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
-    _updatePreview(context);
     return true;
   }
 
@@ -98,7 +96,6 @@ class CreateLineTool extends Tool {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
-    _updatePreview(context);
     return true;
   }
 
@@ -117,7 +114,6 @@ class CreateLineTool extends Tool {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
-    _updatePreview(context);
     return true;
   }
 
@@ -141,10 +137,7 @@ class CreateLineTool extends Tool {
     });
   }
 
-  void _updatePreview(EditorContext context) {
-    final worldPoints = _activeInteractionState.previewPoints;
-    if (worldPoints == null) return;
-
+  void updatePreview(EditorContext context, List<Offset> worldPoints) {
     final feature = _previewFeature ??= _buildFeature(context, worldPoints);
     _setFeaturePoints(feature, worldPoints);
   }

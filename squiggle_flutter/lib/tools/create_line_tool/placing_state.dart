@@ -1,5 +1,4 @@
-import 'dart:ui';
-
+import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/interaction_state.dart';
@@ -12,16 +11,57 @@ class PlacingState extends InteractionState {
   });
 
   final List<Offset> points;
-  Offset previewTip;
+  final Offset previewTip;
+  bool _isPointerDown = false;
 
   @override
-  List<Offset> get previewPoints => [...points, previewTip];
+  void onEnter(EditorContext context) {
+    parent.updatePreview(context, [...points, previewTip]);
+  }
 
   @override
-  List<Offset> get pointsForNextPress => points;
+  void onPointerDown(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _isPointerDown = true;
+    parent.updatePreview(context, [...points, worldPosition]);
+  }
 
   @override
-  List<Offset> get pointsToFinish => points;
+  void onPointerMove(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    if (!_isPointerDown) return;
+    _updateTip(context, worldPosition, isShiftPressed: isShiftPressed);
+  }
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    if (!_isPointerDown) return;
+    _isPointerDown = false;
+    points.add(
+      constrainedPoint(
+        points.last,
+        worldPosition,
+        isShiftPressed: isShiftPressed,
+      ),
+    );
+    parent.updatePreview(context, [...points, worldPosition]);
+  }
 
   @override
   void onPointerHover(
@@ -31,10 +71,29 @@ class PlacingState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    previewTip = constrainedPoint(
+    _updateTip(context, worldPosition, isShiftPressed: isShiftPressed);
+  }
+
+  void _updateTip(
+    EditorContext context,
+    Offset worldPosition, {
+    required bool isShiftPressed,
+  }) {
+    final tip = constrainedPoint(
       points.last,
       worldPosition,
       isShiftPressed: isShiftPressed,
     );
+    parent.updatePreview(context, [...points, tip]);
+  }
+
+  @override
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    if (event.logicalKey != LogicalKeyboardKey.enter &&
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return false;
+    }
+    parent.finishPlacing(context, points);
+    return true;
   }
 }
