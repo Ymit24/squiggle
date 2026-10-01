@@ -272,6 +272,7 @@ class ContextMenu extends StatelessWidget {
       SquiggleMenuItem(
         label: 'Delete',
         icon: LucideIcons.trash2,
+        danger: true,
         shortcut: '⌫',
         onPressed: () {
           editorContext.history.run("Delete", (transaction) {

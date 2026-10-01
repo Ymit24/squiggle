@@ -103,6 +103,7 @@ class CreateFeatureTool extends Tool implements DrawingTool {
       context.history.run('Create feature', (transaction) {
         transaction.add(feature);
       });
+      context.selectCreatedFeature(feature);
       _state = const _Idle();
       context.resetToSelectTool();
     }

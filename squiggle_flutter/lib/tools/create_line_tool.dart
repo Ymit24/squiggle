@@ -109,6 +109,16 @@ class CreateLineTool extends Tool implements DrawingTool {
   }
 
   @override
+  bool onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    _activeInteractionState.onDoubleClick(context, worldPosition, camera);
+    return true;
+  }
+
+  @override
   bool onPointerHover(
     EditorContext context,
     Offset worldPosition,
@@ -151,6 +161,7 @@ class CreateLineTool extends Tool implements DrawingTool {
     context.history.run('Create feature', (transaction) {
       transaction.add(feature);
     });
+    context.selectCreatedFeature(feature);
   }
 
   void updatePreview(EditorContext context, List<Offset> worldPoints) {

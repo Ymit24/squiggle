@@ -132,6 +132,12 @@ class EditorContext extends ChangeNotifier {
 
   void resetToSelectTool() => _tool.resetToSelectTool(this);
 
+  /// Selects a newly committed feature when automatic tool switching is enabled.
+  void selectCreatedFeature(Feature feature) {
+    if (tool.isLocked) return;
+    selection.setSelection([feature.id]);
+  }
+
   void startTextEdit(TextEditSession session) => _textEdit.begin(session);
 
   void endTextEdit() => _textEdit.end();

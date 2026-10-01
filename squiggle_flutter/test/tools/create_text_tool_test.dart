@@ -102,6 +102,7 @@ void main() {
         expect(context.textEdit.session, isNull);
       }
       expect(context.document.nodes, hasLength(1));
+      expect(context.selection.isEmpty, isTrue);
     });
 
     test('document unchanged until modal submit', () async {
@@ -124,6 +125,9 @@ void main() {
       await textEditBloc.stream.firstWhere((state) => state is TextEditClosed);
 
       expect(context.document.nodes, hasLength(1));
+      expect(context.selection.selectedNodeIds, [
+        context.document.nodes.first.id,
+      ]);
       expect(
         ((context.document.nodes.first as Feature).kind as FeatureKindText)
             .label,
