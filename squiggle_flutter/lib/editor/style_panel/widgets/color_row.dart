@@ -19,25 +19,22 @@ class ColorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: swatchGridWidth,
-      child: Wrap(
-        spacing: swatchGap,
-        runSpacing: swatchGap,
-        children: [
-          StyleColorSwatch.none(
-            isActive: activePresetIndex == 0,
-            enabled: noneEnabled,
-            onPressed: () => onPresetSelected(0),
+    return Wrap(
+      spacing: swatchGap,
+      runSpacing: swatchGap,
+      children: [
+        StyleColorSwatch.none(
+          isActive: activePresetIndex == 0,
+          enabled: noneEnabled,
+          onPressed: () => onPresetSelected(0),
+        ),
+        for (var i = 1; i < presets.length; i++)
+          StyleColorSwatch(
+            color: presets[i],
+            isActive: activePresetIndex == i,
+            onPressed: () => onPresetSelected(i),
           ),
-          for (var i = 1; i < presets.length; i++)
-            StyleColorSwatch(
-              color: presets[i],
-              isActive: activePresetIndex == i,
-              onPressed: () => onPresetSelected(i),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }
