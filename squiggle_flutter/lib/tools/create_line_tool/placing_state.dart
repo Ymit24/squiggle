@@ -75,6 +75,15 @@ class PlacingState extends InteractionState<CreateLineTool> {
     _updateTip(context, worldPosition, isShiftPressed: isShiftPressed);
   }
 
+  @override
+  void onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    parent.finish(context, points);
+  }
+
   void _updateTip(
     EditorContext context,
     Offset worldPosition, {
