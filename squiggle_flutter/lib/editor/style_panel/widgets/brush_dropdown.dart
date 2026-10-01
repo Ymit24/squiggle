@@ -26,22 +26,6 @@ class BrushDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final spacing = theme.spacing;
-    final text = TextPainter(
-      text: TextSpan(
-        text: 'Ag',
-        style: DefaultTextStyle.of(
-          context,
-        ).style.merge(theme.typography.menuItemLabel),
-      ),
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-    )..layout();
-    final rowHeight =
-        math.max(text.height, spacing.buttonIconSize) +
-        brushPreviewHeight +
-        brushPreviewGap +
-        brushEntryVerticalPadding * 2;
-    text.dispose();
     final availableHeight =
         (MediaQuery.sizeOf(context).height -
                 MediaQuery.paddingOf(context).vertical -
@@ -60,14 +44,14 @@ class BrushDropdown extends StatelessWidget {
           width: spacing.menuWidth - spacing.menuPadding * 2,
           height: math.min(
             availableHeight,
-            profiles.length * rowHeight +
+            profiles.length * brushEntryHeight +
                 spacing.menuDividerHeight +
                 spacing.menuItemHeight,
           ),
           child: Column(
             children: [
               SizedBox(
-                height: rowHeight,
+                height: brushEntryHeight,
                 child: BrushMenuEntry(
                   brush: scratch,
                   selected: scratch.id == brushes.active.id,
@@ -81,7 +65,7 @@ class BrushDropdown extends StatelessWidget {
                   child: ReorderableListView.builder(
                     key: const ValueKey('brush-reorder-list'),
                     primary: false,
-                    itemExtent: rowHeight,
+                    itemExtent: brushEntryHeight,
                     padding: EdgeInsets.zero,
                     buildDefaultDragHandles: false,
                     itemCount: named.length,
