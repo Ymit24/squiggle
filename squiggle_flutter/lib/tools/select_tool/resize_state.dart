@@ -10,7 +10,7 @@ import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 
-class ResizeState extends InteractionState {
+class ResizeState extends SelectInteractionState {
   ResizeState({
     required super.parent,
     required this._handle,
@@ -40,13 +40,13 @@ class ResizeState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
     final newBounds = getNewBounds(
-      cursorWorldPosition - _resizeOffset,
+      worldPosition - _resizeOffset,
       lockAspectRatio: isShiftPressed,
       symmetric: isAltPressed,
     );
@@ -54,14 +54,14 @@ class ResizeState extends InteractionState {
   }
 
   Rect getNewBounds(
-    Offset cursorWorldPosition, {
+    Offset worldPosition, {
     bool lockAspectRatio = false,
     bool symmetric = false,
   }) => symmetric
-      ? _symmetricBounds(cursorWorldPosition, lockAspectRatio)
-      : _asymmetricBounds(cursorWorldPosition, lockAspectRatio);
+      ? _symmetricBounds(worldPosition, lockAspectRatio)
+      : _asymmetricBounds(worldPosition, lockAspectRatio);
 
-  Rect _symmetricBounds(Offset cursorWorldPosition, bool lockAspectRatio) {
+  Rect _symmetricBounds(Offset worldPosition, bool lockAspectRatio) {
     final center = _initialBounds.center;
     if (lockAspectRatio) {
       final isCorner = switch (_handle.handle) {
@@ -73,7 +73,7 @@ class ResizeState extends InteractionState {
       };
       return symmetricRectWithAspectRatio(
         center,
-        cursorWorldPosition,
+        worldPosition,
         _initialBounds.width / _initialBounds.height,
         resizeHorizontal: isCorner || _resizesHorizontally,
         resizeVertical: isCorner || _resizesVertically,
@@ -86,19 +86,19 @@ class ResizeState extends InteractionState {
       SelectionResizeHandle.bottomLeft ||
       SelectionResizeHandle.bottomRight => Rect.fromCenter(
         center: center,
-        width: (cursorWorldPosition.dx - center.dx).abs() * 2,
-        height: (cursorWorldPosition.dy - center.dy).abs() * 2,
+        width: (worldPosition.dx - center.dx).abs() * 2,
+        height: (worldPosition.dy - center.dy).abs() * 2,
       ),
       SelectionResizeHandle.top ||
       SelectionResizeHandle.bottom => Rect.fromCenter(
         center: center,
         width: _initialBounds.width,
-        height: (cursorWorldPosition.dy - center.dy).abs() * 2,
+        height: (worldPosition.dy - center.dy).abs() * 2,
       ),
       SelectionResizeHandle.left ||
       SelectionResizeHandle.right => Rect.fromCenter(
         center: center,
-        width: (cursorWorldPosition.dx - center.dx).abs() * 2,
+        width: (worldPosition.dx - center.dx).abs() * 2,
         height: _initialBounds.height,
       ),
     };
@@ -112,41 +112,41 @@ class ResizeState extends InteractionState {
       _handle.handle == SelectionResizeHandle.top ||
       _handle.handle == SelectionResizeHandle.bottom;
 
-  Rect _asymmetricBounds(Offset cursorWorldPosition, bool lockAspectRatio) =>
+  Rect _asymmetricBounds(Offset worldPosition, bool lockAspectRatio) =>
       lockAspectRatio
-      ? _aspectLockedAsymmetricBounds(cursorWorldPosition)
+      ? _aspectLockedAsymmetricBounds(worldPosition)
       : Rect.fromPoints(
           Offset(
-            _movesLeft ? cursorWorldPosition.dx : _initialBounds.left,
-            _movesTop ? cursorWorldPosition.dy : _initialBounds.top,
+            _movesLeft ? worldPosition.dx : _initialBounds.left,
+            _movesTop ? worldPosition.dy : _initialBounds.top,
           ),
           Offset(
-            _movesRight ? cursorWorldPosition.dx : _initialBounds.right,
-            _movesBottom ? cursorWorldPosition.dy : _initialBounds.bottom,
+            _movesRight ? worldPosition.dx : _initialBounds.right,
+            _movesBottom ? worldPosition.dy : _initialBounds.bottom,
           ),
         );
 
-  Rect _aspectLockedAsymmetricBounds(Offset cursorWorldPosition) {
+  Rect _aspectLockedAsymmetricBounds(Offset worldPosition) {
     final ratio = _initialBounds.width / _initialBounds.height;
     return switch (_handle.handle) {
       SelectionResizeHandle.topLeft => rectFromAnchorWithAspectRatio(
         _initialBounds.bottomRight,
-        cursorWorldPosition,
+        worldPosition,
         ratio,
       ),
       SelectionResizeHandle.topRight => rectFromAnchorWithAspectRatio(
         _initialBounds.bottomLeft,
-        cursorWorldPosition,
+        worldPosition,
         ratio,
       ),
       SelectionResizeHandle.bottomRight => rectFromAnchorWithAspectRatio(
         _initialBounds.topLeft,
-        cursorWorldPosition,
+        worldPosition,
         ratio,
       ),
       SelectionResizeHandle.bottomLeft => rectFromAnchorWithAspectRatio(
         _initialBounds.topRight,
-        cursorWorldPosition,
+        worldPosition,
         ratio,
       ),
       SelectionResizeHandle.top ||
@@ -154,7 +154,7 @@ class ResizeState extends InteractionState {
       SelectionResizeHandle.bottom ||
       SelectionResizeHandle.left => edgeResizeWithAspectRatio(
         _initialBounds,
-        cursorWorldPosition,
+        worldPosition,
         resizeTop: _movesTop,
         resizeBottom: _movesBottom,
         resizeLeft: _movesLeft,
@@ -208,7 +208,7 @@ class ResizeState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,

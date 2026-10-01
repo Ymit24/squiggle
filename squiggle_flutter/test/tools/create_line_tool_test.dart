@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -203,6 +204,191 @@ void main() {
         const Offset(0, 0),
         const Offset(100, 100),
       ]);
+    });
+
+    test(
+      'initial click uses press position; placement uses release position',
+      () {
+        activateLineTool();
+        camera.zoom = 2;
+        final movement = camera.screenLengthToWorldLength(kTouchSlop);
+
+        pointerDown(Offset.zero);
+        pointerMove(Offset(movement, 0));
+        pointerUp(Offset(movement, 0));
+        expect(context.document.nodes, isEmpty);
+
+        pointerDown(const Offset(100, 0));
+        pointerMove(Offset(100 + movement, 0));
+        pointerUp(Offset(100 + movement, 0));
+        finishWithKey(LogicalKeyboardKey.enter);
+
+        expect(worldPointsFor(context.document.nodes.single as Feature), [
+          Offset.zero,
+          Offset(100 + movement, 0),
+        ]);
+      },
+    );
+
+    test('placement uses release position without a move event', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(103, 0));
+      pointerDown(const Offset(200, 0));
+      pointerUp(const Offset(203, 0));
+      expect(context.document.nodes, isEmpty);
+      finishWithKey(LogicalKeyboardKey.enter);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        const Offset(103, 0),
+        const Offset(203, 0),
+      ]);
+    });
+
+    test('placement snaps using release position and release-time Shift', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(103, 95), shift: true);
+      final snapped = snapPointTo45DegreeAngle(
+        Offset.zero,
+        const Offset(103, 95),
+      );
+      pointerDown(const Offset(200, 100), shift: true);
+      pointerMove(const Offset(250, 195), shift: true);
+      pointerUp(const Offset(253, 195));
+      finishWithKey(LogicalKeyboardKey.enter);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        snapped,
+        const Offset(253, 195),
+      ]);
+    });
+
+    test('unmatched releases do not place vertices', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerUp(const Offset(50, 0));
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(100, 0));
+      pointerUp(const Offset(150, 0));
+      finishWithKey(LogicalKeyboardKey.enter);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        const Offset(100, 0),
+      ]);
+    });
+
+    test('movement beyond zoom-adjusted slop starts a line drag', () {
+      activateLineTool();
+      camera.zoom = 2;
+      final end = Offset(camera.screenLengthToWorldLength(kTouchSlop) + 1, 0);
+      pointerDown(Offset.zero);
+      pointerMove(end);
+      pointerUp(end);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        end,
+      ]);
+    });
+
+    test('placement uses release after moving away and back', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerDown(const Offset(100, 0));
+      pointerMove(const Offset(200, 0));
+      pointerMove(const Offset(101, 0));
+      pointerUp(const Offset(102, 0));
+      finishWithKey(LogicalKeyboardKey.enter);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        const Offset(102, 0),
+      ]);
+    });
+
+    for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.escape]) {
+      for (final drag in [false, true]) {
+        test(
+          'finish with ${key.keyLabel} during placement press (drag: $drag)',
+          () {
+            activateLineTool();
+            pointerDown(Offset.zero);
+            pointerUp(Offset.zero);
+            pointerDown(const Offset(100, 0));
+            pointerUp(const Offset(100, 0));
+            pointerHover(const Offset(200, 0));
+            pointerDown(const Offset(200, 0));
+            if (drag) pointerMove(const Offset(300, 0));
+            expect(finishWithKey(key), isTrue);
+            pointerUp(const Offset(300, 0));
+            expect(worldPointsFor(context.document.nodes.single as Feature), [
+              Offset.zero,
+              const Offset(100, 0),
+            ]);
+          },
+        );
+      }
+    }
+
+    for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.escape]) {
+      test('${key.keyLabel} discards the pending initial press', () {
+        activateLineTool();
+        pointerDown(Offset.zero);
+        expect(finishWithKey(key), isTrue);
+        expect(context.tool.activeTool, isA<SelectTool>());
+        pointerUp(const Offset(100, 0));
+        expect(context.document.nodes, isEmpty);
+        expect(finishWithKey(key), isFalse);
+      });
+    }
+
+    test('finish keys are unhandled while idle or dragging a new line', () {
+      activateLineTool();
+      expect(finishWithKey(LogicalKeyboardKey.enter), isFalse);
+      expect(finishWithKey(LogicalKeyboardKey.escape), isFalse);
+      pointerDown(Offset.zero);
+      pointerMove(const Offset(100, 0));
+      expect(finishWithKey(LogicalKeyboardKey.enter), isFalse);
+      expect(finishWithKey(LogicalKeyboardKey.escape), isFalse);
+      pointerUp(const Offset(100, 0));
+      expect(context.document.nodes, hasLength(1));
+    });
+
+    test('release position and Shift determine the dragged endpoint', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerMove(const Offset(100, 0));
+      pointerUp(const Offset(200, 195), shift: true);
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        Offset.zero,
+        snapPointTo45DegreeAngle(Offset.zero, const Offset(200, 195)),
+      ]);
+    });
+
+    test('cancel discards placement and the next gesture starts fresh', () {
+      activateLineTool();
+      pointerDown(Offset.zero);
+      pointerUp(Offset.zero);
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(100, 0));
+      context.cancelInteraction();
+      expect(context.document.nodes, isEmpty);
+      pointerDown(const Offset(200, 0));
+      pointerMove(const Offset(300, 0));
+      pointerUp(const Offset(300, 0));
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        const Offset(200, 0),
+        const Offset(300, 0),
+      ]);
+      context.undo();
+      expect(context.document.nodes, isEmpty);
+      context.redo();
+      expect(context.document.nodes, hasLength(1));
     });
 
     test('deactivate mid-placement discards partial line', () {
