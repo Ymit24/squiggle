@@ -25,9 +25,8 @@ void main() {
   Future<void> mount(
     WidgetTester tester,
     EditorContext editor,
-    GlobalKey capture, {
-    TargetPlatform platform = TargetPlatform.macOS,
-  }) async {
+    GlobalKey capture,
+  ) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -36,7 +35,9 @@ void main() {
       RepaintBoundary(
         key: capture,
         child: MaterialApp(
-          theme: SquiggleThemeData.dark().copyWith(platform: platform),
+          theme: SquiggleThemeData.dark().copyWith(
+            platform: TargetPlatform.macOS,
+          ),
           debugShowCheckedModeBanner: false,
           home: MultiProvider(
             providers: [
@@ -78,67 +79,6 @@ void main() {
       notes.id,
     ]);
     expect(find.byType(BrushDropdown), findsNothing);
-  });
-
-  testWidgets('touch long press reorders without selecting the entry', (
-    tester,
-  ) async {
-    final editor = EditorContext(document: Document());
-    addTearDown(editor.dispose);
-    editor.setTool(CreateFeatureTool.rect());
-    final actual = editor.brushes.create('Actual');
-    final notes = editor.brushes.create('Notes');
-    editor.brushes.activate(actual.id);
-    await mount(tester, editor, GlobalKey(), platform: TargetPlatform.android);
-    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
-    await tester.pumpAndSettle();
-    final target = tester.getCenter(find.byKey(ValueKey(actual.id)));
-    final drag = await tester.startGesture(
-      tester.getCenter(find.text('Notes')),
-    );
-    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
-    await drag.moveTo(target);
-    await tester.pump(const Duration(milliseconds: 400));
-    await drag.up();
-    await tester.pumpAndSettle();
-    expect(editor.brushes.profiles.map((brush) => brush.id), [
-      'scratch',
-      notes.id,
-      actual.id,
-    ]);
-    expect(editor.brushes.active.id, actual.id);
-    expect(find.byType(BrushDropdown), findsOneWidget);
-    await tester.tap(find.text('Notes'));
-    await tester.pumpAndSettle();
-    expect(editor.brushes.active.id, notes.id);
-    expect(find.byType(BrushDropdown), findsNothing);
-  });
-
-  testWidgets('touch swipe scrolls entries without reordering them', (
-    tester,
-  ) async {
-    final editor = EditorContext(document: Document());
-    addTearDown(editor.dispose);
-    editor.setTool(CreateFeatureTool.rect());
-    for (var index = 1; index < 9; index++) {
-      editor.brushes.create('Brush $index');
-    }
-    final original = editor.brushes.profiles.map((brush) => brush.id).toList();
-    await mount(tester, editor, GlobalKey(), platform: TargetPlatform.android);
-    tester.view.physicalSize = const Size(1280, 400);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
-    await tester.pumpAndSettle();
-    await tester.drag(
-      find.byKey(const ValueKey('brush-reorder-list')),
-      const Offset(0, -300),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Brush 8').hitTestable(), findsOneWidget);
-    expect(editor.brushes.profiles.map((brush) => brush.id), original);
-    expect(editor.brushes.active.id, original.last);
-    expect(find.byType(BrushDropdown), findsOneWidget);
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('repeated mouse drags while hovering entries keep rows mounted', (

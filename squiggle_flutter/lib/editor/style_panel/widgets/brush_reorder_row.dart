@@ -4,7 +4,7 @@ import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/document_session.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
-/// A click selects; desktop dragging or a touch long press reorders.
+/// A click selects; dragging anywhere on the entry reorders.
 class BrushReorderRow extends StatelessWidget {
   const BrushReorderRow({
     super.key,
@@ -34,19 +34,10 @@ class BrushReorderRow extends StatelessWidget {
       onPressed: onPressed,
     );
     // Keep movable rows free of tooltip overlay portals.
-    return switch (Theme.of(context).platform) {
-      TargetPlatform.macOS ||
-      TargetPlatform.windows ||
-      TargetPlatform.linux => ReorderableDragStartListener(
-        key: ValueKey('brush-drag-${brush.id}'),
-        index: index,
-        child: entry,
-      ),
-      _ => ReorderableDelayedDragStartListener(
-        key: ValueKey('brush-drag-${brush.id}'),
-        index: index,
-        child: entry,
-      ),
-    };
+    return ReorderableDragStartListener(
+      key: ValueKey('brush-drag-${brush.id}'),
+      index: index,
+      child: entry,
+    );
   }
 }
