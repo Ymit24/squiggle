@@ -105,6 +105,16 @@ class CreateLineTool extends Tool {
   }
 
   @override
+  bool onDoubleClick(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    _activeInteractionState.onDoubleClick(context, worldPosition, camera);
+    return true;
+  }
+
+  @override
   bool onPointerHover(
     EditorContext context,
     Offset worldPosition,
