@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/editor_toolbar.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/button.dart';
 import 'package:squiggle_flutter/models/document.dart';
@@ -27,12 +25,7 @@ void main() {
       MaterialApp(
         home: RepositoryProvider<EditorContext>.value(
           value: editor,
-          child: BlocProvider(
-            create: (_) =>
-                ToolbarBloc(context: editor)
-                  ..add(const RequestWatchToolbarStateEvent()),
-            child: const Scaffold(body: Stack(children: [EditorToolbar()])),
-          ),
+          child: const Scaffold(body: Stack(children: [EditorToolbar()])),
         ),
       ),
     );
@@ -47,6 +40,13 @@ void main() {
         [hotkey],
       );
     }
+
+    Finder historyButton(IconData icon) => find.byWidgetPredicate(
+      (widget) => widget is Button && widget.icon == icon,
+    );
+
+    expect(tester.widget<Button>(historyButton(Icons.undo)).onPressed, isNull);
+    expect(tester.widget<Button>(historyButton(Icons.redo)).onPressed, isNull);
 
     expectActive('3');
     for (final (tool, hotkey) in [
@@ -108,5 +108,29 @@ void main() {
       ),
     );
     expect(undo.onPressed, isNotNull);
+
+    await tester.tap(historyButton(Icons.undo));
+    await tester.pump();
+    expect(editor.document.nodes, isEmpty);
+    expect(tester.widget<Button>(historyButton(Icons.undo)).onPressed, isNull);
+    expect(
+      tester.widget<Button>(historyButton(Icons.redo)).onPressed,
+      isNotNull,
+    );
+    expectActive('1');
+
+    await tester.tap(historyButton(Icons.redo));
+    await tester.pump();
+    expect(editor.document.nodes, hasLength(1));
+    expect(
+      tester.widget<Button>(historyButton(Icons.undo)).onPressed,
+      isNotNull,
+    );
+    expect(tester.widget<Button>(historyButton(Icons.redo)).onPressed, isNull);
+
+    editor.history.clear();
+    await tester.pump();
+    expect(tester.widget<Button>(historyButton(Icons.undo)).onPressed, isNull);
+    expect(tester.widget<Button>(historyButton(Icons.redo)).onPressed, isNull);
   });
 }

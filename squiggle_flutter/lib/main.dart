@@ -5,8 +5,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/app/app_shell.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
@@ -108,12 +106,7 @@ class SquiggleHomePage extends StatelessWidget {
             child: RepositoryProvider(
               create: (context) => documentLibraryRepository,
               dispose: (repository) => repository.dispose(),
-              child: BlocProvider(
-                create: (context) =>
-                    ToolbarBloc(context: this.context)
-                      ..add(const RequestWatchToolbarStateEvent()),
-                child: AppShell(context: this.context),
-              ),
+              child: AppShell(context: this.context),
             ),
           ),
         ),
