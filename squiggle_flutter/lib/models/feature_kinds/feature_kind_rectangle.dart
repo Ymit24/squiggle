@@ -5,11 +5,13 @@ final class FeatureKindRectangle extends FeatureKind
         StrokeColorCapable,
         FillColorCapable,
         StrokeWidthCapable,
+        StrokeTypeCapable,
         LabelCapable {
   FeatureKindRectangle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
     this.strokeWidth = defaultStrokeWidth,
+    this.strokeType = StrokeType.solid,
     this.label = '',
     this.labelFontSize = _labelFontSize,
     this.labelVerticalAlignment = TextVerticalAlignment.center,
@@ -26,6 +28,9 @@ final class FeatureKindRectangle extends FeatureKind
   double strokeWidth;
 
   @override
+  StrokeType strokeType;
+
+  @override
   String label;
 
   double labelFontSize;
@@ -37,6 +42,7 @@ final class FeatureKindRectangle extends FeatureKind
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         fillColor: _colorFromDataModel(content, 'fillColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        strokeType: _strokeTypeFromDataModel(content),
         label: content['label'],
         labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
         labelVerticalAlignment: TextVerticalAlignment.values.byName(
@@ -53,6 +59,7 @@ final class FeatureKindRectangle extends FeatureKind
     'strokeColor': strokeColor.toARGB32(),
     'fillColor': fillColor.toARGB32(),
     'strokeWidth': strokeWidth,
+    'strokeType': strokeType.name,
     'label': label,
     'labelFontSize': labelFontSize,
     'labelVerticalAlignment': labelVerticalAlignment.name,
@@ -64,6 +71,7 @@ final class FeatureKindRectangle extends FeatureKind
     strokeColor: strokeColor,
     fillColor: fillColor,
     strokeWidth: strokeWidth,
+    strokeType: strokeType,
     label: label,
     labelFontSize: labelFontSize,
     labelVerticalAlignment: labelVerticalAlignment,
@@ -84,12 +92,14 @@ final class FeatureKindRectangle extends FeatureKind
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     canvas.drawRect(bounds, Paint()..color = fillColor);
-    canvas.drawRect(
-      bounds,
+    paintStroke(
+      canvas,
+      Path()..addRect(bounds),
       Paint()
         ..color = strokeColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth,
+      strokeType,
     );
 
     text_painter.paintText(
@@ -121,6 +131,12 @@ final class FeatureKindRectangle extends FeatureKind
         onColorChanged: (color) {
           fillColor = color;
         },
+      ),
+      InspectorStrokeTypeField(
+        fieldKey: 'strokeType',
+        label: 'Stroke Type',
+        value: strokeType,
+        onTypeChanged: (type) => strokeType = type,
       ),
       InspectorWidthField(
         fieldKey: 'strokeWidth',
