@@ -92,6 +92,32 @@ void main() {
       },
     );
 
+    test('locked lines reset between drag, Enter and Escape completion', () {
+      context.tool.toggleLock();
+      activateLineTool();
+      final lineTool = context.tool.activeTool;
+
+      pointerDown(Offset.zero);
+      pointerMove(const Offset(100, 100));
+      pointerUp(const Offset(100, 100));
+      expect(context.tool.activeTool, same(lineTool));
+      expect(context.document.nodes, hasLength(1));
+
+      for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.escape]) {
+        pointerDown(const Offset(200, 200));
+        pointerUp(const Offset(200, 200));
+        pointerDown(const Offset(300, 300));
+        pointerUp(const Offset(300, 300));
+        expect(finishWithKey(key), isTrue);
+        expect(context.tool.activeTool, same(lineTool));
+        expect(worldPointsFor(context.document.nodes.last as Feature), [
+          const Offset(200, 200),
+          const Offset(300, 300),
+        ]);
+      }
+      expect(context.document.nodes, hasLength(3));
+    });
+
     test('two clicks then Enter commits polyline with 2 points', () {
       activateLineTool();
 

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/button.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
@@ -208,6 +209,69 @@ void main() {
 
     await pressKey(LogicalKeyboardKey.digit5);
     expect(context.tool.activeTool, isA<CreateTextTool>());
+  });
+
+  testWidgets('Q toggles tool lock and stays off during text editing', (
+    tester,
+  ) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    final textFocus = FocusNode();
+    addTearDown(textFocus.dispose);
+    final textController = TextEditingController();
+    addTearDown(textController.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    final tool = editor.tool.activeTool;
+
+    Future<void> pumpShortcuts({bool textEditOpen = false}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<EditorContext>.value(
+            value: editor,
+            child: Scaffold(
+              body: ToolShortcuts(
+                textEditOpen: textEditOpen,
+                child: textEditOpen
+                    ? TextField(
+                        focusNode: textFocus,
+                        controller: textController,
+                      )
+                    : const Stack(children: [EditorToolbar()]),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await pumpShortcuts();
+    for (final locked in [true, false]) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+      await tester.pump();
+      expect(editor.tool.isLocked, locked);
+      expect(editor.tool.activeTool, same(tool));
+      expect(find.byType(Tooltip), findsNothing);
+      final button = tester.widget<Button>(
+        find.byWidgetPredicate(
+          (widget) => widget is Button && widget.hotkey == 'Q',
+        ),
+      );
+      expect(button.isActive, locked);
+    }
+
+    await pumpShortcuts(textEditOpen: true);
+    textFocus.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+    await tester.enterText(find.byType(TextField), 'q');
+    expect(textController.text, 'q');
+    expect(editor.tool.isLocked, isFalse);
+
+    await pumpShortcuts();
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+    await tester.pump();
+    expect(editor.tool.isLocked, isTrue);
   });
 
   testWidgets('ToolShortcuts deletes selected features on backspace', (

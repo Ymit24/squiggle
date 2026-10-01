@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Divider;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/toolbar/button.dart';
@@ -40,6 +41,17 @@ class EditorToolbar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Button(
+                        icon: editor.tool.isLocked
+                            ? LucideIcons.lock
+                            : LucideIcons.lockOpen,
+                        hotkey: 'Q',
+                        isActive: editor.tool.isLocked,
+                        onPressed: editor.tool.toggleLock,
+                      ),
+                      const Gap(),
+                      const Divider(),
+                      const Gap(),
                       Button(
                         iconAsset: 'assets/icons/arrow_selector_tool.svg',
                         hotkey: '1',
