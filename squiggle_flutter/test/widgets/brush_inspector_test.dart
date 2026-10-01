@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/brush_menu_entry.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/brush_dropdown.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
@@ -49,6 +50,118 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'handle drag commits on drop without selecting or closing the menu',
+    (tester) async {
+      final editor = EditorContext(document: Document());
+      addTearDown(editor.dispose);
+      editor.setTool(CreateFeatureTool.rect());
+      final actual = editor.brushes.create('Actual');
+      final construction = editor.brushes.create('Construction');
+      final notes = editor.brushes.create('Notes');
+      editor.brushes.activate(actual.id);
+      await mount(tester, editor, GlobalKey());
+      await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('brush-drag-scratch')), findsNothing);
+      final original = editor.brushes.profiles
+          .map((brush) => brush.id)
+          .toList();
+      final target = tester.getCenter(find.byKey(ValueKey(actual.id)));
+      final drag = await tester.startGesture(
+        tester.getCenter(find.byKey(ValueKey('brush-drag-${notes.id}'))),
+      );
+      await drag.moveBy(const Offset(0, -24));
+      await tester.pump();
+      await drag.moveTo(target);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(editor.brushes.profiles.map((brush) => brush.id), original);
+      expect(editor.brushes.active.id, actual.id);
+      expect(find.byType(BrushDropdown), findsOneWidget);
+      await drag.up();
+      await tester.pumpAndSettle();
+      expect(editor.brushes.profiles.map((brush) => brush.id), [
+        'scratch',
+        notes.id,
+        actual.id,
+        construction.id,
+      ]);
+      expect(editor.brushes.active.id, actual.id);
+      expect(find.byType(BrushDropdown), findsOneWidget);
+      final entries = tester
+          .widgetList<BrushMenuEntry>(find.byType(BrushMenuEntry))
+          .toList();
+      expect(entries.map((entry) => entry.brush.id), [
+        'scratch',
+        notes.id,
+        actual.id,
+        construction.id,
+      ]);
+      expect(entries.map((entry) => entry.shortcutNumber), [1, 2, 3, 4]);
+      await tester.tap(find.text('Notes'));
+      await tester.pumpAndSettle();
+      expect(editor.brushes.active.id, notes.id);
+      expect(find.byType(BrushDropdown), findsNothing);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit3);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+      expect(editor.brushes.active.id, actual.id);
+    },
+  );
+
+  testWidgets('cancelled drag leaves brush order unchanged', (tester) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    final actual = editor.brushes.create('Actual');
+    final notes = editor.brushes.create('Notes');
+    await mount(tester, editor, GlobalKey());
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    final target = tester.getCenter(find.byKey(ValueKey(actual.id)));
+    final drag = await tester.startGesture(
+      tester.getCenter(find.byKey(ValueKey('brush-drag-${notes.id}'))),
+    );
+    await drag.moveBy(const Offset(0, -24));
+    await tester.pump();
+    await drag.moveTo(target);
+    await tester.pump(const Duration(milliseconds: 400));
+    await drag.cancel();
+    await tester.pumpAndSettle();
+    expect(editor.brushes.profiles.map((brush) => brush.id), [
+      'scratch',
+      actual.id,
+      notes.id,
+    ]);
+    expect(find.byType(BrushDropdown), findsOneWidget);
+  });
+
+  testWidgets('short popup scrolls profiles with Scratch and Create visible', (
+    tester,
+  ) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    for (var index = 1; index < 9; index++) {
+      editor.brushes.create('Brush $index');
+    }
+    await mount(tester, editor, GlobalKey());
+    tester.view.physicalSize = const Size(1280, 400);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    expect(find.text('Scratch').hitTestable(), findsOneWidget);
+    expect(find.text('Create brush').hitTestable(), findsOneWidget);
+    final list = find.byKey(const ValueKey('brush-reorder-list'));
+    await tester.drag(list, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(find.text('Brush 8').hitTestable(), findsOneWidget);
+    expect(find.text('Scratch').hitTestable(), findsOneWidget);
+    expect(find.text('Create brush').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'brush shortcuts follow menu order and only switch before drawing',

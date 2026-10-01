@@ -58,6 +58,20 @@ class BrushController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Moves a named brush to a final index in the full list, after Scratch.
+  void move(String id, {required int toIndex}) {
+    final oldIndex = _session.brushes.indexWhere((brush) => brush.id == id);
+    if (oldIndex <= 0 ||
+        toIndex < 1 ||
+        toIndex >= _session.brushes.length ||
+        oldIndex == toIndex) {
+      return;
+    }
+    final brush = _session.brushes.removeAt(oldIndex);
+    _session.brushes.insert(toIndex, brush);
+    notifyListeners();
+  }
+
   /// Values are JSON-compatible, encoded by the owning inspector field.
   void setField(String key, Object? value) {
     active.values[key] = value;

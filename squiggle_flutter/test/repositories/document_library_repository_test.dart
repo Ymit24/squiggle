@@ -58,6 +58,18 @@ void main() {
         expect(saved.session.activeBrushId, brush.id);
         expect(saved.session.activeBrush.values['strokeWidth'], 3.0);
         expect(context.history.canUndo, isFalse);
+        final other = context.brushes.create('Actual');
+        context.brushes.activate(brush.id);
+        context.brushes.move(brush.id, toIndex: 2);
+        final reordered = (await library.documentStorage.loadDocument(
+          firstId,
+        ))!.document;
+        expect(reordered.session.brushes.map((profile) => profile.id), [
+          'scratch',
+          other.id,
+          brush.id,
+        ]);
+        expect(reordered.session.activeBrushId, brush.id);
         await library.createDocument(name: 'Other');
         expect(context.brushes.active.isScratch, isTrue);
         expect(context.brushes.active.values, isEmpty);

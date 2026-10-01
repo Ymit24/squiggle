@@ -61,6 +61,52 @@ void main() {
     },
   );
 
+  test(
+    'reordering keeps Scratch fixed, preserves activation and persists once',
+    () {
+      final editor = EditorContext(document: Document());
+      addTearDown(editor.dispose);
+      final actual = editor.brushes.create('Actual');
+      final construction = editor.brushes.create('Construction');
+      final notes = editor.brushes.create('Notes');
+      editor.brushes.activate(actual.id);
+      var notifications = 0;
+      editor.brushes.addListener(() => notifications++);
+      editor.brushes.move(notes.id, toIndex: 1);
+      expect(editor.brushes.profiles.map((brush) => brush.id), [
+        'scratch',
+        notes.id,
+        actual.id,
+        construction.id,
+      ]);
+      expect(editor.brushes.active.id, actual.id);
+      expect(notifications, 1);
+      editor.brushes.move(notes.id, toIndex: 3);
+      expect(editor.brushes.profiles.map((brush) => brush.id), [
+        'scratch',
+        actual.id,
+        construction.id,
+        notes.id,
+      ]);
+      expect(notifications, 2);
+      editor.brushes.move('scratch', toIndex: 2);
+      editor.brushes.move(actual.id, toIndex: 0);
+      editor.brushes.move(actual.id, toIndex: 4);
+      editor.brushes.move('missing', toIndex: 1);
+      editor.brushes.move(actual.id, toIndex: 1);
+      expect(notifications, 2);
+      expect(editor.history.canUndo, isFalse);
+      final restored = Document.fromDataModel(
+        data.Document.decode(editor.document.toDataModel().encode()),
+      );
+      expect(
+        restored.session.brushes.map((brush) => brush.id),
+        editor.brushes.profiles.map((brush) => brush.id),
+      );
+      expect(restored.session.activeBrushId, actual.id);
+    },
+  );
+
   test('old documents get Scratch and invalid active IDs recover', () {
     final old = Document.fromDataModel(
       data.Document.decode('{"version":2,"name":"Old","nodes":[]}'),
