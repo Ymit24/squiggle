@@ -48,6 +48,48 @@ void main() {
       );
     }
 
+    test('lock allows repeated shapes and follows manual tool changes', () {
+      expect(context.tool.isLocked, isFalse);
+      context.tool.toggleLock();
+      context.setTool(CreateFeatureTool.rect());
+      final rectangleTool = context.tool.activeTool;
+
+      void draw(Offset start) {
+        final end = start + const Offset(100, 50);
+        pointerDown(start);
+        pointerMove(start);
+        pointerMove(end);
+        pointerUp(end);
+      }
+
+      draw(Offset.zero);
+      draw(const Offset(200, 200));
+      expect(context.tool.activeTool, same(rectangleTool));
+      expect(context.document.nodes, hasLength(2));
+      expect(
+        context.document.nodes.last.localBounds(),
+        const Rect.fromLTWH(200, 200, 100, 50),
+      );
+
+      context.setTool(SelectTool());
+      expect(context.tool.activeTool, isA<SelectTool>());
+      expect(context.tool.isLocked, isTrue);
+      context.setTool(CreateFeatureTool.circle());
+      final circleTool = context.tool.activeTool;
+      draw(const Offset(400, 400));
+      expect(context.tool.activeTool, same(circleTool));
+      expect(
+        (context.document.nodes.last as Feature).kind,
+        isA<FeatureKindCircle>(),
+      );
+
+      context.tool.toggleLock();
+      expect(context.tool.activeTool, same(circleTool));
+      draw(const Offset(600, 600));
+      expect(context.document.nodes, hasLength(4));
+      expect(context.tool.activeTool, isA<SelectTool>());
+    });
+
     test('click without drag does not create feature', () {
       context.setTool(CreateFeatureTool.rect());
 

@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -139,7 +138,7 @@ class CreateLineTool extends Tool {
       commit(context, points);
     }
     _reset();
-    context.setTool(SelectTool());
+    context.resetToSelectTool();
   }
 
   void commit(EditorContext context, List<Offset> worldPoints) {
