@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ class BrushPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 24,
+    height: brushPreviewHeight,
     width: double.infinity,
     child: CustomPaint(
       painter: _BrushPainter(Map.of(brush.values), imageRepository),

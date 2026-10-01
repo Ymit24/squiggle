@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_menu_entry.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/brush_dropdown.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/brush_name_dialog.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/delete_brush_dialog.dart';
-import 'package:squiggle_flutter/models/document_session.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
@@ -91,21 +90,10 @@ class _BrushPickerState extends State<BrushPicker> {
                   fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
                 ),
                 menuChildren: [
-                  for (final (index, item) in editor.brushes.profiles.indexed)
-                    BrushMenuEntry(
-                      brush: item,
-                      shortcutNumber: index < DocumentSession.maxBrushes
-                          ? index + 1
-                          : null,
-                      selected: item.id == brush.id,
-                      imageRepository: widget.imageRepository,
-                      onPressed: () => editor.brushes.activate(item.id),
-                    ),
-                  const Divider(height: 12),
-                  SquiggleMenuItem(
-                    label: 'Create brush',
-                    icon: Icons.add,
-                    onPressed: editor.brushes.canCreate ? _create : null,
+                  BrushDropdown(
+                    brushes: editor.brushes,
+                    imageRepository: widget.imageRepository,
+                    onCreate: _create,
                   ),
                 ],
                 builder: (context, controller, _) => TextButton(
