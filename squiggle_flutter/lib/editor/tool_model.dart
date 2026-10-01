@@ -11,8 +11,21 @@ class ToolModel extends ChangeNotifier {
   ToolModel({Tool? initialTool}) : _activeTool = initialTool ?? SelectTool();
 
   Tool _activeTool;
+  bool _isLocked = false;
 
   Tool get activeTool => _activeTool;
+  bool get isLocked => _isLocked;
+
+  void toggleLock() {
+    _isLocked = !_isLocked;
+    notifyListeners();
+  }
+
+  /// Returns to selection after creation unless automatic switching is locked.
+  void resetToSelectTool(EditorContext context) {
+    if (_isLocked) return;
+    setTool(SelectTool(), context);
+  }
 
   void setTool(Tool tool, EditorContext context) {
     if (identical(_activeTool, tool)) return;

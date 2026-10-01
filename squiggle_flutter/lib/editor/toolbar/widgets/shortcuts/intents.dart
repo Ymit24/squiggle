@@ -17,6 +17,10 @@ class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();
 }
 
+class ToggleToolLockIntent extends Intent {
+  const ToggleToolLockIntent();
+}
+
 class ActivateCreateRectToolIntent extends Intent {
   const ActivateCreateRectToolIntent();
 }

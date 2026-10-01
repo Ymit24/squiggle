@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/brush_menu_entry.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_width_selector.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -43,13 +40,8 @@ void main() {
               Provider<EditorContext>.value(value: editor),
               Provider<ImageRepository>(create: (_) => ImageRepository()),
             ],
-            child: BlocProvider(
-              create: (_) =>
-                  ToolbarBloc(context: editor)
-                    ..add(const RequestWatchToolbarStateEvent()),
-              child: Scaffold(
-                body: Editor(editorContext: editor, onBackToLibrary: () {}),
-              ),
+            child: Scaffold(
+              body: Editor(editorContext: editor, onBackToLibrary: () {}),
             ),
           ),
         ),

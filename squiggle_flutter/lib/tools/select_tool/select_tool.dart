@@ -10,7 +10,6 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
-import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 
@@ -20,7 +19,7 @@ const kSelectionHandlePaintSize = 12.0;
 const kDoubleClickInterval = Duration(milliseconds: 300);
 
 class SelectTool extends Tool {
-  late InteractionState _activeInteractionState = IdleInteractionState(
+  late SelectInteractionState _activeInteractionState = IdleInteractionState(
     parent: this,
   );
 
@@ -59,7 +58,7 @@ class SelectTool extends Tool {
     return _activeInteractionState.onKeyEvent(context, event);
   }
 
-  void transition(InteractionState state, EditorContext context) {
+  void transition(SelectInteractionState state, EditorContext context) {
     _activeInteractionState = state;
     _activeInteractionState.onEnter(context);
   }
@@ -80,7 +79,6 @@ class SelectTool extends Tool {
   }) {
     _activeInteractionState.onPointerDown(
       context,
-      getTargetUnderCursor(context, worldPosition),
       worldPosition,
       camera,
       isShiftPressed: isShiftPressed,
@@ -139,12 +137,7 @@ class SelectTool extends Tool {
     Offset worldPosition,
     Camera camera,
   ) {
-    _activeInteractionState.onDoubleClick(
-      context,
-      getTargetUnderCursor(context, worldPosition),
-      worldPosition,
-      camera,
-    );
+    _activeInteractionState.onDoubleClick(context, worldPosition, camera);
     return true;
   }
 

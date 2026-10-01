@@ -50,6 +50,32 @@ class ContextMenu extends StatelessWidget {
     Navigator.of(context).pop();
   }
 
+  List<Widget> _buildHistoryItems(BuildContext context) => [
+    SquiggleMenuItem(
+      label: 'Undo',
+      icon: LucideIcons.undo2,
+      shortcut: '⌘Z',
+      onPressed: editorContext.history.canUndo
+          ? () {
+              editorContext.undo();
+              Navigator.of(context).pop();
+            }
+          : null,
+    ),
+    SquiggleMenuItem(
+      label: 'Redo',
+      icon: LucideIcons.redo2,
+      shortcut: '⇧⌘Z',
+      onPressed: editorContext.history.canRedo
+          ? () {
+              editorContext.redo();
+              Navigator.of(context).pop();
+            }
+          : null,
+    ),
+    const SquiggleMenuDivider(),
+  ];
+
   List<Widget> _buildGroupingItems(BuildContext context) => [
     SquiggleMenuItem(
       label: 'Group',
@@ -137,6 +163,7 @@ class ContextMenu extends StatelessWidget {
 
     if (selection.isEmpty) {
       return [
+        ..._buildHistoryItems(context),
         SquiggleMenuItem(
           label: 'Select All',
           icon: LucideIcons.mousePointer,
@@ -161,6 +188,7 @@ class ContextMenu extends StatelessWidget {
     }
 
     return [
+      ..._buildHistoryItems(context),
       SquiggleMenuItem(
         label: 'Cut',
         icon: LucideIcons.scissors,

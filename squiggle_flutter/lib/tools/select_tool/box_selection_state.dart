@@ -8,7 +8,7 @@ import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 
-class BoxSelectionState extends InteractionState {
+class BoxSelectionState extends SelectInteractionState {
   BoxSelectionState({
     required super.parent,
     required this._start,
@@ -32,12 +32,12 @@ class BoxSelectionState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _current = cursorWorldPosition;
+    _current = worldPosition;
 
     final selectionBounds = Rect.fromPoints(_start, _current);
     final selectedNodeIds = context.document.nodes
@@ -57,7 +57,7 @@ class BoxSelectionState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,

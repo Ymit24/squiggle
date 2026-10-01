@@ -1,74 +1,18 @@
-import 'dart:ui';
-
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/tools/editor_cursor.dart';
-
+import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
-import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
 
-abstract class InteractionState {
-  final SelectTool parent;
+/// Selection gestures cancel on Escape unless a state overrides key handling.
+abstract class SelectInteractionState extends InteractionState<SelectTool> {
+  SelectInteractionState({required super.parent});
 
-  InteractionState({required this.parent});
-
-  void onEnter(EditorContext context) {}
-
-  void onPointerDown(
-    EditorContext context,
-    HitTarget target,
-    Offset cursorWorldPosition,
-    Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
-  }) {}
-
-  void onPointerMove(
-    EditorContext context,
-    Offset cursorWorldPosition,
-    Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
-  }) {}
-
-  void onPointerUp(
-    EditorContext context,
-    Offset cursorWorldPosition,
-    Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
-  }) {}
-
-  void onDoubleClick(
-    EditorContext context,
-    HitTarget target,
-    Offset worldPosition,
-    Camera camera,
-  ) {}
-
-  void paint(
-    Canvas canvas,
-    Camera camera,
-    EditorContext context,
-    ImageRepository imageRepository,
-  ) {}
-
-  EditorCursor resolveCursor(
-    EditorContext context,
-    Offset worldPosition,
-    Camera camera,
-  ) {
-    return EditorCursor.basic;
-  }
-
+  @override
   bool onKeyEvent(EditorContext context, KeyDownEvent event) {
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       parent.cancelInteraction(context);
       return true;
     }
-
     return false;
   }
 }

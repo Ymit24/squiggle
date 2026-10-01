@@ -11,7 +11,7 @@ import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/translate_state.dart';
 
-class ClickNodeState extends InteractionState {
+class ClickNodeState extends SelectInteractionState {
   ClickNodeState({
     required super.parent,
     required this._start,
@@ -57,7 +57,7 @@ class ClickNodeState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
@@ -86,7 +86,7 @@ class ClickNodeState extends InteractionState {
       parent.transition(state, context);
       state.onPointerMove(
         context,
-        cursorWorldPosition,
+        worldPosition,
         camera,
         isShiftPressed: isShiftPressed,
         isAltPressed: isAltPressed,
@@ -97,7 +97,7 @@ class ClickNodeState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,

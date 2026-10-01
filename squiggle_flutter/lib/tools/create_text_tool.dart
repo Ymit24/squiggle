@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
@@ -63,7 +62,7 @@ class CreateTextTool extends Tool {
         ),
       ),
     );
-    context.setTool(SelectTool());
+    context.resetToSelectTool();
     return true;
   }
 }

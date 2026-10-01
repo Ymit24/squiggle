@@ -132,6 +132,8 @@ class EditorContext extends ChangeNotifier {
 
   void setTool(Tool tool) => _tool.setTool(tool, this);
 
+  void resetToSelectTool() => _tool.resetToSelectTool(this);
+
   void startTextEdit(TextEditSession session) => _textEdit.begin(session);
 
   void endTextEdit() => _textEdit.end();
