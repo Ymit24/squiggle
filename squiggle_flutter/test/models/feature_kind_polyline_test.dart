@@ -37,6 +37,7 @@ void main() {
           {'x': 10.0, 'y': 20.0},
         ],
         'strokeColor': kind.strokeColor.toARGB32(),
+        'strokeType': 'solid',
         'strokeWidth': kind.strokeWidth,
         'startEndCap': LineEndCap.rounded.name,
         'endEndCap': LineEndCap.rounded.name,

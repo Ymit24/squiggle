@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 export 'inspector_color_field.dart';
 export 'inspector_end_cap_field.dart';
 export 'inspector_numeric_field.dart';
+export 'inspector_stroke_type_field.dart';
 export 'inspector_text_alignment_field.dart';
 
 abstract class InspectorField<T> {

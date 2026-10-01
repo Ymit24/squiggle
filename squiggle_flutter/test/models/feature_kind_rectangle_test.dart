@@ -9,6 +9,7 @@ void main() {
       'type': 'rectangle',
       'strokeColor': 0xFF112233,
       'fillColor': 0xFF445566,
+      'strokeType': 'solid',
       'strokeWidth': 3.5,
       'label': 'Hello rectangle',
       'labelFontSize': 18.0,

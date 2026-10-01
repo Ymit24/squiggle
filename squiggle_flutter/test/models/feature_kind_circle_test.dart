@@ -9,6 +9,7 @@ void main() {
       'type': 'circle',
       'strokeColor': 0xFF112233,
       'fillColor': 0xFF445566,
+      'strokeType': 'solid',
       'strokeWidth': 3.5,
       'label': 'Hello circle',
       'labelFontSize': 18.0,
