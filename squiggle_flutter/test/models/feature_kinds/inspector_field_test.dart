@@ -19,6 +19,7 @@ void main() {
       'strokeColor',
       'fillColor',
       'strokeWidth',
+      'strokeType',
       'fontSize',
       'verticalAlignment',
       'horizontalAlignment',

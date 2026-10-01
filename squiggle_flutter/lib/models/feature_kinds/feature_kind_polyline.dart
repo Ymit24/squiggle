@@ -290,6 +290,12 @@ final class FeatureKindPolyline extends FeatureKind
           strokeColor = color;
         },
       ),
+      InspectorStrokeTypeField(
+        fieldKey: 'strokeType',
+        label: 'Stroke Type',
+        value: strokeType,
+        onTypeChanged: (type) => strokeType = type,
+      ),
       InspectorWidthField(
         fieldKey: 'strokeWidth',
         label: 'Stroke Width',
