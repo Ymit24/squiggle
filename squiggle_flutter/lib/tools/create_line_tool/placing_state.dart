@@ -54,7 +54,7 @@ class PlacingState extends InteractionState {
     if (!_isPointerDown) return;
     _isPointerDown = false;
     points.add(
-      constrainedPoint(
+      parent.constrainedPoint(
         points.last,
         worldPosition,
         isShiftPressed: isShiftPressed,
@@ -79,7 +79,7 @@ class PlacingState extends InteractionState {
     Offset worldPosition, {
     required bool isShiftPressed,
   }) {
-    final tip = constrainedPoint(
+    final tip = parent.constrainedPoint(
       points.last,
       worldPosition,
       isShiftPressed: isShiftPressed,

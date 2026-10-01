@@ -17,7 +17,7 @@ class DraggingState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final end = constrainedPoint(
+    final end = parent.constrainedPoint(
       start,
       worldPosition,
       isShiftPressed: isShiftPressed,
@@ -33,7 +33,7 @@ class DraggingState extends InteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final end = constrainedPoint(
+    final end = parent.constrainedPoint(
       start,
       worldPosition,
       isShiftPressed: isShiftPressed,

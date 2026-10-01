@@ -122,6 +122,12 @@ class CreateLineTool extends Tool {
     return _activeInteractionState.onKeyEvent(context, event);
   }
 
+  Offset constrainedPoint(
+    Offset origin,
+    Offset point, {
+    required bool isShiftPressed,
+  }) => isShiftPressed ? snapPointTo45DegreeAngle(origin, point) : point;
+
   void finishPlacing(EditorContext context, List<Offset> points) {
     if (points.length >= 2) {
       commit(context, points);
