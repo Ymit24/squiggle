@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/brush_field_reset_button.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
@@ -35,8 +36,10 @@ class DrawingInspectorFields extends StatelessWidget {
     );
     return InspectorFieldShell(
       label: shell.label,
-      onReset: editorContext.brushes.active.values.containsKey(field.fieldKey)
-          ? () => editorContext.brushes.clearField(field.fieldKey)
+      trailing: editorContext.brushes.active.values.containsKey(field.fieldKey)
+          ? BrushFieldResetButton(
+              onPressed: () => editorContext.brushes.clearField(field.fieldKey),
+            )
           : null,
       child: shell.child,
     );
