@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
@@ -7,6 +8,12 @@ import 'package:squiggle_flutter/models/font_size_preset.dart';
 import 'package:squiggle_flutter/models/stroke_width_preset.dart';
 
 class InspectorWidthField extends InspectorField<double> {
+  @override
+  Object? encodeValue(double value) => value;
+
+  @override
+  double decodeValue(Object? raw) => _decodePositiveNumber(raw);
+
   InspectorWidthField({
     required super.fieldKey,
     required super.label,
@@ -28,6 +35,12 @@ class InspectorWidthField extends InspectorField<double> {
 }
 
 class InspectorFontSizeField extends InspectorField<double> {
+  @override
+  Object? encodeValue(double value) => value;
+
+  @override
+  double decodeValue(Object? raw) => _decodePositiveNumber(raw);
+
   InspectorFontSizeField({
     required super.fieldKey,
     required super.label,
@@ -46,4 +59,10 @@ class InspectorFontSizeField extends InspectorField<double> {
       onPresetSelected: (value) => onUpdate(value.size),
     ),
   );
+}
+
+double _decodePositiveNumber(Object? raw) {
+  final value = decodeStyleNumber(raw);
+  if (value <= 0) throw const FormatException('Expected a positive number.');
+  return value;
 }

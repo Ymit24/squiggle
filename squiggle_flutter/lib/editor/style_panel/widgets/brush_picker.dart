@@ -27,46 +27,46 @@ class _BrushPickerState extends State<BrushPicker> {
 
   Future<void> _create() async {
     final editor = widget.editorContext;
-    final sourceId = editor.activeBrush.id;
+    final sourceId = editor.brushes.active.id;
     final name = await showDialog<String>(
       context: context,
       builder: (_) => const BrushNameDialog(creating: true),
     );
     if (!mounted ||
         name == null ||
-        editor.activeBrush.id != sourceId ||
-        !editor.document.session.canCreateBrush) {
+        editor.brushes.active.id != sourceId ||
+        !editor.brushes.canCreate) {
       return;
     }
-    editor.createBrush(name);
+    editor.brushes.create(name);
   }
 
   Future<void> _rename() async {
     final editor = widget.editorContext;
-    final brush = editor.activeBrush;
+    final brush = editor.brushes.active;
     final name = await showDialog<String>(
       context: context,
       builder: (_) => BrushNameDialog(creating: false, initialName: brush.name),
     );
     if (!mounted || name == null) return;
-    editor.renameBrush(brush.id, name);
+    editor.brushes.rename(brush.id, name);
   }
 
   Future<void> _delete() async {
     final editor = widget.editorContext;
-    final brush = editor.activeBrush;
+    final brush = editor.brushes.active;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => DeleteBrushDialog(name: brush.name),
     );
-    if (mounted && confirmed == true) editor.deleteBrush(brush.id);
+    if (mounted && confirmed == true) editor.brushes.delete(brush.id);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final editor = widget.editorContext;
-    final brush = editor.activeBrush;
+    final brush = editor.brushes.active;
     final width = theme.spacing.menuWidth;
     final buttonStyle = theme.menuItemStyle().copyWith(
       minimumSize: const WidgetStatePropertyAll(Size(0, 32)),
@@ -91,8 +91,7 @@ class _BrushPickerState extends State<BrushPicker> {
                   fixedSize: WidgetStatePropertyAll(Size.fromWidth(width)),
                 ),
                 menuChildren: [
-                  for (final (index, item)
-                      in editor.document.session.brushes.indexed)
+                  for (final (index, item) in editor.brushes.profiles.indexed)
                     BrushMenuEntry(
                       brush: item,
                       shortcutNumber: index < DocumentSession.maxBrushes
@@ -100,15 +99,13 @@ class _BrushPickerState extends State<BrushPicker> {
                           : null,
                       selected: item.id == brush.id,
                       imageRepository: widget.imageRepository,
-                      onPressed: () => editor.activateBrush(item.id),
+                      onPressed: () => editor.brushes.activate(item.id),
                     ),
                   const Divider(height: 12),
                   SquiggleMenuItem(
                     label: 'Create brush',
                     icon: Icons.add,
-                    onPressed: editor.document.session.canCreateBrush
-                        ? _create
-                        : null,
+                    onPressed: editor.brushes.canCreate ? _create : null,
                   ),
                 ],
                 builder: (context, controller, _) => TextButton(

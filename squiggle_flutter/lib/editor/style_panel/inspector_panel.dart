@@ -24,7 +24,7 @@ class InspectorPanel extends StatelessWidget {
         editorContext.selection,
         editorContext.history,
         editorContext.tool,
-        editorContext.sessionChanges,
+        editorContext.brushes,
       ]),
       builder: (context, _) {
         final selectedNodes = editorContext.selection.selectedNodeIds.map(

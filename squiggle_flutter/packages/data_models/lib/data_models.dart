@@ -1,3 +1,4 @@
+export 'package:data_models/src/brush_profile.dart';
 export 'package:data_models/src/document.dart';
 export 'package:data_models/src/document_session.dart';
 export 'package:data_models/src/feature.dart';

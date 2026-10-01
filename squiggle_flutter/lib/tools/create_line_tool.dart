@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
@@ -11,7 +12,10 @@ import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/idle_state.dart';
 
-class CreateLineTool extends Tool {
+class CreateLineTool extends Tool implements DrawingTool {
+  @override
+  FeatureKind createDrawingKind() => FeatureKindPolyline([]);
+
   late InteractionState<CreateLineTool> _activeInteractionState = IdleState(
     parent: this,
   );
@@ -171,7 +175,7 @@ class CreateLineTool extends Tool {
     final origin = worldPoints.first;
     final localPoints = localPointsFromWorld(worldPoints, origin);
     final kind = FeatureKindPolyline(localPoints);
-    context.applyInspectorValues(kind);
+    context.brushes.active.applyTo(kind);
     return Feature(origin: origin, size: Size.zero, kind: kind);
   }
 }

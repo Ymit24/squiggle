@@ -28,12 +28,15 @@ class DrawingInspectorFields extends StatelessWidget {
   Widget _buildField(BuildContext context, InspectorField field) {
     final shell = field.build(
       context,
-      (dynamic value) => editorContext.setDrawingField(field.fieldKey, value),
+      (dynamic value) => editorContext.brushes.setField(
+        field.fieldKey,
+        field.encodeValue(value),
+      ),
     );
     return InspectorFieldShell(
       label: shell.label,
-      onReset: editorContext.activeBrush.values.containsKey(field.fieldKey)
-          ? () => editorContext.clearDrawingField(field.fieldKey)
+      onReset: editorContext.brushes.active.values.containsKey(field.fieldKey)
+          ? () => editorContext.brushes.clearField(field.fieldKey)
           : null,
       child: shell.child,
     );

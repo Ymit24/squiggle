@@ -55,7 +55,19 @@ abstract class InspectorField<T> {
     }
   }
 
-  void applyIfCompatible(Object? value) {
-    if (value is T) apply(value);
+  Object? encodeValue(T value);
+  T decodeValue(Object? raw);
+
+  /// Invalid overrides leave the current default intact.
+  void applySerialized(Object? raw) {
+    final T value;
+    try {
+      value = decodeValue(raw);
+    } on FormatException {
+      return;
+    } on ArgumentError {
+      return;
+    }
+    apply(value);
   }
 }

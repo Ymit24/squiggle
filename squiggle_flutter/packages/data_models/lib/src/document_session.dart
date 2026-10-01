@@ -1,3 +1,5 @@
+import 'package:data_models/src/brush_profile.dart';
+
 /// Persisted editor preferences, independent of document content and undo.
 class DocumentSession {
   const DocumentSession({
@@ -21,24 +23,4 @@ class DocumentSession {
     'activeBrushId': activeBrushId,
     'brushes': brushes.map((brush) => brush.toJson()).toList(),
   };
-}
-
-class BrushProfile {
-  const BrushProfile({
-    required this.id,
-    required this.name,
-    this.values = const {},
-  });
-
-  final String id;
-  final String name;
-  final Map<String, dynamic> values;
-
-  factory BrushProfile.fromJson(Map<String, dynamic> json) => BrushProfile(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    values: Map<String, dynamic>.from(json['values'] as Map? ?? {}),
-  );
-
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'values': values};
 }

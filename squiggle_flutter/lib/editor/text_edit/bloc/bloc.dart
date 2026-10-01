@@ -67,7 +67,7 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
             final feature = newTextFeatureAt(
               worldOrigin,
               event.contents,
-              configureKind: context.applyInspectorValues,
+              configureKind: context.brushes.active.applyTo,
             );
             transaction.add(feature);
           });

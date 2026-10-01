@@ -60,11 +60,11 @@ void main() {
         FeatureKindRectangle(),
         FeatureKindCircle(),
       ]) {
-        context.applyInspectorValues(kind);
+        context.brushes.active.applyTo(kind);
         expect((kind as FillTypeCapable).fillType, FillType.solid);
       }
       final line = features.last.kind;
-      context.applyInspectorValues(line);
+      context.brushes.active.applyTo(line);
       expect(
         line.buildInspectorFields().any(
           (field) => field.fieldKey == 'fillType',

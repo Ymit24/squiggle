@@ -1,3 +1,5 @@
+import 'package:squiggle_flutter/editor/brush_controller.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -7,10 +9,6 @@ import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/brush_profile.dart';
-import 'package:squiggle_flutter/tools/create_feature_tool.dart';
-import 'package:squiggle_flutter/tools/create_line_tool.dart';
-import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
@@ -30,7 +28,9 @@ class EditorContext extends ChangeNotifier {
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
        _history = history ?? History(document: document),
-       _textEdit = textEdit ?? TextEditModel() {
+       _textEdit = textEdit ?? TextEditModel(),
+       brushes = BrushController(document.session) {
+    brushes.addListener(_forward);
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -43,9 +43,7 @@ class EditorContext extends ChangeNotifier {
   final History _history;
   final TextEditModel _textEdit;
 
-  /// Persisted session changes are separate from pointer/camera notifications.
-  final ChangeNotifier sessionChanges = ChangeNotifier();
-  int _brushSequence = 0;
+  final BrushController brushes;
 
   void openContextMenuAt(
     BuildContext context,
@@ -138,92 +136,14 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  BrushProfile get activeBrush => document.session.activeBrush;
-
-  void activateBrush(String id) {
-    if (document.session.activeBrushId == id) return;
-    if (!document.session.brushes.any((brush) => brush.id == id)) return;
-    document.session.activeBrushId = id;
-    _sessionChanged();
-  }
-
-  BrushProfile createBrush(String name) {
-    if (!document.session.canCreateBrush) {
-      throw StateError('A document can have at most nine brushes.');
-    }
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) throw ArgumentError.value(name, 'name');
-    String id;
-    do {
-      id = 'brush-${DateTime.now().microsecondsSinceEpoch}-${_brushSequence++}';
-    } while (document.session.brushes.any((brush) => brush.id == id));
-    final brush = BrushProfile(
-      id: id,
-      name: trimmed,
-      values: activeBrush.values,
-    );
-    document.session.brushes.add(brush);
-    document.session.activeBrushId = brush.id;
-    _sessionChanged();
-    return brush;
-  }
-
-  void renameBrush(String id, String name) {
-    final brush = document.session.brushes
-        .where((brush) => brush.id == id)
-        .firstOrNull;
-    if (brush == null || brush.isScratch || name.trim().isEmpty) return;
-    brush.name = name.trim();
-    _sessionChanged();
-  }
-
-  void deleteBrush(String id) {
-    final brush = document.session.brushes
-        .where((brush) => brush.id == id)
-        .firstOrNull;
-    if (brush == null || brush.isScratch) return;
-    if (activeBrush.id == id) {
-      document.session.scratch.values
-        ..clear()
-        ..addAll(brush.values);
-      document.session.activeBrushId = BrushProfile.scratchId;
-    }
-    document.session.brushes.remove(brush);
-    _sessionChanged();
-  }
-
-  void setDrawingField(String key, Object? value) {
-    activeBrush.values[key] = value;
-    _sessionChanged();
-  }
-
-  void clearDrawingField(String key) {
-    if (!activeBrush.values.containsKey(key)) return;
-    activeBrush.values.remove(key);
-    _sessionChanged();
-  }
-
-  void _sessionChanged() {
-    sessionChanges.notifyListeners();
-    notifyListeners();
-  }
-
-  /// Kept as an alias for creation call sites; selection edits never call this.
-  void rememberInspectorValue(String fieldKey, Object? value) =>
-      setDrawingField(fieldKey, value);
-
-  void applyInspectorValues(FeatureKind kind) => activeBrush.applyTo(kind);
-
   /// Fresh defaults for the active creation tool, never its mutable template.
   FeatureKind? get drawingInspectorKind {
-    final kind = switch (tool.activeTool) {
-      CreateFeatureTool(:final kind) => kind.clone(),
-      CreateLineTool() => FeatureKindPolyline([]),
-      CreateTextTool() => FeatureKindText(''),
-      _ => null,
-    };
-    if (kind != null) activeBrush.applyTo(kind);
-    return kind;
+    if (tool.activeTool case DrawingTool drawingTool) {
+      final kind = drawingTool.createDrawingKind();
+      brushes.active.applyTo(kind);
+      return kind;
+    }
+    return null;
   }
 
   /// Replaces the document contents and resets transient state.
@@ -234,6 +154,7 @@ class EditorContext extends ChangeNotifier {
 
     selection.clearSelection();
     endTextEdit();
+    brushes.bindSession(document.session);
   }
 
   @override
@@ -242,7 +163,8 @@ class EditorContext extends ChangeNotifier {
     _tool.removeListener(_forward);
     _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
-    sessionChanges.dispose();
+    brushes.removeListener(_forward);
+    brushes.dispose();
     super.dispose();
   }
 }

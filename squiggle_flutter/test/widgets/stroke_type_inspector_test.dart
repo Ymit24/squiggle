@@ -125,7 +125,7 @@ void main() {
         FeatureKindCircle(),
         FeatureKindPolyline([Offset.zero, const Offset(100, 0)]),
       ]) {
-        context.applyInspectorValues(kind);
+        context.brushes.active.applyTo(kind);
         expect((kind as StrokeTypeCapable).strokeType, StrokeType.solid);
       }
     },

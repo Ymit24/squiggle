@@ -47,8 +47,8 @@ void main() {
       'session-only changes autosave and stay local to each document',
       () async {
         final firstId = library.currentDocument!.id;
-        final brush = context.createBrush('Construction');
-        context.setDrawingField('strokeWidth', 3.0);
+        final brush = context.brushes.create('Construction');
+        context.brushes.setField('strokeWidth', 3.0);
         // Loading waits for the queued autosave, with no explicit save call.
         final saved = (await library.documentStorage.loadDocument(
           firstId,
@@ -57,11 +57,11 @@ void main() {
         expect(saved.session.activeBrush.values['strokeWidth'], 3.0);
         expect(context.history.canUndo, isFalse);
         await library.createDocument(name: 'Other');
-        expect(context.activeBrush.isScratch, isTrue);
-        expect(context.activeBrush.values, isEmpty);
+        expect(context.brushes.active.isScratch, isTrue);
+        expect(context.brushes.active.values, isEmpty);
         await library.openDocument(firstId);
-        expect(context.activeBrush.id, brush.id);
-        expect(context.activeBrush.values['strokeWidth'], 3.0);
+        expect(context.brushes.active.id, brush.id);
+        expect(context.brushes.active.values['strokeWidth'], 3.0);
       },
     );
 

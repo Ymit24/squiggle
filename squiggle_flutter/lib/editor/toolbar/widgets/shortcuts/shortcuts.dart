@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -136,10 +137,10 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 final editor = context.read<EditorContext>();
                 if (!textEditOpen &&
                     editor.selection.selectedNodeIds.isEmpty &&
-                    editor.drawingInspectorKind != null &&
-                    intent.index < editor.document.session.brushes.length) {
-                  editor.activateBrush(
-                    editor.document.session.brushes[intent.index].id,
+                    editor.tool.activeTool is DrawingTool &&
+                    intent.index < editor.brushes.profiles.length) {
+                  editor.brushes.activate(
+                    editor.brushes.profiles[intent.index].id,
                   );
                 }
                 return null;

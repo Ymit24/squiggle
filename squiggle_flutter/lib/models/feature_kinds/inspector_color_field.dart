@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/style_panel/style_presets.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/color_row.dart';
@@ -5,6 +6,12 @@ import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shel
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
 class InspectorColorField extends InspectorField<Color> {
+  @override
+  Object? encodeValue(Color value) => value.toARGB32();
+
+  @override
+  Color decodeValue(Object? raw) => decodeStyleColor(raw);
+
   InspectorColorField({
     required super.fieldKey,
     required super.label,

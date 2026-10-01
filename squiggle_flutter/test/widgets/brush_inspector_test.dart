@@ -56,8 +56,8 @@ void main() {
       final editor = EditorContext(document: Document());
       addTearDown(editor.dispose);
       editor.setTool(CreateFeatureTool.rect());
-      final actual = editor.createBrush('Actual');
-      final construction = editor.createBrush('Construction');
+      final actual = editor.brushes.create('Actual');
+      final construction = editor.brushes.create('Construction');
       await mount(tester, editor, GlobalKey());
       Future<void> shortcut(LogicalKeyboardKey key, {bool meta = true}) async {
         final modifier = meta
@@ -70,11 +70,11 @@ void main() {
       }
 
       await shortcut(LogicalKeyboardKey.digit1);
-      expect(editor.activeBrush.isScratch, isTrue);
+      expect(editor.brushes.active.isScratch, isTrue);
       await shortcut(LogicalKeyboardKey.digit2, meta: false);
-      expect(editor.activeBrush.id, actual.id);
+      expect(editor.brushes.active.id, actual.id);
       await shortcut(LogicalKeyboardKey.digit9);
-      expect(editor.activeBrush.id, actual.id);
+      expect(editor.brushes.active.id, actual.id);
       expect(editor.tool.activeTool, isA<CreateFeatureTool>());
       final feature = editor.document.addNode(
         Feature(
@@ -86,17 +86,17 @@ void main() {
       editor.selection.setSelection([feature.id]);
       await tester.pumpAndSettle();
       await shortcut(LogicalKeyboardKey.digit3);
-      expect(editor.activeBrush.id, actual.id);
+      expect(editor.brushes.active.id, actual.id);
       editor.selection.clearSelection();
       editor.setTool(SelectTool());
       await tester.pumpAndSettle();
       await shortcut(LogicalKeyboardKey.digit3);
-      expect(editor.activeBrush.id, actual.id);
+      expect(editor.brushes.active.id, actual.id);
       editor.setTool(CreateFeatureTool.rect());
-      editor.deleteBrush(actual.id);
+      editor.brushes.delete(actual.id);
       await tester.pumpAndSettle();
       await shortcut(LogicalKeyboardKey.digit2);
-      expect(editor.activeBrush.id, construction.id);
+      expect(editor.brushes.active.id, construction.id);
       expect(editor.history.canUndo, isFalse);
     },
   );
@@ -108,11 +108,11 @@ void main() {
     addTearDown(editor.dispose);
     editor.setTool(CreateFeatureTool.rect());
     for (var index = 1; index < 9; index++) {
-      editor.createBrush('Brush $index');
+      editor.brushes.create('Brush $index');
     }
-    final last = editor.activeBrush;
+    final last = editor.brushes.active;
     expect(editor.document.session.brushes, hasLength(9));
-    expect(() => editor.createBrush('Overflow'), throwsStateError);
+    expect(() => editor.brushes.create('Overflow'), throwsStateError);
     await mount(tester, editor, GlobalKey());
     await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
     await tester.pumpAndSettle();
@@ -133,7 +133,7 @@ void main() {
     expect(tester.widget<SquiggleMenuItem>(create).onPressed, isNull);
     await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
     await tester.pumpAndSettle();
-    editor.deleteBrush(last.id);
+    editor.brushes.delete(last.id);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
     await tester.pumpAndSettle();
@@ -146,7 +146,7 @@ void main() {
       final editor = EditorContext(document: Document());
       addTearDown(editor.dispose);
       editor.setTool(CreateFeatureTool.rect());
-      editor.setDrawingField('strokeColor', Colors.orange);
+      editor.brushes.setField('strokeColor', Colors.orange.toARGB32());
       await mount(tester, editor, GlobalKey());
       await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
       await tester.pumpAndSettle();
@@ -156,15 +156,19 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Create'));
       await tester.pumpAndSettle();
-      expect(editor.activeBrush.name, 'Construction');
-      expect(editor.activeBrush.values, {'strokeColor': Colors.orange});
-      editor.setDrawingField('strokeWidth', 3.0);
+      expect(editor.brushes.active.name, 'Construction');
+      expect(editor.brushes.active.values, {
+        'strokeColor': Colors.orange.toARGB32(),
+      });
+      editor.brushes.setField('strokeWidth', 3.0);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Scratch'));
       await tester.pumpAndSettle();
-      expect(editor.activeBrush.values, {'strokeColor': Colors.orange});
+      expect(editor.brushes.active.values, {
+        'strokeColor': Colors.orange.toARGB32(),
+      });
       expect(find.byKey(const ValueKey('brush-actions-trigger')), findsNothing);
     },
   );
@@ -180,12 +184,12 @@ void main() {
           .widget<StrokeWidthSelector>(find.byType(StrokeWidthSelector))
           .onPresetSelected(StrokeWidthPreset.thin);
       await tester.pumpAndSettle();
-      expect(editor.activeBrush.values['strokeWidth'], 3.0);
+      expect(editor.brushes.active.values['strokeWidth'], 3.0);
       expect(editor.history.canUndo, isFalse);
       expect(find.byTooltip('Clear brush override'), findsOneWidget);
       await tester.tap(find.byTooltip('Clear brush override'));
       await tester.pumpAndSettle();
-      expect(editor.activeBrush.values, isEmpty);
+      expect(editor.brushes.active.values, isEmpty);
 
       final feature =
           editor.document.addNode(
@@ -204,7 +208,7 @@ void main() {
           .onPresetSelected(StrokeWidthPreset.thick);
       await tester.pumpAndSettle();
       expect((feature.kind as FeatureKindRectangle).strokeWidth, 16.0);
-      expect(editor.activeBrush.values, isEmpty);
+      expect(editor.brushes.active.values, isEmpty);
       expect(find.byTooltip('Clear brush override'), findsNothing);
       editor.undo();
       await tester.pumpAndSettle();
@@ -238,30 +242,36 @@ void main() {
           id: 'construction',
           name: 'Construction',
           values: {
-            'strokeColor': const Color(0xFFDB963F),
-            'strokeType': StrokeType.dashed,
+            'strokeColor': const Color(0xFFDB963F).toARGB32(),
+            'strokeType': StrokeType.dashed.name,
             'strokeWidth': 3.0,
-            'fillColor': Colors.transparent,
+            'fillColor': Colors.transparent.toARGB32(),
           },
         ),
         BrushProfile(
           id: 'notes',
           name: 'Notes',
-          values: {'strokeColor': const Color(0xFF4976B8), 'fontSize': 24.0},
+          values: {
+            'strokeColor': const Color(0xFF4976B8).toARGB32(),
+            'fontSize': 24.0,
+          },
         ),
         BrushProfile(
           id: 'warnings',
           name: 'Warnings',
-          values: {'strokeColor': const Color(0xFFE45B5B), 'fontSize': 24.0},
+          values: {
+            'strokeColor': const Color(0xFFE45B5B).toARGB32(),
+            'fontSize': 24.0,
+          },
         ),
       ]);
-      final actual = editor.createBrush('Actual');
+      final actual = editor.brushes.create('Actual');
       // Preview fixtures are document-local profiles, not built-in defaults.
       editor.document.session.brushes.remove(actual);
       editor.document.session.brushes.insert(2, actual);
-      editor.setDrawingField('strokeWidth', 8.0);
-      editor.setDrawingField('strokeColor', Colors.white);
-      editor.setDrawingField('endEndCap', LineEndCap.arrow);
+      editor.brushes.setField('strokeWidth', 8.0);
+      editor.brushes.setField('strokeColor', Colors.white.toARGB32());
+      editor.brushes.setField('endEndCap', LineEndCap.arrow.name);
       editor.document.addNode(
         Feature(
           origin: const Offset(430, 200),
@@ -308,19 +318,19 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Actual geometry');
       await tester.tap(find.text('Rename'));
       await tester.pumpAndSettle();
-      expect(editor.activeBrush.name, 'Actual geometry');
+      expect(editor.brushes.active.name, 'Actual geometry');
       await tester.tap(find.byKey(const ValueKey('brush-actions-trigger')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Delete brush'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Delete'));
       await tester.pumpAndSettle();
-      expect(editor.activeBrush.isScratch, isTrue);
+      expect(editor.brushes.active.isScratch, isTrue);
       expect(
         editor.document.session.brushes.any((brush) => brush.id == actual.id),
         isFalse,
       );
-      expect(editor.activeBrush.values['strokeWidth'], 8.0);
+      expect(editor.brushes.active.values['strokeWidth'], 8.0);
       expect(find.byKey(const ValueKey('brush-actions-trigger')), findsNothing);
       expect(editor.history.canUndo, isFalse);
     },

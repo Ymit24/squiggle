@@ -67,15 +67,18 @@ void main() {
         final created = await storage.createDocument(name: 'Brushes');
         final editor = EditorContext(document: Document());
         addTearDown(editor.dispose);
-        final brush = editor.createBrush('Construction');
-        editor.setDrawingField('strokeColor', const Color(0xFFFFAA00));
-        editor.setDrawingField('strokeType', StrokeType.dashed);
+        final brush = editor.brushes.create('Construction');
+        editor.brushes.setField(
+          'strokeColor',
+          const Color(0xFFFFAA00).toARGB32(),
+        );
+        editor.brushes.setField('strokeType', StrokeType.dashed.name);
         final first = storage.saveDocument(
           created.id,
           editor.document,
           'Brushes',
         );
-        editor.setDrawingField('strokeWidth', 3.0);
+        editor.brushes.setField('strokeWidth', 3.0);
         final second = storage.saveDocument(
           created.id,
           editor.document,
