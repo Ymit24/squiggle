@@ -12,7 +12,7 @@ import 'package:squiggle_flutter/tools/select_tool/duplicate_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 
-class TranslateState extends InteractionState {
+class TranslateState extends SelectInteractionState {
   TranslateState({
     required super.parent,
     required this._start,
@@ -41,14 +41,14 @@ class TranslateState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
     final totalMotion = constrainedMoveDelta(
       _start,
-      cursorWorldPosition,
+      worldPosition,
       constrainToAxis: isShiftPressed,
     );
 
@@ -63,7 +63,7 @@ class TranslateState extends InteractionState {
       parent.transition(state, context);
       state.onPointerMove(
         context,
-        cursorWorldPosition,
+        worldPosition,
         camera,
         isShiftPressed: isShiftPressed,
         isAltPressed: isAltPressed,
@@ -89,7 +89,7 @@ class TranslateState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,

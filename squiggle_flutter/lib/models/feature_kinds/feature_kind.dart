@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/painting/stroke_painter.dart';
+import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
@@ -69,10 +71,26 @@ mixin FillColorCapable {
   bool get hasVisibleFill => fillColor.a > 0;
 }
 
+mixin FillTypeCapable {
+  FillType get fillType;
+  set fillType(FillType value);
+}
+
+FillType _fillTypeFromDataModel(Map<String, dynamic> content) =>
+    FillType.values.asNameMap()[content['fillType']] ?? FillType.solid;
+
 mixin StrokeWidthCapable {
   double get strokeWidth;
   set strokeWidth(double value);
 }
+
+mixin StrokeTypeCapable {
+  StrokeType get strokeType;
+  set strokeType(StrokeType value);
+}
+
+StrokeType _strokeTypeFromDataModel(Map<String, dynamic> content) =>
+    StrokeType.values.asNameMap()[content['strokeType']] ?? StrokeType.solid;
 
 mixin LabelCapable {
   String get label;

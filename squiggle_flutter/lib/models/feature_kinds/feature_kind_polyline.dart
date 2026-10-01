@@ -1,11 +1,16 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable, BindingSourceCapable {
+    with
+        StrokeColorCapable,
+        StrokeWidthCapable,
+        StrokeTypeCapable,
+        BindingSourceCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
     this.strokeWidth = defaultStrokeWidth,
+    this.strokeType = StrokeType.solid,
     this.startEndCap = LineEndCap.rounded,
     this.endEndCap = LineEndCap.rounded,
     this.startBinding,
@@ -20,6 +25,7 @@ final class FeatureKindPolyline extends FeatureKind
         ],
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        strokeType: _strokeTypeFromDataModel(content),
         startEndCap: _endCapFromDataModel(content, 'startEndCap'),
         endEndCap: _endCapFromDataModel(content, 'endEndCap'),
         startBinding: content['startBinding'] == null
@@ -42,6 +48,7 @@ final class FeatureKindPolyline extends FeatureKind
     ],
     'strokeColor': strokeColor.toARGB32(),
     'strokeWidth': strokeWidth,
+    'strokeType': strokeType.name,
     'startEndCap': startEndCap.name,
     'endEndCap': endEndCap.name,
     if (startBinding != null) 'startBinding': startBinding!.toJson(),
@@ -53,6 +60,7 @@ final class FeatureKindPolyline extends FeatureKind
     localPoints,
     strokeColor: strokeColor,
     strokeWidth: strokeWidth,
+    strokeType: strokeType,
     startEndCap: startEndCap,
     endEndCap: endEndCap,
     startBinding: startBinding,
@@ -65,6 +73,9 @@ final class FeatureKindPolyline extends FeatureKind
 
   @override
   double strokeWidth;
+
+  @override
+  StrokeType strokeType;
   LineEndCap startEndCap;
   LineEndCap endEndCap;
   NodeBinding? startBinding;
@@ -251,7 +262,8 @@ final class FeatureKindPolyline extends FeatureKind
     final path = _pathFor(feature);
 
     if (hasVisibleStroke) {
-      canvas.drawPath(
+      paintStroke(
+        canvas,
         path,
         Paint()
           ..color = strokeColor
@@ -259,6 +271,7 @@ final class FeatureKindPolyline extends FeatureKind
           ..strokeWidth = strokeWidth
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
+        strokeType,
       );
       _paintArrowHeads(canvas, feature);
     }
@@ -332,6 +345,12 @@ final class FeatureKindPolyline extends FeatureKind
         onColorChanged: (color) {
           strokeColor = color;
         },
+      ),
+      InspectorStrokeTypeField(
+        fieldKey: 'strokeType',
+        label: 'Stroke Type',
+        value: strokeType,
+        onTypeChanged: (type) => strokeType = type,
       ),
       InspectorWidthField(
         fieldKey: 'strokeWidth',

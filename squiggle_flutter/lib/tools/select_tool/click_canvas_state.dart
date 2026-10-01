@@ -7,7 +7,7 @@ import 'package:squiggle_flutter/tools/select_tool/box_selection_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 
-class ClickCanvasState extends InteractionState {
+class ClickCanvasState extends SelectInteractionState {
   ClickCanvasState({required super.parent, required this._start});
 
   final Offset _start;
@@ -15,7 +15,7 @@ class ClickCanvasState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
@@ -28,7 +28,7 @@ class ClickCanvasState extends InteractionState {
     parent.transition(state, context);
     state.onPointerMove(
       context,
-      cursorWorldPosition,
+      worldPosition,
       camera,
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
@@ -38,7 +38,7 @@ class ClickCanvasState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,

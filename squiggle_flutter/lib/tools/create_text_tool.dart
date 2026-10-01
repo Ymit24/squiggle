@@ -62,6 +62,7 @@ class CreateTextTool extends Tool {
         ),
       ),
     );
+    context.resetToSelectTool();
     return true;
   }
 }

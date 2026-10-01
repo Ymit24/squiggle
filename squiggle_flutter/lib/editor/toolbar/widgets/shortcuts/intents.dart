@@ -1,7 +1,18 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/editor/layer_order_commands.dart';
+
+class ReorderSelectedNodesIntent extends Intent {
+  const ReorderSelectedNodesIntent(this.action);
+
+  final LayerOrder action;
+}
 
 class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();
+}
+
+class ToggleToolLockIntent extends Intent {
+  const ToggleToolLockIntent();
 }
 
 class ActivateCreateRectToolIntent extends Intent {
@@ -32,10 +43,18 @@ class CopySelectedFeaturesIntent extends Intent {
   const CopySelectedFeaturesIntent();
 }
 
+class CutSelectedFeaturesIntent extends Intent {
+  const CutSelectedFeaturesIntent();
+}
+
 class UndoDocumentIntent extends Intent {
   const UndoDocumentIntent();
 }
 
 class RedoDocumentIntent extends Intent {
   const RedoDocumentIntent();
+}
+
+class DuplicateSelectedFeaturesIntent extends Intent {
+  const DuplicateSelectedFeaturesIntent();
 }

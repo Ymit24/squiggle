@@ -23,6 +23,14 @@ const kButtonHorizontalPadding = 14.0;
 const kButtonIconSize = 18.0;
 const kButtonIconGap = 7.0;
 
+const kMenuWidth = 188.0;
+const kMenuPadding = 6.0;
+const kMenuItemHeight = 28.0;
+const kMenuItemHorizontalPadding = 7.0;
+const kMenuIconGap = 12.0;
+const kMenuShortcutGap = 8.0;
+const kMenuDividerHeight = 14.0;
+
 const kSwatchGridWidth =
     kSwatchColumns * kSwatchSize + (kSwatchColumns - 1) * kSwatchGap;
 
@@ -51,6 +59,13 @@ class SquiggleSpacing {
     required this.buttonHorizontalPadding,
     required this.buttonIconSize,
     required this.buttonIconGap,
+    required this.menuWidth,
+    required this.menuPadding,
+    required this.menuItemHeight,
+    required this.menuItemHorizontalPadding,
+    required this.menuIconGap,
+    required this.menuShortcutGap,
+    required this.menuDividerHeight,
   });
 
   final double overlayTop;
@@ -74,6 +89,13 @@ class SquiggleSpacing {
   final double buttonHorizontalPadding;
   final double buttonIconSize;
   final double buttonIconGap;
+  final double menuWidth;
+  final double menuPadding;
+  final double menuItemHeight;
+  final double menuItemHorizontalPadding;
+  final double menuIconGap;
+  final double menuShortcutGap;
+  final double menuDividerHeight;
 
   int get swatchColumns => kSwatchColumns;
 
@@ -101,6 +123,13 @@ class SquiggleSpacing {
     buttonHorizontalPadding: kButtonHorizontalPadding,
     buttonIconSize: kButtonIconSize,
     buttonIconGap: kButtonIconGap,
+    menuWidth: kMenuWidth,
+    menuPadding: kMenuPadding,
+    menuItemHeight: kMenuItemHeight,
+    menuItemHorizontalPadding: kMenuItemHorizontalPadding,
+    menuIconGap: kMenuIconGap,
+    menuShortcutGap: kMenuShortcutGap,
+    menuDividerHeight: kMenuDividerHeight,
   );
 
   SquiggleSpacing copyWith({
@@ -125,6 +154,13 @@ class SquiggleSpacing {
     double? buttonHorizontalPadding,
     double? buttonIconSize,
     double? buttonIconGap,
+    double? menuWidth,
+    double? menuPadding,
+    double? menuItemHeight,
+    double? menuItemHorizontalPadding,
+    double? menuIconGap,
+    double? menuShortcutGap,
+    double? menuDividerHeight,
   }) {
     return SquiggleSpacing(
       overlayTop: overlayTop ?? this.overlayTop,
@@ -153,6 +189,14 @@ class SquiggleSpacing {
           buttonHorizontalPadding ?? this.buttonHorizontalPadding,
       buttonIconSize: buttonIconSize ?? this.buttonIconSize,
       buttonIconGap: buttonIconGap ?? this.buttonIconGap,
+      menuWidth: menuWidth ?? this.menuWidth,
+      menuPadding: menuPadding ?? this.menuPadding,
+      menuItemHeight: menuItemHeight ?? this.menuItemHeight,
+      menuItemHorizontalPadding:
+          menuItemHorizontalPadding ?? this.menuItemHorizontalPadding,
+      menuIconGap: menuIconGap ?? this.menuIconGap,
+      menuShortcutGap: menuShortcutGap ?? this.menuShortcutGap,
+      menuDividerHeight: menuDividerHeight ?? this.menuDividerHeight,
     );
   }
 
@@ -219,6 +263,21 @@ class SquiggleSpacing {
       ),
       buttonIconSize: _lerpDouble(buttonIconSize, other.buttonIconSize, t),
       buttonIconGap: _lerpDouble(buttonIconGap, other.buttonIconGap, t),
+      menuWidth: _lerpDouble(menuWidth, other.menuWidth, t),
+      menuPadding: _lerpDouble(menuPadding, other.menuPadding, t),
+      menuItemHeight: _lerpDouble(menuItemHeight, other.menuItemHeight, t),
+      menuItemHorizontalPadding: _lerpDouble(
+        menuItemHorizontalPadding,
+        other.menuItemHorizontalPadding,
+        t,
+      ),
+      menuIconGap: _lerpDouble(menuIconGap, other.menuIconGap, t),
+      menuShortcutGap: _lerpDouble(menuShortcutGap, other.menuShortcutGap, t),
+      menuDividerHeight: _lerpDouble(
+        menuDividerHeight,
+        other.menuDividerHeight,
+        t,
+      ),
     );
   }
 

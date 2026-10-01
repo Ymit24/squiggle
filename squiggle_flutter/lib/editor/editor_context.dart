@@ -1,14 +1,15 @@
-import 'dart:ui';
-
-import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/tool_model.dart';
+import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
+import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
 /// tools, render objects, blocs, and services.
@@ -38,6 +39,27 @@ class EditorContext extends ChangeNotifier {
   final History _history;
   final TextEditModel _textEdit;
   final Map<String, Object?> _inspectorValues = {};
+
+  void openContextMenuAt(
+    BuildContext context,
+    Offset localScreenPosition,
+    Offset worldPosition, {
+    required ImageRepository imageRepository,
+  }) {
+    final node = document.nodeAtPoint(worldPosition);
+    if (node != null && !selection.isNodeSelected(node.id)) {
+      selection.setSelection([node.id]);
+    }
+
+    showSquiggleContextMenu(
+      context: context,
+      builder: (_) => ContextMenu(
+        localScreenPosition: localScreenPosition,
+        editorContext: this,
+        imageRepository: imageRepository,
+      ),
+    );
+  }
 
   SelectionModel get selection => _selection;
 
@@ -102,6 +124,8 @@ class EditorContext extends ChangeNotifier {
   }
 
   void setTool(Tool tool) => _tool.setTool(tool, this);
+
+  void resetToSelectTool() => _tool.resetToSelectTool(this);
 
   void startTextEdit(TextEditSession session) => _textEdit.begin(session);
 

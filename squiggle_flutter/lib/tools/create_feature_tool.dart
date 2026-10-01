@@ -18,6 +18,7 @@ class CreateFeatureTool extends Tool {
       CreateFeatureTool(kind: FeatureKindCircle());
 
   final FeatureKind kind;
+
   _CreateState _state;
 
   @override
@@ -99,6 +100,7 @@ class CreateFeatureTool extends Tool {
         transaction.add(feature);
       });
       _state = const _Idle();
+      context.resetToSelectTool();
     }
     return true;
   }

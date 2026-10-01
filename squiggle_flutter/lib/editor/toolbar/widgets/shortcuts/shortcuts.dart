@@ -1,18 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/toolbar/bloc/event.dart';
+import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
-import 'package:squiggle_flutter/services/paste_image.dart';
-import 'package:squiggle_flutter/services/paste_text.dart';
+import 'package:squiggle_flutter/services/paste_clipboard.dart';
+import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _toolShortcuts = {
+  SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true):
+      ReorderSelectedNodesIntent(LayerOrder.backward),
+  SingleActivator(LogicalKeyboardKey.bracketLeft, control: true):
+      ReorderSelectedNodesIntent(LayerOrder.backward),
+  SingleActivator(LogicalKeyboardKey.bracketRight, meta: true):
+      ReorderSelectedNodesIntent(LayerOrder.forward),
+  SingleActivator(LogicalKeyboardKey.bracketRight, control: true):
+      ReorderSelectedNodesIntent(LayerOrder.forward),
+  SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.back),
+  SingleActivator(LogicalKeyboardKey.bracketLeft, control: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.back),
+  SingleActivator(LogicalKeyboardKey.bracketRight, meta: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.front),
+  SingleActivator(LogicalKeyboardKey.bracketRight, control: true, alt: true):
+      ReorderSelectedNodesIntent(LayerOrder.front),
+  SingleActivator(LogicalKeyboardKey.keyD, meta: true):
+      DuplicateSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyD, control: true):
+      DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyQ): ToggleToolLockIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
@@ -28,6 +52,10 @@ const _toolShortcuts = {
       CopySelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, control: true):
       CopySelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyX, meta: true):
+      CutSelectedFeaturesIntent(),
+  SingleActivator(LogicalKeyboardKey.keyX, control: true):
+      CutSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyZ, meta: true): UndoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyZ, control: true): UndoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true):
@@ -87,19 +115,37 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
         shortcuts: textEditOpen ? const {} : _toolShortcuts,
         child: Actions(
           actions: {
+            ToggleToolLockIntent: CallbackAction<ToggleToolLockIntent>(
+              onInvoke: (_) {
+                if (!textEditOpen) {
+                  context.read<EditorContext>().tool.toggleLock();
+                }
+                return null;
+              },
+            ),
+            ReorderSelectedNodesIntent:
+                CallbackAction<ReorderSelectedNodesIntent>(
+                  onInvoke: (intent) {
+                    if (!textEditOpen) {
+                      reorderSelectedNodes(
+                        context.read<EditorContext>(),
+                        intent.action,
+                      );
+                    }
+                    return null;
+                  },
+                ),
             ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
               onInvoke: (_) {
-                context.read<ToolbarBloc>().add(
-                  const ActivateSelectToolEvent(),
-                );
+                context.read<EditorContext>().setTool(SelectTool());
                 return null;
               },
             ),
             ActivateCreateRectToolIntent:
                 CallbackAction<ActivateCreateRectToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateRectToolEvent(),
+                    context.read<EditorContext>().setTool(
+                      CreateFeatureTool.rect(),
                     );
                     return null;
                   },
@@ -107,8 +153,8 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ActivateCreateCircleToolIntent:
                 CallbackAction<ActivateCreateCircleToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateCircleToolEvent(),
+                    context.read<EditorContext>().setTool(
+                      CreateFeatureTool.circle(),
                     );
                     return null;
                   },
@@ -116,18 +162,14 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ActivateCreateLineToolIntent:
                 CallbackAction<ActivateCreateLineToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateLineToolEvent(),
-                    );
+                    context.read<EditorContext>().setTool(CreateLineTool());
                     return null;
                   },
                 ),
             ActivateCreateTextToolIntent:
                 CallbackAction<ActivateCreateTextToolIntent>(
                   onInvoke: (_) {
-                    context.read<ToolbarBloc>().add(
-                      const ActivateCreateTextToolEvent(),
-                    );
+                    context.read<EditorContext>().setTool(CreateTextTool());
                     return null;
                   },
                 ),
@@ -144,24 +186,46 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                     return null;
                   },
                 ),
+            CutSelectedFeaturesIntent:
+                CallbackAction<CutSelectedFeaturesIntent>(
+                  onInvoke: (_) {
+                    if (textEditOpen) return null;
+                    cutSelectedNodesToClipboard(
+                      context: context.read<EditorContext>(),
+                      imageRepository: context.read<ImageRepository>(),
+                    );
+                    return null;
+                  },
+                ),
+            DuplicateSelectedFeaturesIntent:
+                CallbackAction<DuplicateSelectedFeaturesIntent>(
+                  onInvoke: (_) {
+                    if (textEditOpen) return null;
+                    duplicateSelectedNodes(context.read<EditorContext>());
+                    return null;
+                  },
+                ),
             PasteImageIntent: CallbackAction<PasteImageIntent>(
               onInvoke: (_) {
                 if (textEditOpen) {
                   return null;
                 }
-                _pasteFromClipboard(context);
+                pasteFromClipboard(
+                  context: context.read<EditorContext>(),
+                  imageRepository: context.read<ImageRepository>(),
+                );
                 return null;
               },
             ),
             UndoDocumentIntent: CallbackAction<UndoDocumentIntent>(
               onInvoke: (_) {
-                context.read<ToolbarBloc>().add(const UndoDocumentEvent());
+                context.read<EditorContext>().undo();
                 return null;
               },
             ),
             RedoDocumentIntent: CallbackAction<RedoDocumentIntent>(
               onInvoke: (_) {
-                context.read<ToolbarBloc>().add(const RedoDocumentEvent());
+                context.read<EditorContext>().redo();
                 return null;
               },
             ),
@@ -185,27 +249,4 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
       ),
     );
   }
-}
-
-Future<void> _pasteFromClipboard(BuildContext context) async {
-  final editorContext = context.read<EditorContext>();
-  final imageRepository = context.read<ImageRepository>();
-
-  final pastedNodes = await pasteNodesFromClipboard(
-    context: editorContext,
-    imageRepository: imageRepository,
-  );
-  if (pastedNodes) {
-    return;
-  }
-
-  final pastedText = await pasteTextFromClipboard(context: editorContext);
-  if (pastedText) {
-    return;
-  }
-
-  await pasteImageFromClipboard(
-    imageRepository: imageRepository,
-    context: editorContext,
-  );
 }

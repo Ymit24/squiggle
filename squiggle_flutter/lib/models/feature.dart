@@ -8,8 +8,10 @@ import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 
 export 'feature_kinds/feature_kind.dart';
 export 'font_size_preset.dart';
+export 'fill_type.dart';
 export 'line_end_cap.dart';
 export 'stroke_width_preset.dart';
+export 'stroke_type.dart';
 export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.

@@ -1,19 +1,18 @@
 import 'dart:ui';
-import 'dart:math' as math;
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/tools/binding_candidate.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
 
-class DragPolylineHandleState extends InteractionState {
+class DragPolylineHandleState extends SelectInteractionState {
   DragPolylineHandleState({
     required super.parent,
     required this._handle,
@@ -22,24 +21,16 @@ class DragPolylineHandleState extends InteractionState {
 
   final PolylineHandle _handle;
   final Offset pointerDownWorld;
-  Feature? _hoveredTarget;
-  RadialBinding? _proposedBinding;
-  NodeBinding? _initialBinding;
+  BindingCandidate? _candidate;
   bool _didDrag = false;
 
-  bool get _isEndpoint {
-    final kind = _handle.feature.kind as FeatureKindPolyline;
-    return _handle.pointIndex == 0 ||
-        _handle.pointIndex == kind.localPoints.length - 1;
-  }
-
+  FeatureKindPolyline get _kind => _handle.feature.kind as FeatureKindPolyline;
+  bool get _isEndpoint =>
+      _handle.pointIndex == 0 ||
+      _handle.pointIndex == _kind.localPoints.length - 1;
   @override
   void onEnter(EditorContext context) {
     parent.beginTransaction(context, 'Move point', [_handle.feature]);
-    final kind = _handle.feature.kind as FeatureKindPolyline;
-    _initialBinding = _handle.pointIndex == 0
-        ? kind.startBinding
-        : kind.endBinding;
   }
 
   @override
@@ -54,66 +45,40 @@ class DragPolylineHandleState extends InteractionState {
   @override
   void onPointerMove(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _updateDrag(context, cursorWorldPosition, isShiftPressed: isShiftPressed);
+    _updateDrag(context, worldPosition, camera, isShiftPressed: isShiftPressed);
   }
 
   void _updateDrag(
     EditorContext context,
-    Offset pointer, {
+    Offset worldPosition,
+    Camera camera, {
     required bool isShiftPressed,
   }) {
     if (!_didDrag &&
-        (pointer - pointerDownWorld).distance <
-            context.camera.screenLengthToWorldLength(2)) {
+        (worldPosition - pointerDownWorld).distance <
+            camera.screenLengthToWorldLength(2)) {
       return;
     }
-    final kind = _handle.feature.kind as FeatureKindPolyline;
-    if (!_didDrag && _isEndpoint) {
+    _didDrag = true;
+    final kind = _kind;
+    if (_isEndpoint) {
       if (_handle.pointIndex == 0) {
         kind.startBinding = null;
       } else {
         kind.endBinding = null;
       }
+      _candidate = BindingCandidate.at(context.document, worldPosition);
     }
-    _didDrag = true;
-    if (_isEndpoint) {
-      _hoveredTarget = context.document.bindingTargetAt(pointer);
-    }
-    final target = _hoveredTarget;
-    if (target != null) {
-      final bounds = (target.kind as BindingTargetCapable).bindingBoundsFor(
-        target,
-      );
-      final delta = pointer - bounds.center;
-      final previous = _initialBinding;
-      final angle =
-          delta.distanceSquared < 1e-8 &&
-              previous is RadialBinding &&
-              previous.targetId == target.id
-          ? previous.angle
-          : math.atan2(delta.dy, delta.dx);
-      _proposedBinding = RadialBinding(target.id, angle);
-      final parentOrigin = _handle.feature.parent?.globalOrigin ?? Offset.zero;
-      kind.setPoint(
-        _handle.feature,
-        _handle.pointIndex,
-        _proposedBinding!.pointOn(bounds) - parentOrigin,
-      );
-    } else {
-      _proposedBinding = null;
-      final parentOrigin = _handle.feature.parent?.globalOrigin ?? Offset.zero;
-      kind.setPoint(
-        _handle.feature,
-        _handle.pointIndex,
-        _targetPosition(kind, pointer, isShiftPressed: isShiftPressed) -
-            parentOrigin,
-      );
-    }
+    final target =
+        _candidate?.point ??
+        _targetPosition(kind, worldPosition, isShiftPressed: isShiftPressed);
+    final parentOrigin = _handle.feature.parent?.globalOrigin ?? Offset.zero;
+    kind.setPoint(_handle.feature, _handle.pointIndex, target - parentOrigin);
   }
 
   @override
@@ -123,28 +88,19 @@ class DragPolylineHandleState extends InteractionState {
     EditorContext context,
     ImageRepository imageRepository,
   ) {
-    final target = _hoveredTarget;
-    if (target == null) return;
-    final bounds = (target.kind as BindingTargetCapable)
-        .bindingBoundsFor(target)
-        .inflate(camera.screenLengthToWorldLength(4));
-    final outline = Paint()
-      ..color = SquiggleColors.accent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = camera.screenLengthToWorldLength(2);
-    canvas.drawRect(bounds, outline);
+    _candidate?.paint(canvas, camera);
   }
 
   Offset _targetPosition(
     FeatureKindPolyline kind,
-    Offset cursorWorldPosition, {
+    Offset worldPosition, {
     required bool isShiftPressed,
   }) {
-    if (!isShiftPressed) return cursorWorldPosition;
+    if (!isShiftPressed) return worldPosition;
 
     final points = kind.resolvedGlobalPoints(_handle.feature);
-    final origin = _snapOrigin(points, cursorWorldPosition);
-    return snapPointTo45DegreeAngle(origin, cursorWorldPosition);
+    final origin = _snapOrigin(points, worldPosition);
+    return snapPointTo45DegreeAngle(origin, worldPosition);
   }
 
   Offset _snapOrigin(List<Offset> points, Offset fallback) {
@@ -156,20 +112,17 @@ class DragPolylineHandleState extends InteractionState {
   @override
   void onPointerUp(
     EditorContext context,
-    Offset cursorWorldPosition,
+    Offset worldPosition,
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _updateDrag(context, cursorWorldPosition, isShiftPressed: isShiftPressed);
-    if (_didDrag) {
-      if (_isEndpoint) {
-        final kind = _handle.feature.kind as FeatureKindPolyline;
-        if (_handle.pointIndex == 0) {
-          kind.startBinding = _proposedBinding;
-        } else {
-          kind.endBinding = _proposedBinding;
-        }
+    _updateDrag(context, worldPosition, camera, isShiftPressed: isShiftPressed);
+    if (_didDrag && _isEndpoint) {
+      if (_handle.pointIndex == 0) {
+        _kind.startBinding = _candidate?.binding;
+      } else {
+        _kind.endBinding = _candidate?.binding;
       }
     }
     parent.transition(IdleInteractionState(parent: parent), context);

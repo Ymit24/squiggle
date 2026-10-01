@@ -4,13 +4,17 @@ final class FeatureKindCircle extends FeatureKind
     with
         StrokeColorCapable,
         FillColorCapable,
+        FillTypeCapable,
         StrokeWidthCapable,
+        StrokeTypeCapable,
         LabelCapable,
         BindingTargetCapable {
   FeatureKindCircle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
+    this.fillType = FillType.solid,
     this.strokeWidth = defaultStrokeWidth,
+    this.strokeType = StrokeType.solid,
     this.label = '',
     this.labelFontSize = _labelFontSize,
     this.labelVerticalAlignment = TextVerticalAlignment.center,
@@ -24,7 +28,13 @@ final class FeatureKindCircle extends FeatureKind
   Color fillColor;
 
   @override
+  FillType fillType;
+
+  @override
   double strokeWidth;
+
+  @override
+  StrokeType strokeType;
 
   @override
   String label;
@@ -38,7 +48,9 @@ final class FeatureKindCircle extends FeatureKind
       FeatureKindCircle(
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         fillColor: _colorFromDataModel(content, 'fillColor'),
+        fillType: _fillTypeFromDataModel(content),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        strokeType: _strokeTypeFromDataModel(content),
         label: content['label'],
         labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
         labelVerticalAlignment: TextVerticalAlignment.values.byName(
@@ -54,7 +66,9 @@ final class FeatureKindCircle extends FeatureKind
     'type': 'circle',
     'strokeColor': strokeColor.toARGB32(),
     'fillColor': fillColor.toARGB32(),
+    'fillType': fillType.name,
     'strokeWidth': strokeWidth,
+    'strokeType': strokeType.name,
     'label': label,
     'labelFontSize': labelFontSize,
     'labelVerticalAlignment': labelVerticalAlignment.name,
@@ -65,7 +79,9 @@ final class FeatureKindCircle extends FeatureKind
   FeatureKindCircle clone() => FeatureKindCircle(
     strokeColor: strokeColor,
     fillColor: fillColor,
+    fillType: fillType,
     strokeWidth: strokeWidth,
+    strokeType: strokeType,
     label: label,
     labelFontSize: labelFontSize,
     labelVerticalAlignment: labelVerticalAlignment,
@@ -86,13 +102,16 @@ final class FeatureKindCircle extends FeatureKind
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
-    canvas.drawOval(bounds, Paint()..color = fillColor);
-    canvas.drawOval(
-      bounds,
+    final path = Path()..addOval(bounds);
+    paintFill(canvas, path, Paint()..color = fillColor, fillType);
+    paintStroke(
+      canvas,
+      path,
       Paint()
         ..color = strokeColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth,
+      strokeType,
     );
 
     text_painter.paintText(
@@ -124,6 +143,18 @@ final class FeatureKindCircle extends FeatureKind
         onColorChanged: (color) {
           fillColor = color;
         },
+      ),
+      InspectorFillTypeField(
+        fieldKey: 'fillType',
+        label: 'Fill Type',
+        value: fillType,
+        onTypeChanged: (type) => fillType = type,
+      ),
+      InspectorStrokeTypeField(
+        fieldKey: 'strokeType',
+        label: 'Stroke Type',
+        value: strokeType,
+        onTypeChanged: (type) => strokeType = type,
       ),
       InspectorWidthField(
         fieldKey: 'strokeWidth',
