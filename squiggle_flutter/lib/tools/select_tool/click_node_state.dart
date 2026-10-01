@@ -73,10 +73,6 @@ class ClickNodeState extends SelectInteractionState {
               parent: parent,
               start: _start,
               selectedNodes: selectedNodes,
-              originsAtDragStart: {
-                for (final node in selectedNodes) node.id: node.origin,
-              },
-              selectionAlreadyMoved: false,
             )
           : TranslateState(
               parent: parent,

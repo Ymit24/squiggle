@@ -56,6 +56,14 @@ mixin BindingSourceCapable on FeatureKind {
   /// Called once before removal, with only this source's targets being deleted.
   /// The owner has already been captured for undo and all targets still exist.
   void onBindingTargetsDeleted(Feature owner, Set<NodeId> targetIds);
+
+  /// Captures resolved geometry on a detached copy and remaps its bindings.
+  /// Targets absent from [copiedIds] must be detached without moving geometry.
+  void prepareCopy(
+    Feature original,
+    Feature copy,
+    Map<NodeId, NodeId> copiedIds,
+  );
 }
 
 mixin BindingTargetCapable on FeatureKind {

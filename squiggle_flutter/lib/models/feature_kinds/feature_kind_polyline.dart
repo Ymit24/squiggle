@@ -87,6 +87,25 @@ final class FeatureKindPolyline extends FeatureKind
     if (endBinding case final binding?) yield binding;
   }
 
+  @override
+  void prepareCopy(
+    Feature original,
+    Feature copy,
+    Map<NodeId, NodeId> copiedIds,
+  ) {
+    final points = resolvedPoints(original);
+    final copiedKind = copy.kind as FeatureKindPolyline;
+    if (points.isNotEmpty) {
+      copiedKind.setGeometry(
+        copy,
+        origin: points.first,
+        localPoints: localPointsFromWorld(points, points.first),
+      );
+    }
+    copiedKind.startBinding = startBinding?.remap(copiedIds);
+    copiedKind.endBinding = endBinding?.remap(copiedIds);
+  }
+
   /// Geometry used for painting, bounds, hit tests and selection handles.
   /// Stored points remain available as fallbacks while a target is absent.
   List<Offset> resolvedPoints(Feature feature) {
