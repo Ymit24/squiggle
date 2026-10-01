@@ -18,6 +18,7 @@ void main() {
     expect(fields.keys, {
       'strokeColor',
       'fillColor',
+      'fillType',
       'strokeWidth',
       'strokeType',
       'fontSize',

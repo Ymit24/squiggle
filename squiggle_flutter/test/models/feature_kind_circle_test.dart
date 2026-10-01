@@ -8,6 +8,7 @@ void main() {
     final content = {
       'type': 'circle',
       'strokeColor': 0xFF112233,
+      'fillType': 'solid',
       'fillColor': 0xFF445566,
       'strokeType': 'solid',
       'strokeWidth': 3.5,

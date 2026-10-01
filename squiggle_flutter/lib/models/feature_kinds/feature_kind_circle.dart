@@ -4,12 +4,14 @@ final class FeatureKindCircle extends FeatureKind
     with
         StrokeColorCapable,
         FillColorCapable,
+        FillTypeCapable,
         StrokeWidthCapable,
         StrokeTypeCapable,
         LabelCapable {
   FeatureKindCircle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
+    this.fillType = FillType.solid,
     this.strokeWidth = defaultStrokeWidth,
     this.strokeType = StrokeType.solid,
     this.label = '',
@@ -23,6 +25,9 @@ final class FeatureKindCircle extends FeatureKind
 
   @override
   Color fillColor;
+
+  @override
+  FillType fillType;
 
   @override
   double strokeWidth;
@@ -42,6 +47,7 @@ final class FeatureKindCircle extends FeatureKind
       FeatureKindCircle(
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         fillColor: _colorFromDataModel(content, 'fillColor'),
+        fillType: _fillTypeFromDataModel(content),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
         strokeType: _strokeTypeFromDataModel(content),
         label: content['label'],
@@ -59,6 +65,7 @@ final class FeatureKindCircle extends FeatureKind
     'type': 'circle',
     'strokeColor': strokeColor.toARGB32(),
     'fillColor': fillColor.toARGB32(),
+    'fillType': fillType.name,
     'strokeWidth': strokeWidth,
     'strokeType': strokeType.name,
     'label': label,
@@ -71,6 +78,7 @@ final class FeatureKindCircle extends FeatureKind
   FeatureKindCircle clone() => FeatureKindCircle(
     strokeColor: strokeColor,
     fillColor: fillColor,
+    fillType: fillType,
     strokeWidth: strokeWidth,
     strokeType: strokeType,
     label: label,
@@ -93,10 +101,11 @@ final class FeatureKindCircle extends FeatureKind
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
-    canvas.drawOval(bounds, Paint()..color = fillColor);
+    final path = Path()..addOval(bounds);
+    paintFill(canvas, path, Paint()..color = fillColor, fillType);
     paintStroke(
       canvas,
-      Path()..addOval(bounds),
+      path,
       Paint()
         ..color = strokeColor
         ..style = PaintingStyle.stroke
@@ -133,6 +142,12 @@ final class FeatureKindCircle extends FeatureKind
         onColorChanged: (color) {
           fillColor = color;
         },
+      ),
+      InspectorFillTypeField(
+        fieldKey: 'fillType',
+        label: 'Fill Type',
+        value: fillType,
+        onTypeChanged: (type) => fillType = type,
       ),
       InspectorStrokeTypeField(
         fieldKey: 'strokeType',
