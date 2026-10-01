@@ -35,8 +35,10 @@ class BrushReorderRow extends StatelessWidget {
           ReorderableDragStartListener(
             key: ValueKey('brush-drag-${brush.id}'),
             index: index,
-            child: Tooltip(
-              message: 'Drag to reorder ${brush.name}',
+            // Tooltip portals cannot safely move between this lazy list
+            // and its drag overlay while the menu is laying out.
+            child: Semantics(
+              label: 'Drag to reorder ${brush.name}',
               child: MouseRegion(
                 cursor: SystemMouseCursors.grab,
                 child: SizedBox(

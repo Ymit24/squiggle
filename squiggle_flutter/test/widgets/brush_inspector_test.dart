@@ -1,3 +1,5 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,6 +52,50 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('repeated mouse drags while hovering handles keep rows mounted', (
+    tester,
+  ) async {
+    final editor = EditorContext(document: Document());
+    addTearDown(editor.dispose);
+    editor.setTool(CreateFeatureTool.rect());
+    final actual = editor.brushes.create('Normal');
+    final construction = editor.brushes.create('Construction');
+    editor.brushes.create('Notes');
+    editor.brushes.create('Warnings');
+    await mount(tester, editor, GlobalKey());
+    await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+    await tester.pumpAndSettle();
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer();
+    for (var i = 0; i < 8; i++) {
+      final named = editor.brushes.profiles.skip(1).toList();
+      final targetRow = tester.getCenter(find.byKey(ValueKey(named.first.id)));
+      final source = tester.getCenter(
+        find.byKey(ValueKey('brush-drag-${named.last.id}')),
+      );
+      // Keep hovering the handle after dropping, rather than the row label.
+      final target = Offset(source.dx, targetRow.dy);
+      await mouse.moveTo(source);
+      await tester.pump(const Duration(milliseconds: 800));
+      await mouse.down(source);
+      final drag = mouse;
+      await drag.moveBy(const Offset(0, -24));
+      await tester.pump();
+      await drag.moveTo(target);
+      await tester.pump(const Duration(milliseconds: 400));
+      await drag.up();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(editor.brushes.profiles.map((brush) => brush.id), [
+        'scratch',
+        named.last.id,
+        ...named.take(named.length - 1).map((brush) => brush.id),
+      ]);
+      expect(find.byKey(ValueKey(actual.id)), findsOneWidget);
+      expect(find.byKey(ValueKey(construction.id)), findsOneWidget);
+    }
+  });
 
   testWidgets(
     'handle drag commits on drop without selecting or closing the menu',
