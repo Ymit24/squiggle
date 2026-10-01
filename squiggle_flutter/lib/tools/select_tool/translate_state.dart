@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -17,15 +18,18 @@ class TranslateState extends SelectInteractionState {
     required super.parent,
     required this._start,
     required this.selectedNodes,
-    Map<NodeId, Offset>? initialOrigins,
     this._hasDuplicated = false,
-  }) : _initialOrigins =
-           initialOrigins ??
-           {for (final node in selectedNodes) node.id: node.origin};
+  }) : _initialOrigins = {
+         for (final node in selectedNodes) node.id: node.origin,
+       },
+       _originalNodes = {
+         for (final node in selectedNodes) node.id: node.toDataModel(),
+       };
 
   final Offset _start;
   final List<Node> selectedNodes;
   final Map<NodeId, Offset> _initialOrigins;
+  final Map<NodeId, data.Node> _originalNodes;
   final bool _hasDuplicated;
   bool _detachedBindings = false;
 
@@ -53,12 +57,14 @@ class TranslateState extends SelectInteractionState {
     );
 
     if (isAltPressed && !_hasDuplicated) {
+      // A move may have detached bindings and rebased local geometry.
+      for (final node in selectedNodes) {
+        node.restoreFromDataModel(_originalNodes[node.id]!);
+      }
       final state = DuplicateState(
         parent: parent,
         start: _start,
         selectedNodes: selectedNodes,
-        originsAtDragStart: _initialOrigins,
-        selectionAlreadyMoved: true,
       );
       parent.transition(state, context);
       state.onPointerMove(
@@ -71,11 +77,16 @@ class TranslateState extends SelectInteractionState {
       return;
     }
 
-    if (!_detachedBindings && totalMotion != Offset.zero) {
+    // Copying already detached external bindings; keep connections between
+    // the copied nodes while translating the duplicated selection.
+    if (!_detachedBindings && !_hasDuplicated && totalMotion != Offset.zero) {
       for (final node in selectedNodes) {
         if (node is Feature && node.kind is FeatureKindPolyline) {
-          (node.kind as FeatureKindPolyline).detachBindings(node);
-          _initialOrigins[node.id] = node.origin;
+          final kind = node.kind as FeatureKindPolyline;
+          if (kind.bindings.isNotEmpty) {
+            kind.detachBindings(node);
+            _initialOrigins[node.id] = node.origin;
+          }
         }
       }
       _detachedBindings = true;

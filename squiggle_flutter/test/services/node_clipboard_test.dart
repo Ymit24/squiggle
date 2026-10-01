@@ -4,12 +4,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
+import 'package:squiggle_flutter/services/copy_nodes.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +62,7 @@ void main() {
   });
 
   test(
-    'clipboard round-trips group trees, fresh IDs, and image bytes',
+    'clipboard retains tree IDs for remapping and round-trips image bytes',
     () async {
       final sourceDir = await Directory.systemTemp.createTemp(
         'clipboard_source',
@@ -98,13 +101,152 @@ void main() {
       final decodedGroup = decoded!.single as Group;
       final decodedImage = decodedGroup.children.single as Feature;
       final decodedKind = decodedImage.kind as FeatureKindImage;
-      expect(decodedGroup.id, noId);
-      expect(decodedImage.id, noId);
+      expect(decodedGroup.id, group.id);
+      expect(decodedImage.id, group.children.single.id);
       expect(decodedGroup.origin, group.origin);
       expect(decodedKind.imageId, isNot(imported.imageId));
       expect(await target.readPngBytes(decodedKind.imageId), isNotEmpty);
     },
   );
+
+  group('clipboard bindings', () {
+    late ImageRepository images;
+    setUp(() async {
+      final directory = await Directory.systemTemp.createTemp(
+        'clipboard_binds',
+      );
+      images = ImageRepository(imagesDirectory: directory);
+      await images.initialize();
+      addTearDown(() async {
+        images.dispose();
+        await directory.delete(recursive: true);
+      });
+    });
+
+    test(
+      'line-only transfer detaches before colliding destination IDs exist',
+      () async {
+        final target = Feature(
+          origin: const Offset(100, 0),
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        );
+        final line = Feature(
+          origin: Offset.zero,
+          size: Size.zero,
+          kind: FeatureKindPolyline([Offset.zero, const Offset(50, 50)]),
+        );
+        final source = Document()..addNodes([target, line]);
+        final kind = line.kind as FeatureKindPolyline;
+        kind.startBinding = RadialBinding(target.id, 0);
+        kind.endBinding = RadialBinding(target.id, 0);
+        target.origin += const Offset(80, 40);
+        final points = kind.resolvedGlobalPoints(line);
+        final before = source.toDataModel();
+
+        final payload = await encodeNodesForClipboard([line], images);
+        expect(source.toDataModel().nodes, before.nodes);
+        // Changes after copying must not change the exported geometry.
+        target.origin += const Offset(100, 0);
+        final decoded = (await decodeNodesFromClipboard(payload, images))!;
+        final unrelated = Feature(
+          id: target.id,
+          origin: const Offset(1000, 1000),
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        );
+        final destination = Document()..addNode(unrelated);
+        final copies = copyNodes(
+          decoded,
+          allocateId: (_) => destination.generateId(),
+        );
+        destination.addNodes(copies);
+
+        final copy = copies.single as Feature;
+        final copiedKind = copy.kind as FeatureKindPolyline;
+        expect(copiedKind.bindings, isEmpty);
+        expect(copiedKind.resolvedGlobalPoints(copy), points);
+        unrelated.origin += const Offset(100, 0);
+        expect(copiedKind.resolvedGlobalPoints(copy), points);
+      },
+    );
+
+    test(
+      'group transfer preserves internal connections through paste and history',
+      () async {
+        final target = Feature(
+          origin: const Offset(100, 0),
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        );
+        final line = Feature(
+          origin: Offset.zero,
+          size: Size.zero,
+          kind: FeatureKindPolyline([Offset.zero, const Offset(50, 50)]),
+        );
+        final group = Group(
+          origin: const Offset(200, 100),
+          children: [line, target],
+        );
+        Document().addNode(group);
+        (line.kind as FeatureKindPolyline).endBinding = RadialBinding(
+          target.id,
+          0,
+        );
+        target.origin += const Offset(50, 50);
+        final payload = await encodeNodesForClipboard([group], images);
+        final decoded = (await decodeNodesFromClipboard(payload, images))!;
+        final context = EditorContext(document: Document());
+        // Force every pasted ID to differ from the payload IDs.
+        context.document.addNode(
+          Feature(
+            id: NodeId.newId(100),
+            origin: const Offset(1000, 1000),
+            size: const Size(100, 100),
+            kind: FeatureKindRectangle(),
+          ),
+        );
+        final before = context.document.toDataModel();
+        final copies = copyNodes(
+          decoded,
+          allocateId: (_) => context.document.generateId(),
+        );
+        final positioned = repositionNodesToCenter(
+          copies,
+          const Offset(500, 500),
+        );
+        context.history.run('Paste', (edit) {
+          for (final node in positioned) {
+            edit.add(node);
+          }
+        });
+
+        final pasted = positioned.single as Group;
+        final copiedLine = pasted.children.first as Feature;
+        final copiedTarget = pasted.children.last as Feature;
+        final kind = copiedLine.kind as FeatureKindPolyline;
+        expect(pasted.id, isNot(group.id));
+        expect(kind.endBinding!.targetId, copiedTarget.id);
+        expect(pasted.globalBounds().center, const Offset(500, 500));
+        final after = context.document.toDataModel();
+        context.undo();
+        expect(context.document.toDataModel().nodes, before.nodes);
+        context.redo();
+        expect(context.document.toDataModel().nodes, after.nodes);
+        final restoredLine = context.document.featureById(copiedLine.id)!;
+        final restoredKind = restoredLine.kind as FeatureKindPolyline;
+        final endpoint = restoredKind.resolvedGlobalPoints(restoredLine).last;
+        context.document.featureById(copiedTarget.id)!.origin += const Offset(
+          30,
+          0,
+        );
+        expect(
+          restoredKind.resolvedGlobalPoints(restoredLine).last,
+          endpoint + const Offset(30, 0),
+        );
+      },
+    );
+  });
 }
 
 Future<Uint8List> _testPng() async {

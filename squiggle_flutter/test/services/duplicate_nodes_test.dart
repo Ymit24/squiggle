@@ -27,6 +27,105 @@ Iterable<Node> tree(Node node) sync* {
 }
 
 void main() {
+  test('duplicating only a bound line freezes its current geometry', () {
+    final first = rectangle(const Offset(100, 0));
+    final second = rectangle(const Offset(300, 0));
+    final line = Feature(
+      origin: Offset.zero,
+      size: Size.zero,
+      kind: FeatureKindPolyline([
+        Offset.zero,
+        const Offset(200, 100),
+        const Offset(400, 0),
+      ]),
+    );
+    final document = Document()..addNodes([first, second, line]);
+    final kind = line.kind as FeatureKindPolyline;
+    kind.startBinding = RadialBinding(first.id, 0);
+    kind.endBinding = RadialBinding(second.id, 0);
+    // Resolve from the latest target geometry without painting first.
+    first.origin += const Offset(20, 40);
+    second.size = const Size(80, 100);
+    final points = kind.resolvedGlobalPoints(line);
+    final before = document.toDataModel();
+    final context = EditorContext(document: document);
+    context.selection.setSelection([line.id]);
+
+    duplicateSelectedNodes(context);
+
+    final copy = document.featureById(
+      context.selection.selectedNodeIds.single,
+    )!;
+    final copiedKind = copy.kind as FeatureKindPolyline;
+    expect(copiedKind.bindings, isEmpty);
+    expect(copiedKind.resolvedGlobalPoints(copy), [
+      for (final point in points) point + const Offset(64, 64),
+    ]);
+    expect(line.toDataModel(), before.nodes.last);
+    first.origin += const Offset(100, 100);
+    expect(copiedKind.resolvedGlobalPoints(copy), [
+      for (final point in points) point + const Offset(64, 64),
+    ]);
+    // Restore the direct target edit before checking the duplicate's history.
+    first.origin -= const Offset(100, 100);
+    final after = document.toDataModel();
+    context.undo();
+    expect(document.toDataModel().nodes, before.nodes);
+    context.redo();
+    expect(document.toDataModel().nodes, after.nodes);
+  });
+
+  test(
+    'duplicating a nested group remaps internal and detaches external binds',
+    () {
+      final internal = rectangle(const Offset(100, 0));
+      final external = rectangle(const Offset(500, 0));
+      final line = Feature(
+        origin: const Offset(10, 20),
+        size: Size.zero,
+        kind: FeatureKindPolyline([Offset.zero, const Offset(200, 50)]),
+      );
+      final nested = Group(origin: const Offset(30, 40), children: [internal]);
+      final group = Group(
+        origin: const Offset(200, 100),
+        // The source appears before its target in the copied tree.
+        children: [line, nested],
+      );
+      final document = Document()..addNodes([group, external]);
+      final kind = line.kind as FeatureKindPolyline;
+      kind.startBinding = RadialBinding(internal.id, 0);
+      kind.endBinding = RadialBinding(external.id, 0);
+      final points = kind.resolvedGlobalPoints(line);
+      final context = EditorContext(document: document);
+      context.selection.setSelection([group.id]);
+
+      duplicateSelectedNodes(context);
+
+      final copy =
+          document.nodeById(context.selection.selectedNodeIds.single) as Group;
+      final copiedLine = copy.children.first as Feature;
+      final copiedTarget =
+          (copy.children.last as Group).children.single as Feature;
+      final copiedKind = copiedLine.kind as FeatureKindPolyline;
+      expect(copiedKind.startBinding!.targetId, copiedTarget.id);
+      expect(copiedKind.endBinding, isNull);
+      expect(copiedKind.resolvedGlobalPoints(copiedLine), [
+        for (final point in points) point + const Offset(64, 64),
+      ]);
+
+      internal.origin += const Offset(10, 0);
+      external.origin += const Offset(10, 0);
+      expect(copiedKind.resolvedGlobalPoints(copiedLine), [
+        for (final point in points) point + const Offset(64, 64),
+      ]);
+      copiedTarget.origin += const Offset(20, 0);
+      expect(
+        copiedKind.resolvedGlobalPoints(copiedLine).first,
+        points.first + const Offset(84, 64),
+      );
+    },
+  );
+
   test(
     'duplicates sibling trees in paint order with fresh IDs and one edit',
     () {

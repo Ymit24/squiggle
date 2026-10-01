@@ -7,9 +7,9 @@ import 'package:super_clipboard/super_clipboard.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
-import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/services/copy_nodes.dart';
 
 const _clipboardPrefix = 'squiggle-nodes:2:';
 
@@ -21,8 +21,7 @@ List<T> repositionNodesToCenter<T extends Node>(
   if (nodes.isEmpty) return nodes;
   final offset = targetCenter - Node.localBoundsOfNodes(nodes).center;
   return [
-    for (final node in nodes)
-      node.copyWith(id: noId, origin: node.origin + offset) as T,
+    for (final node in nodes) node.copyWith(origin: node.origin + offset) as T,
   ];
 }
 
@@ -30,7 +29,10 @@ Future<String> encodeNodesForClipboard(
   List<Node> nodes,
   ImageRepository imageRepository,
 ) async => jsonEncode({
-  'nodes': [for (final node in nodes) await _encodeNode(node, imageRepository)],
+  'nodes': [
+    for (final node in copyNodes(nodes, allocateId: (id) => id))
+      await _encodeNode(node, imageRepository),
+  ],
 });
 
 Future<List<Node>?> decodeNodesFromClipboard(
@@ -43,10 +45,10 @@ Future<List<Node>?> decodeNodesFromClipboard(
     if (rawNodes == null) return null;
     return [
       for (final raw in rawNodes)
-        (await _decodeNode(
+        await _decodeNode(
           Map<String, dynamic>.from(raw as Map),
           imageRepository,
-        )).copyWith(id: noId),
+        ),
     ];
   } on Object {
     return null;
@@ -112,8 +114,12 @@ Future<bool> pasteNodesFromClipboard({
     return false;
   }
 
-  final pasted = repositionNodesToCenter(nodes, center);
   context.cancelInteraction();
+  final copies = copyNodes(
+    nodes,
+    allocateId: (_) => context.document.generateId(),
+  );
+  final pasted = repositionNodesToCenter(copies, center);
   context.history.run('Paste', (transaction) {
     for (final node in pasted) {
       transaction.add(node);

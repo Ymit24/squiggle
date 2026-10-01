@@ -9,6 +9,14 @@ sealed class NodeBinding {
 
   final NodeId targetId;
 
+  NodeBinding withTargetId(NodeId targetId);
+
+  /// A target outside the copied tree becomes a detached endpoint.
+  NodeBinding? remap(Map<NodeId, NodeId> copiedIds) {
+    final id = copiedIds[targetId];
+    return id == null ? null : withTargetId(id);
+  }
+
   Offset pointOn(Rect bounds);
 
   /// Resolves into the owner's parent coordinates; null keeps the fallback point.
@@ -34,6 +42,9 @@ final class RadialBinding extends NodeBinding {
   const RadialBinding(super.targetId, this.angle);
 
   final double angle;
+
+  @override
+  RadialBinding withTargetId(NodeId targetId) => RadialBinding(targetId, angle);
 
   @override
   Offset pointOn(Rect bounds) {
