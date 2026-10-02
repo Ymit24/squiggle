@@ -23,15 +23,6 @@ class BrushPicker extends StatefulWidget {
 class _BrushPickerState extends State<BrushPicker> {
   final _picker = MenuController();
   final _actions = MenuController();
-  final _pickerFocus = FocusNode();
-  final _actionsFocus = FocusNode();
-
-  @override
-  void dispose() {
-    _pickerFocus.dispose();
-    _actionsFocus.dispose();
-    super.dispose();
-  }
 
   Future<void> _create() async {
     final editor = widget.editorContext;
@@ -93,7 +84,6 @@ class _BrushPickerState extends State<BrushPicker> {
             Expanded(
               child: MenuAnchor(
                 controller: _picker,
-                onOpen: _pickerFocus.requestFocus,
                 consumeOutsideTap: false,
                 alignmentOffset: Offset(-theme.spacing.panelPadding, 2),
                 style: theme.menuStyle().copyWith(
@@ -101,7 +91,7 @@ class _BrushPickerState extends State<BrushPicker> {
                 ),
                 menuChildren: [
                   Focus(
-                    focusNode: _pickerFocus,
+                    autofocus: true,
                     child: BrushDropdown(
                       brushes: editor.brushes,
                       imageRepository: widget.imageRepository,
@@ -135,12 +125,11 @@ class _BrushPickerState extends State<BrushPicker> {
               const SizedBox(width: 4),
               MenuAnchor(
                 controller: _actions,
-                onOpen: _actionsFocus.requestFocus,
                 consumeOutsideTap: false,
                 style: theme.menuStyle(),
                 menuChildren: [
                   Focus(
-                    focusNode: _actionsFocus,
+                    autofocus: true,
                     child: SquiggleMenuItem(
                       label: 'Rename…',
                       icon: Icons.edit_outlined,

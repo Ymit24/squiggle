@@ -64,21 +64,23 @@ void main() {
       editor.brushes.create('Actual');
       await mount(tester, editor, GlobalKey());
 
-      await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
-      await tester.pumpAndSettle();
-      expect(find.byType(BrushDropdown), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(find.byType(BrushDropdown), findsNothing);
-      expect(editor.tool.activeTool, same(tool));
+      for (var opening = 0; opening < 2; opening++) {
+        await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+        await tester.pumpAndSettle();
+        expect(find.byType(BrushDropdown), findsOneWidget);
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(find.byType(BrushDropdown), findsNothing);
+        expect(editor.tool.activeTool, same(tool));
 
-      await tester.tap(find.byKey(const ValueKey('brush-actions-trigger')));
-      await tester.pumpAndSettle();
-      expect(find.text('Rename…'), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(find.text('Rename…'), findsNothing);
-      expect(editor.tool.activeTool, same(tool));
+        await tester.tap(find.byKey(const ValueKey('brush-actions-trigger')));
+        await tester.pumpAndSettle();
+        expect(find.text('Rename…'), findsOneWidget);
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(find.text('Rename…'), findsNothing);
+        expect(editor.tool.activeTool, same(tool));
+      }
       expect(editor.brushes.active.name, 'Actual');
     },
   );
