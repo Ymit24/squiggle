@@ -54,6 +54,35 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'Escape dismisses brush menus without cancelling the drawing tool',
+    (tester) async {
+      final editor = EditorContext(document: Document());
+      addTearDown(editor.dispose);
+      final tool = CreateFeatureTool.rect();
+      editor.setTool(tool);
+      editor.brushes.create('Actual');
+      await mount(tester, editor, GlobalKey());
+
+      await tester.tap(find.byKey(const ValueKey('brush-picker-trigger')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BrushDropdown), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(BrushDropdown), findsNothing);
+      expect(editor.tool.activeTool, same(tool));
+
+      await tester.tap(find.byKey(const ValueKey('brush-actions-trigger')));
+      await tester.pumpAndSettle();
+      expect(find.text('Rename…'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text('Rename…'), findsNothing);
+      expect(editor.tool.activeTool, same(tool));
+      expect(editor.brushes.active.name, 'Actual');
+    },
+  );
+
   testWidgets('a small mouse movement still clicks the entry', (tester) async {
     final editor = EditorContext(document: Document());
     addTearDown(editor.dispose);

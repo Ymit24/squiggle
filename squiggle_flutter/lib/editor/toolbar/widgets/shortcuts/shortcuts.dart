@@ -264,7 +264,6 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
           child: Focus(
             focusNode: _focusNode,
             autofocus: !textEditOpen,
-            descendantsAreFocusable: textEditOpen,
             onKeyEvent: (node, event) {
               if (textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
