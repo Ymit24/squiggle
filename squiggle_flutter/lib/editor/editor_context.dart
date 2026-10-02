@@ -1,5 +1,6 @@
 import 'package:squiggle_flutter/editor/brush_controller.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -30,7 +31,7 @@ class EditorContext extends ChangeNotifier {
        _history = history ?? History(document: document),
        _textEdit = textEdit ?? TextEditModel(),
        brushes = BrushController(document.session) {
-    brushes.addListener(_forward);
+    brushes.addListener(_onBrushChanged);
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -94,6 +95,13 @@ class EditorContext extends ChangeNotifier {
   void cancelViewportMotion() => _cancelViewportMotion?.call();
 
   void _forward() => notifyListeners();
+
+  void _onBrushChanged() {
+    if (tool.activeTool case BrushPreviewTool previewTool) {
+      previewTool.refreshBrushPreview(this);
+    }
+    notifyListeners();
+  }
 
   /// Notifies observers that the camera or viewport changed.
   void notifyViewportChanged() => notifyListeners();
@@ -169,7 +177,7 @@ class EditorContext extends ChangeNotifier {
     _tool.removeListener(_forward);
     _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
-    brushes.removeListener(_forward);
+    brushes.removeListener(_onBrushChanged);
     brushes.dispose();
     super.dispose();
   }

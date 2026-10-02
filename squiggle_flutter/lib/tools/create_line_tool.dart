@@ -1,4 +1,5 @@
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
@@ -12,7 +13,7 @@ import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/idle_state.dart';
 
-class CreateLineTool extends Tool implements DrawingTool {
+class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
   @override
   FeatureKind createDrawingKind() => FeatureKindPolyline([]);
 
@@ -20,6 +21,17 @@ class CreateLineTool extends Tool implements DrawingTool {
     parent: this,
   );
   Feature? _previewFeature;
+
+  @override
+  void refreshBrushPreview(EditorContext context) {
+    final feature = _previewFeature;
+    if (feature == null) return;
+
+    final previous = feature.kind as FeatureKindPolyline;
+    final freshKind = FeatureKindPolyline(previous.localPoints);
+    context.brushes.active.applyTo(freshKind);
+    feature.kind = freshKind;
+  }
 
   @override
   EditorCursor resolveCursor(
