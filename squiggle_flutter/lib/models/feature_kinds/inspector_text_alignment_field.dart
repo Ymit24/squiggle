@@ -1,7 +1,7 @@
 import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 

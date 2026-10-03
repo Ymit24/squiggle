@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/color_swatch.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/color_swatch.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/metrics.dart';
 
 class ColorRow extends StatelessWidget {
   const ColorRow({

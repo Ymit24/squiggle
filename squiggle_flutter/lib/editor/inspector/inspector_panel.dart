@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_picker.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/drawing_inspector_fields.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_picker.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/drawing_inspector_fields.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_fields.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_layout_actions.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_fields.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_layout_actions.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 

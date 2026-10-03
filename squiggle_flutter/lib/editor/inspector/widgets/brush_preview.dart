@@ -1,4 +1,4 @@
-import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/metrics.dart';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

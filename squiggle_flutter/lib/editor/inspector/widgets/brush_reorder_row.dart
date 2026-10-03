@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_menu_entry.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_menu_entry.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/document_session.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';

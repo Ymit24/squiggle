@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/color_swatch.dart';
-import 'package:squiggle_flutter/models/fill_type.dart';
-import 'package:squiggle_flutter/painting/fill_painter.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/color_swatch.dart';
+import 'package:squiggle_flutter/models/stroke_type.dart';
+import 'package:squiggle_flutter/painting/stroke_painter.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-class FillTypeSelector extends StatelessWidget {
-  const FillTypeSelector({
+class StrokeTypeSelector extends StatelessWidget {
+  const StrokeTypeSelector({
     super.key,
     required this.activeType,
     required this.isMixed,
@@ -13,9 +13,9 @@ class FillTypeSelector extends StatelessWidget {
     this.enabled = true,
   });
 
-  final FillType? activeType;
+  final StrokeType? activeType;
   final bool isMixed;
-  final ValueChanged<FillType> onTypeSelected;
+  final ValueChanged<StrokeType> onTypeSelected;
   final bool enabled;
 
   @override
@@ -25,12 +25,12 @@ class FillTypeSelector extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: theme.spacing.swatchGap,
       children: [
-        for (final type in FillType.values)
+        for (final type in StrokeType.values)
           Tooltip(
             message: switch (type) {
-              FillType.solid => 'Solid',
-              FillType.lines => 'Lines',
-              FillType.crosshatch => 'Crosshatch',
+              StrokeType.solid => 'Solid',
+              StrokeType.dashed => 'Dashed',
+              StrokeType.dotted => 'Dotted',
             },
             child: StyleColorSwatch(
               color: theme.colors.base,
@@ -38,7 +38,7 @@ class FillTypeSelector extends StatelessWidget {
               enabled: enabled,
               onPressed: () => onTypeSelected(type),
               overlay: CustomPaint(
-                painter: _FillTypePreviewPainter(
+                painter: _StrokeTypePreviewPainter(
                   type: type,
                   color: !isMixed && activeType == type
                       ? theme.colors.text
@@ -52,32 +52,29 @@ class FillTypeSelector extends StatelessWidget {
   }
 }
 
-class _FillTypePreviewPainter extends CustomPainter {
-  const _FillTypePreviewPainter({required this.type, required this.color});
+class _StrokeTypePreviewPainter extends CustomPainter {
+  const _StrokeTypePreviewPainter({required this.type, required this.color});
 
-  final FillType type;
+  final StrokeType type;
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintFill(
+    paintStroke(
       canvas,
-      Path()..addRect(
-        Rect.fromLTWH(
-          size.width * 0.2,
-          size.height * 0.2,
-          size.width * 0.6,
-          size.height * 0.6,
-        ),
-      ),
-      Paint()..color = color,
+      Path()
+        ..moveTo(size.width * 0.2, size.height / 2)
+        ..lineTo(size.width * 0.8, size.height / 2),
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
       type,
-      spacing: 5,
-      lineWidth: 1,
     );
   }
 
   @override
-  bool shouldRepaint(covariant _FillTypePreviewPainter oldDelegate) =>
+  bool shouldRepaint(covariant _StrokeTypePreviewPainter oldDelegate) =>
       oldDelegate.type != type || oldDelegate.color != color;
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_field_reset_button.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_field_reset_button.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
