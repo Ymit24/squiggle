@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
@@ -18,8 +19,9 @@ abstract interface class Transaction {
   /// Adds a node as part of this edit.
   T add<T extends Node>(T node, {int? index});
 
-  /// Removes nodes as part of this edit.
-  void removeAll(Iterable<NodeId> ids);
+  /// Removes nodes and detaches surviving sources from the deleted targets.
+  /// Use [preserveBindings] for temporary removal while reparenting nodes.
+  void removeAll(Iterable<NodeId> ids, {bool preserveBindings = false});
 
   /// Reorders the scoped container's immediate children.
   void reorder(Iterable<NodeId> ids);
@@ -44,6 +46,7 @@ abstract interface class Commit {
 /// Snapshots affected immediate children (including their subtrees) in one
 /// container. Group/ungroup within that scope; transfers between existing
 /// containers require separate edits. Do not mutate other containers directly.
+/// Deletion also captures binding sources in other containers by their IDs.
 final class DocumentTransaction implements Transaction {
   DocumentTransaction({
     required this.document,
@@ -63,6 +66,7 @@ final class DocumentTransaction implements Transaction {
   final String label;
 
   final Map<NodeId, data.Node?> _before = {};
+  final Map<NodeId, data.Feature> _bindingSourcesBefore = {};
   List<NodeId>? _orderBefore;
   bool _isOpen = true;
 
@@ -96,7 +100,7 @@ final class DocumentTransaction implements Transaction {
   }
 
   @override
-  void removeAll(Iterable<NodeId> ids) {
+  void removeAll(Iterable<NodeId> ids, {bool preserveBindings = false}) {
     _ensureOpen();
     final nodes = <Node>[];
     for (final id in ids) {
@@ -106,7 +110,60 @@ final class DocumentTransaction implements Transaction {
     if (nodes.isEmpty) return;
     _watchOrder();
     watch(nodes);
+    if (!preserveBindings) _notifyBindingSources(nodes);
     container.removeAll(nodes.map((node) => node.id));
+  }
+
+  void _notifyBindingSources(List<Node> removedNodes) {
+    final deletedIds = <NodeId>{};
+    void collect(Node node) {
+      deletedIds.add(node.id);
+      if (node is NodeContainer) {
+        for (final child in (node as NodeContainer).children) {
+          collect(child);
+        }
+      }
+    }
+
+    removedNodes.forEach(collect);
+
+    final affected = <(Feature, BindingSourceCapable, Set<NodeId>)>[];
+    for (final feature in document.allNodes.whereType<Feature>()) {
+      final kind = feature.kind;
+      if (deletedIds.contains(feature.id) || kind is! BindingSourceCapable) {
+        continue;
+      }
+      final targetIds = kind.bindings
+          .map((binding) => binding.targetId)
+          .where(deletedIds.contains)
+          .toSet();
+      if (targetIds.isNotEmpty) affected.add((feature, kind, targetIds));
+    }
+    for (final (feature, _, _) in affected) {
+      _watchBindingSource(feature);
+    }
+    for (final (feature, kind, targetIds) in affected) {
+      kind.onBindingTargetsDeleted(feature, Set.unmodifiable(targetIds));
+    }
+  }
+
+  void _watchBindingSource(Feature source) {
+    if (identical(source.parent, container)) {
+      watch([source]);
+      return;
+    }
+    // A previously captured ancestor already covers this source's mutations.
+    Node ancestor = source;
+    while (true) {
+      if (identical(ancestor.parent, container) &&
+          _before.containsKey(ancestor.id)) {
+        return;
+      }
+      final parent = ancestor.parent;
+      if (parent is! Node) break;
+      ancestor = parent as Node;
+    }
+    _bindingSourcesBefore.putIfAbsent(source.id, source.toDataModel);
   }
 
   @override
@@ -129,18 +186,32 @@ final class DocumentTransaction implements Transaction {
       }
     }
 
+    final bindingSourcesBefore = <NodeId, data.Feature?>{};
+    final bindingSourcesAfter = <NodeId, data.Feature?>{};
+    for (final entry in _bindingSourcesBefore.entries) {
+      final state = document.featureById(entry.key)?.toDataModel();
+      if (entry.value != state) {
+        bindingSourcesBefore[entry.key] = entry.value;
+        bindingSourcesAfter[entry.key] = state;
+      }
+    }
+
     final orderAfter = _orderBefore == null ? null : _captureOrder();
     final orderChanged =
         _orderBefore != null &&
         !const ListEquality<NodeId>().equals(_orderBefore, orderAfter);
     _isOpen = false;
-    if (before.isEmpty && !orderChanged) return null;
+    if (before.isEmpty && bindingSourcesBefore.isEmpty && !orderChanged) {
+      return null;
+    }
 
     return DocumentCommit._(
       label: label,
       containerId: _containerId,
       before: before,
       after: after,
+      bindingSourcesBefore: bindingSourcesBefore,
+      bindingSourcesAfter: bindingSourcesAfter,
       orderBefore: orderChanged ? _orderBefore : null,
       orderAfter: orderChanged ? orderAfter : null,
     );
@@ -150,6 +221,7 @@ final class DocumentTransaction implements Transaction {
   void cancel() {
     _ensureOpen();
     _apply(container, states: _before, order: _orderBefore);
+    _restoreBindingSources(document, _bindingSourcesBefore);
     _isOpen = false;
   }
 
@@ -171,10 +243,14 @@ final class DocumentCommit implements Commit {
     required this.containerId,
     required Map<NodeId, data.Node?> before,
     required Map<NodeId, data.Node?> after,
+    required Map<NodeId, data.Feature?> bindingSourcesBefore,
+    required Map<NodeId, data.Feature?> bindingSourcesAfter,
     required this._orderBefore,
     required this._orderAfter,
   }) : _before = Map.unmodifiable(before),
        _after = Map.unmodifiable(after),
+       _bindingSourcesBefore = Map.unmodifiable(bindingSourcesBefore),
+       _bindingSourcesAfter = Map.unmodifiable(bindingSourcesAfter),
        assert((_orderBefore == null) == (_orderAfter == null));
 
   @override
@@ -184,28 +260,47 @@ final class DocumentCommit implements Commit {
   final NodeId? containerId;
   final Map<NodeId, data.Node?> _before;
   final Map<NodeId, data.Node?> _after;
+  final Map<NodeId, data.Feature?> _bindingSourcesBefore;
+  final Map<NodeId, data.Feature?> _bindingSourcesAfter;
   final List<NodeId>? _orderBefore;
   final List<NodeId>? _orderAfter;
 
   @override
-  int get affectedNodeCount => _before.length;
+  int get affectedNodeCount =>
+      {..._before.keys, ..._bindingSourcesBefore.keys}.length;
 
   @override
   bool get changesOrder => _orderBefore != null;
 
   @override
-  void undo(Document document) =>
-      _apply(_resolve(document), states: _before, order: _orderBefore);
+  void undo(Document document) {
+    _apply(_resolve(document), states: _before, order: _orderBefore);
+    _restoreBindingSources(document, _bindingSourcesBefore);
+  }
 
   @override
-  void redo(Document document) =>
-      _apply(_resolve(document), states: _after, order: _orderAfter);
+  void redo(Document document) {
+    _apply(_resolve(document), states: _after, order: _orderAfter);
+    _restoreBindingSources(document, _bindingSourcesAfter);
+  }
 
   NodeContainer _resolve(Document document) {
     if (containerId == null) return document;
     final node = document.nodeById(containerId!);
     if (node is NodeContainer) return node as NodeContainer;
     throw StateError('Edit container no longer exists');
+  }
+}
+
+void _restoreBindingSources(
+  Document document,
+  Map<NodeId, data.Feature?> states,
+) {
+  for (final entry in states.entries) {
+    final source = document.featureById(entry.key);
+    if (source != null && entry.value != null) {
+      source.restoreFromDataModel(entry.value!);
+    }
   }
 }
 

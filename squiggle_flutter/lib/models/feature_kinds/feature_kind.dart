@@ -11,7 +11,10 @@ import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
+
+export 'package:squiggle_flutter/models/node_binding.dart';
 
 part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
@@ -45,6 +48,18 @@ sealed class FeatureKind {
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
+}
+
+mixin BindingSourceCapable on FeatureKind {
+  Iterable<NodeBinding> get bindings;
+
+  /// Called once before removal, with only this source's targets being deleted.
+  /// The owner has already been captured for undo and all targets still exist.
+  void onBindingTargetsDeleted(Feature owner, Set<NodeId> targetIds);
+}
+
+mixin BindingTargetCapable on FeatureKind {
+  Rect bindingBoundsFor(Feature feature) => feature.globalBounds();
 }
 
 mixin StrokeColorCapable {

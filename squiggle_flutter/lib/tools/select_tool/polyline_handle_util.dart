@@ -21,9 +21,10 @@ class PolylineHandleUtil {
     final polyline = feature.kind as FeatureKindPolyline;
 
     final screenPoint = camera.worldToScreen(worldPoint);
-    for (final (pointIndex, localPoint) in polyline.localPoints.indexed) {
+    for (final (pointIndex, point)
+        in polyline.resolvedGlobalPoints(feature).indexed) {
       final hitRect = Rect.fromCenter(
-        center: camera.worldToScreen(feature.origin + localPoint),
+        center: camera.worldToScreen(point),
         width: kSelectionHandleHitSize,
         height: kSelectionHandleHitSize,
       );

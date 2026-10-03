@@ -1,7 +1,7 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindImage extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable {
+    with StrokeColorCapable, StrokeWidthCapable, BindingTargetCapable {
   FeatureKindImage(
     this.imageId, {
     this.strokeColor = transparentStrokeColor,

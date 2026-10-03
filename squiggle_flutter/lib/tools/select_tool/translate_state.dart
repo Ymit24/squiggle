@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -26,6 +27,7 @@ class TranslateState extends SelectInteractionState {
   final List<Node> selectedNodes;
   final Map<NodeId, Offset> _initialOrigins;
   final bool _hasDuplicated;
+  bool _detachedBindings = false;
 
   @override
   EditorCursor resolveCursor(
@@ -67,6 +69,16 @@ class TranslateState extends SelectInteractionState {
         isAltPressed: isAltPressed,
       );
       return;
+    }
+
+    if (!_detachedBindings && totalMotion != Offset.zero) {
+      for (final node in selectedNodes) {
+        if (node is Feature && node.kind is FeatureKindPolyline) {
+          (node.kind as FeatureKindPolyline).detachBindings(node);
+          _initialOrigins[node.id] = node.origin;
+        }
+      }
+      _detachedBindings = true;
     }
 
     for (var node in selectedNodes) {

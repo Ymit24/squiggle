@@ -7,7 +7,8 @@ final class FeatureKindCircle extends FeatureKind
         FillTypeCapable,
         StrokeWidthCapable,
         StrokeTypeCapable,
-        LabelCapable {
+        LabelCapable,
+        BindingTargetCapable {
   FeatureKindCircle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,

@@ -3,7 +3,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 enum SelectionEdge { top, right, bottom, left }
@@ -130,5 +129,5 @@ class SelectToolTestHarness {
 
 List<Offset> polylineWorldPoints(Feature feature) {
   final kind = feature.kind as FeatureKindPolyline;
-  return worldPoints(feature.origin, kind.localPoints);
+  return kind.resolvedGlobalPoints(feature);
 }

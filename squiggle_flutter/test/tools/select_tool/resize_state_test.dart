@@ -223,6 +223,48 @@ void main() {
       expect(feature.localBounds(), bounds);
     });
 
+    test('two-point lines have no resize handles', () {
+      final line = SelectToolTestHarness.polylineContext().document.nodes.first;
+      expect(ResizeHandleUtil.getResizeHandles(line, harness.camera), isEmpty);
+    });
+
+    test('resizing a bound multi-segment line detaches it', () {
+      final target = Feature(
+        origin: const Offset(300, 0),
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      final line = Feature(
+        origin: Offset.zero,
+        size: const Size(200, 100),
+        kind: FeatureKindPolyline([
+          Offset.zero,
+          const Offset(100, 100),
+          const Offset(200, 50),
+        ]),
+      );
+      harness.context = EditorContext(
+        document: Document.fromFeatures([target, line]),
+      );
+      (line.kind as FeatureKindPolyline).endBinding = RadialBinding(
+        target.id,
+        3.141592653589793,
+      );
+      harness.context.selection.setSelection([line.id]);
+      final handle = ResizeHandleUtil.getResizeHandles(line, harness.camera)
+          .firstWhere(
+            (handle) => handle.handle == SelectionResizeHandle.bottomRight,
+          );
+
+      harness.pointerDown(handle.geometry.center);
+      harness.pointerMove(handle.geometry.center + const Offset(40, 20));
+      harness.pointerUp(handle.geometry.center + const Offset(40, 20));
+
+      expect((line.kind as FeatureKindPolyline).endBinding, isNull);
+      harness.context.history.undo();
+      expect((line.kind as FeatureKindPolyline).endBinding, isNotNull);
+    });
+
     test('resizes from the top edge', () {
       final feature = (harness.context.document.nodes.first as Feature);
       harness.context.selection.selectNode(feature.id);
@@ -342,9 +384,21 @@ void main() {
     });
 
     test('resizing a polyline scales its points', () {
-      harness.context = SelectToolTestHarness.polylineContext();
+      harness.context = EditorContext(
+        document: Document.fromFeatures([
+          Feature(
+            origin: Offset.zero,
+            size: const Size(100, 100),
+            kind: FeatureKindPolyline([
+              Offset.zero,
+              const Offset(50, 50),
+              const Offset(100, 100),
+            ]),
+          ),
+        ]),
+      );
       final feature = (harness.context.document.nodes.first as Feature);
-      harness.click(const Offset(50, 50));
+      harness.context.selection.setSelection([feature.id]);
       final endBefore = polylineWorldPoints(feature).last;
       final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);

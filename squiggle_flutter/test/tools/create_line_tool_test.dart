@@ -219,6 +219,106 @@ void main() {
       ]);
     });
 
+    test('single-segment drag binds both endpoints to hovered features', () {
+      final startTarget = Feature(
+        origin: Offset.zero,
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      final endTarget = Feature(
+        origin: const Offset(200, 0),
+        size: const Size(100, 100),
+        kind: FeatureKindRectangle(),
+      );
+      context.document.addNode(startTarget);
+      context.document.addNode(endTarget);
+      activateLineTool();
+
+      pointerHover(const Offset(80, 50));
+      pointerDown(const Offset(80, 50));
+      pointerMove(const Offset(220, 50));
+      pointerUp(const Offset(220, 50));
+
+      final line = context.document.nodes.last as Feature;
+      final kind = line.kind as FeatureKindPolyline;
+      expect(kind.startBinding?.targetId, startTarget.id);
+      expect(kind.endBinding?.targetId, endTarget.id);
+      final points = kind.resolvedGlobalPoints(line);
+      expect(points.first, const Offset(100, 50));
+      expect(points.last.dx, closeTo(200, 0.001));
+      expect(points.last.dy, closeTo(50, 0.001));
+      startTarget.origin = const Offset(10, 0);
+      expect(kind.resolvedGlobalPoints(line).first, const Offset(110, 50));
+    });
+
+    test('click-to-place line does not attach endpoints', () {
+      context.document.addNode(
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        ),
+      );
+      activateLineTool();
+      final tool = context.tool.activeTool as CreateLineTool;
+
+      pointerHover(const Offset(80, 50));
+      expect(tool.hoveredBinding, isNotNull);
+      pointerDown(const Offset(80, 50));
+      pointerUp(const Offset(80, 50));
+      expect(tool.hoveredBinding, isNull);
+      pointerDown(const Offset(150, 50));
+      pointerUp(const Offset(150, 50));
+      finishWithKey(LogicalKeyboardKey.enter);
+
+      final kind =
+          (context.document.nodes.last as Feature).kind as FeatureKindPolyline;
+      expect(kind.startBinding, isNull);
+      expect(kind.endBinding, isNull);
+    });
+
+    test(
+      'locked line tool clears bindings between creations and history replays them',
+      () {
+        final target = Feature(
+          origin: Offset.zero,
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        );
+        context.document.addNode(target);
+        context.tool.toggleLock();
+        activateLineTool();
+        final tool = context.tool.activeTool as CreateLineTool;
+
+        pointerDown(const Offset(80, 50));
+        pointerMove(const Offset(200, 50));
+        pointerUp(const Offset(200, 50));
+        expect(tool.hoveredBinding, isNull);
+        expect(context.tool.activeTool, same(tool));
+        final boundId = context.document.nodes.last.id;
+
+        pointerDown(const Offset(400, 200));
+        pointerMove(const Offset(500, 250));
+        pointerUp(const Offset(500, 250));
+        final freeKind =
+            (context.document.nodes.last as Feature).kind
+                as FeatureKindPolyline;
+        expect(freeKind.bindings, isEmpty);
+
+        context.history.undo();
+        context.history.undo();
+        expect(context.document.nodes, [target]);
+        context.history.redo();
+        final restored = context.document.featureById(boundId)!;
+        final restoredKind = restored.kind as FeatureKindPolyline;
+        expect(restoredKind.startBinding?.targetId, target.id);
+        expect(
+          restoredKind.resolvedGlobalPoints(restored).first,
+          const Offset(100, 50),
+        );
+      },
+    );
+
     test('click then drag in placing mode adds point at release position', () {
       activateLineTool();
 

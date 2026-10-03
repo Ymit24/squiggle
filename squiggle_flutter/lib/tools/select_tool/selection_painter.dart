@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/utils/painting.dart';
 
@@ -38,7 +38,8 @@ abstract final class SelectionPainter {
         canvas,
         camera,
         node.localBounds(),
-        showResizeHandles: showResizeHandles,
+        showResizeHandles:
+            showResizeHandles && ResizeHandleUtil.canResize(node),
       );
     }
   }
@@ -55,7 +56,7 @@ abstract final class SelectionPainter {
     if (node is! Feature || node.kind is! FeatureKindPolyline) return;
 
     final kind = node.kind as FeatureKindPolyline;
-    for (final point in worldPoints(node.origin, kind.localPoints)) {
+    for (final point in kind.resolvedGlobalPoints(node)) {
       paintVertexHandle(canvas, camera, point);
     }
   }

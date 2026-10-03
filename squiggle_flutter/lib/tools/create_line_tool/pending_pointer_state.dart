@@ -43,6 +43,7 @@ class PendingPointerState extends InteractionState<CreateLineTool> {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    parent.hoveredBinding = null;
     parent.transition(
       PlacingState(parent: parent, points: [start], previewTip: worldPosition),
       context,

@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/binding_candidate.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/idle_state.dart';
@@ -16,6 +17,7 @@ class CreateLineTool extends Tool {
     parent: this,
   );
   Feature? _previewFeature;
+  BindingCandidate? hoveredBinding;
 
   @override
   EditorCursor resolveCursor(
@@ -32,6 +34,7 @@ class CreateLineTool extends Tool {
     ImageRepository imageRepository,
   ) {
     _previewFeature?.paint(canvas, imageRepository);
+    hoveredBinding?.paint(canvas, camera);
   }
 
   void transition(
@@ -143,17 +146,35 @@ class CreateLineTool extends Tool {
     required bool isShiftPressed,
   }) => isShiftPressed ? snapPointTo45DegreeAngle(origin, point) : point;
 
-  void finish(EditorContext context, List<Offset> points) {
+  void finish(
+    EditorContext context,
+    List<Offset> points, {
+    NodeBinding? startBinding,
+    NodeBinding? endBinding,
+  }) {
     if (points.length >= 2) {
-      commit(context, points);
+      commit(
+        context,
+        points,
+        startBinding: startBinding,
+        endBinding: endBinding,
+      );
     }
     _reset();
     context.resetToSelectTool();
   }
 
-  void commit(EditorContext context, List<Offset> worldPoints) {
+  void commit(
+    EditorContext context,
+    List<Offset> worldPoints, {
+    NodeBinding? startBinding,
+    NodeBinding? endBinding,
+  }) {
     final feature = _previewFeature ?? _buildFeature(context, worldPoints);
     _setFeaturePoints(feature, worldPoints);
+    final kind = feature.kind as FeatureKindPolyline;
+    kind.startBinding = startBinding;
+    kind.endBinding = endBinding;
     context.history.run('Create feature', (transaction) {
       transaction.add(feature);
     });
@@ -176,6 +197,7 @@ class CreateLineTool extends Tool {
   void _reset() {
     _activeInteractionState = IdleState(parent: this);
     _previewFeature = null;
+    hoveredBinding = null;
   }
 
   Feature _buildFeature(EditorContext context, List<Offset> worldPoints) {
