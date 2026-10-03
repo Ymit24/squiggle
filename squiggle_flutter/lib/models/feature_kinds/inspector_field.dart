@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 
 export 'inspector_color_field.dart';
@@ -55,7 +55,19 @@ abstract class InspectorField<T> {
     }
   }
 
-  void applyIfCompatible(Object? value) {
-    if (value is T) apply(value);
+  Object? encodeValue(T value);
+  T decodeValue(Object? raw);
+
+  /// Invalid overrides leave the current default intact.
+  void applySerialized(Object? raw) {
+    final T value;
+    try {
+      value = decodeValue(raw);
+    } on FormatException {
+      return;
+    } on ArgumentError {
+      return;
+    }
+    apply(value);
   }
 }

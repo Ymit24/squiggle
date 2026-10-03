@@ -1,3 +1,6 @@
+import 'package:squiggle_flutter/editor/brush_controller.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -26,7 +29,9 @@ class EditorContext extends ChangeNotifier {
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
        _history = history ?? History(document: document),
-       _textEdit = textEdit ?? TextEditModel() {
+       _textEdit = textEdit ?? TextEditModel(),
+       brushes = BrushController(document.session) {
+    brushes.addListener(_onBrushChanged);
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -38,7 +43,8 @@ class EditorContext extends ChangeNotifier {
   final ToolModel _tool;
   final History _history;
   final TextEditModel _textEdit;
-  final Map<String, Object?> _inspectorValues = {};
+
+  final BrushController brushes;
 
   void openContextMenuAt(
     BuildContext context,
@@ -90,6 +96,13 @@ class EditorContext extends ChangeNotifier {
 
   void _forward() => notifyListeners();
 
+  void _onBrushChanged() {
+    if (tool.activeTool case BrushPreviewTool previewTool) {
+      previewTool.refreshBrushPreview(this);
+    }
+    notifyListeners();
+  }
+
   /// Notifies observers that the camera or viewport changed.
   void notifyViewportChanged() => notifyListeners();
 
@@ -137,17 +150,14 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  void rememberInspectorValue(String fieldKey, Object? value) {
-    _inspectorValues[fieldKey] = value;
-  }
-
-  /// Applies the last inspector choices to a feature being created.
-  void applyInspectorValues(FeatureKind kind) {
-    for (final field in kind.buildInspectorFields()) {
-      if (_inspectorValues.containsKey(field.fieldKey)) {
-        field.applyIfCompatible(_inspectorValues[field.fieldKey]);
-      }
+  /// Fresh defaults for the active creation tool, never its mutable template.
+  FeatureKind? get drawingInspectorKind {
+    if (tool.activeTool case DrawingTool drawingTool) {
+      final kind = drawingTool.createDrawingKind();
+      brushes.active.applyTo(kind);
+      return kind;
     }
+    return null;
   }
 
   /// Replaces the document contents and resets transient state.
@@ -155,9 +165,10 @@ class EditorContext extends ChangeNotifier {
     cancelInteraction();
     document.replaceFrom(newDocument);
     history.clear();
-    _inspectorValues.clear();
+
     selection.clearSelection();
     endTextEdit();
+    brushes.bindSession(document.session);
   }
 
   @override
@@ -166,6 +177,8 @@ class EditorContext extends ChangeNotifier {
     _tool.removeListener(_forward);
     _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
+    brushes.removeListener(_onBrushChanged);
+    brushes.dispose();
     super.dispose();
   }
 }
