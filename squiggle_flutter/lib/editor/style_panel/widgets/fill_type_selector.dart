@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/color_swatch.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/style_color_swatch.dart';
 import 'package:squiggle_flutter/models/fill_type.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';

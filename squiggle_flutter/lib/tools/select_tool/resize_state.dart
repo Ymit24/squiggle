@@ -93,9 +93,12 @@ class ResizeState extends SelectInteractionState {
     Offset worldPosition, {
     bool lockAspectRatio = false,
     bool symmetric = false,
-  }) => symmetric
-      ? _symmetricBounds(worldPosition, lockAspectRatio)
-      : _asymmetricBounds(worldPosition, lockAspectRatio);
+  }) {
+    if (symmetric) {
+      return _symmetricBounds(worldPosition, lockAspectRatio);
+    }
+    return _asymmetricBounds(worldPosition, lockAspectRatio);
+  }
 
   @override
   void onPointerUp(
@@ -151,19 +154,21 @@ class ResizeState extends SelectInteractionState {
     };
   }
 
-  Rect _asymmetricBounds(Offset worldPosition, bool lockAspectRatio) =>
-      lockAspectRatio
-      ? _aspectLockedAsymmetricBounds(worldPosition)
-      : Rect.fromPoints(
-          Offset(
-            _movesLeft ? worldPosition.dx : _initialBounds.left,
-            _movesTop ? worldPosition.dy : _initialBounds.top,
-          ),
-          Offset(
-            _movesRight ? worldPosition.dx : _initialBounds.right,
-            _movesBottom ? worldPosition.dy : _initialBounds.bottom,
-          ),
-        );
+  Rect _asymmetricBounds(Offset worldPosition, bool lockAspectRatio) {
+    if (lockAspectRatio) {
+      return _aspectLockedAsymmetricBounds(worldPosition);
+    }
+    return Rect.fromPoints(
+      Offset(
+        _movesLeft ? worldPosition.dx : _initialBounds.left,
+        _movesTop ? worldPosition.dy : _initialBounds.top,
+      ),
+      Offset(
+        _movesRight ? worldPosition.dx : _initialBounds.right,
+        _movesBottom ? worldPosition.dy : _initialBounds.bottom,
+      ),
+    );
+  }
 
   Rect _aspectLockedAsymmetricBounds(Offset worldPosition) {
     final ratio = _initialBounds.width / _initialBounds.height;

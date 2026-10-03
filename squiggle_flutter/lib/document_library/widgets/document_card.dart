@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/current_document_badge.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card_menu_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_anchor.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
@@ -40,6 +40,14 @@ class _DocumentCardState extends State<DocumentCard> {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final colors = theme.colors;
+    final Color borderColor;
+    if (widget.isCurrent) {
+      borderColor = colors.accent.withValues(alpha: 0.6);
+    } else if (_elevated) {
+      borderColor = colors.accent.withValues(alpha: 0.45);
+    } else {
+      borderColor = colors.surface1;
+    }
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
@@ -61,14 +69,7 @@ class _DocumentCardState extends State<DocumentCard> {
           decoration: BoxDecoration(
             color: colors.base,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: widget.isCurrent
-                  ? colors.accent.withValues(alpha: 0.6)
-                  : _elevated
-                  ? colors.accent.withValues(alpha: 0.45)
-                  : colors.surface1,
-              width: 1,
-            ),
+            border: Border.all(color: borderColor, width: 1),
             boxShadow: _elevated
                 ? [
                     BoxShadow(

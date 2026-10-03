@@ -33,11 +33,36 @@ class _ButtonState extends State<Button> {
     final spacing = theme.spacing;
     final colors = theme.colors;
     final isEnabled = widget.onPressed != null;
-    final foregroundColor = !isEnabled
-        ? colors.surface1
-        : widget.isActive
-        ? colors.text
-        : colors.subtext0;
+    final Color foregroundColor;
+    if (!isEnabled) {
+      foregroundColor = colors.surface1;
+    } else if (widget.isActive) {
+      foregroundColor = colors.text;
+    } else {
+      foregroundColor = colors.subtext0;
+    }
+
+    Widget buttonContent;
+    if (widget.iconAsset != null) {
+      buttonContent = SvgPicture.asset(
+        widget.iconAsset!,
+        width: spacing.toolbarIconSize,
+        height: spacing.toolbarIconSize,
+        fit: BoxFit.contain,
+        colorFilter: ColorFilter.mode(foregroundColor, BlendMode.srcIn),
+      );
+    } else if (widget.icon != null) {
+      buttonContent = Icon(
+        widget.icon,
+        size: spacing.toolbarIconSize,
+        color: foregroundColor,
+      );
+    } else {
+      buttonContent = Text(
+        widget.label!,
+        style: theme.typography.buttonLabel(isActive: widget.isActive),
+      );
+    }
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = isEnabled),
@@ -57,31 +82,7 @@ class _ButtonState extends State<Button> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Center(
-                  child: widget.iconAsset != null
-                      ? SvgPicture.asset(
-                          widget.iconAsset!,
-                          width: spacing.toolbarIconSize,
-                          height: spacing.toolbarIconSize,
-                          fit: BoxFit.contain,
-                          colorFilter: ColorFilter.mode(
-                            foregroundColor,
-                            BlendMode.srcIn,
-                          ),
-                        )
-                      : widget.icon != null
-                      ? Icon(
-                          widget.icon,
-                          size: spacing.toolbarIconSize,
-                          color: foregroundColor,
-                        )
-                      : Text(
-                          widget.label!,
-                          style: theme.typography.buttonLabel(
-                            isActive: widget.isActive,
-                          ),
-                        ),
-                ),
+                Center(child: buttonContent),
                 if (widget.hotkey != null)
                   Positioned(
                     right: 3,

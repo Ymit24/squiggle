@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/document_library/document_library_page.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 enum _AppScreen { library, editor }
 
@@ -54,23 +53,5 @@ class _AppShellState extends State<AppShell> {
     await library.refreshDocuments();
     if (!mounted) return;
     setState(() => _screen = _AppScreen.library);
-  }
-}
-
-/// Back control shown while editing a document.
-class EditorBackButton extends StatelessWidget {
-  const EditorBackButton({super.key, required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SquiggleButton(
-      onPressed: onPressed,
-      icon: Icons.grid_view_rounded,
-      label: 'Canvas library',
-      variant: SquiggleButtonVariant.secondary,
-      compact: true,
-    );
   }
 }

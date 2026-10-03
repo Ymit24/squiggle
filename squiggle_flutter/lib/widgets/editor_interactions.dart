@@ -12,19 +12,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/widgets/fling_controller.dart';
-
-class PointerRecord {
-  PointerRecord({
-    required this.pointer,
-    required this.buttons,
-    required this.screenPosition,
-    required this.timeStamp,
-  });
-  final int pointer;
-  final int buttons;
-  final Offset screenPosition;
-  final Duration timeStamp;
-}
+import 'package:squiggle_flutter/widgets/pointer_record.dart';
 
 class EditorInteractions extends StatefulWidget {
   const EditorInteractions({
@@ -118,19 +106,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
             _onRightPointerUpdate(event);
           }
         },
-        onPointerHover: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          _pointerInCanvas = _canvasLocal(event);
-          final world = _screenToWorld(event);
-          if (world == null) return;
-          widget.context.tool.onPointerHover(
-            widget.context,
-            world,
-            _camera,
-            isShiftPressed: _isShiftPressed,
-            isAltPressed: _isAltPressed,
-          );
-        },
+        onPointerHover: _onPointerHover,
         onPointerUp: (event) {
           if (!widget.canvasInteractionsEnabled) return;
 
@@ -181,31 +157,45 @@ class _EditorInteractionsState extends State<EditorInteractions>
           _camera.zoomToward(focal, 1 / factor);
           widget.context.notifyViewportChanged();
         },
-        onPointerPanZoomUpdate: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          if (!event.synthesized) {
-            _panVelocityTracker.addPosition(event.timeStamp, event.pan);
-          }
-          if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
-            _panZoomHadSignificantPinch = true;
-          }
-          final focal = _pointerInCanvas ?? _canvasLocal(event);
-          if (focal == null) return;
-          final prevZoom = _initialZoom;
-          final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
-            0.05,
-            10.0,
-          );
-          _camera.zoom = newZoom;
-          _camera.location =
-              _initialLocation +
-              focal * (prevZoom - newZoom) -
-              event.pan * newZoom;
-          widget.context.notifyViewportChanged();
-        },
+        onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
         child: widget.child,
       ),
     );
+  }
+
+  void _onPointerHover(PointerHoverEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+    _pointerInCanvas = _canvasLocal(event);
+    final world = _screenToWorld(event);
+    if (world == null) return;
+    widget.context.tool.onPointerHover(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+    if (!event.synthesized) {
+      _panVelocityTracker.addPosition(event.timeStamp, event.pan);
+    }
+    if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
+      _panZoomHadSignificantPinch = true;
+    }
+    final focal = _pointerInCanvas ?? _canvasLocal(event);
+    if (focal == null) return;
+    final prevZoom = _initialZoom;
+    final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
+      0.05,
+      10.0,
+    );
+    _camera.zoom = newZoom;
+    _camera.location =
+        _initialLocation + focal * (prevZoom - newZoom) - event.pan * newZoom;
+    widget.context.notifyViewportChanged();
   }
 
   void _onFlingPan(Offset delta) {
