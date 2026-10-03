@@ -86,3 +86,14 @@ void _distributeAlongAxis(
     current += (horizontal ? bounds.width : bounds.height) + gap;
   }
 }
+
+/// Moves the combined bounds to [targetCenter], preserving relative positions.
+/// Nodes must share a parent coordinate space. Their IDs remain unchanged.
+void centerNodesAt(List<Node> nodes, Offset targetCenter) {
+  if (nodes.isEmpty) return;
+
+  final delta = targetCenter - Node.localBoundsOfNodes(nodes).center;
+  for (final node in nodes) {
+    node.origin += delta;
+  }
+}

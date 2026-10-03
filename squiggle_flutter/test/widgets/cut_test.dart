@@ -13,7 +13,7 @@ import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/tool_shortcuts
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/node_clipboard.dart';
+import 'package:squiggle_flutter/services/clipboard.dart';
 import 'package:super_native_extensions/src/native/context.dart';
 
 EditorContext selectedContext() {
@@ -125,9 +125,9 @@ void main() {
       await pumpShortcuts(tester, context);
       await pressShortcut(tester, modifier, LogicalKeyboardKey.keyX, platform);
       expect(writes, 1);
-      expect(isSquiggleNodesClipboardText(copiedText!), isTrue);
+      expect(copiedText, startsWith('squiggle-nodes:3:'));
       final payload = jsonDecode(
-        copiedText!.substring('squiggle-nodes:2:'.length),
+        copiedText!.substring('squiggle-nodes:3:'.length),
       );
       expect(payload['nodes'], hasLength(2));
       expect(context.document.toDataModel().toJson(), before);

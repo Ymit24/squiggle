@@ -3,6 +3,9 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/group.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 
 void main() {
@@ -15,6 +18,38 @@ void main() {
         Feature(origin: origin, size: size, kind: FeatureKindRectangle()),
     ]);
   }
+
+  test('centering preserves group contents, relative positions, and IDs', () {
+    final child = Feature(
+      id: NodeId.newId(2),
+      origin: const Offset(5, 10),
+      size: const Size(20, 30),
+      kind: FeatureKindRectangle(),
+    );
+    final group = Group(
+      id: NodeId.newId(1),
+      origin: const Offset(100, 200),
+      children: [child],
+    );
+    final sibling = Feature(
+      id: NodeId.newId(3),
+      origin: const Offset(200, 300),
+      size: const Size(40, 50),
+      kind: FeatureKindCircle(),
+    );
+    final nodes = <Node>[group, sibling];
+    final childBefore = child.toDataModel();
+    final relativeOffset = sibling.origin - group.origin;
+
+    centerNodesAt(nodes, const Offset(500, 400));
+
+    expect(Node.localBoundsOfNodes(nodes).center, const Offset(500, 400));
+    expect(sibling.origin - group.origin, relativeOffset);
+    expect(child.toDataModel(), childBefore);
+    expect(group.children.single, same(child));
+    expect(group.id, NodeId.newId(1));
+    expect(sibling.id, NodeId.newId(3));
+  });
 
   group('alignNodes', () {
     test('does nothing for fewer than two features', () {
