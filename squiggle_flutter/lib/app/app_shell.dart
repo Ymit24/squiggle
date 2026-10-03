@@ -56,21 +56,3 @@ class _AppShellState extends State<AppShell> {
     setState(() => _screen = _AppScreen.library);
   }
 }
-
-/// Back control shown while editing a document.
-class EditorBackButton extends StatelessWidget {
-  const EditorBackButton({super.key, required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SquiggleButton(
-      onPressed: onPressed,
-      icon: Icons.grid_view_rounded,
-      label: 'Canvas library',
-      variant: SquiggleButtonVariant.secondary,
-      compact: true,
-    );
-  }
-}

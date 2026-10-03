@@ -1,6 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 
+class ActivateBrushIntent extends Intent {
+  const ActivateBrushIntent(this.index);
+
+  final int index;
+}
+
 class ReorderSelectedNodesIntent extends Intent {
   const ReorderSelectedNodesIntent(this.action);
 
@@ -33,6 +39,10 @@ class ActivateCreateTextToolIntent extends Intent {
 
 class DeleteSelectedFeaturesIntent extends Intent {
   const DeleteSelectedFeaturesIntent();
+}
+
+class ClearSelectionIntent extends Intent {
+  const ClearSelectionIntent();
 }
 
 class PasteImageIntent extends Intent {

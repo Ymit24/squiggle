@@ -20,23 +20,6 @@ final class FeatureKindRectangle extends FeatureKind
     this.labelHorizontalAlignment = TextHorizontalAlignment.center,
   });
 
-  factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
-      FeatureKindRectangle(
-        strokeColor: _colorFromDataModel(content, 'strokeColor'),
-        fillColor: _colorFromDataModel(content, 'fillColor'),
-        fillType: _fillTypeFromDataModel(content),
-        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
-        strokeType: _strokeTypeFromDataModel(content),
-        label: content['label'],
-        labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
-        labelVerticalAlignment: TextVerticalAlignment.values.byName(
-          content['labelVerticalAlignment'] as String,
-        ),
-        labelHorizontalAlignment: TextHorizontalAlignment.values.byName(
-          content['labelHorizontalAlignment'] as String,
-        ),
-      );
-
   @override
   Color strokeColor;
 
@@ -58,6 +41,25 @@ final class FeatureKindRectangle extends FeatureKind
   double labelFontSize;
   TextVerticalAlignment labelVerticalAlignment;
   TextHorizontalAlignment labelHorizontalAlignment;
+
+  factory FeatureKindRectangle.fromDataModel(Map<String, dynamic> content) =>
+      FeatureKindRectangle(
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        fillColor: _colorFromDataModel(content, 'fillColor'),
+        fillType: _fillTypeFromDataModel(content),
+        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        strokeType: _strokeTypeFromDataModel(content),
+        label: content['label'],
+        labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
+        labelVerticalAlignment: decodeStyleEnum(
+          content['labelVerticalAlignment'],
+          TextVerticalAlignment.values,
+        ),
+        labelHorizontalAlignment: decodeStyleEnum(
+          content['labelHorizontalAlignment'],
+          TextHorizontalAlignment.values,
+        ),
+      );
 
   @override
   Map<String, dynamic> toDataModel() => {

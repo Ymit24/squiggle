@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -66,7 +67,11 @@ mixin FillTypeCapable {
 }
 
 FillType _fillTypeFromDataModel(Map<String, dynamic> content) =>
-    FillType.values.asNameMap()[content['fillType']] ?? FillType.solid;
+    decodeStyleEnum(
+      content['fillType'],
+      FillType.values,
+      fallback: FillType.solid,
+    );
 
 mixin StrokeWidthCapable {
   double get strokeWidth;
@@ -79,7 +84,11 @@ mixin StrokeTypeCapable {
 }
 
 StrokeType _strokeTypeFromDataModel(Map<String, dynamic> content) =>
-    StrokeType.values.asNameMap()[content['strokeType']] ?? StrokeType.solid;
+    decodeStyleEnum(
+      content['strokeType'],
+      StrokeType.values,
+      fallback: StrokeType.solid,
+    );
 
 mixin LabelCapable {
   String get label;
@@ -125,11 +134,11 @@ void _growHeightToFitLabel(
 }
 
 double _doubleFromDataModel(Map<String, dynamic> content, String key) {
-  return (content[key] as num).toDouble();
+  return decodeStyleNumber(content[key]);
 }
 
 Color _colorFromDataModel(Map<String, dynamic> content, String key) {
-  return Color((content[key] as num).toInt());
+  return decodeStyleColor(content[key]);
 }
 
 Offset _offsetFromDataModel(Object value) {

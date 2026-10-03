@@ -1,11 +1,19 @@
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/text_alignment_selector.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/text_alignment_selector.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
 class InspectorVerticalTextAlignmentField
     extends InspectorField<TextVerticalAlignment> {
+  @override
+  Object? encodeValue(TextVerticalAlignment value) => value.name;
+
+  @override
+  TextVerticalAlignment decodeValue(Object? raw) =>
+      decodeStyleEnum(raw, TextVerticalAlignment.values);
+
   InspectorVerticalTextAlignmentField({
     required super.fieldKey,
     required super.label,
@@ -28,6 +36,13 @@ class InspectorVerticalTextAlignmentField
 
 class InspectorHorizontalTextAlignmentField
     extends InspectorField<TextHorizontalAlignment> {
+  @override
+  Object? encodeValue(TextHorizontalAlignment value) => value.name;
+
+  @override
+  TextHorizontalAlignment decodeValue(Object? raw) =>
+      decodeStyleEnum(raw, TextHorizontalAlignment.values);
+
   InspectorHorizontalTextAlignmentField({
     required super.fieldKey,
     required super.label,

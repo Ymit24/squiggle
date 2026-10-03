@@ -1,9 +1,11 @@
 import 'dart:ui';
 
-import 'package:data_models/data_models.dart' as data;
-import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:data_models/data_models.dart' as data;
+
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/models/document_session.dart';
 
 /// Editable document tree with document-wide node IDs.
 ///
@@ -13,8 +15,15 @@ import 'package:squiggle_flutter/models/node_id.dart';
 ///
 /// Undo/redo bookkeeping lives in the editor's history layer.
 class Document extends NodeContainer {
-  Document({this.name = 'Untitled', NodeId? nextId})
-    : _nextId = nextId ?? NodeId.newId(1);
+  Document({this.name = 'Untitled', NodeId? nextId, DocumentSession? session})
+    : _nextId = nextId ?? NodeId.newId(1),
+      session = session ?? DocumentSession();
+
+  String name;
+  DocumentSession session;
+
+  @override
+  Document get document => this;
 
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
@@ -25,36 +34,32 @@ class Document extends NodeContainer {
   }
 
   factory Document.fromDataModel(data.Document raw) {
-    final document = Document(name: raw.name);
+    final document = Document(
+      name: raw.name,
+      session: DocumentSession.fromDataModel(raw.session),
+    );
     document.addNodes(raw.nodes.map(Node.fromDataModel));
     return document;
   }
 
-  String name;
-
-  /// ID lookup index, carrying no parent or paint-order information.
-  final Map<NodeId, Node> _nodesById = {};
-
-  NodeId _nextId;
-
-  @override
-  Document get document => this;
+  data.Document toDataModel() {
+    return data.Document(
+      name: name,
+      session: session.toDataModel(),
+      nodes: _rootNodes.map((node) => node.toDataModel()).toList(),
+    );
+  }
 
   /// Root nodes in paint order; descendants live in their owners' child lists.
   List<Node> get _rootNodes => children;
 
+  /// ID lookup index, carrying no parent or paint-order information.
+  final Map<NodeId, Node> _nodesById = {};
+
   List<Node> get nodes => _rootNodes;
+
+  NodeId _nextId;
   int get nextId => _nextId.value;
-
-  @override
-  Offset get globalOrigin => Offset.zero;
-
-  data.Document toDataModel() {
-    return data.Document(
-      name: name,
-      nodes: _rootNodes.map((node) => node.toDataModel()).toList(),
-    );
-  }
 
   NodeId generateId() {
     final id = _nextId;
@@ -120,6 +125,15 @@ class Document extends NodeContainer {
     }
   }
 
+  Iterable<Node> _subtree(Node node) sync* {
+    yield node;
+    if (node is NodeContainer) {
+      for (final child in (node as NodeContainer).children) {
+        yield* _subtree(child);
+      }
+    }
+  }
+
   /// Adds multiple features
   void addNodes(Iterable<Node> nodes) {
     for (final node in nodes) {
@@ -149,14 +163,9 @@ class Document extends NodeContainer {
     _nextId = next;
     addNodes(copies);
     name = other.name;
+    session = DocumentSession.fromDataModel(other.session.toDataModel());
   }
 
-  Iterable<Node> _subtree(Node node) sync* {
-    yield node;
-    if (node is NodeContainer) {
-      for (final child in (node as NodeContainer).children) {
-        yield* _subtree(child);
-      }
-    }
-  }
+  @override
+  Offset get globalOrigin => Offset.zero;
 }

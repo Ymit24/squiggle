@@ -24,6 +24,7 @@ class DocumentStorage {
   Directory? _storageDirectory;
   Future<void>? _initializeFuture;
   bool _initialized = false;
+  final Map<String, Future<void>> _pendingWrites = {};
 
   static const _documentsDirName = 'documents';
   static const _activeDocumentFileName = 'active_document.txt';
@@ -80,6 +81,7 @@ class DocumentStorage {
 
   Future<StoredDocument?> loadDocument(String id) async {
     await initialize();
+    await _pendingWrites[id];
     final file = _documentFile(id);
     if (!await file.exists()) {
       return null;
@@ -106,19 +108,31 @@ class DocumentStorage {
     return info;
   }
 
-  Future<void> saveDocument(String id, Document document, String name) async {
-    await _ensureStorageReady();
-    try {
-      final raw = document.toDataModel();
-      final namedRaw = data.Document(name: name, nodes: raw.nodes);
-      await _documentFile(id).writeAsString(namedRaw.encode(), flush: true);
-    } on Object {
-      // Ignore persistence failures during autosave.
-    }
+  Future<void> saveDocument(String id, Document document, String name) {
+    final raw = document.toDataModel();
+    final encoded = data.Document(
+      name: name,
+      nodes: raw.nodes,
+      session: raw.session,
+    ).encode();
+    final previous = _pendingWrites[id] ?? Future<void>.value();
+    final write = previous.then((_) async {
+      try {
+        await _ensureStorageReady();
+        await _documentFile(id).writeAsString(encoded, flush: true);
+      } on Object {
+        // Ignore persistence failures during autosave.
+      }
+    });
+    _pendingWrites[id] = write;
+    return write.whenComplete(() {
+      if (identical(_pendingWrites[id], write)) _pendingWrites.remove(id);
+    });
   }
 
   Future<void> renameDocument(String id, String newName) async {
     await initialize();
+    await _pendingWrites[id];
     final file = _documentFile(id);
     if (!await file.exists()) {
       return;
@@ -135,6 +149,7 @@ class DocumentStorage {
 
   Future<void> deleteDocument(String id) async {
     await initialize();
+    await _pendingWrites[id];
     final file = _documentFile(id);
     if (await file.exists()) {
       await file.delete();

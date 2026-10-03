@@ -1,3 +1,5 @@
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -8,7 +10,10 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
-class CreateFeatureTool extends Tool {
+class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
+  @override
+  FeatureKind createDrawingKind() => kind.clone();
+
   CreateFeatureTool({required this.kind}) : _state = const _Idle();
 
   factory CreateFeatureTool.rect() =>
@@ -20,6 +25,15 @@ class CreateFeatureTool extends Tool {
   final FeatureKind kind;
 
   _CreateState _state;
+
+  @override
+  void refreshBrushPreview(EditorContext context) {
+    if (_state case _Dragging(:final feature)) {
+      final freshKind = createDrawingKind();
+      context.brushes.active.applyTo(freshKind);
+      feature.kind = freshKind;
+    }
+  }
 
   @override
   EditorCursor resolveCursor(
@@ -108,7 +122,7 @@ class CreateFeatureTool extends Tool {
 
   Feature _buildFeature(EditorContext context, Rect bounds) {
     final styledKind = kind.clone();
-    context.applyInspectorValues(styledKind);
+    context.brushes.active.applyTo(styledKind);
     return Feature(origin: bounds.topLeft, size: bounds.size, kind: styledKind);
   }
 
