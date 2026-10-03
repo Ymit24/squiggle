@@ -45,17 +45,6 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
     final colors = theme.colors;
     final opacity = widget.enabled ? 1.0 : 0.35;
 
-    final Color borderColor;
-    if (widget.isActive) {
-      borderColor = colors.text;
-    } else if (widget._needsSubtleBorder(widget.color)) {
-      borderColor = colors.surface1;
-    } else if (_hovering && widget.enabled) {
-      borderColor = colors.subtext0;
-    } else {
-      borderColor = colors.surface1;
-    }
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
@@ -75,7 +64,7 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
                 color: widget.color ?? colors.surface0,
                 borderRadius: BorderRadius.circular(theme.radii.swatch),
                 border: Border.all(
-                  color: borderColor,
+                  color: _borderColor(colors),
                   width: spacing.swatchBorderWidth,
                 ),
               ),
@@ -85,6 +74,19 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
         ),
       ),
     );
+  }
+
+  Color _borderColor(SquiggleColorScheme colors) {
+    if (widget.isActive) {
+      return colors.text;
+    }
+    if (widget._needsSubtleBorder(widget.color)) {
+      return colors.surface1;
+    }
+    if (_hovering && widget.enabled) {
+      return colors.subtext0;
+    }
+    return colors.surface1;
   }
 
   Widget? _noneSwatchOverlay(SquiggleColorScheme colors) {
