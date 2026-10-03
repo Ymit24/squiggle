@@ -13,6 +13,8 @@ Use semantic commit whenever commiting
 - Name helper files after their responsibility. Avoid introducing generic
   `helpers.dart`, `utils.dart`, or `common.dart` files.
 - Inspect existing implementations and callers before adding a helper.
+- Derive values selected by conditional branches in methods that return the
+  result directly, rather than assigning a local variable in each branch.
 - Theme code must not depend on application behavior or widgets. Persistence
   models in `packages/data_models` must remain independent of Flutter and the app.
 - When extracting code, update all callers and move its tests with it.
