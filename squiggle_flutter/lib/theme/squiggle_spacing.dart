@@ -124,10 +124,6 @@ class SquiggleSpacing {
     menuDividerHeight: kMenuDividerHeight,
   );
 
-  int get swatchColumns => kSwatchColumns;
-
-  double get swatchGridWidth => kSwatchGridWidth;
-
   SquiggleSpacing copyWith({
     double? overlayTop,
     double? overlaySide,
