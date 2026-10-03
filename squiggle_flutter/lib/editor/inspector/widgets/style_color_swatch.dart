@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class StyleColorSwatch extends StatefulWidget {
@@ -25,13 +26,13 @@ class StyleColorSwatch extends StatefulWidget {
   final bool enabled;
   final Widget? overlay;
 
+  @override
+  State<StyleColorSwatch> createState() => _StyleColorSwatchState();
+
   bool _needsSubtleBorder(Color? color) {
     if (color == null) return false;
     return !isActive && color.computeLuminance() > 0.65;
   }
-
-  @override
-  State<StyleColorSwatch> createState() => _StyleColorSwatchState();
 }
 
 class _StyleColorSwatchState extends State<StyleColorSwatch> {
@@ -43,13 +44,6 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
     final spacing = theme.spacing;
     final colors = theme.colors;
     final opacity = widget.enabled ? 1.0 : 0.35;
-    final borderColor = widget.isActive
-        ? colors.text
-        : (widget._needsSubtleBorder(widget.color)
-              ? colors.surface1
-              : (_hovering && widget.enabled
-                    ? colors.subtext0
-                    : colors.surface1));
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
@@ -70,24 +64,36 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
                 color: widget.color ?? colors.surface0,
                 borderRadius: BorderRadius.circular(theme.radii.swatch),
                 border: Border.all(
-                  color: borderColor,
+                  color: _borderColor(colors),
                   width: spacing.swatchBorderWidth,
                 ),
               ),
-              child:
-                  widget.overlay ??
-                  (widget.color == null
-                      ? CustomPaint(
-                          painter: _NoneSwatchPainter(
-                            color: widget.isActive
-                                ? colors.text
-                                : colors.subtext0,
-                          ),
-                        )
-                      : null),
+              child: widget.overlay ?? _noneSwatchOverlay(colors),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Color _borderColor(SquiggleColorScheme colors) {
+    if (widget.isActive) {
+      return colors.text;
+    }
+    if (widget._needsSubtleBorder(widget.color)) {
+      return colors.surface1;
+    }
+    if (_hovering && widget.enabled) {
+      return colors.subtext0;
+    }
+    return colors.surface1;
+  }
+
+  Widget? _noneSwatchOverlay(SquiggleColorScheme colors) {
+    if (widget.color != null) return null;
+    return CustomPaint(
+      painter: _NoneSwatchPainter(
+        color: widget.isActive ? colors.text : colors.subtext0,
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card_menu_button.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_anchor.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 

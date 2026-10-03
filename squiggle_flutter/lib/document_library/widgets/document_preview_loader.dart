@@ -35,11 +35,6 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
     }
   }
 
-  Future<List<Node>> _load(String documentId) {
-    final storage = context.read<DocumentStorage>();
-    return _loadPreviewNodes(storage, documentId);
-  }
-
   @override
   Widget build(BuildContext context) {
     final imageRepository = context.read<ImageRepository>();
@@ -65,6 +60,11 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
         return DocumentPreview(nodes: nodes, imageRepository: imageRepository);
       },
     );
+  }
+
+  Future<List<Node>> _load(String documentId) {
+    final storage = context.read<DocumentStorage>();
+    return _loadPreviewNodes(storage, documentId);
   }
 }
 

@@ -15,6 +15,12 @@ final class FeatureKindImage extends FeatureKind
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
       );
 
+  String imageId;
+  @override
+  Color strokeColor;
+  @override
+  double strokeWidth;
+
   @override
   Map<String, dynamic> toDataModel() => {
     'type': 'image',
@@ -29,12 +35,6 @@ final class FeatureKindImage extends FeatureKind
     strokeColor: strokeColor,
     strokeWidth: strokeWidth,
   );
-
-  String imageId;
-  @override
-  Color strokeColor;
-  @override
-  double strokeWidth;
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {

@@ -2,30 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/grouping_commands.dart';
-import 'package:squiggle_flutter/editor/layout_commands.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
+import 'package:squiggle_flutter/editor/layout_commands.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
+import 'package:squiggle_flutter/services/node_clipboard.dart';
 import 'package:squiggle_flutter/services/paste_clipboard.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_divider.dart';
-import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_group_label.dart';
+import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
 
 class ContextMenu extends StatelessWidget {
-  final Offset localScreenPosition;
-  final EditorContext editorContext;
-  final ImageRepository imageRepository;
-
   const ContextMenu({
     super.key,
     required this.localScreenPosition,
     required this.editorContext,
     required this.imageRepository,
   });
+  final Offset localScreenPosition;
+  final EditorContext editorContext;
+  final ImageRepository imageRepository;
+
+  @override
+  Widget build(BuildContext context) => SquiggleContextMenu(
+    position: localScreenPosition,
+    children: _buildMenuItems(context),
+  );
 
   void _copy(BuildContext context, {bool cut = false}) {
     if (cut) {
@@ -284,10 +289,4 @@ class ContextMenu extends StatelessWidget {
       ),
     ];
   }
-
-  @override
-  Widget build(BuildContext context) => SquiggleContextMenu(
-    position: localScreenPosition,
-    children: _buildMenuItems(context),
-  );
 }

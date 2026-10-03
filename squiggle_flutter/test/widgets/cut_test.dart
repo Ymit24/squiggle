@@ -8,13 +8,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:irondash_message_channel/irondash_message_channel.dart';
 import 'package:provider/provider.dart';
-import 'package:super_native_extensions/src/native/context.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/shortcuts.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/tool_shortcuts.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
+import 'package:super_native_extensions/src/native/context.dart';
 
 EditorContext selectedContext() {
   final context = EditorContext(

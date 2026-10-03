@@ -40,23 +40,10 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
     });
   }
 
-  void _measurePanel() {
-    final box = _panelKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
-    final height = box.size.height;
-    if (_panelHeight != height) {
-      setState(() => _panelHeight = height);
-    }
-  }
-
   @override
   void dispose() {
     _textFocusNode.dispose();
     super.dispose();
-  }
-
-  void _cancel() {
-    context.read<TextEditBloc>().add(const TextEditCancelled());
   }
 
   @override
@@ -124,5 +111,18 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
         ),
       ),
     );
+  }
+
+  void _measurePanel() {
+    final box = _panelKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final height = box.size.height;
+    if (_panelHeight != height) {
+      setState(() => _panelHeight = height);
+    }
+  }
+
+  void _cancel() {
+    context.read<TextEditBloc>().add(const TextEditCancelled());
   }
 }

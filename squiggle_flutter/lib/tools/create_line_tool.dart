@@ -1,5 +1,3 @@
-import 'package:squiggle_flutter/tools/drawing_tool.dart';
-import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
@@ -8,19 +6,20 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/tools/editor_cursor.dart';
-import 'package:squiggle_flutter/tools/tool.dart';
-import 'package:squiggle_flutter/tools/interaction_state.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/idle_state.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/interaction_state.dart';
+import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
-  @override
-  FeatureKind createDrawingKind() => FeatureKindPolyline([]);
-
   late InteractionState<CreateLineTool> _activeInteractionState = IdleState(
     parent: this,
   );
   Feature? _previewFeature;
+  @override
+  FeatureKind createDrawingKind() => FeatureKindPolyline([]);
 
   @override
   void refreshBrushPreview(EditorContext context) {

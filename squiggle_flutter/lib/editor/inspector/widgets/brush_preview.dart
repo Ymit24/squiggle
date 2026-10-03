@@ -1,7 +1,8 @@
-import 'package:squiggle_flutter/editor/inspector/widgets/metrics.dart';
 import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/metrics.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';

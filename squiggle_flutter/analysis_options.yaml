@@ -1,12 +1,5 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+include: package:flutter_lints/flutter.yaml
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 analyzer:
   exclude:
     - build/**
@@ -14,23 +7,78 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
-include: package:flutter_lints/flutter.yaml
 
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
     always_use_package_imports: true
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    directives_ordering: true
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+plugins:
+  dart_code_linter:
+    version: 4.4.0
+    diagnostics:
+      prefer-single-widget-per-file: warning
+      member-ordering: warning
+      prefer-match-file-name: warning
+      prefer-extracting-callbacks: warning
+      avoid-nested-conditional-expressions: warning
+      avoid-banned-imports: warning
+
+dart_code_linter:
+  metrics:
+    cyclomatic-complexity: 15
+    maximum-nesting-level: 3
+    source-lines-of-code: 60
+    number-of-methods: 20
+  metrics-exclude:
+    - test/**
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+  rules-exclude:
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+  rules:
+    - prefer-single-widget-per-file:
+        severity: warning
+        ignore-private-widgets: false
+    - member-ordering:
+        severity: warning
+        alphabetize: false
+        order:
+          - constructors
+          - fields
+          - getters-setters
+          - public-methods
+          - private-methods
+        widgets-order:
+          - constructors
+          - fields
+          - getters-setters
+          - init-state-method
+          - did-change-dependencies-method
+          - did-update-widget-method
+          - dispose-method
+          - build-method
+          - public-methods
+          - private-methods
+    - prefer-match-file-name:
+        severity: warning
+        ignore-enums: true
+        ignore-typedefs: true
+        include:
+          - lib/widgets/**
+          - lib/**/widgets/**
+    - prefer-extracting-callbacks:
+        severity: warning
+        allowed-line-count: 10
+    - avoid-nested-conditional-expressions:
+        severity: warning
+    - avoid-banned-imports:
+        severity: warning
+        entries:
+          - paths: ['lib/theme/.*\.dart$']
+            deny: ['^package:squiggle_flutter/(app|document_library|editor|repositories|services|tools|widgets)/']
+            message: 'Theme code must not depend on application behavior or widgets.'
+          - paths: ['packages/data_models/lib/.*\.dart$']
+            deny: ['^package:(flutter|squiggle_flutter)/']
+            message: 'Persistence models must remain independent of Flutter and the application.'

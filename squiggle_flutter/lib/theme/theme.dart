@@ -1,9 +1,9 @@
 export 'package:squiggle_flutter/theme/document_colors.dart';
 export 'package:squiggle_flutter/theme/squiggle_button_style.dart';
-export 'package:squiggle_flutter/theme/squiggle_menu_item_style.dart';
 export 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 export 'package:squiggle_flutter/theme/squiggle_colors.dart';
 export 'package:squiggle_flutter/theme/squiggle_decorations.dart';
+export 'package:squiggle_flutter/theme/squiggle_menu_item_style.dart';
 export 'package:squiggle_flutter/theme/squiggle_radii.dart';
 export 'package:squiggle_flutter/theme/squiggle_spacing.dart';
 export 'package:squiggle_flutter/theme/squiggle_theme.dart';

@@ -49,12 +49,6 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
     super.dispose();
   }
 
-  void _submit() {
-    final name = _controller.text.trim();
-    if (name.isEmpty) return;
-    Navigator.of(context).pop(name);
-  }
-
   @override
   Widget build(BuildContext context) {
     return SquiggleDialog(
@@ -80,5 +74,11 @@ class _DocumentNameDialogState extends State<_DocumentNameDialog> {
         ),
       ],
     );
+  }
+
+  void _submit() {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+    Navigator.of(context).pop(name);
   }
 }

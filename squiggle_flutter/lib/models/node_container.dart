@@ -32,20 +32,6 @@ abstract mixin class NodeContainer {
     return node;
   }
 
-  void _validateInsertion(Node node, int position) {
-    RangeError.checkValueInInterval(position, 0, _children.length, 'index');
-    if (node.parent != null) {
-      throw StateError('Detach the node before inserting');
-    }
-    NodeContainer? ancestor = this;
-    while (ancestor is Node) {
-      if (identical(ancestor, node)) {
-        throw StateError('A node cannot own itself');
-      }
-      ancestor = (ancestor as Node).parent;
-    }
-  }
-
   void removeAll(Iterable<NodeId> ids) {
     final removed = ids.toSet();
     if (removed.isEmpty) return;
@@ -69,5 +55,19 @@ abstract mixin class NodeContainer {
     _children
       ..clear()
       ..addAll(order.map((id) => byId[id]!));
+  }
+
+  void _validateInsertion(Node node, int position) {
+    RangeError.checkValueInInterval(position, 0, _children.length, 'index');
+    if (node.parent != null) {
+      throw StateError('Detach the node before inserting');
+    }
+    NodeContainer? ancestor = this;
+    while (ancestor is Node) {
+      if (identical(ancestor, node)) {
+        throw StateError('A node cannot own itself');
+      }
+      ancestor = (ancestor as Node).parent;
+    }
   }
 }

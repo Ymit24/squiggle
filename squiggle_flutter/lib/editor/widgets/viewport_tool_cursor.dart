@@ -74,6 +74,36 @@ class _ViewportToolCursorState extends State<ViewportToolCursor> {
     super.dispose();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (event) {
+        _pointerDown = true;
+        _trackPointer(event);
+      },
+      onPointerMove: _trackPointer,
+      onPointerUp: (event) {
+        _pointerDown = false;
+        _trackPointer(event);
+      },
+      onPointerCancel: (event) {
+        _pointerDown = false;
+        _trackPointer(event);
+      },
+      child: MouseRegion(
+        cursor: _cursor,
+        onHover: _trackPointer,
+        onExit: (_) {
+          if (_pointerDown) return;
+          _lastPointerGlobal = null;
+          if (_cursor == SystemMouseCursors.basic) return;
+          setState(() => _cursor = SystemMouseCursors.basic);
+        },
+        child: widget.child,
+      ),
+    );
+  }
+
   Offset? _worldFromGlobal(Offset global) {
     final renderBox =
         widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
@@ -104,35 +134,5 @@ class _ViewportToolCursorState extends State<ViewportToolCursor> {
   void _trackPointer(PointerEvent event) {
     _lastPointerGlobal = event.position;
     _updateCursor(event.position);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (event) {
-        _pointerDown = true;
-        _trackPointer(event);
-      },
-      onPointerMove: _trackPointer,
-      onPointerUp: (event) {
-        _pointerDown = false;
-        _trackPointer(event);
-      },
-      onPointerCancel: (event) {
-        _pointerDown = false;
-        _trackPointer(event);
-      },
-      child: MouseRegion(
-        cursor: _cursor,
-        onHover: _trackPointer,
-        onExit: (_) {
-          if (_pointerDown) return;
-          _lastPointerGlobal = null;
-          if (_cursor == SystemMouseCursors.basic) return;
-          setState(() => _cursor = SystemMouseCursors.basic);
-        },
-        child: widget.child,
-      ),
-    );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/inspector/widgets/color_swatch.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_fields.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/stroke_type_selector.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/style_color_swatch.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 

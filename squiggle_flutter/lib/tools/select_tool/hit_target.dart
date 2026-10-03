@@ -8,19 +8,16 @@ class HitTarget {}
 class CanvasTarget extends HitTarget {}
 
 class NodeTarget extends HitTarget {
-  final Node node;
-
   NodeTarget({required this.node});
+  final Node node;
 }
 
 class ResizeHandleTarget extends HitTarget {
-  final ResizeHandle handle;
-
   ResizeHandleTarget({required this.handle});
+  final ResizeHandle handle;
 }
 
 class PolylineHandleTarget extends HitTarget {
-  final PolylineHandle handle;
-
   PolylineHandleTarget({required this.handle});
+  final PolylineHandle handle;
 }

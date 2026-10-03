@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/current_document_badge.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card_menu_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_loader.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_anchor.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_time.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class DocumentCard extends StatefulWidget {
@@ -61,14 +62,7 @@ class _DocumentCardState extends State<DocumentCard> {
           decoration: BoxDecoration(
             color: colors.base,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: widget.isCurrent
-                  ? colors.accent.withValues(alpha: 0.6)
-                  : _elevated
-                  ? colors.accent.withValues(alpha: 0.45)
-                  : colors.surface1,
-              width: 1,
-            ),
+            border: Border.all(color: _borderColor(colors), width: 1),
             boxShadow: _elevated
                 ? [
                     BoxShadow(
@@ -211,6 +205,16 @@ class _DocumentCardState extends State<DocumentCard> {
         ),
       ),
     );
+  }
+
+  Color _borderColor(SquiggleColorScheme colors) {
+    if (widget.isCurrent) {
+      return colors.accent.withValues(alpha: 0.6);
+    }
+    if (_elevated) {
+      return colors.accent.withValues(alpha: 0.45);
+    }
+    return colors.surface1;
   }
 
   void _showContextMenu(BuildContext context, Offset position) {

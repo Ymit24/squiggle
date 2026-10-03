@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class Button extends StatefulWidget {
@@ -31,14 +32,7 @@ class _ButtonState extends State<Button> {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     final spacing = theme.spacing;
-    final colors = theme.colors;
     final isEnabled = widget.onPressed != null;
-    final foregroundColor = !isEnabled
-        ? colors.surface1
-        : widget.isActive
-        ? colors.text
-        : colors.subtext0;
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = isEnabled),
       onExit: (_) => setState(() => _hovering = false),
@@ -57,31 +51,7 @@ class _ButtonState extends State<Button> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Center(
-                  child: widget.iconAsset != null
-                      ? SvgPicture.asset(
-                          widget.iconAsset!,
-                          width: spacing.toolbarIconSize,
-                          height: spacing.toolbarIconSize,
-                          fit: BoxFit.contain,
-                          colorFilter: ColorFilter.mode(
-                            foregroundColor,
-                            BlendMode.srcIn,
-                          ),
-                        )
-                      : widget.icon != null
-                      ? Icon(
-                          widget.icon,
-                          size: spacing.toolbarIconSize,
-                          color: foregroundColor,
-                        )
-                      : Text(
-                          widget.label!,
-                          style: theme.typography.buttonLabel(
-                            isActive: widget.isActive,
-                          ),
-                        ),
-                ),
+                Center(child: _buttonContent(theme)),
                 if (widget.hotkey != null)
                   Positioned(
                     right: 3,
@@ -93,6 +63,37 @@ class _ButtonState extends State<Button> {
           ),
         ),
       ),
+    );
+  }
+
+  Color _foregroundColor(SquiggleColorScheme colors) {
+    if (widget.onPressed == null) {
+      return colors.surface1;
+    }
+    if (widget.isActive) {
+      return colors.text;
+    }
+    return colors.subtext0;
+  }
+
+  Widget _buttonContent(SquiggleTheme theme) {
+    final foregroundColor = _foregroundColor(theme.colors);
+    final iconSize = theme.spacing.toolbarIconSize;
+    if (widget.iconAsset != null) {
+      return SvgPicture.asset(
+        widget.iconAsset!,
+        width: iconSize,
+        height: iconSize,
+        fit: BoxFit.contain,
+        colorFilter: ColorFilter.mode(foregroundColor, BlendMode.srcIn),
+      );
+    }
+    if (widget.icon != null) {
+      return Icon(widget.icon, size: iconSize, color: foregroundColor);
+    }
+    return Text(
+      widget.label!,
+      style: theme.typography.buttonLabel(isActive: widget.isActive),
     );
   }
 }

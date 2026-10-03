@@ -5,27 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/fling_controller.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_record.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
-import 'package:squiggle_flutter/editor/fling_controller.dart';
-
-class PointerRecord {
-  final int pointer;
-  final int buttons;
-  final Offset screenPosition;
-  final Duration timeStamp;
-
-  PointerRecord({
-    required this.pointer,
-    required this.buttons,
-    required this.screenPosition,
-    required this.timeStamp,
-  });
-}
 
 class EditorInteractions extends StatefulWidget {
   const EditorInteractions({
@@ -51,37 +38,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     with SingleTickerProviderStateMixin {
   late final FlingController _flingController;
 
-  Camera get _camera => widget.context.camera;
-
   PointerRecord? lastPointerRecord;
-
-  @override
-  void initState() {
-    super.initState();
-    _flingController = FlingController(vsync: this, onPan: _onFlingPan);
-    widget.context.attachViewportMotionCanceller(_flingController.stop);
-  }
-
-  @override
-  void dispose() {
-    widget.context.detachViewportMotionCanceller(_flingController.stop);
-    _flingController.dispose();
-    super.dispose();
-  }
-
-  void _onFlingPan(Offset delta) {
-    _camera.panByScreenDelta(delta);
-    widget.context.notifyViewportChanged();
-  }
-
-  void _resetPointerState() {
-    _isPrimaryDragging = false;
-    _secondaryPointerDownAt = null;
-    _isSecondaryDragging = false;
-    _pointerDownButtons = null;
-    _pointerInCanvas = null;
-    _flingController.stop();
-  }
 
   static const _pinchScaleThreshold = 0.02;
   static const _secondaryDragThreshold = 5.0;
@@ -99,6 +56,26 @@ class _EditorInteractionsState extends State<EditorInteractions>
   VelocityTracker _panVelocityTracker = VelocityTracker.withKind(
     PointerDeviceKind.trackpad,
   );
+
+  Camera get _camera => widget.context.camera;
+
+  bool get _isShiftPressed => HardwareKeyboard.instance.isShiftPressed;
+
+  bool get _isAltPressed => HardwareKeyboard.instance.isAltPressed;
+
+  @override
+  void initState() {
+    super.initState();
+    _flingController = FlingController(vsync: this, onPan: _onFlingPan);
+    widget.context.attachViewportMotionCanceller(_flingController.stop);
+  }
+
+  @override
+  void dispose() {
+    widget.context.detachViewportMotionCanceller(_flingController.stop);
+    _flingController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,19 +106,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
             _onRightPointerUpdate(event);
           }
         },
-        onPointerHover: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          _pointerInCanvas = _canvasLocal(event);
-          final world = _screenToWorld(event);
-          if (world == null) return;
-          widget.context.tool.onPointerHover(
-            widget.context,
-            world,
-            _camera,
-            isShiftPressed: _isShiftPressed,
-            isAltPressed: _isAltPressed,
-          );
-        },
+        onPointerHover: _onPointerHover,
         onPointerUp: (event) {
           if (!widget.canvasInteractionsEnabled) return;
 
@@ -192,31 +157,59 @@ class _EditorInteractionsState extends State<EditorInteractions>
           _camera.zoomToward(focal, 1 / factor);
           widget.context.notifyViewportChanged();
         },
-        onPointerPanZoomUpdate: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          if (!event.synthesized) {
-            _panVelocityTracker.addPosition(event.timeStamp, event.pan);
-          }
-          if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
-            _panZoomHadSignificantPinch = true;
-          }
-          final focal = _pointerInCanvas ?? _canvasLocal(event);
-          if (focal == null) return;
-          final prevZoom = _initialZoom;
-          final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
-            0.05,
-            10.0,
-          );
-          _camera.zoom = newZoom;
-          _camera.location =
-              _initialLocation +
-              focal * (prevZoom - newZoom) -
-              event.pan * newZoom;
-          widget.context.notifyViewportChanged();
-        },
+        onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
         child: widget.child,
       ),
     );
+  }
+
+  void _onPointerHover(PointerHoverEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+    _pointerInCanvas = _canvasLocal(event);
+    final world = _screenToWorld(event);
+    if (world == null) return;
+    widget.context.tool.onPointerHover(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+    if (!event.synthesized) {
+      _panVelocityTracker.addPosition(event.timeStamp, event.pan);
+    }
+    if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
+      _panZoomHadSignificantPinch = true;
+    }
+    final focal = _pointerInCanvas ?? _canvasLocal(event);
+    if (focal == null) return;
+    final prevZoom = _initialZoom;
+    final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
+      0.05,
+      10.0,
+    );
+    _camera.zoom = newZoom;
+    _camera.location =
+        _initialLocation + focal * (prevZoom - newZoom) - event.pan * newZoom;
+    widget.context.notifyViewportChanged();
+  }
+
+  void _onFlingPan(Offset delta) {
+    _camera.panByScreenDelta(delta);
+    widget.context.notifyViewportChanged();
+  }
+
+  void _resetPointerState() {
+    _isPrimaryDragging = false;
+    _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
+    _pointerDownButtons = null;
+    _pointerInCanvas = null;
+    _flingController.stop();
   }
 
   void _checkForDoubleClick(PointerUpEvent event) {
@@ -259,10 +252,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
     if (local == null) return null;
     return _camera.screenToWorld(local);
   }
-
-  bool get _isShiftPressed => HardwareKeyboard.instance.isShiftPressed;
-
-  bool get _isAltPressed => HardwareKeyboard.instance.isAltPressed;
 
   void _onLeftPointerDown(PointerDownEvent event) {
     ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
