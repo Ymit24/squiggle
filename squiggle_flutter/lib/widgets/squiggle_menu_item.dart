@@ -1,6 +1,6 @@
-import 'package:squiggle_flutter/widgets/squiggle_shortcut_hint.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_shortcut_hint.dart';
 
 /// A compact menu action. A null [onPressed] disables the item.
 class SquiggleMenuItem extends StatelessWidget {

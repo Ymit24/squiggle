@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/layout_commands.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/node_layout_selector.dart';
+import 'package:squiggle_flutter/editor/layout_commands.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';

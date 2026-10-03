@@ -1,4 +1,3 @@
-import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +12,7 @@ import 'package:squiggle_flutter/services/paste_clipboard.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _brushKeys = [

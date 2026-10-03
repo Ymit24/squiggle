@@ -9,6 +9,9 @@ class BrushProfile {
     Map<String, Object?>? values,
   }) : values = Map.of(values ?? {});
 
+  factory BrushProfile.fromDataModel(data.BrushProfile raw) =>
+      BrushProfile(id: raw.id, name: raw.name, values: raw.values);
+
   static const scratchId = 'scratch';
   final String id;
   String name;
@@ -24,9 +27,6 @@ class BrushProfile {
       }
     }
   }
-
-  factory BrushProfile.fromDataModel(data.BrushProfile raw) =>
-      BrushProfile(id: raw.id, name: raw.name, values: raw.values);
 
   data.BrushProfile toDataModel() => data.BrushProfile(
     id: id,

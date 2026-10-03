@@ -1,4 +1,3 @@
-import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/stroke_painter.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;

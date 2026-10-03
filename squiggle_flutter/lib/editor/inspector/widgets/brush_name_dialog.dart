@@ -31,11 +31,6 @@ class _BrushNameDialogState extends State<BrushNameDialog> {
     super.dispose();
   }
 
-  void _submit() {
-    final name = _controller.text.trim();
-    if (name.isNotEmpty) Navigator.of(context).pop(name);
-  }
-
   @override
   Widget build(BuildContext context) => SquiggleDialog(
     title: widget.creating ? 'Create brush' : 'Rename brush',
@@ -60,4 +55,9 @@ class _BrushNameDialogState extends State<BrushNameDialog> {
       ),
     ],
   );
+
+  void _submit() {
+    final name = _controller.text.trim();
+    if (name.isNotEmpty) Navigator.of(context).pop(name);
+  }
 }

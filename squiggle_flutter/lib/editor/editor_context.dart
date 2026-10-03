@@ -1,7 +1,5 @@
-import 'package:squiggle_flutter/editor/brush_controller.dart';
-import 'package:squiggle_flutter/tools/drawing_tool.dart';
-import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:squiggle_flutter/editor/brush_controller.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
@@ -11,6 +9,8 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
@@ -46,6 +46,33 @@ class EditorContext extends ChangeNotifier {
 
   final BrushController brushes;
 
+  /// World-space camera for the current document viewport.
+  final Camera camera = Camera();
+
+  /// Viewport size in screen pixels, written by the viewport widget.
+  Size viewportSize = Size.zero;
+
+  // TODO: Consider a better way to coordinate camera motion.
+  VoidCallback? _cancelViewportMotion;
+
+  SelectionModel get selection => _selection;
+
+  ToolModel get tool => _tool;
+
+  History get history => _history;
+
+  TextEditModel get textEdit => _textEdit;
+
+  /// Fresh defaults for the active creation tool, never its mutable template.
+  FeatureKind? get drawingInspectorKind {
+    if (tool.activeTool case DrawingTool drawingTool) {
+      final kind = drawingTool.createDrawingKind();
+      brushes.active.applyTo(kind);
+      return kind;
+    }
+    return null;
+  }
+
   void openContextMenuAt(
     BuildContext context,
     Offset localScreenPosition,
@@ -67,23 +94,6 @@ class EditorContext extends ChangeNotifier {
     );
   }
 
-  SelectionModel get selection => _selection;
-
-  ToolModel get tool => _tool;
-
-  History get history => _history;
-
-  TextEditModel get textEdit => _textEdit;
-
-  /// World-space camera for the current document viewport.
-  final Camera camera = Camera();
-
-  /// Viewport size in screen pixels, written by the viewport widget.
-  Size viewportSize = Size.zero;
-
-  // TODO: Consider a better way to coordinate camera motion.
-  VoidCallback? _cancelViewportMotion;
-
   void attachViewportMotionCanceller(VoidCallback cancel) {
     _cancelViewportMotion = cancel;
   }
@@ -93,15 +103,6 @@ class EditorContext extends ChangeNotifier {
   }
 
   void cancelViewportMotion() => _cancelViewportMotion?.call();
-
-  void _forward() => notifyListeners();
-
-  void _onBrushChanged() {
-    if (tool.activeTool case BrushPreviewTool previewTool) {
-      previewTool.refreshBrushPreview(this);
-    }
-    notifyListeners();
-  }
 
   /// Notifies observers that the camera or viewport changed.
   void notifyViewportChanged() => notifyListeners();
@@ -130,12 +131,6 @@ class EditorContext extends ChangeNotifier {
     _refreshSelectionAfterHistoryChange();
   }
 
-  void _refreshSelectionAfterHistoryChange() {
-    selection.setSelection(
-      selection.selectedNodeIds.where((id) => document.nodeById(id) != null),
-    );
-  }
-
   void setTool(Tool tool) => _tool.setTool(tool, this);
 
   void resetToSelectTool() => _tool.resetToSelectTool(this);
@@ -149,16 +144,6 @@ class EditorContext extends ChangeNotifier {
   void startTextEdit(TextEditSession session) => _textEdit.begin(session);
 
   void endTextEdit() => _textEdit.end();
-
-  /// Fresh defaults for the active creation tool, never its mutable template.
-  FeatureKind? get drawingInspectorKind {
-    if (tool.activeTool case DrawingTool drawingTool) {
-      final kind = drawingTool.createDrawingKind();
-      brushes.active.applyTo(kind);
-      return kind;
-    }
-    return null;
-  }
 
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
@@ -180,5 +165,20 @@ class EditorContext extends ChangeNotifier {
     brushes.removeListener(_onBrushChanged);
     brushes.dispose();
     super.dispose();
+  }
+
+  void _forward() => notifyListeners();
+
+  void _onBrushChanged() {
+    if (tool.activeTool case BrushPreviewTool previewTool) {
+      previewTool.refreshBrushPreview(this);
+    }
+    notifyListeners();
+  }
+
+  void _refreshSelectionAfterHistoryChange() {
+    selection.setSelection(
+      selection.selectedNodeIds.where((id) => document.nodeById(id) != null),
+    );
   }
 }

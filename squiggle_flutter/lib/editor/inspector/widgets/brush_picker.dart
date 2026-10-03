@@ -24,43 +24,6 @@ class _BrushPickerState extends State<BrushPicker> {
   final _picker = MenuController();
   final _actions = MenuController();
 
-  Future<void> _create() async {
-    final editor = widget.editorContext;
-    final sourceId = editor.brushes.active.id;
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => const BrushNameDialog(creating: true),
-    );
-    if (!mounted ||
-        name == null ||
-        editor.brushes.active.id != sourceId ||
-        !editor.brushes.canCreate) {
-      return;
-    }
-    editor.brushes.create(name);
-  }
-
-  Future<void> _rename() async {
-    final editor = widget.editorContext;
-    final brush = editor.brushes.active;
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => BrushNameDialog(creating: false, initialName: brush.name),
-    );
-    if (!mounted || name == null) return;
-    editor.brushes.rename(brush.id, name);
-  }
-
-  Future<void> _delete() async {
-    final editor = widget.editorContext;
-    final brush = editor.brushes.active;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => DeleteBrushDialog(name: brush.name),
-    );
-    if (mounted && confirmed == true) editor.brushes.delete(brush.id);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
@@ -166,5 +129,42 @@ class _BrushPickerState extends State<BrushPicker> {
         ),
       ],
     );
+  }
+
+  Future<void> _create() async {
+    final editor = widget.editorContext;
+    final sourceId = editor.brushes.active.id;
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => const BrushNameDialog(creating: true),
+    );
+    if (!mounted ||
+        name == null ||
+        editor.brushes.active.id != sourceId ||
+        !editor.brushes.canCreate) {
+      return;
+    }
+    editor.brushes.create(name);
+  }
+
+  Future<void> _rename() async {
+    final editor = widget.editorContext;
+    final brush = editor.brushes.active;
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => BrushNameDialog(creating: false, initialName: brush.name),
+    );
+    if (!mounted || name == null) return;
+    editor.brushes.rename(brush.id, name);
+  }
+
+  Future<void> _delete() async {
+    final editor = widget.editorContext;
+    final brush = editor.brushes.active;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => DeleteBrushDialog(name: brush.name),
+    );
+    if (mounted && confirmed == true) editor.brushes.delete(brush.id);
   }
 }

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:data_models/src/node.dart';
 import 'package:data_models/src/document_session.dart';
+import 'package:data_models/src/node.dart';
 
 const dataModelFormatVersion = 2;
 
@@ -11,10 +11,6 @@ final class Document {
     this.nodes = const [],
     this.session = const DocumentSession(),
   });
-
-  final String name;
-  final List<Node> nodes;
-  final DocumentSession session;
 
   factory Document.fromJson(Map<String, dynamic> json) {
     if (json['version'] != dataModelFormatVersion) {
@@ -35,6 +31,13 @@ final class Document {
     );
   }
 
+  factory Document.decode(String value) =>
+      Document.fromJson(jsonDecode(value) as Map<String, dynamic>);
+
+  final String name;
+  final List<Node> nodes;
+  final DocumentSession session;
+
   Map<String, dynamic> toJson() => {
     'version': dataModelFormatVersion,
     'name': name,
@@ -43,7 +46,4 @@ final class Document {
   };
 
   String encode() => jsonEncode(toJson());
-
-  factory Document.decode(String value) =>
-      Document.fromJson(jsonDecode(value) as Map<String, dynamic>);
 }

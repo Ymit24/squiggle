@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/document_library/document_library_page.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
-import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 enum _AppScreen { library, editor }
 

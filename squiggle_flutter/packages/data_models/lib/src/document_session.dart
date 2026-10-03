@@ -7,9 +7,6 @@ class DocumentSession {
     this.activeBrushId = 'scratch',
   });
 
-  final List<BrushProfile> brushes;
-  final String activeBrushId;
-
   factory DocumentSession.fromJson(Map<String, dynamic> json) =>
       DocumentSession(
         brushes: [
@@ -18,6 +15,9 @@ class DocumentSession {
         ],
         activeBrushId: json['activeBrushId'] as String? ?? 'scratch',
       );
+
+  final List<BrushProfile> brushes;
+  final String activeBrushId;
 
   Map<String, dynamic> toJson() => {
     'activeBrushId': activeBrushId,
