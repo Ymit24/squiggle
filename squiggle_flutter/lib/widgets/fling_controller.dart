@@ -44,6 +44,8 @@ class FlingController {
     _simY = null;
   }
 
+  void dispose() => _ticker.dispose();
+
   void _onTick(Duration elapsed) {
     final simX = _simX;
     final simY = _simY;
@@ -64,6 +66,4 @@ class FlingController {
 
     if (dx != 0 || dy != 0) onPan(Offset(dx, dy));
   }
-
-  void dispose() => _ticker.dispose();
 }

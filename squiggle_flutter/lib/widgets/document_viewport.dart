@@ -6,8 +6,8 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/widgets/document_canvas.dart';
-import 'package:squiggle_flutter/widgets/viewport_tool_cursor.dart';
 import 'package:squiggle_flutter/widgets/editor_interactions.dart';
+import 'package:squiggle_flutter/widgets/viewport_tool_cursor.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
 class DocumentViewport extends StatefulWidget {

@@ -12,10 +12,6 @@ final class Feature extends Node {
     required this.content,
   });
 
-  final double width;
-  final double height;
-  final Map<String, dynamic> content;
-
   factory Feature.fromJson(Map<String, dynamic> json) => Feature(
     id: json['id'] as int,
     originX: (json['originX'] as num).toDouble(),
@@ -23,6 +19,20 @@ final class Feature extends Node {
     width: (json['width'] as num).toDouble(),
     height: (json['height'] as num).toDouble(),
     content: Map<String, dynamic>.from(json['content'] as Map),
+  );
+
+  final double width;
+  final double height;
+  final Map<String, dynamic> content;
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    originX,
+    originY,
+    width,
+    height,
+    const DeepCollectionEquality().hash(content),
   );
 
   @override
@@ -43,14 +53,4 @@ final class Feature extends Node {
           width == other.width &&
           height == other.height &&
           const DeepCollectionEquality().equals(content, other.content);
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    originX,
-    originY,
-    width,
-    height,
-    const DeepCollectionEquality().hash(content),
-  );
 }

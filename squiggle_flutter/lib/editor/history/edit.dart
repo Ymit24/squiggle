@@ -57,7 +57,6 @@ final class DocumentTransaction implements Transaction {
 
   final Document document;
   final NodeContainer container;
-  NodeId? get _containerId => container is Node ? (container as Node).id : null;
 
   @override
   final String label;
@@ -65,6 +64,7 @@ final class DocumentTransaction implements Transaction {
   final Map<NodeId, data.Node?> _before = {};
   List<NodeId>? _orderBefore;
   bool _isOpen = true;
+  NodeId? get _containerId => container is Node ? (container as Node).id : null;
 
   @override
   bool get isOpen => _isOpen;

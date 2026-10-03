@@ -3,9 +3,8 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
-
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 class PolylineHandleUtil {
   static PolylineHandle? hitTest(Node node, Offset worldPoint, Camera camera) {

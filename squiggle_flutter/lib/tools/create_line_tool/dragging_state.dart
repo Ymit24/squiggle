@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/interaction_state.dart';
 
 class DraggingState extends InteractionState<CreateLineTool> {
   DraggingState({required super.parent, required this.start});

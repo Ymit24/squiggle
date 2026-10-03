@@ -24,6 +24,34 @@ final class FeatureKindPolyline extends FeatureKind
         endEndCap: _endCapFromDataModel(content, 'endEndCap'),
       );
 
+  List<Offset> localPoints;
+  @override
+  Color strokeColor;
+
+  @override
+  double strokeWidth;
+
+  @override
+  StrokeType strokeType;
+  LineEndCap startEndCap;
+  LineEndCap endEndCap;
+
+  double get _hitRadius => strokeWidth / 2;
+
+  double get _selectionTolerance => _hitRadius + kPolylineHitSlop;
+
+  double get _boundsPadding {
+    if (startEndCap != LineEndCap.arrow && endEndCap != LineEndCap.arrow) {
+      return _hitRadius;
+    }
+    return math.max(
+      _hitRadius,
+      math.max(5.0, strokeWidth * 1.5) + _hitRadius / 2,
+    );
+  }
+
+  double get _arrowLength => math.max(12.0, strokeWidth * 3);
+
   @override
   Map<String, dynamic> toDataModel() => {
     'type': 'polyline',
@@ -47,23 +75,6 @@ final class FeatureKindPolyline extends FeatureKind
     endEndCap: endEndCap,
   );
 
-  List<Offset> localPoints;
-  @override
-  Color strokeColor;
-
-  @override
-  double strokeWidth;
-
-  @override
-  StrokeType strokeType;
-  LineEndCap startEndCap;
-  LineEndCap endEndCap;
-
-  static LineEndCap _endCapFromDataModel(
-    Map<String, dynamic> content,
-    String key,
-  ) => LineEndCap.values.asNameMap()[content[key]] ?? LineEndCap.rounded;
-
   void setGeometry(
     Feature feature, {
     required Offset origin,
@@ -86,10 +97,6 @@ final class FeatureKindPolyline extends FeatureKind
     );
   }
 
-  double get _hitRadius => strokeWidth / 2;
-
-  double get _selectionTolerance => _hitRadius + kPolylineHitSlop;
-
   @override
   Rect boundsFor(Feature feature) {
     if (localPoints.isEmpty) {
@@ -100,44 +107,6 @@ final class FeatureKindPolyline extends FeatureKind
       worldPoints(feature.origin, localPoints),
       strokePadding: _boundsPadding,
     );
-  }
-
-  double get _boundsPadding {
-    if (startEndCap != LineEndCap.arrow && endEndCap != LineEndCap.arrow) {
-      return _hitRadius;
-    }
-    return math.max(
-      _hitRadius,
-      math.max(5.0, strokeWidth * 1.5) + _hitRadius / 2,
-    );
-  }
-
-  Path _pathFor(Feature feature) {
-    final path = Path();
-    if (localPoints.isEmpty) {
-      return path;
-    }
-
-    final points = worldPoints(feature.origin, localPoints);
-    if (startEndCap == LineEndCap.arrow) {
-      final direction = _endpointDirection(points, fromStart: true);
-      if (direction != null) {
-        points[0] -= direction * _arrowLength;
-      }
-    }
-    if (endEndCap == LineEndCap.arrow) {
-      final direction = _endpointDirection(points, fromStart: false);
-      if (direction != null) {
-        points[points.length - 1] -= direction * _arrowLength;
-      }
-    }
-
-    final first = points.first;
-    path.moveTo(first.dx, first.dy);
-    for (final point in points.skip(1)) {
-      path.lineTo(point.dx, point.dy);
-    }
-    return path;
   }
 
   @override
@@ -221,6 +190,85 @@ final class FeatureKindPolyline extends FeatureKind
     }
   }
 
+  @override
+  Iterable<InspectorField> buildInspectorFields() {
+    return [
+      InspectorColorField(
+        fieldKey: 'strokeColor',
+        label: 'Stroke Color',
+        value: strokeColor,
+        onColorChanged: (color) {
+          strokeColor = color;
+        },
+      ),
+      InspectorStrokeTypeField(
+        fieldKey: 'strokeType',
+        label: 'Stroke Type',
+        value: strokeType,
+        onTypeChanged: (type) => strokeType = type,
+      ),
+      InspectorWidthField(
+        fieldKey: 'strokeWidth',
+        label: 'Stroke Width',
+        value: strokeWidth,
+        onWidthChanged: (width) {
+          strokeWidth = width;
+        },
+      ),
+      InspectorEndCapField(
+        fieldKey: 'startEndCap',
+        label: 'Start End Cap',
+        isStart: true,
+        value: startEndCap,
+        onEndCapChanged: (endCap) {
+          startEndCap = endCap;
+        },
+      ),
+      InspectorEndCapField(
+        fieldKey: 'endEndCap',
+        label: 'End End Cap',
+        isStart: false,
+        value: endEndCap,
+        onEndCapChanged: (endCap) {
+          endEndCap = endCap;
+        },
+      ),
+    ];
+  }
+
+  static LineEndCap _endCapFromDataModel(
+    Map<String, dynamic> content,
+    String key,
+  ) => LineEndCap.values.asNameMap()[content[key]] ?? LineEndCap.rounded;
+
+  Path _pathFor(Feature feature) {
+    final path = Path();
+    if (localPoints.isEmpty) {
+      return path;
+    }
+
+    final points = worldPoints(feature.origin, localPoints);
+    if (startEndCap == LineEndCap.arrow) {
+      final direction = _endpointDirection(points, fromStart: true);
+      if (direction != null) {
+        points[0] -= direction * _arrowLength;
+      }
+    }
+    if (endEndCap == LineEndCap.arrow) {
+      final direction = _endpointDirection(points, fromStart: false);
+      if (direction != null) {
+        points[points.length - 1] -= direction * _arrowLength;
+      }
+    }
+
+    final first = points.first;
+    path.moveTo(first.dx, first.dy);
+    for (final point in points.skip(1)) {
+      path.lineTo(point.dx, point.dy);
+    }
+    return path;
+  }
+
   Iterable<Path> _arrowPaths(List<Offset> points) sync* {
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
@@ -270,58 +318,10 @@ final class FeatureKindPolyline extends FeatureKind
     return from + delta / delta.distance * math.min(distance, delta.distance);
   }
 
-  double get _arrowLength => math.max(12.0, strokeWidth * 3);
-
   void _paintArrowHeads(Canvas canvas, Feature feature) {
     final points = worldPoints(feature.origin, localPoints);
     for (final arrow in _arrowPaths(points)) {
       canvas.drawPath(arrow, Paint()..color = strokeColor);
     }
-  }
-
-  @override
-  Iterable<InspectorField> buildInspectorFields() {
-    return [
-      InspectorColorField(
-        fieldKey: 'strokeColor',
-        label: 'Stroke Color',
-        value: strokeColor,
-        onColorChanged: (color) {
-          strokeColor = color;
-        },
-      ),
-      InspectorStrokeTypeField(
-        fieldKey: 'strokeType',
-        label: 'Stroke Type',
-        value: strokeType,
-        onTypeChanged: (type) => strokeType = type,
-      ),
-      InspectorWidthField(
-        fieldKey: 'strokeWidth',
-        label: 'Stroke Width',
-        value: strokeWidth,
-        onWidthChanged: (width) {
-          strokeWidth = width;
-        },
-      ),
-      InspectorEndCapField(
-        fieldKey: 'startEndCap',
-        label: 'Start End Cap',
-        isStart: true,
-        value: startEndCap,
-        onEndCapChanged: (endCap) {
-          startEndCap = endCap;
-        },
-      ),
-      InspectorEndCapField(
-        fieldKey: 'endEndCap',
-        label: 'End End Cap',
-        isStart: false,
-        value: endEndCap,
-        onEndCapChanged: (endCap) {
-          endEndCap = endCap;
-        },
-      ),
-    ];
   }
 }

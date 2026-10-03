@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/utils/grid.dart';
 
 /// Paints a [Document]'s nodes on an infinite world-space grid.
@@ -45,6 +45,12 @@ class RenderDocumentCanvas extends RenderBox {
   });
 
   EditorContext _context;
+
+  ImageRepository _imageRepository;
+
+  StreamSubscription<void>? _imageRepaintSubscription;
+
+  static const Color _canvasColor = Color(0xFF171717);
   EditorContext get context => _context;
   set context(EditorContext value) {
     if (identical(_context, value)) return;
@@ -54,7 +60,6 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
-  ImageRepository _imageRepository;
   ImageRepository get imageRepository => _imageRepository;
   set imageRepository(ImageRepository value) {
     if (identical(_imageRepository, value)) return;
@@ -63,10 +68,6 @@ class RenderDocumentCanvas extends RenderBox {
     _subscribeToImageRepaints();
     markNeedsPaint();
   }
-
-  StreamSubscription<void>? _imageRepaintSubscription;
-
-  static const Color _canvasColor = Color(0xFF171717);
 
   @override
   void attach(covariant PipelineOwner owner) {
@@ -80,25 +81,6 @@ class RenderDocumentCanvas extends RenderBox {
     _unsubscribeFromContext();
     _unsubscribeFromImageRepaints();
     super.detach();
-  }
-
-  void _subscribeToContext() {
-    _context.addListener(markNeedsPaint);
-  }
-
-  void _unsubscribeFromContext() {
-    _context.removeListener(markNeedsPaint);
-  }
-
-  void _subscribeToImageRepaints() {
-    _imageRepaintSubscription ??= _imageRepository.repaintStream.listen(
-      (_) => markNeedsPaint(),
-    );
-  }
-
-  void _unsubscribeFromImageRepaints() {
-    _imageRepaintSubscription?.cancel();
-    _imageRepaintSubscription = null;
   }
 
   @override
@@ -134,6 +116,25 @@ class RenderDocumentCanvas extends RenderBox {
     canvas.restore();
 
     canvas.restore();
+  }
+
+  void _subscribeToContext() {
+    _context.addListener(markNeedsPaint);
+  }
+
+  void _unsubscribeFromContext() {
+    _context.removeListener(markNeedsPaint);
+  }
+
+  void _subscribeToImageRepaints() {
+    _imageRepaintSubscription ??= _imageRepository.repaintStream.listen(
+      (_) => markNeedsPaint(),
+    );
+  }
+
+  void _unsubscribeFromImageRepaints() {
+    _imageRepaintSubscription?.cancel();
+    _imageRepaintSubscription = null;
   }
 
   void _applyWorldTransform(Canvas canvas) {

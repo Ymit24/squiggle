@@ -25,13 +25,13 @@ class StyleColorSwatch extends StatefulWidget {
   final bool enabled;
   final Widget? overlay;
 
+  @override
+  State<StyleColorSwatch> createState() => _StyleColorSwatchState();
+
   bool _needsSubtleBorder(Color? color) {
     if (color == null) return false;
     return !isActive && color.computeLuminance() > 0.65;
   }
-
-  @override
-  State<StyleColorSwatch> createState() => _StyleColorSwatchState();
 }
 
 class _StyleColorSwatchState extends State<StyleColorSwatch> {

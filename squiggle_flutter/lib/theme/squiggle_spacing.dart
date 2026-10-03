@@ -97,10 +97,6 @@ class SquiggleSpacing {
   final double menuShortcutGap;
   final double menuDividerHeight;
 
-  int get swatchColumns => kSwatchColumns;
-
-  double get swatchGridWidth => kSwatchGridWidth;
-
   static const standard = SquiggleSpacing(
     overlayTop: kOverlayTop,
     overlaySide: kOverlaySide,
@@ -131,6 +127,10 @@ class SquiggleSpacing {
     menuShortcutGap: kMenuShortcutGap,
     menuDividerHeight: kMenuDividerHeight,
   );
+
+  int get swatchColumns => kSwatchColumns;
+
+  double get swatchGridWidth => kSwatchGridWidth;
 
   SquiggleSpacing copyWith({
     double? overlayTop,

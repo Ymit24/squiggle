@@ -20,6 +20,23 @@ final class FeatureKindCircle extends FeatureKind
     this.labelHorizontalAlignment = TextHorizontalAlignment.center,
   });
 
+  factory FeatureKindCircle.fromDataModel(Map<String, dynamic> content) =>
+      FeatureKindCircle(
+        strokeColor: _colorFromDataModel(content, 'strokeColor'),
+        fillColor: _colorFromDataModel(content, 'fillColor'),
+        fillType: _fillTypeFromDataModel(content),
+        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
+        strokeType: _strokeTypeFromDataModel(content),
+        label: content['label'],
+        labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
+        labelVerticalAlignment: TextVerticalAlignment.values.byName(
+          content['labelVerticalAlignment'] as String,
+        ),
+        labelHorizontalAlignment: TextHorizontalAlignment.values.byName(
+          content['labelHorizontalAlignment'] as String,
+        ),
+      );
+
   @override
   Color strokeColor;
 
@@ -42,23 +59,6 @@ final class FeatureKindCircle extends FeatureKind
   TextVerticalAlignment labelVerticalAlignment = TextVerticalAlignment.center;
   TextHorizontalAlignment labelHorizontalAlignment =
       TextHorizontalAlignment.center;
-
-  factory FeatureKindCircle.fromDataModel(Map<String, dynamic> content) =>
-      FeatureKindCircle(
-        strokeColor: _colorFromDataModel(content, 'strokeColor'),
-        fillColor: _colorFromDataModel(content, 'fillColor'),
-        fillType: _fillTypeFromDataModel(content),
-        strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
-        strokeType: _strokeTypeFromDataModel(content),
-        label: content['label'],
-        labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
-        labelVerticalAlignment: TextVerticalAlignment.values.byName(
-          content['labelVerticalAlignment'] as String,
-        ),
-        labelHorizontalAlignment: TextHorizontalAlignment.values.byName(
-          content['labelHorizontalAlignment'] as String,
-        ),
-      );
 
   @override
   Map<String, dynamic> toDataModel() => {

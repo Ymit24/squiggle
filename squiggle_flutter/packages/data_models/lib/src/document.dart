@@ -7,9 +7,6 @@ const dataModelFormatVersion = 2;
 final class Document {
   const Document({this.name = 'Untitled', this.nodes = const []});
 
-  final String name;
-  final List<Node> nodes;
-
   factory Document.fromJson(Map<String, dynamic> json) {
     if (json['version'] != dataModelFormatVersion) {
       throw FormatException('Unsupported document version: ${json['version']}');
@@ -23,6 +20,12 @@ final class Document {
     return Document(name: json['name'] as String? ?? 'Untitled', nodes: nodes);
   }
 
+  factory Document.decode(String value) =>
+      Document.fromJson(jsonDecode(value) as Map<String, dynamic>);
+
+  final String name;
+  final List<Node> nodes;
+
   Map<String, dynamic> toJson() => {
     'version': dataModelFormatVersion,
     'name': name,
@@ -30,7 +33,4 @@ final class Document {
   };
 
   String encode() => jsonEncode(toJson());
-
-  factory Document.decode(String value) =>
-      Document.fromJson(jsonDecode(value) as Map<String, dynamic>);
 }

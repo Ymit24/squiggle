@@ -11,9 +11,8 @@ import 'package:squiggle_flutter/tools/tool.dart';
 ///
 /// Concrete states retain access to their tool-specific helpers through [parent].
 abstract class InteractionState<T extends Tool> {
-  final T parent;
-
   InteractionState({required this.parent});
+  final T parent;
 
   void onEnter(EditorContext context) {}
 

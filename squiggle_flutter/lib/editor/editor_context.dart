@@ -40,6 +40,23 @@ class EditorContext extends ChangeNotifier {
   final TextEditModel _textEdit;
   final Map<String, Object?> _inspectorValues = {};
 
+  /// World-space camera for the current document viewport.
+  final Camera camera = Camera();
+
+  /// Viewport size in screen pixels, written by the viewport widget.
+  Size viewportSize = Size.zero;
+
+  // TODO: Consider a better way to coordinate camera motion.
+  VoidCallback? _cancelViewportMotion;
+
+  SelectionModel get selection => _selection;
+
+  ToolModel get tool => _tool;
+
+  History get history => _history;
+
+  TextEditModel get textEdit => _textEdit;
+
   void openContextMenuAt(
     BuildContext context,
     Offset localScreenPosition,
@@ -61,23 +78,6 @@ class EditorContext extends ChangeNotifier {
     );
   }
 
-  SelectionModel get selection => _selection;
-
-  ToolModel get tool => _tool;
-
-  History get history => _history;
-
-  TextEditModel get textEdit => _textEdit;
-
-  /// World-space camera for the current document viewport.
-  final Camera camera = Camera();
-
-  /// Viewport size in screen pixels, written by the viewport widget.
-  Size viewportSize = Size.zero;
-
-  // TODO: Consider a better way to coordinate camera motion.
-  VoidCallback? _cancelViewportMotion;
-
   void attachViewportMotionCanceller(VoidCallback cancel) {
     _cancelViewportMotion = cancel;
   }
@@ -87,8 +87,6 @@ class EditorContext extends ChangeNotifier {
   }
 
   void cancelViewportMotion() => _cancelViewportMotion?.call();
-
-  void _forward() => notifyListeners();
 
   /// Notifies observers that the camera or viewport changed.
   void notifyViewportChanged() => notifyListeners();
@@ -115,12 +113,6 @@ class EditorContext extends ChangeNotifier {
     if (!history.canRedo) return;
     history.redo();
     _refreshSelectionAfterHistoryChange();
-  }
-
-  void _refreshSelectionAfterHistoryChange() {
-    selection.setSelection(
-      selection.selectedNodeIds.where((id) => document.nodeById(id) != null),
-    );
   }
 
   void setTool(Tool tool) => _tool.setTool(tool, this);
@@ -167,5 +159,13 @@ class EditorContext extends ChangeNotifier {
     _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
     super.dispose();
+  }
+
+  void _forward() => notifyListeners();
+
+  void _refreshSelectionAfterHistoryChange() {
+    selection.setSelection(
+      selection.selectedNodeIds.where((id) => document.nodeById(id) != null),
+    );
   }
 }

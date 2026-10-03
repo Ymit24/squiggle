@@ -23,6 +23,42 @@ class ResizeState extends SelectInteractionState {
   final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.localBounds();
 
+  bool get _resizesHorizontally =>
+      _handle.handle == SelectionResizeHandle.left ||
+      _handle.handle == SelectionResizeHandle.right;
+
+  bool get _resizesVertically =>
+      _handle.handle == SelectionResizeHandle.top ||
+      _handle.handle == SelectionResizeHandle.bottom;
+
+  bool get _movesLeft => switch (_handle.handle) {
+    SelectionResizeHandle.topLeft ||
+    SelectionResizeHandle.left ||
+    SelectionResizeHandle.bottomLeft => true,
+    _ => false,
+  };
+
+  bool get _movesRight => switch (_handle.handle) {
+    SelectionResizeHandle.topRight ||
+    SelectionResizeHandle.right ||
+    SelectionResizeHandle.bottomRight => true,
+    _ => false,
+  };
+
+  bool get _movesTop => switch (_handle.handle) {
+    SelectionResizeHandle.topLeft ||
+    SelectionResizeHandle.top ||
+    SelectionResizeHandle.topRight => true,
+    _ => false,
+  };
+
+  bool get _movesBottom => switch (_handle.handle) {
+    SelectionResizeHandle.bottomLeft ||
+    SelectionResizeHandle.bottom ||
+    SelectionResizeHandle.bottomRight => true,
+    _ => false,
+  };
+
   @override
   void onEnter(EditorContext context) {
     parent.beginTransaction(context, 'Resize', [_handle.node]);
@@ -60,6 +96,17 @@ class ResizeState extends SelectInteractionState {
   }) => symmetric
       ? _symmetricBounds(worldPosition, lockAspectRatio)
       : _asymmetricBounds(worldPosition, lockAspectRatio);
+
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent), context);
+  }
 
   Rect _symmetricBounds(Offset worldPosition, bool lockAspectRatio) {
     final center = _initialBounds.center;
@@ -103,14 +150,6 @@ class ResizeState extends SelectInteractionState {
       ),
     };
   }
-
-  bool get _resizesHorizontally =>
-      _handle.handle == SelectionResizeHandle.left ||
-      _handle.handle == SelectionResizeHandle.right;
-
-  bool get _resizesVertically =>
-      _handle.handle == SelectionResizeHandle.top ||
-      _handle.handle == SelectionResizeHandle.bottom;
 
   Rect _asymmetricBounds(Offset worldPosition, bool lockAspectRatio) =>
       lockAspectRatio
@@ -164,34 +203,6 @@ class ResizeState extends SelectInteractionState {
     };
   }
 
-  bool get _movesLeft => switch (_handle.handle) {
-    SelectionResizeHandle.topLeft ||
-    SelectionResizeHandle.left ||
-    SelectionResizeHandle.bottomLeft => true,
-    _ => false,
-  };
-
-  bool get _movesRight => switch (_handle.handle) {
-    SelectionResizeHandle.topRight ||
-    SelectionResizeHandle.right ||
-    SelectionResizeHandle.bottomRight => true,
-    _ => false,
-  };
-
-  bool get _movesTop => switch (_handle.handle) {
-    SelectionResizeHandle.topLeft ||
-    SelectionResizeHandle.top ||
-    SelectionResizeHandle.topRight => true,
-    _ => false,
-  };
-
-  bool get _movesBottom => switch (_handle.handle) {
-    SelectionResizeHandle.bottomLeft ||
-    SelectionResizeHandle.bottom ||
-    SelectionResizeHandle.bottomRight => true,
-    _ => false,
-  };
-
   static Offset _referenceFor(SelectionResizeHandle handle, Rect bounds) {
     return switch (handle) {
       SelectionResizeHandle.topLeft ||
@@ -203,16 +214,5 @@ class ResizeState extends SelectInteractionState {
       SelectionResizeHandle.bottom => bounds.bottomRight,
       SelectionResizeHandle.bottomLeft => bounds.bottomLeft,
     };
-  }
-
-  @override
-  void onPointerUp(
-    EditorContext context,
-    Offset worldPosition,
-    Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
-  }) {
-    parent.transition(IdleInteractionState(parent: parent), context);
   }
 }

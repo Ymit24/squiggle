@@ -53,8 +53,6 @@ class _TextEditPanelState extends State<TextEditPanel> {
     super.dispose();
   }
 
-  void _accept() => widget.onAccept(_controller.text);
-
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
@@ -123,4 +121,6 @@ class _TextEditPanelState extends State<TextEditPanel> {
       ),
     );
   }
+
+  void _accept() => widget.onAccept(_controller.text);
 }

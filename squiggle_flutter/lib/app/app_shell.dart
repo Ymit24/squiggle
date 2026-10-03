@@ -20,6 +20,20 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   _AppScreen _screen = _AppScreen.library;
 
+  @override
+  Widget build(BuildContext context) {
+    return switch (_screen) {
+      _AppScreen.library => DocumentLibraryPage(
+        onOpenDocument: _openDocument,
+        onCreateAndOpen: _createAndOpen,
+      ),
+      _AppScreen.editor => Editor(
+        editorContext: widget.context,
+        onBackToLibrary: _returnToLibrary,
+      ),
+    };
+  }
+
   Future<void> _openDocument(String id) async {
     final library = context.read<DocumentLibraryRepository>();
     await library.openDocument(id);
@@ -40,20 +54,6 @@ class _AppShellState extends State<AppShell> {
     await library.refreshDocuments();
     if (!mounted) return;
     setState(() => _screen = _AppScreen.library);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (_screen) {
-      _AppScreen.library => DocumentLibraryPage(
-        onOpenDocument: _openDocument,
-        onCreateAndOpen: _createAndOpen,
-      ),
-      _AppScreen.editor => Editor(
-        editorContext: widget.context,
-        onBackToLibrary: _returnToLibrary,
-      ),
-    };
   }
 }
 

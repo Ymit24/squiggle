@@ -29,31 +29,6 @@ class DocumentStorage {
   static const _activeDocumentFileName = 'active_document.txt';
   static const _defaultDocumentName = 'Untitled';
 
-  Future<void> initialize() async {
-    if (_initialized) {
-      return;
-    }
-
-    _initializeFuture ??= _initializeOnce();
-    await _initializeFuture;
-  }
-
-  Future<void> _initializeOnce() async {
-    await _ensureStorageReady();
-    _initialized = true;
-  }
-
-  Future<void> _ensureStorageReady() async {
-    _storageDirectory ??= await _defaultStorageDirectory();
-    await _storageDirectory!.create(recursive: true);
-    await _documentsDirectory.create(recursive: true);
-  }
-
-  Future<Directory> _defaultStorageDirectory() async {
-    final supportDir = await getApplicationSupportDirectory();
-    return Directory('${supportDir.path}/Squiggle');
-  }
-
   Directory get _documentsDirectory {
     final directory = _storageDirectory;
     if (directory == null) {
@@ -62,14 +37,21 @@ class DocumentStorage {
     return Directory('${directory.path}/$_documentsDirName');
   }
 
-  File _documentFile(String id) => File('${_documentsDirectory.path}/$id.json');
-
   File get _activeDocumentFile {
     final directory = _storageDirectory;
     if (directory == null) {
       throw StateError('DocumentStorage.initialize() must be called first.');
     }
     return File('${directory.path}/$_activeDocumentFileName');
+  }
+
+  Future<void> initialize() async {
+    if (_initialized) {
+      return;
+    }
+
+    _initializeFuture ??= _initializeOnce();
+    await _initializeFuture;
   }
 
   Future<List<DocumentInfo>> listDocuments() async {
@@ -182,6 +164,24 @@ class DocumentStorage {
       // Ignore persistence failures.
     }
   }
+
+  Future<void> _initializeOnce() async {
+    await _ensureStorageReady();
+    _initialized = true;
+  }
+
+  Future<void> _ensureStorageReady() async {
+    _storageDirectory ??= await _defaultStorageDirectory();
+    await _storageDirectory!.create(recursive: true);
+    await _documentsDirectory.create(recursive: true);
+  }
+
+  Future<Directory> _defaultStorageDirectory() async {
+    final supportDir = await getApplicationSupportDirectory();
+    return Directory('${supportDir.path}/Squiggle');
+  }
+
+  File _documentFile(String id) => File('${_documentsDirectory.path}/$id.json');
 
   Future<DocumentInfo?> _readDocumentInfo(File file) async {
     try {

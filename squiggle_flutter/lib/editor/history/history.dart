@@ -6,16 +6,18 @@ import 'package:squiggle_flutter/models/node.dart';
 export 'package:squiggle_flutter/editor/history/edit.dart';
 
 class History extends ChangeNotifier {
+  History({required this._document});
   Transaction? _active;
   final Document _document;
 
   final List<Commit> _undoStack = [];
   final List<Commit> _redoStack = [];
 
-  History({required this._document});
-
   Transaction get active => _active!;
   bool get isActive => _active != null;
+
+  bool get canUndo => _undoStack.isNotEmpty;
+  bool get canRedo => _redoStack.isNotEmpty;
 
   void begin(String label, {NodeContainer? container}) {
     if (_active != null) {
@@ -28,9 +30,6 @@ class History extends ChangeNotifier {
       container: container,
     );
   }
-
-  bool get canUndo => _undoStack.isNotEmpty;
-  bool get canRedo => _redoStack.isNotEmpty;
 
   void clear() {
     if (_active != null) {
