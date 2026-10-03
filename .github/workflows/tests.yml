@@ -38,3 +38,9 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - name: Analyze Dart and Flutter code
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Report DCL lint and metric warnings
+        run: dart run dart_code_linter:metrics analyze lib packages/data_models/lib --reporter=console --no-fatal-warnings
