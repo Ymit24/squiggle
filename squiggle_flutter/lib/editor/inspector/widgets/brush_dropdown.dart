@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/brush_controller.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_menu_entry.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_reorder_row.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_menu_entry.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_reorder_row.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/metrics.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';

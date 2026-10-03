@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_preview.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/metrics.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_preview.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/metrics.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';

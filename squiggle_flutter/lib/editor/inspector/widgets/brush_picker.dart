@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_dropdown.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/brush_name_dialog.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/delete_brush_dialog.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_dropdown.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_name_dialog.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/delete_brush_dialog.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_menu_item.dart';
