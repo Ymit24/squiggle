@@ -1,11 +1,10 @@
-import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/intents.dart';
-import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/scope.dart';
+import 'package:squiggle_flutter/editor/toolbar/intents.dart';
+import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/shortcuts_scope.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:squiggle_flutter/services/node_clipboard.dart';
@@ -13,6 +12,7 @@ import 'package:squiggle_flutter/services/paste_clipboard.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _brushKeys = [

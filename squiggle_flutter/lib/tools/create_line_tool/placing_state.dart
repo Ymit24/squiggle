@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
-import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/interaction_state.dart';
 
 class PlacingState extends InteractionState<CreateLineTool> {
   PlacingState({
@@ -84,6 +84,16 @@ class PlacingState extends InteractionState<CreateLineTool> {
     parent.finish(context, points);
   }
 
+  @override
+  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
+    if (event.logicalKey != LogicalKeyboardKey.enter &&
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return false;
+    }
+    parent.finish(context, points);
+    return true;
+  }
+
   void _updateTip(
     EditorContext context,
     Offset worldPosition, {
@@ -95,15 +105,5 @@ class PlacingState extends InteractionState<CreateLineTool> {
       isShiftPressed: isShiftPressed,
     );
     parent.updatePreview(context, [...points, tip]);
-  }
-
-  @override
-  bool onKeyEvent(EditorContext context, KeyDownEvent event) {
-    if (event.logicalKey != LogicalKeyboardKey.enter &&
-        event.logicalKey != LogicalKeyboardKey.escape) {
-      return false;
-    }
-    parent.finish(context, points);
-    return true;
   }
 }

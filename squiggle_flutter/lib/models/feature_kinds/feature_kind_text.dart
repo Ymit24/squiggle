@@ -26,6 +26,16 @@ final class FeatureKindText extends FeatureKind
       );
 
   @override
+  Color strokeColor;
+
+  @override
+  String label;
+
+  double fontSize;
+  TextHorizontalAlignment horizontalAlignment;
+  TextVerticalAlignment verticalAlignment;
+
+  @override
   Map<String, dynamic> toDataModel() {
     return {
       'type': 'text',
@@ -45,16 +55,6 @@ final class FeatureKindText extends FeatureKind
     verticalAlignment: verticalAlignment,
     strokeColor: strokeColor,
   );
-
-  @override
-  Color strokeColor;
-
-  @override
-  String label;
-
-  double fontSize;
-  TextHorizontalAlignment horizontalAlignment;
-  TextVerticalAlignment verticalAlignment;
 
   Size measureContents({required double width, required double fontSize}) =>
       text_painter.measureText(

@@ -277,22 +277,7 @@ Rect symmetricRectWithAspectRatio(
   }
 
   if (resizeHorizontal && resizeVertical) {
-    final halfWidth = (dragged.dx - center.dx).abs();
-    final halfHeight = (dragged.dy - center.dy).abs();
-    final effectiveRatio = halfHeight == 0
-        ? double.infinity
-        : halfWidth / halfHeight;
-
-    late double width;
-    late double height;
-    if (effectiveRatio > aspectRatio) {
-      width = halfWidth * 2;
-      height = width / aspectRatio;
-    } else {
-      height = halfHeight * 2;
-      width = height * aspectRatio;
-    }
-    return Rect.fromCenter(center: center, width: width, height: height);
+    return _symmetricCornerBounds(center, dragged, aspectRatio);
   }
 
   if (resizeVertical) {
@@ -304,4 +289,26 @@ Rect symmetricRectWithAspectRatio(
   final width = (dragged.dx - center.dx).abs() * 2;
   final height = width / aspectRatio;
   return Rect.fromCenter(center: center, width: width, height: height);
+}
+
+Rect _symmetricCornerBounds(Offset center, Offset dragged, double aspectRatio) {
+  final halfWidth = (dragged.dx - center.dx).abs();
+  final halfHeight = (dragged.dy - center.dy).abs();
+  final effectiveRatio = halfHeight == 0
+      ? double.infinity
+      : halfWidth / halfHeight;
+  if (effectiveRatio > aspectRatio) {
+    final width = halfWidth * 2;
+    return Rect.fromCenter(
+      center: center,
+      width: width,
+      height: width / aspectRatio,
+    );
+  }
+  final height = halfHeight * 2;
+  return Rect.fromCenter(
+    center: center,
+    width: height * aspectRatio,
+    height: height,
+  );
 }

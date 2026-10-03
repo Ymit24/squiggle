@@ -23,12 +23,6 @@ class SquiggleTypography {
     height: 1,
   );
 
-  TextStyle buttonLabel({required bool isActive}) => TextStyle(
-    color: isActive ? colors.text : colors.subtext0,
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-  );
-
   TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
   TextStyle get actionButtonLabel => const TextStyle(fontSize: 13.5);
@@ -36,6 +30,12 @@ class SquiggleTypography {
   TextStyle get menuItemLabel => actionButtonLabel.copyWith(
     fontWeight: FontWeight.normal,
     letterSpacing: 0,
+  );
+
+  TextStyle buttonLabel({required bool isActive}) => TextStyle(
+    color: isActive ? colors.text : colors.subtext0,
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
   );
 
   TextStyle panelButtonLabel({required bool isPrimary}) => TextStyle(

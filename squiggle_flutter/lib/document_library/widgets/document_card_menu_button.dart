@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/document_library/widgets/library_menu.dart';
+import 'package:squiggle_flutter/document_library/widgets/library_menu_anchor.dart';
 import 'package:squiggle_flutter/theme/squiggle_button_style.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 

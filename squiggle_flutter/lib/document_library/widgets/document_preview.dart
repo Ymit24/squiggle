@@ -75,6 +75,14 @@ class _DocumentPreviewPainter extends CustomPainter {
     canvas.restore();
   }
 
+  @override
+  bool shouldRepaint(_DocumentPreviewPainter oldDelegate) {
+    return oldDelegate.nodes != nodes ||
+        oldDelegate.imageRepository != imageRepository ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.dotColor != dotColor;
+  }
+
   Rect _contentBounds(List<Node> nodes) {
     var bounds = nodes.first.localBounds();
     for (var i = 1; i < nodes.length; i++) {
@@ -111,13 +119,5 @@ class _DocumentPreviewPainter extends CustomPainter {
         canvas.drawCircle(Offset(x, y), _dotRadius, paint);
       }
     }
-  }
-
-  @override
-  bool shouldRepaint(_DocumentPreviewPainter oldDelegate) {
-    return oldDelegate.nodes != nodes ||
-        oldDelegate.imageRepository != imageRepository ||
-        oldDelegate.backgroundColor != backgroundColor ||
-        oldDelegate.dotColor != dotColor;
   }
 }

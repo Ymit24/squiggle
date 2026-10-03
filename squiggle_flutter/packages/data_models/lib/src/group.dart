@@ -10,8 +10,6 @@ final class Group extends Node {
     required this.children,
   });
 
-  final List<Node> children;
-
   factory Group.fromJson(Map<String, dynamic> json) => Group(
     id: json['id'] as int,
     originX: (json['originX'] as num).toDouble(),
@@ -20,6 +18,16 @@ final class Group extends Node {
       for (final child in json['children'] as List<dynamic>)
         Node.fromJson(child as Map<String, dynamic>),
     ],
+  );
+
+  final List<Node> children;
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    originX,
+    originY,
+    const ListEquality<Node>().hash(children),
   );
 
   @override
@@ -36,12 +44,4 @@ final class Group extends Node {
           originX == other.originX &&
           originY == other.originY &&
           const ListEquality<Node>().equals(children, other.children);
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    originX,
-    originY,
-    const ListEquality<Node>().hash(children),
-  );
 }

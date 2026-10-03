@@ -14,6 +14,9 @@ class Camera {
   Offset location;
   double zoom;
 
+  @override
+  int get hashCode => Object.hash(location, zoom);
+
   Offset worldToScreen(Offset world) {
     return (world - location) / zoom;
   }
@@ -72,9 +75,6 @@ class Camera {
     if (other.runtimeType != runtimeType) return false;
     return other is Camera && other.location == location && other.zoom == zoom;
   }
-
-  @override
-  int get hashCode => Object.hash(location, zoom);
 
   Iterable<Node> getNodesInViewport(Document document, Size viewportSize) {
     if (viewportSize == Size.zero) {

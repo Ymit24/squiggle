@@ -1,24 +1,23 @@
-import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/painting/stroke_painter.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
+import 'package:squiggle_flutter/painting/stroke_painter.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
-import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
-
-part 'feature_kind_rectangle.dart';
 part 'feature_kind_circle.dart';
-part 'feature_kind_text.dart';
-part 'feature_kind_polyline.dart';
 part 'feature_kind_image.dart';
+part 'feature_kind_polyline.dart';
+part 'feature_kind_rectangle.dart';
+part 'feature_kind_text.dart';
 
 sealed class FeatureKind {
   Map<String, dynamic> toDataModel();

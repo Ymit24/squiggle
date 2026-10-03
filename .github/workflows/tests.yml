@@ -2,8 +2,6 @@ name: Tests
 
 on:
   pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -38,3 +36,9 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - name: Analyze Dart and Flutter code
+        run: flutter analyze
+
+      - name: Enforce DCL lints and report advisory metrics
+        run: dart run dart_code_linter:metrics analyze lib packages/data_models/lib test --reporter=console

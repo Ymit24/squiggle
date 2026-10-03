@@ -21,6 +21,8 @@ class DocumentLibraryRepository {
   List<DocumentInfo> _documents = [];
   DocumentInfo? _currentDocument;
 
+  bool _autosaveSubscribed = false;
+
   List<DocumentInfo> get documents => List.unmodifiable(_documents);
   DocumentInfo? get currentDocument => _currentDocument;
   Stream<void> get changesStream => _changesController.stream;
@@ -108,6 +110,15 @@ class DocumentLibraryRepository {
     _notify();
   }
 
+  void dispose() {
+    if (_autosaveSubscribed) {
+      context.history.removeListener(_autosave);
+      context.brushes.removeListener(_autosave);
+      _autosaveSubscribed = false;
+    }
+    _changesController.close();
+  }
+
   Future<void> _openDocument(String id, {required bool saveCurrent}) async {
     if (saveCurrent) {
       await _saveCurrentDocument();
@@ -149,8 +160,6 @@ class DocumentLibraryRepository {
     context.brushes.addListener(_autosave);
   }
 
-  bool _autosaveSubscribed = false;
-
   void _autosave() {
     final current = _currentDocument;
     if (current == null) {
@@ -185,14 +194,5 @@ class DocumentLibraryRepository {
     if (!_changesController.isClosed) {
       _changesController.add(null);
     }
-  }
-
-  void dispose() {
-    if (_autosaveSubscribed) {
-      context.history.removeListener(_autosave);
-      context.brushes.removeListener(_autosave);
-      _autosaveSubscribed = false;
-    }
-    _changesController.close();
   }
 }

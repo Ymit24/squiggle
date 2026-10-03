@@ -36,11 +36,6 @@ class ImageRepository {
     await _imagesDirectory!.create(recursive: true);
   }
 
-  Future<Directory> _defaultImagesDirectory() async {
-    final supportDir = await getApplicationSupportDirectory();
-    return Directory('${supportDir.path}/Squiggle/images');
-  }
-
   File fileFor(String imageId) {
     final directory = _imagesDirectory;
     if (directory == null) {
@@ -96,6 +91,19 @@ class ImageRepository {
     _cache[imageId] = decoded.image;
 
     return ImportedImage(imageId: imageId, intrinsicSize: decoded.size);
+  }
+
+  void dispose() {
+    for (final image in _cache.values) {
+      image.dispose();
+    }
+    _cache.clear();
+    _repaintController.close();
+  }
+
+  Future<Directory> _defaultImagesDirectory() async {
+    final supportDir = await getApplicationSupportDirectory();
+    return Directory('${supportDir.path}/Squiggle/images');
   }
 
   Future<Uint8List?> _readClipboardPngBytes() async {
@@ -160,14 +168,6 @@ class ImageRepository {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final random = math.Random().nextInt(0xFFFFFF);
     return 'img_${timestamp}_${random.toRadixString(16).padLeft(6, '0')}.png';
-  }
-
-  void dispose() {
-    for (final image in _cache.values) {
-      image.dispose();
-    }
-    _cache.clear();
-    _repaintController.close();
   }
 }
 

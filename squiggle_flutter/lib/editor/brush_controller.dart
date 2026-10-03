@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/document_session.dart';
+import 'package:uuid/uuid.dart';
 
 /// Mutates document-local brush preferences without touching canvas history.
 class BrushController extends ChangeNotifier {

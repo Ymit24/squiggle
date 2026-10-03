@@ -1,17 +1,16 @@
-import 'package:flutter/widgets.dart';
 import 'package:data_models/data_models.dart' as data;
+import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
-import 'package:squiggle_flutter/models/node_id.dart';
-import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
-
 export 'feature_kinds/feature_kind.dart';
-export 'font_size_preset.dart';
 export 'fill_type.dart';
+export 'font_size_preset.dart';
 export 'line_end_cap.dart';
-export 'stroke_width_preset.dart';
 export 'stroke_type.dart';
+export 'stroke_width_preset.dart';
 export 'text_alignment.dart';
 
 /// A drawable shape or label in world space.
@@ -42,6 +41,13 @@ class Feature extends Node {
     );
   }
 
+  Size size;
+  FeatureKind kind;
+
+  double get width => size.width;
+
+  double get height => size.height;
+
   @override
   data.Feature toDataModel() {
     return data.Feature(
@@ -64,13 +70,6 @@ class Feature extends Node {
     size = restored.size;
     kind = restored.kind;
   }
-
-  Size size;
-  FeatureKind kind;
-
-  double get width => size.width;
-
-  double get height => size.height;
 
   @override
   Rect localBounds() => kind.boundsFor(this);

@@ -26,7 +26,7 @@ class SquiggleDecorations {
     required bool isActive,
     required bool isHovering,
   }) => BoxDecoration(
-    color: isActive ? colors.surface1 : (isHovering ? colors.surface0 : null),
+    color: _toolbarButtonColor(isActive, isHovering),
     borderRadius: BorderRadius.circular(radii.button),
   );
 
@@ -34,9 +34,7 @@ class SquiggleDecorations {
     required bool isPrimary,
     required bool isHovering,
   }) => BoxDecoration(
-    color: isPrimary
-        ? colors.accent.withValues(alpha: isHovering ? 0.85 : 1)
-        : (isHovering ? colors.surface0 : colors.surface1),
+    color: _panelButtonColor(isPrimary, isHovering),
     borderRadius: BorderRadius.circular(radii.button),
   );
 
@@ -73,5 +71,28 @@ class SquiggleDecorations {
       colors: colors.lerp(other.colors, t),
       radii: radii.lerp(other.radii, t),
     );
+  }
+
+  Color? _toolbarButtonColor(bool isActive, bool isHovering) {
+    if (isActive) {
+      return colors.surface1;
+    }
+    if (isHovering) {
+      return colors.surface0;
+    }
+    return null;
+  }
+
+  Color _panelButtonColor(bool isPrimary, bool isHovering) {
+    if (isPrimary) {
+      if (isHovering) {
+        return colors.accent.withValues(alpha: 0.85);
+      }
+      return colors.accent.withValues(alpha: 1);
+    }
+    if (isHovering) {
+      return colors.surface0;
+    }
+    return colors.surface1;
   }
 }

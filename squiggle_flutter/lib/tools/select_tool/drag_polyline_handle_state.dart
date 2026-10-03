@@ -45,6 +45,17 @@ class DragPolylineHandleState extends SelectInteractionState {
     kind.setPoint(_handle.feature, _handle.pointIndex, target);
   }
 
+  @override
+  void onPointerUp(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.transition(IdleInteractionState(parent: parent), context);
+  }
+
   Offset _targetPosition(
     FeatureKindPolyline kind,
     Offset worldPosition, {
@@ -61,16 +72,5 @@ class DragPolylineHandleState extends SelectInteractionState {
     if (_handle.pointIndex > 0) return points[_handle.pointIndex - 1];
     if (points.length > 1) return points[1];
     return fallback;
-  }
-
-  @override
-  void onPointerUp(
-    EditorContext context,
-    Offset worldPosition,
-    Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
-  }) {
-    parent.transition(IdleInteractionState(parent: parent), context);
   }
 }

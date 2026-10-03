@@ -1,4 +1,3 @@
-import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/font_size_selector.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
@@ -6,20 +5,20 @@ import 'package:squiggle_flutter/editor/inspector/widgets/stroke_width_selector.
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/font_size_preset.dart';
 import 'package:squiggle_flutter/models/stroke_width_preset.dart';
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 
 class InspectorWidthField extends InspectorField<double> {
-  @override
-  Object? encodeValue(double value) => value;
-
-  @override
-  double decodeValue(Object? raw) => _decodePositiveNumber(raw);
-
   InspectorWidthField({
     required super.fieldKey,
     required super.label,
     required double value,
     required ValueChanged<double> onWidthChanged,
   }) : super(values: [value], callbacks: [onWidthChanged]);
+  @override
+  Object? encodeValue(double value) => value;
+
+  @override
+  double decodeValue(Object? raw) => _decodePositiveNumber(raw);
   @override
   InspectorFieldShell build(
     BuildContext context,
@@ -35,18 +34,17 @@ class InspectorWidthField extends InspectorField<double> {
 }
 
 class InspectorFontSizeField extends InspectorField<double> {
-  @override
-  Object? encodeValue(double value) => value;
-
-  @override
-  double decodeValue(Object? raw) => _decodePositiveNumber(raw);
-
   InspectorFontSizeField({
     required super.fieldKey,
     required super.label,
     required double value,
     required ValueChanged<double> onFontSizeChanged,
   }) : super(values: [value], callbacks: [onFontSizeChanged]);
+  @override
+  Object? encodeValue(double value) => value;
+
+  @override
+  double decodeValue(Object? raw) => _decodePositiveNumber(raw);
   @override
   InspectorFieldShell build(
     BuildContext context,
