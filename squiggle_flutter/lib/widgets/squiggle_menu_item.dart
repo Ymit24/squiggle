@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/widgets/squiggle_shortcut_hint.dart';
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 
@@ -34,15 +35,12 @@ class SquiggleMenuItem extends StatelessWidget {
             Icon(icon),
             SizedBox(width: theme.spacing.menuIconGap),
           ],
-          Expanded(child: Text(label)),
+          Expanded(
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
           if (shortcut != null) ...[
             SizedBox(width: theme.spacing.menuShortcutGap),
-            Text(
-              shortcut!,
-              style: TextStyle(
-                color: onPressed == null ? null : theme.colors.subtext0,
-              ),
-            ),
+            SquiggleShortcutHint(label: shortcut!, enabled: onPressed != null),
           ],
           if (checked) ...[
             SizedBox(width: theme.spacing.menuShortcutGap),

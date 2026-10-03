@@ -46,6 +46,7 @@ dependencies:
   super_clipboard: ^0.9.1
   window_manager: ^0.5.2
   lucide_icons_flutter: ^3.1.20
+  uuid: ^4.6.0
 dev_dependencies:
   irondash_message_channel: ^0.7.0
   super_native_extensions: ^0.9.1

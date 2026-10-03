@@ -1,6 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 
+class ActivateBrushIntent extends Intent {
+  const ActivateBrushIntent(this.index);
+
+  final int index;
+}
+
 class ReorderSelectedNodesIntent extends Intent {
   const ReorderSelectedNodesIntent(this.action);
 

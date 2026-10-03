@@ -24,7 +24,6 @@ class InspectorFields extends StatelessWidget {
           transaction.watch(features);
           field.apply(result);
         });
-        editorContext.rememberInspectorValue(field.fieldKey, result);
       }),
     );
 

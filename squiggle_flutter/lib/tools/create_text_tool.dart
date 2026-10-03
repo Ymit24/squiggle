@@ -1,3 +1,5 @@
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -8,7 +10,10 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
-class CreateTextTool extends Tool {
+class CreateTextTool extends Tool implements DrawingTool {
+  @override
+  FeatureKind createDrawingKind() => FeatureKindText('');
+
   @override
   EditorCursor resolveCursor(
     EditorContext context,
