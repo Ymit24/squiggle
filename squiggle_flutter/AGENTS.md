@@ -30,10 +30,10 @@ Use semantic commit whenever commiting
 
 ## Validation
 
-- Run `flutter analyze --no-fatal-warnings --no-fatal-infos` and
-  `dart run dart_code_linter:metrics analyze lib packages/data_models/lib --no-fatal-warnings`.
-- DCL warnings and metrics are advisory during the initial rollout. Fix relevant
-  findings in changed code without unrelated refactoring or blanket suppressions.
+- Run `flutter analyze` and
+  `dart run dart_code_linter:metrics analyze lib packages/data_models/lib test`.
+- Analyzer and DCL lint checks must pass. Fix findings without blanket
+  suppressions; complexity metrics remain advisory review signals.
 - Complexity 15, nesting 3, source lines 60, and methods per class 20 are review
   thresholds. Use 30 source lines as an additional review signal for logic-heavy
   methods; preserve cohesive declarative UI and field mappings.
