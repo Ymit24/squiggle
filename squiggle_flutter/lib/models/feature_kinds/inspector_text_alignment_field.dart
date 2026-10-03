@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_field_shell.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/text_horizontal_alignment_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/text_vertical_alignment_selector.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/text_horizontal_alignment_selector.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/text_vertical_alignment_selector.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
+import 'package:squiggle_flutter/models/style_value_serialization.dart';
 
 class InspectorVerticalTextAlignmentField
     extends InspectorField<TextVerticalAlignment> {
@@ -13,6 +14,12 @@ class InspectorVerticalTextAlignmentField
     required TextVerticalAlignment value,
     required ValueChanged<TextVerticalAlignment> onTextAlignChanged,
   }) : super(values: [value], callbacks: [onTextAlignChanged]);
+  @override
+  Object? encodeValue(TextVerticalAlignment value) => value.name;
+
+  @override
+  TextVerticalAlignment decodeValue(Object? raw) =>
+      decodeStyleEnum(raw, TextVerticalAlignment.values);
   @override
   InspectorFieldShell build(
     BuildContext context,
@@ -35,6 +42,12 @@ class InspectorHorizontalTextAlignmentField
     required TextHorizontalAlignment value,
     required ValueChanged<TextHorizontalAlignment> onTextAlignChanged,
   }) : super(values: [value], callbacks: [onTextAlignChanged]);
+  @override
+  Object? encodeValue(TextHorizontalAlignment value) => value.name;
+
+  @override
+  TextHorizontalAlignment decodeValue(Object? raw) =>
+      decodeStyleEnum(raw, TextHorizontalAlignment.values);
   @override
   InspectorFieldShell build(
     BuildContext context,

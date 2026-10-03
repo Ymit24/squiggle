@@ -6,16 +6,31 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/idle_state.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
-class CreateLineTool extends Tool {
+class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
   late InteractionState<CreateLineTool> _activeInteractionState = IdleState(
     parent: this,
   );
   Feature? _previewFeature;
+  @override
+  FeatureKind createDrawingKind() => FeatureKindPolyline([]);
+
+  @override
+  void refreshBrushPreview(EditorContext context) {
+    final feature = _previewFeature;
+    if (feature == null) return;
+
+    final previous = feature.kind as FeatureKindPolyline;
+    final freshKind = FeatureKindPolyline(previous.localPoints);
+    context.brushes.active.applyTo(freshKind);
+    feature.kind = freshKind;
+  }
 
   @override
   EditorCursor resolveCursor(
@@ -182,7 +197,7 @@ class CreateLineTool extends Tool {
     final origin = worldPoints.first;
     final localPoints = localPointsFromWorld(worldPoints, origin);
     final kind = FeatureKindPolyline(localPoints);
-    context.applyInspectorValues(kind);
+    context.brushes.active.applyTo(kind);
     return Feature(origin: origin, size: Size.zero, kind: kind);
   }
 }

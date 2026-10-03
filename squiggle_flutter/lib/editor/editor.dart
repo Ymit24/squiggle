@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:squiggle_flutter/app/editor_back_button.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/inspector_panel.dart';
+import 'package:squiggle_flutter/editor/inspector/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
+import 'package:squiggle_flutter/editor/widgets/document_viewport.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-import 'package:squiggle_flutter/widgets/document_viewport.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class Editor extends StatelessWidget {
   const Editor({
@@ -65,7 +65,13 @@ class Editor extends StatelessWidget {
                           spacing: 8,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            EditorBackButton(onPressed: onBackToLibrary),
+                            SquiggleButton(
+                              onPressed: onBackToLibrary,
+                              icon: Icons.grid_view_rounded,
+                              label: 'Canvas library',
+                              variant: SquiggleButtonVariant.secondary,
+                              compact: true,
+                            ),
                             Flexible(
                               child: InspectorPanel(
                                 editorContext: editorContext,

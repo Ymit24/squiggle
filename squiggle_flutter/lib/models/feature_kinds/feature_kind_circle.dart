@@ -29,11 +29,13 @@ final class FeatureKindCircle extends FeatureKind
         strokeType: _strokeTypeFromDataModel(content),
         label: content['label'],
         labelFontSize: _doubleFromDataModel(content, 'labelFontSize'),
-        labelVerticalAlignment: TextVerticalAlignment.values.byName(
-          content['labelVerticalAlignment'] as String,
+        labelVerticalAlignment: decodeStyleEnum(
+          content['labelVerticalAlignment'],
+          TextVerticalAlignment.values,
         ),
-        labelHorizontalAlignment: TextHorizontalAlignment.values.byName(
-          content['labelHorizontalAlignment'] as String,
+        labelHorizontalAlignment: decodeStyleEnum(
+          content['labelHorizontalAlignment'],
+          TextHorizontalAlignment.values,
         ),
       );
 

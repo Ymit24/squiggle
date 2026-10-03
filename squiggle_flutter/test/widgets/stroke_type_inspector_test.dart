@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_fields.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/stroke_type_selector.dart';
-import 'package:squiggle_flutter/editor/style_panel/widgets/style_color_swatch.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/style_color_swatch.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/inspector_fields.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/stroke_type_selector.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 
@@ -67,7 +67,7 @@ void main() {
   });
 
   testWidgets(
-    'inspector updates mixed shapes, supports history and remembers type',
+    'selection inspector updates mixed shapes without changing drawing defaults',
     (tester) async {
       final kinds = <FeatureKind>[
         FeatureKindRectangle(),
@@ -125,8 +125,8 @@ void main() {
         FeatureKindCircle(),
         FeatureKindPolyline([Offset.zero, const Offset(100, 0)]),
       ]) {
-        context.applyInspectorValues(kind);
-        expect((kind as StrokeTypeCapable).strokeType, StrokeType.dotted);
+        context.brushes.active.applyTo(kind);
+        expect((kind as StrokeTypeCapable).strokeType, StrokeType.solid);
       }
     },
   );

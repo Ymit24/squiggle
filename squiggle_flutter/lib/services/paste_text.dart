@@ -21,7 +21,7 @@ Future<bool> pasteTextFromClipboard({required EditorContext context}) async {
   final feature = createTextFeatureAtCenter(
     contents: text,
     center: center,
-    configureKind: context.applyInspectorValues,
+    configureKind: context.brushes.active.applyTo,
   );
   context.cancelInteraction();
   context.history.run('Create feature', (transaction) {

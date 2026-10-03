@@ -112,7 +112,8 @@ class DocumentLibraryRepository {
 
   void dispose() {
     if (_autosaveSubscribed) {
-      context.removeListener(_autosave);
+      context.history.removeListener(_autosave);
+      context.brushes.removeListener(_autosave);
       _autosaveSubscribed = false;
     }
     _changesController.close();
@@ -156,6 +157,7 @@ class DocumentLibraryRepository {
   void _attachAutosave() {
     _autosaveSubscribed = true;
     context.history.addListener(_autosave);
+    context.brushes.addListener(_autosave);
   }
 
   void _autosave() {

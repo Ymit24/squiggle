@@ -6,11 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
+import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
-import 'package:squiggle_flutter/widgets/editor_interactions.dart';
 
 Future<EditorContext> _pumpEditor(
   WidgetTester tester, {

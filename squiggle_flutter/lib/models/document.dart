@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:data_models/data_models.dart' as data;
+import 'package:squiggle_flutter/models/document_session.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
@@ -13,8 +14,9 @@ import 'package:squiggle_flutter/models/node_id.dart';
 ///
 /// Undo/redo bookkeeping lives in the editor's history layer.
 class Document extends NodeContainer {
-  Document({this.name = 'Untitled', NodeId? nextId})
-    : _nextId = nextId ?? NodeId.newId(1);
+  Document({this.name = 'Untitled', NodeId? nextId, DocumentSession? session})
+    : _nextId = nextId ?? NodeId.newId(1),
+      session = session ?? DocumentSession();
 
   factory Document.fromFeatures(List<Feature> features) {
     final doc = Document();
@@ -25,12 +27,16 @@ class Document extends NodeContainer {
   }
 
   factory Document.fromDataModel(data.Document raw) {
-    final document = Document(name: raw.name);
+    final document = Document(
+      name: raw.name,
+      session: DocumentSession.fromDataModel(raw.session),
+    );
     document.addNodes(raw.nodes.map(Node.fromDataModel));
     return document;
   }
 
   String name;
+  DocumentSession session;
 
   /// ID lookup index, carrying no parent or paint-order information.
   final Map<NodeId, Node> _nodesById = {};
@@ -52,6 +58,7 @@ class Document extends NodeContainer {
   data.Document toDataModel() {
     return data.Document(
       name: name,
+      session: session.toDataModel(),
       nodes: _rootNodes.map((node) => node.toDataModel()).toList(),
     );
   }
@@ -149,6 +156,7 @@ class Document extends NodeContainer {
     _nextId = next;
     addNodes(copies);
     name = other.name;
+    session = DocumentSession.fromDataModel(other.session.toDataModel());
   }
 
   Iterable<Node> _subtree(Node node) sync* {

@@ -18,6 +18,8 @@ void main() {
       camera = Camera();
     });
 
+    tearDown(() => context.dispose());
+
     void pointerDown(Offset world) {
       context.tool.onPointerDown(
         context,
@@ -46,6 +48,46 @@ void main() {
         isShiftPressed: shift,
         isAltPressed: alt,
       );
+    }
+
+    for (final tool in [CreateFeatureTool.rect(), CreateFeatureTool.circle()]) {
+      test('${tool.kind.runtimeType} follows brush changes during drag', () {
+        context.brushes.setField('strokeWidth', 8);
+        final scratchId = context.brushes.active.id;
+        final sparseBrush = context.brushes.create('Sparse');
+        context.brushes.clearField('strokeWidth');
+        context.brushes.activate(scratchId);
+        context.setTool(tool);
+
+        pointerDown(const Offset(10, 20));
+        pointerMove(const Offset(10, 20));
+        pointerMove(const Offset(110, 70));
+        context.brushes.activate(sparseBrush.id);
+        context.brushes.setField('fillColor', 0xFF123456);
+        context.brushes.setField('strokeType', 'dashed');
+        context.brushes.clearField('strokeType');
+        expect(context.document.nodes, isEmpty);
+        expect(context.history.canUndo, isFalse);
+
+        // No further move: commit the already-restyled preview.
+        pointerUp(const Offset(110, 70));
+        final feature = context.document.nodes.single as Feature;
+        final styles = feature.kind.toDataModel();
+        expect(styles['strokeWidth'], tool.kind.toDataModel()['strokeWidth']);
+        expect(styles['strokeType'], 'solid');
+        expect(styles['fillColor'], 0xFF123456);
+        expect(feature.localBounds(), const Rect.fromLTWH(10, 20, 100, 50));
+
+        context.undo();
+        expect(context.document.nodes, isEmpty);
+        expect(context.history.canUndo, isFalse);
+        expect(context.brushes.active.id, sparseBrush.id);
+        context.redo();
+        expect(
+          (context.document.nodes.single as Feature).kind.toDataModel(),
+          styles,
+        );
+      });
     }
 
     test('lock allows repeated shapes and follows manual tool changes', () {
