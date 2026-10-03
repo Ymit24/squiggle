@@ -6,33 +6,33 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 
 void main() {
-  test('rememberInspectorValue keeps the latest value', () {
+  test('brush field edits keep the latest value', () {
     final context = EditorContext(document: Document());
     final kind = FeatureKindRectangle();
 
-    context.rememberInspectorValue('fillColor', const Color(0xFFFF0000));
-    context.rememberInspectorValue('fillColor', const Color(0xFF0000FF));
-    context.applyInspectorValues(kind);
+    context.brushes.setField('fillColor', const Color(0xFFFF0000).toARGB32());
+    context.brushes.setField('fillColor', const Color(0xFF0000FF).toARGB32());
+    context.brushes.active.applyTo(kind);
 
     expect(kind.fillColor, const Color(0xFF0000FF));
   });
 
-  test('applyInspectorValues applies a matching field', () {
+  test('brush application applies a matching field', () {
     final context = EditorContext(document: Document());
     final kind = FeatureKindCircle();
 
-    context.rememberInspectorValue('strokeWidth', 5.0);
-    context.applyInspectorValues(kind);
+    context.brushes.setField('strokeWidth', 5.0);
+    context.brushes.active.applyTo(kind);
 
     expect(kind.strokeWidth, 5.0);
   });
 
-  test('applyInspectorValues leaves defaults when no value is remembered', () {
+  test('brush application leaves unset fields at their defaults', () {
     final context = EditorContext(document: Document());
     final kind = FeatureKindRectangle();
     final originalFillColor = kind.fillColor;
 
-    context.applyInspectorValues(kind);
+    context.brushes.active.applyTo(kind);
 
     expect(kind.fillColor, originalFillColor);
   });

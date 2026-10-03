@@ -9,7 +9,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 
 void main() {
   testWidgets(
-    'fill choices update supported shapes, undo/redo, and new shapes',
+    'selection fill choices support undo without changing new shape styles',
     (tester) async {
       final features = [
         for (final kind in <FeatureKind>[
@@ -60,11 +60,11 @@ void main() {
         FeatureKindRectangle(),
         FeatureKindCircle(),
       ]) {
-        context.applyInspectorValues(kind);
-        expect((kind as FillTypeCapable).fillType, FillType.crosshatch);
+        context.brushes.active.applyTo(kind);
+        expect((kind as FillTypeCapable).fillType, FillType.solid);
       }
       final line = features.last.kind;
-      context.applyInspectorValues(line);
+      context.brushes.active.applyTo(line);
       expect(
         line.buildInspectorFields().any(
           (field) => field.fieldKey == 'fillType',

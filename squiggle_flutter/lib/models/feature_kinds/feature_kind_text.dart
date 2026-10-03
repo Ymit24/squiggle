@@ -14,11 +14,13 @@ final class FeatureKindText extends FeatureKind
       FeatureKindText(
         content['contents'] as String,
         fontSize: _doubleFromDataModel(content, 'fontSize'),
-        horizontalAlignment: TextHorizontalAlignment.values.byName(
-          content['horizontalAlignment'] as String,
+        horizontalAlignment: decodeStyleEnum(
+          content['horizontalAlignment'],
+          TextHorizontalAlignment.values,
         ),
-        verticalAlignment: TextVerticalAlignment.values.byName(
-          content['verticalAlignment'] as String,
+        verticalAlignment: decodeStyleEnum(
+          content['verticalAlignment'],
+          TextVerticalAlignment.values,
         ),
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
       );

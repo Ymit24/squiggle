@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/brush_picker.dart';
+import 'package:squiggle_flutter/editor/style_panel/widgets/drawing_inspector_fields.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_fields.dart';
 import 'package:squiggle_flutter/editor/style_panel/widgets/inspector_layout_actions.dart';
@@ -19,36 +23,57 @@ class InspectorPanel extends StatelessWidget {
       listenable: Listenable.merge([
         editorContext.selection,
         editorContext.history,
+        editorContext.tool,
+        editorContext.brushes,
       ]),
       builder: (context, _) {
         final selectedNodes = editorContext.selection.selectedNodeIds.map(
           (nodeId) => editorContext.document.requireNodeById(nodeId),
         );
         final selectedFeatures = selectedNodes.whereType<Feature>().toList();
-        if (selectedFeatures.isEmpty && selectedNodes.length < 2) {
-          return SizedBox.shrink();
+        final drawingKind = selectedNodes.isEmpty
+            ? editorContext.drawingInspectorKind
+            : null;
+
+        if (selectedNodes.isEmpty && drawingKind == null) {
+          return const SizedBox.shrink();
         }
 
-        return DecoratedBox(
-          decoration: theme.decorations.floatingPanel(),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(spacing.panelPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                spacing: spacing.panelSectionSpacing,
-                children: [
-                  InspectorFields(
-                    editorContext: editorContext,
-                    features: selectedFeatures,
-                  ),
-                  InspectorLayoutActions(
-                    editorContext: editorContext,
-                    nodes: selectedNodes.toList(),
-                  ),
-                ],
+        return SizedBox(
+          width: spacing.menuWidth,
+          child: DecoratedBox(
+            decoration: theme.decorations.floatingPanel(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(spacing.panelPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: spacing.panelSectionSpacing,
+                  children: [
+                    if (drawingKind != null)
+                      BrushPicker(
+                        editorContext: editorContext,
+                        imageRepository: context.read<ImageRepository>(),
+                      ),
+                    if (selectedFeatures.isNotEmpty)
+                      InspectorFields(
+                        editorContext: editorContext,
+                        features: selectedFeatures,
+                      ),
+                    if (drawingKind != null)
+                      DrawingInspectorFields(
+                        editorContext: editorContext,
+                        kind: drawingKind,
+                      ),
+                    if (selectedNodes.isNotEmpty)
+                      InspectorLayoutActions(
+                        editorContext: editorContext,
+                        nodes: selectedNodes.toList(),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -37,11 +37,47 @@ void main() {
 
     tearDown(() async {
       library.dispose();
+      // Let queued autosaves finish before removing their storage directory.
+      await library.documentStorage.loadDocument(library.currentDocument!.id);
       context.dispose();
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
       }
     });
+
+    test(
+      'session-only changes autosave and stay local to each document',
+      () async {
+        final firstId = library.currentDocument!.id;
+        final brush = context.brushes.create('Construction');
+        context.brushes.setField('strokeWidth', 3.0);
+        // Loading waits for the queued autosave, with no explicit save call.
+        final saved = (await library.documentStorage.loadDocument(
+          firstId,
+        ))!.document;
+        expect(saved.session.activeBrushId, brush.id);
+        expect(saved.session.activeBrush.values['strokeWidth'], 3.0);
+        expect(context.history.canUndo, isFalse);
+        final other = context.brushes.create('Actual');
+        context.brushes.activate(brush.id);
+        context.brushes.move(brush.id, toIndex: 2);
+        final reordered = (await library.documentStorage.loadDocument(
+          firstId,
+        ))!.document;
+        expect(reordered.session.brushes.map((profile) => profile.id), [
+          'scratch',
+          other.id,
+          brush.id,
+        ]);
+        expect(reordered.session.activeBrushId, brush.id);
+        await library.createDocument(name: 'Other');
+        expect(context.brushes.active.isScratch, isTrue);
+        expect(context.brushes.active.values, isEmpty);
+        await library.openDocument(firstId);
+        expect(context.brushes.active.id, brush.id);
+        expect(context.brushes.active.values['strokeWidth'], 3.0);
+      },
+    );
 
     test('switches documents and clears selection', () async {
       await library.createDocument(name: 'One');

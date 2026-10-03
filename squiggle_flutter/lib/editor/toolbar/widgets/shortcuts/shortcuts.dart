@@ -1,3 +1,4 @@
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,23 @@ import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
-const _toolShortcuts = {
+const _brushKeys = [
+  LogicalKeyboardKey.digit1,
+  LogicalKeyboardKey.digit2,
+  LogicalKeyboardKey.digit3,
+  LogicalKeyboardKey.digit4,
+  LogicalKeyboardKey.digit5,
+  LogicalKeyboardKey.digit6,
+  LogicalKeyboardKey.digit7,
+  LogicalKeyboardKey.digit8,
+  LogicalKeyboardKey.digit9,
+];
+
+final _toolShortcuts = <ShortcutActivator, Intent>{
+  for (final (index, key) in _brushKeys.indexed)
+    SingleActivator(key, meta: true): ActivateBrushIntent(index),
+  for (final (index, key) in _brushKeys.indexed)
+    SingleActivator(key, control: true): ActivateBrushIntent(index),
   SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true):
       ReorderSelectedNodesIntent(LayerOrder.backward),
   SingleActivator(LogicalKeyboardKey.bracketLeft, control: true):
@@ -120,6 +137,20 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
               onInvoke: (_) {
                 if (!textEditOpen) {
                   context.read<EditorContext>().selection.clearSelection();
+                }
+                return null;
+              },
+            ),
+            ActivateBrushIntent: CallbackAction<ActivateBrushIntent>(
+              onInvoke: (intent) {
+                final editor = context.read<EditorContext>();
+                if (!textEditOpen &&
+                    editor.selection.selectedNodeIds.isEmpty &&
+                    editor.tool.activeTool is DrawingTool &&
+                    intent.index < editor.brushes.profiles.length) {
+                  editor.brushes.activate(
+                    editor.brushes.profiles[intent.index].id,
+                  );
                 }
                 return null;
               },
@@ -242,7 +273,6 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
           child: Focus(
             focusNode: _focusNode,
             autofocus: !textEditOpen,
-            descendantsAreFocusable: textEditOpen,
             onKeyEvent: (node, event) {
               if (textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
