@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:squiggle_flutter/widgets/fling_controller.dart';
+import 'package:squiggle_flutter/editor/fling_controller.dart';
 
 void main() {
   testWidgets('fling reports pan deltas and stops when the simulation ends', (

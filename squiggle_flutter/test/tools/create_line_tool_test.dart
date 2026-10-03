@@ -19,6 +19,8 @@ void main() {
       camera = Camera();
     });
 
+    tearDown(() => context.dispose());
+
     void activateLineTool() {
       context.setTool(CreateLineTool());
     }
@@ -77,6 +79,57 @@ void main() {
     List<Offset> worldPointsFor(Feature feature) {
       final kind = feature.kind as FeatureKindPolyline;
       return worldPoints(feature.origin, kind.localPoints);
+    }
+
+    for (final placing in [false, true]) {
+      test('line follows brush changes mid-draw (placing: $placing)', () {
+        context.brushes.setField('strokeWidth', 8);
+        context.brushes.setField('endEndCap', 'arrow');
+        final scratchId = context.brushes.active.id;
+        final sparseBrush = context.brushes.create('Sparse');
+        context.brushes.clearField('strokeWidth');
+        context.brushes.clearField('endEndCap');
+        context.brushes.activate(scratchId);
+        activateLineTool();
+
+        pointerDown(const Offset(10, 20));
+        if (placing) {
+          pointerUp(const Offset(10, 20));
+          pointerDown(const Offset(110, 70));
+          pointerUp(const Offset(110, 70));
+          pointerHover(const Offset(210, 120));
+        } else {
+          pointerMove(const Offset(110, 70));
+        }
+        context.brushes.activate(sparseBrush.id);
+        context.brushes.setField('strokeColor', 0xFF123456);
+        context.brushes.setField('startEndCap', 'arrow');
+        context.brushes.setField('strokeType', 'dashed');
+        context.brushes.clearField('strokeType');
+        expect(context.document.nodes, isEmpty);
+        expect(context.history.canUndo, isFalse);
+
+        if (placing) {
+          finishWithKey(LogicalKeyboardKey.enter);
+        } else {
+          pointerUp(const Offset(110, 70));
+        }
+        final feature = context.document.nodes.single as Feature;
+        final kind = feature.kind as FeatureKindPolyline;
+        expect(worldPointsFor(feature), [
+          const Offset(10, 20),
+          const Offset(110, 70),
+        ]);
+        expect(kind.strokeWidth, defaultStrokeWidth);
+        expect(kind.strokeType, StrokeType.solid);
+        expect(kind.strokeColor, const Color(0xFF123456));
+        expect(kind.startEndCap, LineEndCap.arrow);
+        expect(kind.endEndCap, LineEndCap.rounded);
+        context.undo();
+        expect(context.document.nodes, isEmpty);
+        expect(context.history.canUndo, isFalse);
+        expect(context.brushes.active.id, sparseBrush.id);
+      });
     }
 
     test(

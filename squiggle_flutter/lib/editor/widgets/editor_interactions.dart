@@ -1,0 +1,360 @@
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/fling_controller.dart';
+import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
+import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_record.dart';
+import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+
+class EditorInteractions extends StatefulWidget {
+  const EditorInteractions({
+    super.key,
+    required this.child,
+    required this.context,
+    required this.canvasKey,
+    required this.imageRepository,
+    required this.canvasInteractionsEnabled,
+  });
+
+  final Widget child;
+  final GlobalKey canvasKey;
+  final EditorContext context;
+  final ImageRepository imageRepository;
+  final bool canvasInteractionsEnabled;
+
+  @override
+  State<EditorInteractions> createState() => _EditorInteractionsState();
+}
+
+class _EditorInteractionsState extends State<EditorInteractions>
+    with SingleTickerProviderStateMixin {
+  late final FlingController _flingController;
+
+  PointerRecord? lastPointerRecord;
+
+  static const _pinchScaleThreshold = 0.02;
+  static const _secondaryDragThreshold = 5.0;
+
+  double _initialZoom = 1.0;
+  Offset _initialLocation = Offset.zero;
+  Offset? _pointerInCanvas;
+  int? _pointerDownButtons;
+  bool _isPrimaryDragging = false;
+
+  Offset? _secondaryPointerDownAt;
+  bool _isSecondaryDragging = false;
+  bool _panZoomHadSignificantPinch = false;
+
+  VelocityTracker _panVelocityTracker = VelocityTracker.withKind(
+    PointerDeviceKind.trackpad,
+  );
+
+  Camera get _camera => widget.context.camera;
+
+  bool get _isShiftPressed => HardwareKeyboard.instance.isShiftPressed;
+
+  bool get _isAltPressed => HardwareKeyboard.instance.isAltPressed;
+
+  @override
+  void initState() {
+    super.initState();
+    _flingController = FlingController(vsync: this, onPan: _onFlingPan);
+    widget.context.attachViewportMotionCanceller(_flingController.stop);
+  }
+
+  @override
+  void dispose() {
+    widget.context.detachViewportMotionCanceller(_flingController.stop);
+    _flingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<TextEditBloc, TextEditState>(
+      listenWhen: (previous, current) =>
+          current is TextEditOpen && previous is! TextEditOpen,
+      listener: (context, state) => _resetPointerState(),
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+
+          _pointerDownButtons = event.buttons;
+
+          if (event.buttons == kPrimaryButton) {
+            _onLeftPointerDown(event);
+          } else if (event.buttons == kSecondaryButton) {
+            _onRightPointerDown(event);
+          }
+        },
+        onPointerMove: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+
+          // TODO: This sucks for state machine
+          if (_isPrimaryDragging) {
+            _onLeftPointerUpdate(event);
+          } else if (_secondaryPointerDownAt != null) {
+            _onRightPointerUpdate(event);
+          }
+        },
+        onPointerHover: _onPointerHover,
+        onPointerUp: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+
+          // TODO: This sucks for state machine
+          if (_isPrimaryDragging) {
+            _onLeftPointerUp(event);
+          } else if (_secondaryPointerDownAt != null) {
+            _onRightPointerUp(context, event);
+          }
+
+          _checkForDoubleClick(event);
+        },
+        onPointerCancel: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+          // TODO: This sucks for state machine
+          _pointerDownButtons = null;
+          if (_isPrimaryDragging) {
+            _onLeftPointerCancel(event);
+          } else if (_secondaryPointerDownAt != null) {
+            _onRightPointerCancel(event);
+          }
+        },
+        onPointerPanZoomStart: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+          _flingController.stop();
+          _panVelocityTracker = VelocityTracker.withKind(
+            PointerDeviceKind.trackpad,
+          );
+          _panZoomHadSignificantPinch = false;
+          _initialZoom = _camera.zoom;
+          _initialLocation = _camera.location;
+          _pointerInCanvas = _canvasLocal(event);
+        },
+        onPointerPanZoomEnd: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+          if (_panZoomHadSignificantPinch) return;
+          final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
+          if (velocity.distance < kMinFlingVelocity) return;
+          _flingController.fling(velocity);
+        },
+        onPointerSignal: (event) {
+          if (!widget.canvasInteractionsEnabled) return;
+          if (event is! PointerScrollEvent) return;
+          _flingController.stop();
+          final focal = _canvasLocal(event);
+          if (focal == null) return;
+          final factor = math.exp(-event.scrollDelta.dy * 0.002);
+          _camera.zoomToward(focal, 1 / factor);
+          widget.context.notifyViewportChanged();
+        },
+        onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
+        child: widget.child,
+      ),
+    );
+  }
+
+  void _onPointerHover(PointerHoverEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+    _pointerInCanvas = _canvasLocal(event);
+    final world = _screenToWorld(event);
+    if (world == null) return;
+    widget.context.tool.onPointerHover(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+    if (!event.synthesized) {
+      _panVelocityTracker.addPosition(event.timeStamp, event.pan);
+    }
+    if ((event.scale - 1.0).abs() > _pinchScaleThreshold) {
+      _panZoomHadSignificantPinch = true;
+    }
+    final focal = _pointerInCanvas ?? _canvasLocal(event);
+    if (focal == null) return;
+    final prevZoom = _initialZoom;
+    final newZoom = (_initialZoom / math.pow(event.scale, 1.75)).clamp(
+      0.05,
+      10.0,
+    );
+    _camera.zoom = newZoom;
+    _camera.location =
+        _initialLocation + focal * (prevZoom - newZoom) - event.pan * newZoom;
+    widget.context.notifyViewportChanged();
+  }
+
+  void _onFlingPan(Offset delta) {
+    _camera.panByScreenDelta(delta);
+    widget.context.notifyViewportChanged();
+  }
+
+  void _resetPointerState() {
+    _isPrimaryDragging = false;
+    _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
+    _pointerDownButtons = null;
+    _pointerInCanvas = null;
+    _flingController.stop();
+  }
+
+  void _checkForDoubleClick(PointerUpEvent event) {
+    final pointerDownButtons = _pointerDownButtons;
+    if (pointerDownButtons != null && lastPointerRecord != null) {
+      final recentEnough =
+          event.timeStamp - lastPointerRecord!.timeStamp <=
+          kDoubleClickInterval;
+      final sameButton = pointerDownButtons == lastPointerRecord!.buttons;
+      final closeEnough =
+          (event.position - lastPointerRecord!.screenPosition).distance < 10;
+      final isLeftClick = pointerDownButtons == kPrimaryButton;
+
+      if (recentEnough && sameButton && closeEnough && isLeftClick) {
+        _onLeftPointerDouble(event);
+      }
+    }
+    if (pointerDownButtons != null) {
+      lastPointerRecord = PointerRecord(
+        pointer: event.pointer,
+        buttons: pointerDownButtons,
+        screenPosition: event.position,
+        timeStamp: event.timeStamp,
+      );
+    }
+    _pointerDownButtons = null;
+  }
+
+  Offset? _canvasLocal(PointerEvent event) {
+    final renderBox =
+        widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      return null;
+    }
+    return renderBox.globalToLocal(event.position);
+  }
+
+  Offset? _screenToWorld(PointerEvent event) {
+    final local = _canvasLocal(event);
+    if (local == null) return null;
+    return _camera.screenToWorld(local);
+  }
+
+  void _onLeftPointerDown(PointerDownEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    _isPrimaryDragging = true;
+    _pointerInCanvas = _canvasLocal(event);
+
+    widget.context.tool.onPointerDown(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onLeftPointerDouble(PointerUpEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onDoubleClick(widget.context, world, _camera);
+  }
+
+  void _onLeftPointerUpdate(PointerMoveEvent event) {
+    _pointerInCanvas = _canvasLocal(event);
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onPointerMove(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onLeftPointerUp(PointerUpEvent event) {
+    _isPrimaryDragging = false;
+
+    final world = _screenToWorld(event);
+    if (world == null) return;
+
+    widget.context.tool.onPointerUp(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
+  }
+
+  void _onLeftPointerCancel(PointerCancelEvent event) {
+    _isPrimaryDragging = false;
+    widget.context.cancelInteraction();
+  }
+
+  void _onRightPointerDown(PointerDownEvent event) {
+    ShortcutsScope.maybeOf(context)?.requestShortcutsFocus();
+    _flingController.stop();
+
+    _secondaryPointerDownAt = event.position;
+    _isSecondaryDragging = false;
+  }
+
+  void _onRightPointerUpdate(PointerMoveEvent event) {
+    if (event.synthesized) return;
+
+    final distance = (event.position - _secondaryPointerDownAt!).distance;
+    if (!_isSecondaryDragging && distance < _secondaryDragThreshold) return;
+    _isSecondaryDragging = true;
+
+    _camera.panByScreenDelta(event.delta);
+    widget.context.notifyViewportChanged();
+  }
+
+  void _onRightPointerUp(BuildContext context, PointerUpEvent event) {
+    final distance = (event.position - _secondaryPointerDownAt!).distance;
+    final isClick = !_isSecondaryDragging && distance < _secondaryDragThreshold;
+    _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
+    if (!isClick) return;
+
+    final local = _canvasLocal(event);
+    if (local == null) return;
+    widget.context.openContextMenuAt(
+      context,
+      local,
+      _camera.screenToWorld(local),
+      imageRepository: widget.imageRepository,
+    );
+  }
+
+  void _onRightPointerCancel(PointerCancelEvent event) {
+    _secondaryPointerDownAt = null;
+    _isSecondaryDragging = false;
+  }
+}

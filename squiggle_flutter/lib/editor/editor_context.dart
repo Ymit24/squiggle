@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:squiggle_flutter/editor/brush_controller.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
@@ -8,6 +9,8 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
+import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
@@ -26,7 +29,9 @@ class EditorContext extends ChangeNotifier {
   }) : _selection = selection ?? SelectionModel(),
        _tool = tool ?? ToolModel(),
        _history = history ?? History(document: document),
-       _textEdit = textEdit ?? TextEditModel() {
+       _textEdit = textEdit ?? TextEditModel(),
+       brushes = BrushController(document.session) {
+    brushes.addListener(_onBrushChanged);
     _selection.addListener(_forward);
     _tool.addListener(_forward);
     _history.addListener(_forward);
@@ -38,7 +43,8 @@ class EditorContext extends ChangeNotifier {
   final ToolModel _tool;
   final History _history;
   final TextEditModel _textEdit;
-  final Map<String, Object?> _inspectorValues = {};
+
+  final BrushController brushes;
 
   /// World-space camera for the current document viewport.
   final Camera camera = Camera();
@@ -56,6 +62,16 @@ class EditorContext extends ChangeNotifier {
   History get history => _history;
 
   TextEditModel get textEdit => _textEdit;
+
+  /// Fresh defaults for the active creation tool, never its mutable template.
+  FeatureKind? get drawingInspectorKind {
+    if (tool.activeTool case DrawingTool drawingTool) {
+      final kind = drawingTool.createDrawingKind();
+      brushes.active.applyTo(kind);
+      return kind;
+    }
+    return null;
+  }
 
   void openContextMenuAt(
     BuildContext context,
@@ -129,27 +145,15 @@ class EditorContext extends ChangeNotifier {
 
   void endTextEdit() => _textEdit.end();
 
-  void rememberInspectorValue(String fieldKey, Object? value) {
-    _inspectorValues[fieldKey] = value;
-  }
-
-  /// Applies the last inspector choices to a feature being created.
-  void applyInspectorValues(FeatureKind kind) {
-    for (final field in kind.buildInspectorFields()) {
-      if (_inspectorValues.containsKey(field.fieldKey)) {
-        field.applyIfCompatible(_inspectorValues[field.fieldKey]);
-      }
-    }
-  }
-
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
     cancelInteraction();
     document.replaceFrom(newDocument);
     history.clear();
-    _inspectorValues.clear();
+
     selection.clearSelection();
     endTextEdit();
+    brushes.bindSession(document.session);
   }
 
   @override
@@ -158,10 +162,19 @@ class EditorContext extends ChangeNotifier {
     _tool.removeListener(_forward);
     _history.removeListener(_forward);
     _textEdit.removeListener(_forward);
+    brushes.removeListener(_onBrushChanged);
+    brushes.dispose();
     super.dispose();
   }
 
   void _forward() => notifyListeners();
+
+  void _onBrushChanged() {
+    if (tool.activeTool case BrushPreviewTool previewTool) {
+      previewTool.refreshBrushPreview(this);
+    }
+    notifyListeners();
+  }
 
   void _refreshSelectionAfterHistoryChange() {
     selection.setSelection(

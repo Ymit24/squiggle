@@ -13,7 +13,6 @@ const kPanelLabelSpacing = 8.0;
 const kSwatchSize = 26.0;
 const kSwatchGap = 6.0;
 const kSwatchBorderWidth = 2.0;
-const kSwatchColumns = 4;
 const kTextEditPanelPadding = 12.0;
 const kTextEditButtonSpacing = 8.0;
 const kTextEditButtonHorizontalPadding = 12.0;
@@ -30,9 +29,6 @@ const kMenuItemHorizontalPadding = 7.0;
 const kMenuIconGap = 12.0;
 const kMenuShortcutGap = 8.0;
 const kMenuDividerHeight = 14.0;
-
-const kSwatchGridWidth =
-    kSwatchColumns * kSwatchSize + (kSwatchColumns - 1) * kSwatchGap;
 
 /// Layout and sizing tokens for UI chrome.
 @immutable
@@ -127,10 +123,6 @@ class SquiggleSpacing {
     menuShortcutGap: kMenuShortcutGap,
     menuDividerHeight: kMenuDividerHeight,
   );
-
-  int get swatchColumns => kSwatchColumns;
-
-  double get swatchGridWidth => kSwatchGridWidth;
 
   SquiggleSpacing copyWith({
     double? overlayTop,

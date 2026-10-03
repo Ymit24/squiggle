@@ -239,7 +239,11 @@ final class FeatureKindPolyline extends FeatureKind
   static LineEndCap _endCapFromDataModel(
     Map<String, dynamic> content,
     String key,
-  ) => LineEndCap.values.asNameMap()[content[key]] ?? LineEndCap.rounded;
+  ) => decodeStyleEnum(
+    content[key],
+    LineEndCap.values,
+    fallback: LineEndCap.rounded,
+  );
 
   Path _pathFor(Feature feature) {
     final path = Path();
