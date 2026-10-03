@@ -14,6 +14,7 @@ import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/document_viewport.dart';
+import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
 class Editor extends StatelessWidget {
   const Editor({
@@ -65,7 +66,13 @@ class Editor extends StatelessWidget {
                           spacing: 8,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            EditorBackButton(onPressed: onBackToLibrary),
+                            SquiggleButton(
+                              onPressed: onBackToLibrary,
+                              icon: Icons.grid_view_rounded,
+                              label: 'Canvas library',
+                              variant: SquiggleButtonVariant.secondary,
+                              compact: true,
+                            ),
                             Flexible(
                               child: InspectorPanel(
                                 editorContext: editorContext,
