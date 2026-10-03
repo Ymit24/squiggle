@@ -41,6 +41,10 @@ class DeleteSelectedFeaturesIntent extends Intent {
   const DeleteSelectedFeaturesIntent();
 }
 
+class ClearSelectionIntent extends Intent {
+  const ClearSelectionIntent();
+}
+
 class PasteImageIntent extends Intent {
   const PasteImageIntent();
 }
