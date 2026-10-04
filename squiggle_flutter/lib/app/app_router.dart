@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/document_library_page.dart';
 import 'package:squiggle_flutter/editor/editor_page.dart';
 

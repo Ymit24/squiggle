@@ -198,12 +198,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
     );
   }
 
-  Future<void> _openDocument(String id) async {
-    final library = context.read<DocumentLibraryRepository>();
-    await library.openDocument(id);
-
-    if (!mounted) return;
-    await context.router.replace(EditorRoute());
+  void _openDocument(String id) {
+    context.router.replace(EditorRoute(id: id));
   }
 
   Future<void> _createAndOpen({String? name}) async {
@@ -211,7 +207,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
     await library.createDocument(name: name);
 
     if (!mounted) return;
-    await context.router.replace(EditorRoute());
+    await context.router.replace(EditorRoute(id: library.currentDocument!.id));
   }
 
   List<DocumentInfo> _filtered(List<DocumentInfo> documents) {

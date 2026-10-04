@@ -28,16 +28,48 @@ class DocumentLibraryRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [EditorPage]
-class EditorRoute extends PageRouteInfo<void> {
-  const EditorRoute({List<PageRouteInfo>? children})
-    : super(EditorRoute.name, initialChildren: children);
+class EditorRoute extends PageRouteInfo<EditorRouteArgs> {
+  EditorRoute({Key? key, required String id, List<PageRouteInfo>? children})
+    : super(
+        EditorRoute.name,
+        args: EditorRouteArgs(key: key, id: id),
+        rawPathParams: {'id': id},
+        initialChildren: children,
+      );
 
   static const String name = 'EditorRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return EditorPage();
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<EditorRouteArgs>(
+        orElse: () => EditorRouteArgs(id: pathParams.getString('id')),
+      );
+      return EditorPage(key: args.key, id: args.id);
     },
   );
+}
+
+class EditorRouteArgs {
+  const EditorRouteArgs({this.key, required this.id});
+
+  final Key? key;
+
+  final String id;
+
+  @override
+  String toString() {
+    return 'EditorRouteArgs{key: $key, id: $id}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! EditorRouteArgs) return false;
+    return key == other.key && id == other.id;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ id.hashCode;
 }
