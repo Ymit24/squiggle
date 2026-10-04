@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/bloc/bloc.dart';
@@ -15,6 +16,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
+@RoutePage(name: "EditorRoute")
 class Editor extends StatelessWidget {
   const Editor({
     super.key,

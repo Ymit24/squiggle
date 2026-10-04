@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/app/squiggle_app.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
@@ -36,8 +37,11 @@ void main() async {
   );
   await documentLibraryRepository.initialize();
 
+  final appRouter = AppRouter();
+
   runApp(
     SquiggleApp(
+      appRouter: appRouter,
       imageRepository: imageRepository,
       context: context,
       documentStorage: documentStorage,

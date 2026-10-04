@@ -8,9 +8,9 @@ import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 enum _AppScreen { library, editor }
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.context});
+  const AppShell({super.key, required this.editorContext});
 
-  final EditorContext context;
+  final EditorContext editorContext;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -27,24 +27,10 @@ class _AppShellState extends State<AppShell> {
         onCreateAndOpen: _createAndOpen,
       ),
       _AppScreen.editor => Editor(
-        editorContext: widget.context,
+        editorContext: widget.editorContext,
         onBackToLibrary: _returnToLibrary,
       ),
     };
-  }
-
-  Future<void> _openDocument(String id) async {
-    final library = context.read<DocumentLibraryRepository>();
-    await library.openDocument(id);
-    if (!mounted) return;
-    setState(() => _screen = _AppScreen.editor);
-  }
-
-  Future<void> _createAndOpen({String? name}) async {
-    final library = context.read<DocumentLibraryRepository>();
-    await library.createDocument(name: name);
-    if (!mounted) return;
-    setState(() => _screen = _AppScreen.editor);
   }
 
   Future<void> _returnToLibrary() async {

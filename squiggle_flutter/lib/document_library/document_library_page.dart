@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +14,7 @@ import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
+@RoutePage()
 class DocumentLibraryPage extends StatefulWidget {
   const DocumentLibraryPage({
     super.key,
@@ -155,8 +157,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                       (context, index) {
                                         if (!isSearching && index == 0) {
                                           return NewDocumentCard(
-                                            onPressed: () =>
-                                                widget.onCreateAndOpen(),
+                                            onPressed: _createAndOpen,
                                           );
                                         }
                                         final document =
@@ -168,9 +169,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                           isCurrent: document.id == currentId,
                                           canDelete:
                                               library.documents.length > 1,
-                                          onOpen: () => widget.onOpenDocument(
-                                            document.id,
-                                          ),
+                                          onOpen: () =>
+                                              _openDocument(document.id),
                                           onRename: () => _renameDocument(
                                             context,
                                             library,
@@ -202,6 +202,16 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _openDocument(String id) async {
+    final library = context.read<DocumentLibraryRepository>();
+    await library.openDocument(id);
+  }
+
+  Future<void> _createAndOpen({String? name}) async {
+    final library = context.read<DocumentLibraryRepository>();
+    await library.createDocument(name: name);
   }
 
   List<DocumentInfo> _filtered(List<DocumentInfo> documents) {
