@@ -1,6 +1,8 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/document_library/widgets/delete_document_dialog.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_card.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_name_dialog.dart';
@@ -13,15 +15,9 @@ import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
+@RoutePage()
 class DocumentLibraryPage extends StatefulWidget {
-  const DocumentLibraryPage({
-    super.key,
-    required this.onOpenDocument,
-    required this.onCreateAndOpen,
-  });
-
-  final Future<void> Function(String id) onOpenDocument;
-  final Future<void> Function({String? name}) onCreateAndOpen;
+  const DocumentLibraryPage({super.key});
 
   @override
   State<DocumentLibraryPage> createState() => _DocumentLibraryPageState();
@@ -51,10 +47,10 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
       backgroundColor: theme.colors.mantle,
       body: CallbackShortcuts(
         bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyN, meta: true): () =>
-              widget.onCreateAndOpen(),
-          const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-              widget.onCreateAndOpen(),
+          const SingleActivator(LogicalKeyboardKey.keyN, meta: true):
+              _createAndOpen,
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true):
+              _createAndOpen,
           const SingleActivator(LogicalKeyboardKey.slash, meta: true): () =>
               _searchFocus.requestFocus(),
           const SingleActivator(LogicalKeyboardKey.slash, control: true): () =>
@@ -113,7 +109,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                         _searchController.clear();
                                         setState(() => _query = '');
                                       },
-                                      onCreate: () => widget.onCreateAndOpen(),
+                                      onCreate: _createAndOpen,
                                     ),
                                   ),
                                 ),
@@ -155,8 +151,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                       (context, index) {
                                         if (!isSearching && index == 0) {
                                           return NewDocumentCard(
-                                            onPressed: () =>
-                                                widget.onCreateAndOpen(),
+                                            onPressed: _createAndOpen,
                                           );
                                         }
                                         final document =
@@ -168,9 +163,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                           isCurrent: document.id == currentId,
                                           canDelete:
                                               library.documents.length > 1,
-                                          onOpen: () => widget.onOpenDocument(
-                                            document.id,
-                                          ),
+                                          onOpen: () =>
+                                              _openDocument(document.id),
                                           onRename: () => _renameDocument(
                                             context,
                                             library,
@@ -202,6 +196,18 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
         ),
       ),
     );
+  }
+
+  void _openDocument(String id) {
+    context.router.replace(EditorRoute(id: id));
+  }
+
+  Future<void> _createAndOpen({String? name}) async {
+    final library = context.read<DocumentLibraryRepository>();
+    await library.createDocument(name: name);
+
+    if (!mounted) return;
+    await context.router.replace(EditorRoute(id: library.currentDocument!.id));
   }
 
   List<DocumentInfo> _filtered(List<DocumentInfo> documents) {
@@ -243,7 +249,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
       initialName: 'Untitled',
     );
     if (name == null || !context.mounted) return;
-    await widget.onCreateAndOpen(name: name);
+    await _createAndOpen(name: name);
   }
 
   Future<void> _renameDocument(

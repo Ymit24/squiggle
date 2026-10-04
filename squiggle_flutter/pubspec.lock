@@ -57,6 +57,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.1"
+  auto_route:
+    dependency: "direct main"
+    description:
+      name: auto_route
+      sha256: "538d8eb2ffc48de30abb30d4545a90405b5f8a29248b82d5e4b2977a79bfd229"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.2.0"
+  auto_route_generator:
+    dependency: "direct dev"
+    description:
+      name: auto_route_generator
+      sha256: "7aa0e90874928e78709f0a21a69fb5bc2ae1aa932dec862930d2af85c40adb01"
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.5.0"
   bloc:
     dependency: transitive
     description:
@@ -77,10 +93,10 @@ packages:
     dependency: transitive
     description:
       name: build
-      sha256: a156715e7cd728130c592f30552575908aae5b100005fbc1f0fb16b3c03a3d10
+      sha256: "45d14a0fb23e018d8287c32fc98d726ce466b231928ed9b9200f29bd3ccd39ae"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.6"
+    version: "4.0.7"
   build_config:
     dependency: transitive
     description:
@@ -101,10 +117,10 @@ packages:
     dependency: "direct dev"
     description:
       name: build_runner
-      sha256: "1523ce62448ebac2c15a8ba5fbad8acac169788658a7dd2a1c2d9c2a9318b9a6"
+      sha256: "5367e521935b102bdf1e735d2aab461e36b2edca6517662d088dd04cc39f8d16"
       url: "https://pub.dev"
     source: hosted
-    version: "2.15.0"
+    version: "2.15.1"
   built_collection:
     dependency: transitive
     description:
@@ -153,6 +169,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.1"
+  code_builder:
+    dependency: transitive
+    description:
+      name: code_builder
+      sha256: aa5932e94c6c39c2f9ec4e5e06dfdd11a9430a61f6c41b6ba75b28ce0c481baf
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.12.0"
   collection:
     dependency: "direct main"
     description:
@@ -193,6 +217,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.9"
+  cupertino_ui:
+    dependency: transitive
+    description:
+      name: cupertino_ui
+      sha256: e9dfe7fac704028f8928cbe4028a0be5e8a709498e8daf8247de99e99a32aef3
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   dart_code_linter:
     dependency: "direct dev"
     description:
@@ -293,6 +325,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  flutter_localizations:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -327,6 +364,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0"
+  frontend_server_client:
+    dependency: transitive
+    description:
+      name: frontend_server_client
+      sha256: "404dbf9bce29beafbe9dcb19219447b6f7d49900cd42b8d3b7af102b24508e25"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   glob:
     dependency: transitive
     description:
@@ -351,6 +396,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  hotreloader:
+    dependency: transitive
+    description:
+      name: hotreloader
+      sha256: "66871df468fc24eee81f1a0a7cb98acc104716f9b7376d355437b48d633c4ebf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.4.0"
   html:
     dependency: transitive
     description:
@@ -383,6 +436,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.20.2"
   io:
     dependency: transitive
     description:
@@ -455,6 +516,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
+  lean_builder:
+    dependency: transitive
+    description:
+      name: lean_builder
+      sha256: c16e95ddf7b2d49dd551357b7212fe2ce9f13ec7ad1b1e660c157184031e96c0
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.10"
   lints:
     dependency: transitive
     description:
@@ -495,6 +564,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_ui:
+    dependency: transitive
+    description:
+      name: material_ui
+      sha256: fbfb53cab6c4629438feeade5f3d305f72944bc9d9f25786b19106d32b80ec45
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   meta:
     dependency: transitive
     description:
@@ -972,6 +1049,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.6.1"
+  xxh3:
+    dependency: transitive
+    description:
+      name: xxh3
+      sha256: "399a0438f5d426785723c99da6b16e136f4953fb1e9db0bf270bd41dd4619916"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   yaml:
     dependency: transitive
     description:
@@ -990,4 +1075,4 @@ packages:
     version: "2.2.4"
 sdks:
   dart: ">=3.12.0 <4.0.0"
-  flutter: ">=3.38.4"
+  flutter: ">=3.44.0"
