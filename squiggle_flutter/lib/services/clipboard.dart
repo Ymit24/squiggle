@@ -12,7 +12,8 @@ import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
-const _clipboardPrefix = 'squiggle-nodes:3:';
+const _clipboardFormatPrefix = 'squiggle-nodes:';
+const _clipboardPrefix = '${_clipboardFormatPrefix}3:';
 
 Future<bool> copySelectedNodesToClipboard({
   required EditorContext context,
@@ -120,29 +121,48 @@ Future<List<Node>> _readNodesForPaste({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
-  final text = await _readClipboardPlainText();
+  final nodes = await _nodesFromClipboardText(
+    await _readClipboardPlainText(),
+    context: context,
+    imageRepository: imageRepository,
+  );
+  if (nodes != null && nodes.isNotEmpty) return nodes;
 
-  if (text != null && text.startsWith(_clipboardPrefix)) {
-    final nodes = await decodeNodesFromClipboard(
+  return _readImageForPaste(context: context, imageRepository: imageRepository);
+}
+
+Future<List<Node>?> _nodesFromClipboardText(
+  String? text, {
+  required EditorContext context,
+  required ImageRepository imageRepository,
+}) async {
+  if (text == null) return null;
+
+  if (text.startsWith(_clipboardPrefix)) {
+    return decodeNodesFromClipboard(
       text.substring(_clipboardPrefix.length),
       imageRepository,
     );
-    if (nodes != null && nodes.isNotEmpty) return nodes;
   }
 
-  // Unsupported or malformed Squiggle payloads must not become canvas text.
-  if (text != null &&
-      !text.startsWith('squiggle-nodes:') &&
-      text.trim().isNotEmpty) {
-    return [
-      newTextFeatureAt(
-        Offset.zero,
-        text,
-        configureKind: context.brushes.active.applyTo,
-      ),
-    ];
+  // Unsupported Squiggle payloads must not become canvas text.
+  if (text.startsWith(_clipboardFormatPrefix) || text.trim().isEmpty) {
+    return null;
   }
 
+  return [
+    newTextFeatureAt(
+      Offset.zero,
+      text,
+      configureKind: context.brushes.active.applyTo,
+    ),
+  ];
+}
+
+Future<List<Node>> _readImageForPaste({
+  required EditorContext context,
+  required ImageRepository imageRepository,
+}) async {
   final imported = await imageRepository.importFromClipboard();
   if (imported == null) return [];
 
