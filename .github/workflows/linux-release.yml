@@ -79,11 +79,7 @@ jobs:
 
           echo "Using $bump version bump."
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
-          if [[ "$bump" == "minor" ]]; then
-            echo "release=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "release=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
 
       - name: Increment pre-1.0 version
         id: version
