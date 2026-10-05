@@ -5,9 +5,9 @@ import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/app/squiggle_app.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/repositories/mock_document_library_repository.dart';
 import 'package:window_manager/window_manager.dart';
 
 String get _buildMode {
@@ -31,10 +31,7 @@ void main() async {
 
   final documentStorage = DocumentStorage(imageRepository: imageRepository);
   final context = EditorContext(document: Document());
-  final documentLibraryRepository = DocumentLibraryRepository(
-    documentStorage: documentStorage,
-    context: context,
-  );
+  final documentLibraryRepository = MockDocumentLibraryRepository();
   await documentLibraryRepository.initialize();
 
   final appRouter = AppRouter();

@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/repositories/document_library_repository.dart';
+import 'package:squiggle_flutter/repositories/document_library_repository_impl.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
@@ -14,7 +14,7 @@ void main() {
 
   group('DocumentLibraryRepository', () {
     late Directory tempDir;
-    late DocumentLibraryRepository library;
+    late DocumentLibraryRepositoryImpl library;
     late EditorContext context;
 
     setUp(() async {
@@ -28,7 +28,7 @@ void main() {
         storageDirectory: tempDir,
       );
       context = EditorContext(document: Document());
-      library = DocumentLibraryRepository(
+      library = DocumentLibraryRepositoryImpl(
         documentStorage: documentStorage,
         context: context,
       );
