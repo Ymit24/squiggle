@@ -53,9 +53,11 @@ jobs:
           set -euo pipefail
 
           bump="patch"
+          release="false"
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             bump="$MANUAL_BUMP"
+            release="true"
           else
             labels="$(
               gh api \
@@ -66,6 +68,7 @@ jobs:
 
             if grep -Fxq "release:minor" <<< "$labels"; then
               bump="minor"
+              release="true"
             fi
           fi
 
@@ -79,7 +82,7 @@ jobs:
 
           echo "Using $bump version bump."
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
-          echo "release=true" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
 
       - name: Increment pre-1.0 version
         id: version
