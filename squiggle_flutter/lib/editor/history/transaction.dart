@@ -4,7 +4,10 @@ import 'package:squiggle_flutter/models/node_id.dart';
 
 /// One in-progress document edit.
 abstract interface class Transaction {
+  /// Human-readable label associated with this edit.
   String get label;
+
+  /// Whether this transaction can still be changed, committed, or canceled.
   bool get isOpen;
 
   /// Captures each existing node before its first mutation.

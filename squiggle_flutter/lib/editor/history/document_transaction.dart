@@ -12,6 +12,9 @@ import 'package:squiggle_flutter/models/node_id.dart';
 /// container. Group/ungroup within that scope; transfers between existing
 /// containers require separate edits. Do not mutate other containers directly.
 final class DocumentTransaction implements Transaction {
+  /// Opens an edit scoped to [container], or to [document] when omitted.
+  ///
+  /// Throws an [ArgumentError] if [container] does not belong to [document].
   DocumentTransaction({
     required this.document,
     required this.label,
@@ -22,9 +25,13 @@ final class DocumentTransaction implements Transaction {
     }
   }
 
+  /// Document whose nodes this transaction edits.
   final Document document;
+
+  /// Container whose direct children this transaction may edit.
   final NodeContainer container;
 
+  /// Human-readable label associated with this edit.
   @override
   final String label;
 
@@ -33,9 +40,13 @@ final class DocumentTransaction implements Transaction {
   bool _isOpen = true;
   NodeId? get _containerId => container is Node ? (container as Node).id : null;
 
+  /// Whether this transaction is still open.
   @override
   bool get isOpen => _isOpen;
 
+  /// Saves each direct child in [nodes] before its first mutation.
+  ///
+  /// Throws an [ArgumentError] if any node is not a direct child of [container].
   @override
   void watch(Iterable<Node> nodes) {
     _ensureOpen();
@@ -47,12 +58,14 @@ final class DocumentTransaction implements Transaction {
     }
   }
 
+  /// Saves [node], then applies [change] to it.
   @override
   void update<T extends Node>(T node, void Function(T node) change) {
     watch([node]);
     change(node);
   }
 
+  /// Adds [node] to the scoped container at [index], if supplied.
   @override
   T add<T extends Node>(T node, {int? index}) {
     _ensureOpen();
@@ -62,6 +75,7 @@ final class DocumentTransaction implements Transaction {
     return node;
   }
 
+  /// Removes any listed IDs that currently identify direct children.
   @override
   void removeAll(Iterable<NodeId> ids) {
     _ensureOpen();
@@ -76,6 +90,7 @@ final class DocumentTransaction implements Transaction {
     container.removeAll(nodes.map((node) => node.id));
   }
 
+  /// Reorders the container's direct children to match [ids].
   @override
   void reorder(Iterable<NodeId> ids) {
     _ensureOpen();
@@ -83,6 +98,7 @@ final class DocumentTransaction implements Transaction {
     container.reorder(ids);
   }
 
+  /// Closes this transaction and returns its change, or null if it was a no-op.
   @override
   Commit? commit() {
     _ensureOpen();
@@ -113,6 +129,7 @@ final class DocumentTransaction implements Transaction {
     );
   }
 
+  /// Restores the captured state and closes this transaction.
   @override
   void cancel() {
     _ensureOpen();

@@ -5,20 +5,38 @@ import 'package:squiggle_flutter/models/node.dart';
 
 export 'package:squiggle_flutter/editor/history/edit.dart';
 
+/// Manages the active document edit and its undo and redo history.
+///
+/// Listeners are notified when the committed history changes or an active edit
+/// is canceled. Mutations to the active transaction itself do not notify.
 class History extends ChangeNotifier {
+  /// Creates a history manager for [document].
   History({required this._document});
+
   Transaction? _active;
   final Document _document;
 
   final List<Commit> _undoStack = [];
   final List<Commit> _redoStack = [];
 
+  /// The current transaction.
+  ///
+  /// Throws a [StateError] when [isActive] is false.
   Transaction get active => _active!;
+
+  /// Whether a transaction is currently open.
   bool get isActive => _active != null;
 
+  /// Whether a previously committed edit can be undone.
   bool get canUndo => _undoStack.isNotEmpty;
+
+  /// Whether an undone edit can be redone.
   bool get canRedo => _redoStack.isNotEmpty;
 
+  /// Starts an edit labeled [label], scoped to [container].
+  ///
+  /// When [container] is omitted, the edit is scoped to the document. Throws a
+  /// [StateError] if another transaction is already active.
   void begin(String label, {NodeContainer? container}) {
     if (_active != null) {
       throw StateError('A transaction is already active');
@@ -31,6 +49,9 @@ class History extends ChangeNotifier {
     );
   }
 
+  /// Discards all undo and redo history and notifies listeners.
+  ///
+  /// Throws a [StateError] if a transaction is active.
   void clear() {
     if (_active != null) {
       throw StateError('Cannot clear while a transaction is active');
@@ -42,6 +63,10 @@ class History extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Undoes the most recently committed edit and notifies listeners.
+  ///
+  /// Throws a [StateError] if there is no edit to undo or a transaction is
+  /// active.
   void undo() {
     if (_undoStack.isEmpty) {
       throw StateError('No commits to undo');
@@ -58,6 +83,10 @@ class History extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reapplies the most recently undone edit and notifies listeners.
+  ///
+  /// Throws a [StateError] if there is no edit to redo or a transaction is
+  /// active.
   void redo() {
     if (_redoStack.isEmpty) {
       throw StateError('No commits to redo');
@@ -74,6 +103,11 @@ class History extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Commits the active transaction.
+  ///
+  /// A non-empty commit is added to the undo history and clears the redo
+  /// history. Listeners are notified only when a commit is added. Throws a
+  /// [StateError] if no transaction is active.
   void commit() {
     if (_active == null) {
       throw StateError('No transaction is active');
@@ -90,6 +124,10 @@ class History extends ChangeNotifier {
     }
   }
 
+  /// Cancels the active transaction, restores its changes, and notifies
+  /// listeners.
+  ///
+  /// Throws a [StateError] if no transaction is active.
   void cancel() {
     if (_active == null) {
       throw StateError('No transaction is active');
@@ -101,6 +139,11 @@ class History extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Runs [action] in a transaction labeled [label], then commits it.
+  ///
+  /// If [action] throws, the transaction is canceled and the error is
+  /// rethrown. When [container] is omitted, the transaction is scoped to the
+  /// document. Throws a [StateError] if a transaction is already active.
   void run(
     String label,
     void Function(Transaction transaction) action, {
