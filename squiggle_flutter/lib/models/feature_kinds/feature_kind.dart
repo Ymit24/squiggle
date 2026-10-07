@@ -36,8 +36,11 @@ sealed class FeatureKind {
     feature.size.height,
   );
 
-  bool hitTest(Feature feature, Offset worldPoint) =>
-      boundsFor(feature).contains(worldPoint);
+  bool hitTest(Feature feature, Offset worldPoint) => Rect.fromCenter(
+    center: Offset.zero,
+    width: feature.size.width,
+    height: feature.size.height,
+  ).contains(worldPoint);
 
   bool intersectsRect(Feature feature, Rect rect) =>
       boundsFor(feature).overlaps(rect);

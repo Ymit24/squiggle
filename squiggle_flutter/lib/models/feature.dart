@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:data_models/data_models.dart' as data;
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
@@ -83,8 +85,25 @@ class Feature extends Node {
   }
 
   @override
-  bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
+  bool hitTest(Offset worldPoint) {
+    final centerOrigin = center();
+    final worldInCenterSpace = worldPoint - centerOrigin;
 
+    final c = cos(-localRotationAngle * pi / 180);
+    final s = sin(-localRotationAngle * pi / 180);
+
+    final rotatedWorldPointInCenterSpace = Offset(
+      worldInCenterSpace.dx * c - worldInCenterSpace.dy * s,
+      worldInCenterSpace.dx * s + worldInCenterSpace.dy * c,
+    );
+
+    final localRotatedPoint = rotatedWorldPointInCenterSpace;
+
+    return kind.hitTest(this, localRotatedPoint);
+  }
+
+  // NOTE: use SAT to check if selection rectangle and rotated feature kind intersect.
+  // https://programmerart.weebly.com/separating-axis-theorem.html
   @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
 
@@ -102,6 +121,12 @@ class Feature extends Node {
   );
 
   @override
-  void paint(Canvas canvas, ImageRepository imageRepository) =>
-      kind.paint(this, canvas, imageRepository);
+  void paint(Canvas canvas, ImageRepository imageRepository) {
+    canvas.save();
+    final centerOrigin = center();
+    canvas.translate(centerOrigin.dx, centerOrigin.dy);
+    canvas.rotate(localRotationAngle * pi / 180);
+    kind.paint(this, canvas, imageRepository);
+    canvas.restore();
+  }
 }

@@ -17,13 +17,16 @@ abstract class Node {
     _ => throw FormatException('Unknown node type: ${raw.runtimeType}'),
   };
 
-  Node({this.id = noId, required this.origin});
+  Node({this.id = noId, required this.origin, this.localRotationAngle = 40});
   NodeContainer? _parent;
 
   NodeId id;
 
   /// Relative to parent node.
   Offset origin;
+
+  /// Angle in degrees relative to parent node.
+  double localRotationAngle;
 
   /// Direct owner; null while detached. Maintained by container operations.
   NodeContainer? get parent => _parent;

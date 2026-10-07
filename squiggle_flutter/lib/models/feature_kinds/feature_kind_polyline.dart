@@ -251,7 +251,10 @@ final class FeatureKindPolyline extends FeatureKind
       return path;
     }
 
-    final points = worldPoints(feature.origin, localPoints);
+    final points = worldPoints(
+      Offset(feature.size.width / 2, feature.size.height / 2),
+      localPoints,
+    );
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
       if (direction != null) {

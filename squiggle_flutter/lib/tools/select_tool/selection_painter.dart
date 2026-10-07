@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -34,12 +35,21 @@ abstract final class SelectionPainter {
     final showResizeHandles = context.selection.selectedNodeIds.length == 1;
     for (final featureId in context.selection.selectedNodeIds) {
       final node = context.document.requireNodeById(featureId);
+      canvas.save();
+      final center = node.center();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(node.localRotationAngle * pi / 180);
       paintSelectionBox(
         canvas,
         camera,
-        node.localBounds(),
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: node.localBounds().size.width,
+          height: node.localBounds().size.height,
+        ),
         showResizeHandles: showResizeHandles,
       );
+      canvas.restore();
     }
   }
 
@@ -55,8 +65,17 @@ abstract final class SelectionPainter {
     if (node is! Feature || node.kind is! FeatureKindPolyline) return;
 
     final kind = node.kind as FeatureKindPolyline;
-    for (final point in worldPoints(node.origin, kind.localPoints)) {
+    for (final point in worldPoints(
+      Offset(node.size.width / 2, node.size.height / 2),
+      kind.localPoints,
+    )) {
+      final center = node.center();
+
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(node.localRotationAngle * pi / 180);
       paintVertexHandle(canvas, camera, point);
+      canvas.restore();
     }
   }
 

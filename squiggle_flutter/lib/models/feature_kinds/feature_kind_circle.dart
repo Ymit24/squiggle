@@ -103,7 +103,14 @@ final class FeatureKindCircle extends FeatureKind
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
-    final path = Path()..addOval(bounds);
+    final path = Path()
+      ..addOval(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: bounds.size.width,
+          height: bounds.size.height,
+        ),
+      );
     paintFill(canvas, path, Paint()..color = fillColor, fillType);
     paintStroke(
       canvas,
