@@ -87,6 +87,62 @@ bool segmentIntersectsRect(Offset segmentStart, Offset segmentEnd, Rect rect) {
       segmentsIntersect(segmentStart, segmentEnd, bottomLeft, topLeft);
 }
 
+bool convexPolygonsIntersect(List<Offset> first, List<Offset> second) {
+  if (first.isEmpty || second.isEmpty) {
+    return false;
+  }
+  return !_hasSeparatingAxis(first, second) &&
+      !_hasSeparatingAxis(second, first);
+}
+
+bool rotatedRectIntersectsRect(Rect bounds, Rect rect, double radians) {
+  final corners = [
+    bounds.topLeft,
+    bounds.topRight,
+    bounds.bottomRight,
+    bounds.bottomLeft,
+  ].map((point) => _rotatePointAround(point, bounds.center, radians)).toList();
+  final rectCorners = [
+    rect.topLeft,
+    rect.topRight,
+    rect.bottomRight,
+    rect.bottomLeft,
+  ];
+  return convexPolygonsIntersect(corners, rectCorners);
+}
+
+Offset _rotatePointAround(Offset point, Offset center, double radians) {
+  final relative = point - center;
+  final c = cos(radians);
+  final s = sin(radians);
+  return center +
+      Offset(
+        relative.dx * c - relative.dy * s,
+        relative.dx * s + relative.dy * c,
+      );
+}
+
+bool _hasSeparatingAxis(List<Offset> axesFrom, List<Offset> other) {
+  for (var i = 0; i < axesFrom.length; i++) {
+    final edge = axesFrom[(i + 1) % axesFrom.length] - axesFrom[i];
+    final axis = Offset(-edge.dy, edge.dx);
+    final firstProjection = axesFrom.map(
+      (point) => point.dx * axis.dx + point.dy * axis.dy,
+    );
+    final secondProjection = other.map(
+      (point) => point.dx * axis.dx + point.dy * axis.dy,
+    );
+    final firstMin = firstProjection.reduce((a, b) => a < b ? a : b);
+    final firstMax = firstProjection.reduce((a, b) => a > b ? a : b);
+    final secondMin = secondProjection.reduce((a, b) => a < b ? a : b);
+    final secondMax = secondProjection.reduce((a, b) => a > b ? a : b);
+    if (firstMax < secondMin || secondMax < firstMin) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool segmentsIntersect(Offset a1, Offset a2, Offset b1, Offset b2) {
   final d1 = direction(b1, b2, a1);
   final d2 = direction(b1, b2, a2);

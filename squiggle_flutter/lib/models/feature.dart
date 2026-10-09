@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:data_models/data_models.dart' as data;
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
@@ -102,10 +103,14 @@ class Feature extends Node {
     return kind.hitTest(this, localRotatedPoint);
   }
 
-  // NOTE: use SAT to check if selection rectangle and rotated feature kind intersect.
-  // https://programmerart.weebly.com/separating-axis-theorem.html
   @override
-  bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
+  bool intersectsRect(Rect rect) => localRotationAngle == 0
+      ? kind.intersectsRect(this, rect)
+      : rotatedRectIntersectsRect(
+          localBounds(),
+          rect,
+          localRotationAngle * pi / 180,
+        );
 
   @override
   Feature copyWith({
