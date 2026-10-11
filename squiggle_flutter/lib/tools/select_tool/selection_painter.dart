@@ -25,6 +25,7 @@ abstract final class SelectionPainter {
   ) {
     paintSelectedFeatureBoxes(canvas, camera, context);
     paintSelectedPolylineHandles(canvas, camera, context);
+    paintRotationHandles(canvas, camera, context);
   }
 
   static void paintSelectedFeatureBoxes(
@@ -75,6 +76,30 @@ abstract final class SelectionPainter {
       paintVertexHandle(canvas, camera, point);
       canvas.restore();
     }
+  }
+
+  static void paintRotationHandles(
+    Canvas canvas,
+    Camera camera,
+    EditorContext context,
+  ) {
+    final selectedNodes = context.selection.selectedNodeIds;
+    if (selectedNodes.length != 1) {
+      return;
+    }
+
+    final node = context.document.requireNodeById(selectedNodes.single);
+    final handleOffset = -camera.screenLengthToWorldLength(25);
+
+    final pivot =
+        rotatePoint(
+          node.center(),
+          node.origin.translate(node.localBounds().width / 2, handleOffset),
+          node.localRotationAngle,
+        ) +
+        node.center();
+
+    SelectionPainter._paintCircleHandleAtWorldCenter(canvas, camera, pivot);
   }
 
   static void paintSelectionBox(

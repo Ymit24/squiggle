@@ -2,6 +2,7 @@ import 'package:squiggle_flutter/models/node.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/rotate_handle_util.dart';
 
 class HitTarget {}
 
@@ -20,4 +21,9 @@ class ResizeHandleTarget extends HitTarget {
 class PolylineHandleTarget extends HitTarget {
   PolylineHandleTarget({required this.handle});
   final PolylineHandle handle;
+}
+
+class RotateHandleTarget extends HitTarget {
+  RotateHandleTarget({required this.handle});
+  final RotateHandle handle;
 }

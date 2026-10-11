@@ -150,8 +150,7 @@ class SelectTool extends Tool {
   ) {
     _activeInteractionState.paint(canvas, camera, context, imageRepository);
 
-    SelectionPainter.paintSelectedFeatureBoxes(canvas, camera, context);
-    SelectionPainter.paintSelectedPolylineHandles(canvas, camera, context);
+    SelectionPainter.paintSelection(canvas, camera, context);
   }
 
   @override

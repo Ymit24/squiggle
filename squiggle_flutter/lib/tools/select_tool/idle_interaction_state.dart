@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/click_canvas_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/click_node_state.dart';
+import 'package:squiggle_flutter/tools/select_tool/click_rotate_handle_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/drag_polyline_handle_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
@@ -29,6 +30,7 @@ class IdleInteractionState extends SelectInteractionState {
         handle.handle,
       ),
       PolylineHandleTarget() => EditorCursor.grab,
+      RotateHandleTarget() => EditorCursor.grab,
       NodeTarget() => EditorCursor.grab,
       CanvasTarget() => EditorCursor.basic,
       _ => EditorCursor.basic,
@@ -73,6 +75,12 @@ class IdleInteractionState extends SelectInteractionState {
             selectedNodes: selectedNodes.toList(),
             isShiftPressed: isShiftPressed,
           ),
+          context,
+        );
+        break;
+      case RotateHandleTarget(handle: var handle):
+        parent.transition(
+          ClickRotateHandleState(parent: parent, node: handle.node),
           context,
         );
         break;

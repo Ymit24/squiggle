@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle_util.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
+import 'package:squiggle_flutter/tools/select_tool/rotate_handle_util.dart';
 
 enum SelectionResizeHandle {
   topLeft,
@@ -31,13 +32,23 @@ HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
     if (polyHandle != null) {
       return PolylineHandleTarget(handle: polyHandle);
     }
-    final handle = ResizeHandleUtil.hitTest(
+    final resizeHandle = ResizeHandleUtil.hitTest(
       node,
       worldPosition,
       context.camera,
     );
-    if (handle != null) {
-      return ResizeHandleTarget(handle: handle);
+    if (resizeHandle != null) {
+      return ResizeHandleTarget(handle: resizeHandle);
+    }
+
+    final rotateHandle = RotateHandleUtil.hitTest(
+      node,
+      worldPosition,
+      context.camera,
+    );
+
+    if (rotateHandle != null) {
+      return RotateHandleTarget(handle: rotateHandle);
     }
   }
 
