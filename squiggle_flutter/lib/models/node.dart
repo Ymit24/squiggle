@@ -17,7 +17,7 @@ abstract class Node {
     _ => throw FormatException('Unknown node type: ${raw.runtimeType}'),
   };
 
-  Node({this.id = noId, required this.origin, this.localRotationAngle = 40});
+  Node({this.id = noId, required this.origin, this.localRotationAngle = 0});
   NodeContainer? _parent;
 
   NodeId id;
