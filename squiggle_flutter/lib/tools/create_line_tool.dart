@@ -123,9 +123,17 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
   bool onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) {
-    _activeInteractionState.onDoubleClick(context, worldPosition, camera);
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _activeInteractionState.onDoubleClick(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
     return true;
   }
 

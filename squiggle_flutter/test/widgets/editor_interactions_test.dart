@@ -5,12 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/tools/create_line_tool.dart';
 
 Future<EditorContext> _pumpEditor(
   WidgetTester tester, {
@@ -169,6 +171,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(editor.camera.location, Offset.zero);
     expect(find.byType(ContextMenu), findsOneWidget);
+  });
+
+  testWidgets('double-click ends a polyline without a duplicate vertex', (
+    tester,
+  ) async {
+    final editor = await _pumpEditor(tester);
+    editor.setTool(CreateLineTool());
+
+    await tester.tapAt(const Offset(100, 100));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.tapAt(const Offset(200, 100));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.tapAt(const Offset(200, 200));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.tapAt(const Offset(200, 200));
+    await tester.pumpAndSettle();
+
+    final feature = editor.document.nodes.single as Feature;
+    final kind = feature.kind as FeatureKindPolyline;
+    expect(kind.localPoints, [
+      Offset.zero,
+      const Offset(100, 0),
+      const Offset(100, 100),
+    ]);
+  });
+
+  testWidgets('double-click still starts text editing in the select tool', (
+    tester,
+  ) async {
+    final feature = Feature(
+      origin: const Offset(100, 100),
+      size: const Size(100, 40),
+      kind: FeatureKindText('label'),
+    );
+    final editor = await _pumpEditor(
+      tester,
+      document: Document.fromFeatures([feature]),
+    );
+
+    await tester.tapAt(const Offset(110, 110));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.tapAt(const Offset(110, 110));
+    await tester.pumpAndSettle();
+
+    expect(editor.textEdit.session, isA<EditTextEditSession>());
   });
 
   testWidgets('cancelling a right drag allows the next context click', (

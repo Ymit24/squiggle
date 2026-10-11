@@ -55,11 +55,14 @@ abstract class EditorInteraction {
     required bool isAltPressed,
   }) => false;
 
+  /// Handles the second release of a double-click instead of [onPointerUp].
   bool onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) => false;
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) => false;
 
   bool onKeyEvent(EditorContext context, KeyDownEvent event) => false;
 

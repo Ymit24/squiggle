@@ -54,9 +54,17 @@ class ToolModel extends ChangeNotifier {
   void onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) {
-    _activeTool.onDoubleClick(context, worldPosition, camera);
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _activeTool.onDoubleClick(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
     notifyListeners();
   }
 

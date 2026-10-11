@@ -79,8 +79,25 @@ class PlacingState extends InteractionState<CreateLineTool> {
   void onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) {
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    if (points.length > 1) {
+      points[points.length - 1] = parent.constrainedPoint(
+        points[points.length - 2],
+        worldPosition,
+        isShiftPressed: isShiftPressed,
+      );
+    } else {
+      points.add(
+        parent.constrainedPoint(
+          points.last,
+          worldPosition,
+          isShiftPressed: isShiftPressed,
+        ),
+      );
+    }
     parent.finish(context, points);
   }
 
