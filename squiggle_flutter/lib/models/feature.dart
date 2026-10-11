@@ -88,17 +88,12 @@ class Feature extends Node {
   @override
   bool hitTest(Offset worldPoint) {
     final centerOrigin = center();
-    final worldInCenterSpace = worldPoint - centerOrigin;
 
-    final c = cos(-localRotationAngle * pi / 180);
-    final s = sin(-localRotationAngle * pi / 180);
-
-    final rotatedWorldPointInCenterSpace = Offset(
-      worldInCenterSpace.dx * c - worldInCenterSpace.dy * s,
-      worldInCenterSpace.dx * s + worldInCenterSpace.dy * c,
+    final localRotatedPoint = rotatePoint(
+      centerOrigin,
+      worldPoint,
+      -localRotationAngle,
     );
-
-    final localRotatedPoint = rotatedWorldPointInCenterSpace;
 
     return kind.hitTest(this, localRotatedPoint);
   }
@@ -131,6 +126,7 @@ class Feature extends Node {
     final centerOrigin = center();
     canvas.translate(centerOrigin.dx, centerOrigin.dy);
     canvas.rotate(localRotationAngle * pi / 180);
+    canvas.translate(-centerOrigin.dx, -centerOrigin.dy);
     kind.paint(this, canvas, imageRepository);
     canvas.restore();
   }

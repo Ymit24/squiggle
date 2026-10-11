@@ -101,14 +101,7 @@ final class FeatureKindRectangle extends FeatureKind
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
-    final path = Path()
-      ..addRect(
-        Rect.fromCenter(
-          center: Offset(0, 0),
-          width: bounds.size.width,
-          height: bounds.size.height,
-        ),
-      );
+    final path = Path()..addRect(bounds);
     paintFill(canvas, path, Paint()..color = fillColor, fillType);
     paintStroke(
       canvas,

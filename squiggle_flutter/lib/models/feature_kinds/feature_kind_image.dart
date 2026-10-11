@@ -38,11 +38,7 @@ final class FeatureKindImage extends FeatureKind
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    final bounds = Rect.fromCenter(
-      center: Offset.zero,
-      width: feature.size.width,
-      height: feature.size.height,
-    );
+    final bounds = feature.localBounds();
     final image = imageRepository.getCached(imageId);
     if (image != null) {
       canvas.drawImageRect(

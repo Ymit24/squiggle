@@ -368,3 +368,18 @@ Rect _symmetricCornerBounds(Offset center, Offset dragged, double aspectRatio) {
     height: height,
   );
 }
+
+// TODO: consider moving this somewhere else
+Offset rotatePoint(Offset pivot, Offset point, double localAngleRads) {
+  final worldInCenterSpace = point - pivot;
+
+  final c = cos(localAngleRads * pi / 180);
+  final s = sin(localAngleRads * pi / 180);
+
+  final rotatedWorldPointInCenterSpace = Offset(
+    worldInCenterSpace.dx * c - worldInCenterSpace.dy * s,
+    worldInCenterSpace.dx * s + worldInCenterSpace.dy * c,
+  );
+
+  return rotatedWorldPointInCenterSpace;
+}

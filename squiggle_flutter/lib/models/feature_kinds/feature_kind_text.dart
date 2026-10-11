@@ -114,11 +114,7 @@ final class FeatureKindText extends FeatureKind
     text_painter.paintText(
       canvas,
       label,
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: feature.size.width,
-        height: feature.size.height,
-      ),
+      feature.localBounds(),
       fontSize: fontSize,
       fillColor: strokeColor,
       horizontalAlignment: horizontalAlignment,

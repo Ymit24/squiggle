@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
@@ -21,8 +22,15 @@ class PolylineHandleUtil {
 
     final screenPoint = camera.worldToScreen(worldPoint);
     for (final (pointIndex, localPoint) in polyline.localPoints.indexed) {
+      final rotatedPoint =
+          rotatePoint(
+            node.center(),
+            feature.origin + localPoint,
+            node.localRotationAngle,
+          ) +
+          node.center();
       final hitRect = Rect.fromCenter(
-        center: camera.worldToScreen(feature.origin + localPoint),
+        center: camera.worldToScreen(rotatedPoint),
         width: kSelectionHandleHitSize,
         height: kSelectionHandleHitSize,
       );

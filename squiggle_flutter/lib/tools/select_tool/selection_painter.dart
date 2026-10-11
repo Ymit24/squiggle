@@ -65,15 +65,13 @@ abstract final class SelectionPainter {
     if (node is! Feature || node.kind is! FeatureKindPolyline) return;
 
     final kind = node.kind as FeatureKindPolyline;
-    for (final point in worldPoints(
-      Offset(node.size.width / 2, node.size.height / 2),
-      kind.localPoints,
-    )) {
+    for (final point in worldPoints(node.origin, kind.localPoints)) {
       final center = node.center();
 
       canvas.save();
       canvas.translate(center.dx, center.dy);
       canvas.rotate(node.localRotationAngle * pi / 180);
+      canvas.translate(-center.dx, -center.dy);
       paintVertexHandle(canvas, camera, point);
       canvas.restore();
     }

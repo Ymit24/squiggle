@@ -86,15 +86,39 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
+    final oldCenter = feature.center();
     final points = worldPoints(feature.origin, localPoints);
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
-    // need to rotate worldPosition -rotation around origin
-    points[pointIndex] = worldPosition;
+    final rotatedPosition =
+        rotatePoint(
+          oldCenter,
+          worldPosition,
+          -feature.localRotationAngle,
+        ) +
+        oldCenter;
+
+    points[pointIndex] = rotatedPosition;
+
+    final newCenter = envelopeOfPoints(
+      points,
+      strokePadding: _boundsPadding,
+    ).center;
+    final centerDelta = newCenter - oldCenter;
+    final correction =
+        rotatePoint(Offset.zero, centerDelta, feature.localRotationAngle) -
+        centerDelta;
+    final correctedPoints = [
+      for (final point in points) point + correction,
+    ];
+
     setGeometry(
       feature,
-      origin: points.first,
-      localPoints: localPointsFromWorld(points, points.first),
+      origin: correctedPoints.first,
+      localPoints: localPointsFromWorld(
+        correctedPoints,
+        correctedPoints.first,
+      ),
     );
   }
 
@@ -252,10 +276,7 @@ final class FeatureKindPolyline extends FeatureKind
       return path;
     }
 
-    final points = worldPoints(
-      Offset(feature.size.width / 2, feature.size.height / 2),
-      localPoints,
-    );
+    final points = worldPoints(feature.origin, localPoints);
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
       if (direction != null) {
