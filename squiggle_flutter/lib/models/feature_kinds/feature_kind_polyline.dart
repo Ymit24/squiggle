@@ -89,6 +89,7 @@ final class FeatureKindPolyline extends FeatureKind
     final points = worldPoints(feature.origin, localPoints);
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
+    // need to rotate worldPosition -rotation around origin
     points[pointIndex] = worldPosition;
     setGeometry(
       feature,
