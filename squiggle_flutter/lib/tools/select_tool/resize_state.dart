@@ -13,15 +13,30 @@ import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 class ResizeState extends SelectInteractionState {
   ResizeState({
     required super.parent,
-    required this._handle,
+    required ResizeHandle handle,
     required Offset pointerDownWorld,
-  }) : _resizeOffset =
-           pointerDownWorld -
-           _referenceFor(_handle.handle, _handle.node.localBounds());
+  }) : _handle = handle,
+       _initialBounds = handle.node.localBounds(),
+       _initialCenter = handle.node.localBounds().center,
+       _rotationDegrees = handle.node.localRotationAngle,
+       _resizeOffset =
+           _toUnrotated(
+             handle.node.localBounds().center,
+             pointerDownWorld,
+             handle.node.localRotationAngle,
+           ) -
+           _handlePoint(handle.handle, handle.node.localBounds()),
+       _fixedAnchor = _oppositeAnchor(
+         handle.handle,
+         handle.node.localBounds(),
+       );
 
   final ResizeHandle _handle;
+  final Rect _initialBounds;
+  final Offset _initialCenter;
+  final double _rotationDegrees;
   final Offset _resizeOffset;
-  late final Rect _initialBounds = _handle.node.localBounds();
+  final Offset _fixedAnchor;
 
   bool get _resizesHorizontally =>
       _handle.handle == SelectionResizeHandle.left ||
@@ -81,12 +96,17 @@ class ResizeState extends SelectInteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    final rotatedPoint =
+        _toUnrotated(_initialCenter, worldPosition, _rotationDegrees) -
+        _resizeOffset;
     final newBounds = getNewBounds(
-      worldPosition - _resizeOffset,
+      rotatedPoint,
       lockAspectRatio: isShiftPressed,
       symmetric: isAltPressed,
     );
-    _handle.node.resize(newBounds);
+    _handle.node.resize(
+      isAltPressed ? newBounds : _boundsKeepingAnchorFixed(newBounds),
+    );
   }
 
   Rect getNewBounds(
@@ -208,16 +228,47 @@ class ResizeState extends SelectInteractionState {
     };
   }
 
-  static Offset _referenceFor(SelectionResizeHandle handle, Rect bounds) {
+  Rect _boundsKeepingAnchorFixed(Rect bounds) {
+    final oldAnchor =
+        _initialCenter +
+        rotatePoint(
+          Offset.zero,
+          _fixedAnchor - _initialCenter,
+          _rotationDegrees,
+        );
+    final newCenter = bounds.center;
+    final newAnchor =
+        newCenter +
+        rotatePoint(Offset.zero, _fixedAnchor - newCenter, _rotationDegrees);
+    return bounds.shift(oldAnchor - newAnchor);
+  }
+
+  static Offset _toUnrotated(Offset center, Offset point, double degrees) =>
+      rotatePoint(center, point, -degrees) + center;
+
+  static Offset _handlePoint(SelectionResizeHandle handle, Rect bounds) {
     return switch (handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.top ||
-      SelectionResizeHandle.left => bounds.topLeft,
+      SelectionResizeHandle.topLeft => bounds.topLeft,
+      SelectionResizeHandle.top => bounds.topCenter,
       SelectionResizeHandle.topRight => bounds.topRight,
-      SelectionResizeHandle.right ||
-      SelectionResizeHandle.bottomRight ||
-      SelectionResizeHandle.bottom => bounds.bottomRight,
+      SelectionResizeHandle.right => bounds.centerRight,
+      SelectionResizeHandle.bottomRight => bounds.bottomRight,
+      SelectionResizeHandle.bottom => bounds.bottomCenter,
       SelectionResizeHandle.bottomLeft => bounds.bottomLeft,
+      SelectionResizeHandle.left => bounds.centerLeft,
+    };
+  }
+
+  static Offset _oppositeAnchor(SelectionResizeHandle handle, Rect bounds) {
+    return switch (handle) {
+      SelectionResizeHandle.topLeft => bounds.bottomRight,
+      SelectionResizeHandle.top => bounds.bottomCenter,
+      SelectionResizeHandle.topRight => bounds.bottomLeft,
+      SelectionResizeHandle.right => bounds.centerLeft,
+      SelectionResizeHandle.bottomRight => bounds.topLeft,
+      SelectionResizeHandle.bottom => bounds.topCenter,
+      SelectionResizeHandle.bottomLeft => bounds.topRight,
+      SelectionResizeHandle.left => bounds.centerRight,
     };
   }
 }
