@@ -17,18 +17,21 @@ void main() {
       id: 1,
       originX: 10,
       originY: 20,
+      localRotationAngle: 0,
       children: [_feature(2)],
     );
     final equal = data.Group(
       id: 1,
       originX: 10,
       originY: 20,
+      localRotationAngle: 0,
       children: [_feature(2)],
     );
     final changed = data.Group(
       id: 1,
       originX: 10,
       originY: 20,
+      localRotationAngle: 0,
       children: [_feature(3)],
     );
 
@@ -42,6 +45,7 @@ data.Feature _feature(int id, {double strokeWidth = 2}) => data.Feature(
   id: id,
   originX: 10,
   originY: 20,
+  localRotationAngle: 0,
   width: 100,
   height: 80,
   content: {

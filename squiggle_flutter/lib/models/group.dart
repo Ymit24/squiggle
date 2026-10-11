@@ -6,7 +6,12 @@ import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 class Group extends Node with NodeContainer {
-  Group({super.id, required List<Node> children, required super.origin}) {
+  Group({
+    super.id,
+    required List<Node> children,
+    required super.origin,
+    required super.localRotationAngle,
+  }) {
     for (final child in children) {
       insert(child);
     }
@@ -15,6 +20,7 @@ class Group extends Node with NodeContainer {
   factory Group.fromDataModel(data.Group raw) => Group(
     id: NodeId.newId(raw.id),
     origin: Offset(raw.originX, raw.originY),
+    localRotationAngle: raw.localRotationAngle,
     children: raw.children.map(Node.fromDataModel).toList(),
   );
 
@@ -22,19 +28,22 @@ class Group extends Node with NodeContainer {
   Rect localBounds() => Node.localBoundsOfNodes(children).shift(origin);
 
   @override
-  Group copyWith({NodeId? id, Offset? origin}) => Group(
-    id: id ?? this.id,
-    origin: origin ?? this.origin,
-    children: children
-        .map((child) => child.copyWith(id: id == noId ? noId : null))
-        .toList(),
-  );
+  Group copyWith({NodeId? id, Offset? origin, double? localRotationAngle}) =>
+      Group(
+        id: id ?? this.id,
+        origin: origin ?? this.origin,
+        localRotationAngle: localRotationAngle ?? this.localRotationAngle,
+        children: children
+            .map((child) => child.copyWith(id: id == noId ? noId : null))
+            .toList(),
+      );
 
   @override
   data.Group toDataModel() => data.Group(
     id: id.value,
     originX: origin.dx,
     originY: origin.dy,
+    localRotationAngle: localRotationAngle,
     children: children.map((child) => child.toDataModel()).toList(),
   );
 

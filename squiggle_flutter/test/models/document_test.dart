@@ -319,6 +319,7 @@ data.Feature _rawFeature({required int id, required String type}) =>
       id: id,
       originX: 0,
       originY: 0,
+      localRotationAngle: 0,
       width: 10,
       height: 20,
       content: {

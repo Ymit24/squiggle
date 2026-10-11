@@ -2,7 +2,12 @@ import 'package:data_models/src/feature.dart';
 import 'package:data_models/src/group.dart';
 
 abstract class Node {
-  const Node({required this.id, required this.originX, required this.originY});
+  const Node({
+    required this.id,
+    required this.originX,
+    required this.originY,
+    required this.localRotationAngle,
+  });
 
   factory Node.fromJson(Map<String, dynamic> json) => switch (json['type']) {
     'feature' => Feature.fromJson(json),
@@ -13,6 +18,7 @@ abstract class Node {
   final int id;
   final double originX;
   final double originY;
+  final double localRotationAngle;
 
   Map<String, dynamic> toJson();
 
@@ -21,5 +27,6 @@ abstract class Node {
     'id': id,
     'originX': originX,
     'originY': originY,
+    'localRotationAngle': localRotationAngle,
   };
 }

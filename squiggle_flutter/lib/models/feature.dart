@@ -21,6 +21,7 @@ class Feature extends Node {
   Feature({
     super.id,
     required super.origin,
+    required super.localRotationAngle,
     required this.size,
     required this.kind,
   });
@@ -39,6 +40,7 @@ class Feature extends Node {
     return Feature(
       id: NodeId.newId(raw.id),
       origin: Offset(raw.originX, raw.originY),
+      localRotationAngle: raw.localRotationAngle,
       size: Size(raw.width, raw.height),
       kind: kind,
     );
@@ -57,6 +59,7 @@ class Feature extends Node {
       id: id.value,
       originX: origin.dx,
       originY: origin.dy,
+      localRotationAngle: localRotationAngle,
       width: size.width,
       height: size.height,
       content: kind.toDataModel(),
@@ -111,11 +114,13 @@ class Feature extends Node {
   Feature copyWith({
     NodeId? id,
     Offset? origin,
+    double? localRotationAngle,
     Size? size,
     FeatureKind? kind,
   }) => Feature(
     id: id ?? this.id,
     origin: origin ?? this.origin,
+    localRotationAngle: localRotationAngle ?? this.localRotationAngle,
     size: size ?? this.size,
     kind: (kind ?? this.kind).clone(),
   );

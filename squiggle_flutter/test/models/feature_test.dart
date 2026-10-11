@@ -185,6 +185,7 @@ data.Feature _rawFeature(String type) {
     id: 42,
     originX: 12.5,
     originY: -8.25,
+    localRotationAngle: 0,
     width: 100.5,
     height: 200.25,
     content: content,

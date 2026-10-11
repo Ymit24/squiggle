@@ -7,6 +7,7 @@ final class Group extends Node {
     required super.id,
     required super.originX,
     required super.originY,
+    required super.localRotationAngle,
     required this.children,
   });
 
@@ -14,6 +15,7 @@ final class Group extends Node {
     id: json['id'] as int,
     originX: (json['originX'] as num).toDouble(),
     originY: (json['originY'] as num).toDouble(),
+    localRotationAngle: (json['localRotationAngle'] as num).toDouble(),
     children: [
       for (final child in json['children'] as List<dynamic>)
         Node.fromJson(child as Map<String, dynamic>),
