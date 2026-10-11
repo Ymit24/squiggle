@@ -91,11 +91,7 @@ final class FeatureKindPolyline extends FeatureKind
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
     final rotatedPosition =
-        rotatePoint(
-          oldCenter,
-          worldPosition,
-          -feature.localRotationAngle,
-        ) +
+        rotatePoint(oldCenter, worldPosition, -feature.localRotationAngle) +
         oldCenter;
 
     points[pointIndex] = rotatedPosition;
@@ -108,17 +104,12 @@ final class FeatureKindPolyline extends FeatureKind
     final correction =
         rotatePoint(Offset.zero, centerDelta, feature.localRotationAngle) -
         centerDelta;
-    final correctedPoints = [
-      for (final point in points) point + correction,
-    ];
+    final correctedPoints = [for (final point in points) point + correction];
 
     setGeometry(
       feature,
       origin: correctedPoints.first,
-      localPoints: localPointsFromWorld(
-        correctedPoints,
-        correctedPoints.first,
-      ),
+      localPoints: localPointsFromWorld(correctedPoints, correctedPoints.first),
     );
   }
 
@@ -140,15 +131,17 @@ final class FeatureKindPolyline extends FeatureKind
       return false;
     }
 
+    final originBased = worldPoint + feature.center();
+
     final threshold = _selectionTolerance;
     final points = worldPoints(feature.origin, localPoints);
     for (var i = 0; i < points.length - 1; i++) {
-      if (distanceToSegment(worldPoint, points[i], points[i + 1]) <=
+      if (distanceToSegment(originBased, points[i], points[i + 1]) <=
           threshold) {
         return true;
       }
     }
-    return _arrowPaths(points).any((path) => path.contains(worldPoint));
+    return _arrowPaths(points).any((path) => path.contains(originBased));
   }
 
   @override
