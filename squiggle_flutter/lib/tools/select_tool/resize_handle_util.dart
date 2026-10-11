@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 
@@ -9,7 +10,12 @@ import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 class ResizeHandleUtil {
   static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {
     final resizeHandles = getResizeHandles(node, camera);
-    final screenPoint = camera.worldToScreen(worldPoint);
+    final rotatedPoint = rotatePoint(
+      node.center(),
+      worldPoint,
+      -node.localRotationAngle,
+    );
+    final screenPoint = camera.worldToScreen(rotatedPoint + node.center());
     for (final handle in resizeHandles) {
       if (handle.geometry.contains(screenPoint)) {
         return handle;
