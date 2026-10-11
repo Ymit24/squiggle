@@ -7,8 +7,8 @@ import 'package:squiggle_flutter/models/group.dart';
 void main() {
   test('nested local and global bounds use each ancestor origin once', () {
     final child = rectangle(const Rect.fromLTWH(-10, 20, 30, 40));
-    final nested = Group(origin: const Offset(50, 60), children: [child]);
-    final outer = Group(origin: const Offset(100, 200), children: [nested]);
+    final nested = Group(localRotationAngle: 0, origin: const Offset(50, 60), children: [child]);
+    final outer = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: [nested]);
 
     expect(child.localBounds(), const Rect.fromLTWH(-10, 20, 30, 40));
     expect(child.globalOrigin, const Offset(140, 280));
@@ -19,6 +19,7 @@ void main() {
 
   test('hit testing and box selection include gaps between children', () {
     final group = Group(
+      localRotationAngle: 0,
       origin: const Offset(100, 200),
       children: [
         rectangle(const Rect.fromLTWH(-10, 0, 20, 20)),
@@ -37,6 +38,7 @@ void main() {
       final first = rectangle(const Rect.fromLTWH(-10, 20, 20, 30));
       final second = rectangle(const Rect.fromLTWH(30, 60, 10, 10));
       final group = Group(
+        localRotationAngle: 0,
         origin: const Offset(100, 200),
         children: [first, second],
       );
@@ -51,8 +53,8 @@ void main() {
 
     test('resizes nested groups in their parent coordinates', () {
       final feature = rectangle(const Rect.fromLTWH(10, 20, 30, 40));
-      final nested = Group(origin: const Offset(50, 60), children: [feature]);
-      final group = Group(origin: const Offset(100, 200), children: [nested]);
+      final nested = Group(localRotationAngle: 0, origin: const Offset(50, 60), children: [feature]);
+      final group = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: [nested]);
 
       group.resize(const Rect.fromLTWH(300, 400, 60, 120));
 
@@ -64,6 +66,7 @@ void main() {
 
     test('delegates polyline geometry resizing', () {
       final feature = Feature(
+        localRotationAngle: 0,
         origin: const Offset(10, 20),
         size: const Size(30, 40),
         kind: FeatureKindPolyline([
@@ -71,7 +74,7 @@ void main() {
           Offset(30, 40),
         ], strokeWidth: 0),
       );
-      final group = Group(origin: const Offset(100, 200), children: [feature]);
+      final group = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: [feature]);
 
       group.resize(const Rect.fromLTWH(300, 400, 60, 120));
 
@@ -86,6 +89,7 @@ void main() {
       for (final size in [const Size(0, 20), const Size(20, 0), Size.zero]) {
         final feature = rectangle(Offset(10, 20) & size);
         final group = Group(
+          localRotationAngle: 0,
           origin: const Offset(100, 200),
           children: [feature],
         );
@@ -101,7 +105,7 @@ void main() {
     });
 
     test('moves empty groups without introducing nonfinite bounds', () {
-      final group = Group(origin: const Offset(100, 200), children: []);
+      final group = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: []);
 
       group.resize(const Rect.fromLTWH(300, 400, 60, 120));
 
@@ -111,6 +115,7 @@ void main() {
 }
 
 Feature rectangle(Rect bounds) => Feature(
+  localRotationAngle: 0,
   origin: bounds.topLeft,
   size: bounds.size,
   kind: FeatureKindRectangle(),

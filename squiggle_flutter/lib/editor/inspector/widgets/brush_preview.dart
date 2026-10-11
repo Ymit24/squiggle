@@ -53,15 +53,22 @@ class _BrushPainter extends CustomPainter {
     final samples = [
       Feature(
         origin: const Offset(3, 3),
+        localRotationAngle: 0,
         size: const Size(18, 18),
         kind: rectangle,
       ),
       Feature(
         origin: const Offset(29, 1),
+        localRotationAngle: 0,
         size: const Size(32, 22),
         kind: text,
       ),
-      Feature(origin: const Offset(69, 12), size: Size.zero, kind: line),
+      Feature(
+        origin: const Offset(69, 12),
+        localRotationAngle: 0,
+        size: Size.zero,
+        kind: line,
+      ),
     ];
     canvas.save();
     canvas.clipRect(Offset.zero & size);

@@ -18,6 +18,7 @@ void main() {
       context = EditorContext(
         document: Document.fromFeatures([
           Feature(
+            localRotationAngle: 0,
             origin: const Offset(0, 0),
             size: const Size(200, 48),
             kind: FeatureKindText(
@@ -72,6 +73,7 @@ void main() {
         context = EditorContext(
           document: Document.fromFeatures([
             Feature(
+              localRotationAngle: 0,
               origin: Offset.zero,
               size: const Size(200, 48),
               kind: testCase.createKind(),

@@ -168,6 +168,7 @@ Future<List<Node>> _readImageForPaste({
 
   final feature = Feature(
     origin: Offset.zero,
+    localRotationAngle: 0,
     size: clampImageWorldSize(imported.intrinsicSize),
     kind: FeatureKindImage(imported.imageId),
   );

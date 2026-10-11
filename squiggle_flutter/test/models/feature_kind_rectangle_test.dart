@@ -89,6 +89,7 @@ void main() {
     test('grows height when wrapped label would overflow', () {
       final kind = FeatureKindRectangle();
       final feature = Feature(
+        localRotationAngle: 0,
         origin: const Offset(10, 20),
         size: const Size(80, 20),
         kind: kind,
@@ -104,6 +105,7 @@ void main() {
     test('does not shrink height when label fits or is empty', () {
       final kind = FeatureKindRectangle();
       final feature = Feature(
+        localRotationAngle: 0,
         origin: Offset.zero,
         size: const Size(200, 200),
         kind: kind,

@@ -16,6 +16,7 @@ void main() {
       context = EditorContext(
         document: Document.fromFeatures([
           Feature(
+            localRotationAngle: 0,
             origin: const Offset(0, 0),
             size: const Size(100, 100),
             kind: FeatureKindRectangle(),

@@ -28,6 +28,7 @@ void main() {
         document: Document.fromFeatures([
           for (var i = 0; i < 3; i++)
             Feature(
+              localRotationAngle: 0,
               origin: Offset(i * 10.0, 0),
               size: const Size(10, 10),
               kind: FeatureKindRectangle(),
@@ -130,6 +131,7 @@ void main() {
     final context = EditorContext(
       document: Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
@@ -280,6 +282,7 @@ void main() {
     final context = EditorContext(
       document: Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
@@ -326,6 +329,7 @@ void main() {
     context.history.run('Add feature', (transaction) {
       transaction.add(
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
@@ -376,6 +380,7 @@ void main() {
     final context = EditorContext(
       document: Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
@@ -426,6 +431,7 @@ void main() {
     final context = EditorContext(
       document: Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),

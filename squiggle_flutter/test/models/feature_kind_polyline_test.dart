@@ -12,6 +12,7 @@ Feature polylineFeature({
   List<Offset> localPoints = const [Offset.zero, Offset(100, 100)],
 }) {
   return Feature(
+    localRotationAngle: 0,
     origin: origin,
     size: size,
     kind: FeatureKindPolyline(

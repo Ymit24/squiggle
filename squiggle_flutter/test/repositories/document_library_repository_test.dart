@@ -84,6 +84,7 @@ void main() {
       context.history.run('Add feature', (transaction) {
         transaction.add(
           Feature(
+            localRotationAngle: 0,
             origin: const Offset(0, 0),
             size: const Size(10, 10),
             kind: FeatureKindRectangle(),

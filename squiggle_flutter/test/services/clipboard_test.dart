@@ -38,17 +38,20 @@ void main() {
       final png = await _testPng();
       final imported = (await source.importPngBytes(png))!;
       final image = Feature(
+        localRotationAngle: 0,
         id: NodeId.newId(12),
         origin: const Offset(5, 7),
         size: const Size(8, 6),
         kind: FeatureKindImage(imported.imageId, strokeWidth: 3),
       );
       final nested = Group(
+        localRotationAngle: 0,
         id: NodeId.newId(11),
         origin: const Offset(20, 30),
         children: [image],
       );
       final group = Group(
+        localRotationAngle: 0,
         id: NodeId.newId(10),
         origin: const Offset(100, 200),
         children: [
@@ -88,6 +91,7 @@ void main() {
 
   test('text round-trips without image attachments', () async {
     final feature = Feature(
+      localRotationAngle: 0,
       id: NodeId.newId(42),
       origin: const Offset(10, 20),
       size: const Size(120, 80),
@@ -104,6 +108,7 @@ void main() {
 
   test('rejects malformed nodes and missing or invalid images', () async {
     final image = Feature(
+      localRotationAngle: 0,
       origin: Offset.zero,
       size: const Size(8, 6),
       kind: FeatureKindImage('missing.png'),

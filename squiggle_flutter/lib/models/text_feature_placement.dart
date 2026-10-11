@@ -26,5 +26,5 @@ Feature newTextFeatureAt(
     width: defaultNewTextWidth,
     fontSize: kind.fontSize,
   );
-  return Feature(origin: origin, size: size, kind: kind);
+  return Feature(origin: origin, localRotationAngle: 0, size: size, kind: kind);
 }

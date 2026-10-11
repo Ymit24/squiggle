@@ -151,6 +151,7 @@ void main() {
 
     test('drag creates rectangle feature', () {
       final previous = Feature(
+        localRotationAngle: 0,
         origin: const Offset(200, 200),
         size: const Size(50, 50),
         kind: FeatureKindRectangle(),

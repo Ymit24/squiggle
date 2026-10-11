@@ -56,30 +56,35 @@ void main() {
     group('Encode', () {
       final features = <Feature>[
         Feature(
+          localRotationAngle: 0,
           id: NodeId.newId(42),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: FeatureKindRectangle(),
         ),
         Feature(
+          localRotationAngle: 0,
           id: NodeId.newId(43),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: FeatureKindCircle(),
         ),
         Feature(
+          localRotationAngle: 0,
           id: NodeId.newId(44),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: FeatureKindText('text'),
         ),
         Feature(
+          localRotationAngle: 0,
           id: NodeId.newId(45),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
           kind: FeatureKindPolyline([Offset.zero, Offset(1, 1)]),
         ),
         Feature(
+          localRotationAngle: 0,
           id: NodeId.newId(46),
           origin: const Offset(12.5, -8.25),
           size: const Size(100.5, 200.25),
@@ -135,6 +140,7 @@ void main() {
 
   test('copyWith deep-copies mutable kind data', () {
     final original = Feature(
+      localRotationAngle: 0,
       origin: Offset.zero,
       size: const Size(10, 10),
       kind: FeatureKindPolyline([Offset.zero, const Offset(10, 10)]),

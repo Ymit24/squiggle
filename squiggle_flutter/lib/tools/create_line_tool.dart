@@ -198,6 +198,11 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     final localPoints = localPointsFromWorld(worldPoints, origin);
     final kind = FeatureKindPolyline(localPoints);
     context.brushes.active.applyTo(kind);
-    return Feature(origin: origin, size: Size.zero, kind: kind);
+    return Feature(
+      origin: origin,
+      localRotationAngle: 0,
+      size: Size.zero,
+      kind: kind,
+    );
   }
 }

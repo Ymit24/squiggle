@@ -19,11 +19,13 @@ class SelectToolTestHarness {
   static EditorContext defaultContext() => EditorContext(
     document: Document.fromFeatures([
       Feature(
+        localRotationAngle: 0,
         origin: const Offset(0, 0),
         size: const Size(100, 100),
         kind: FeatureKindRectangle(),
       ),
       Feature(
+        localRotationAngle: 0,
         origin: const Offset(200, 0),
         size: const Size(100, 100),
         kind: FeatureKindRectangle(),
@@ -34,6 +36,7 @@ class SelectToolTestHarness {
   static EditorContext polylineContext() => EditorContext(
     document: Document.fromFeatures([
       Feature(
+        localRotationAngle: 0,
         origin: const Offset(0, 0),
         size: const Size(100, 100),
         kind: FeatureKindPolyline([

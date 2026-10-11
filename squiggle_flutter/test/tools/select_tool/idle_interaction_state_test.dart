@@ -143,6 +143,6 @@ void main() {
 
 EditorContext _labelContext(FeatureKind kind) => EditorContext(
   document: Document.fromFeatures([
-    Feature(origin: Offset.zero, size: const Size(200, 48), kind: kind),
+    Feature(localRotationAngle: 0, origin: Offset.zero, size: const Size(200, 48), kind: kind),
   ]),
 );

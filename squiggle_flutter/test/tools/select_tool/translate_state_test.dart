@@ -18,6 +18,7 @@ void main() {
         document: Document.fromFeatures([
           for (final x in [0.0, 100.0, 200.0])
             Feature(
+              localRotationAngle: 0,
               origin: Offset(x, 0),
               size: const Size(50, 50),
               kind: FeatureKindRectangle(),

@@ -17,7 +17,7 @@ void main() {
           FeatureKindCircle(fillType: FillType.lines),
           FeatureKindPolyline([Offset.zero, const Offset(100, 0)]),
         ])
-          Feature(origin: Offset.zero, size: const Size(100, 60), kind: kind),
+          Feature(localRotationAngle: 0, origin: Offset.zero, size: const Size(100, 60), kind: kind),
       ];
       final context = EditorContext(document: Document.fromFeatures(features));
       List<FillType> types() => [

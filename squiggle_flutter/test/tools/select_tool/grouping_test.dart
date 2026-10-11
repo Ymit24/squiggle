@@ -11,7 +11,7 @@ void main() {
     final document = harness.context.document;
     final children = document.nodes.toList();
     document.removeAll(children.map((node) => node.id));
-    final group = Group(origin: const Offset(100, 200), children: children);
+    final group = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: children);
     document.addNode(group);
 
     // The point is in the gap between the two children.
@@ -159,10 +159,10 @@ void main() {
     final children = document.nodes.toList();
     document.removeAll(children.map((node) => node.id));
     final firstGroup = document.addNode(
-      Group(origin: Offset.zero, children: [children.first]),
+      Group(localRotationAngle: 0, origin: Offset.zero, children: [children.first]),
     );
     final secondGroup = document.addNode(
-      Group(origin: Offset.zero, children: [children.last]),
+      Group(localRotationAngle: 0, origin: Offset.zero, children: [children.last]),
     );
     harness.context.selection.setSelection([firstGroup.id, secondGroup.id]);
 

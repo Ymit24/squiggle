@@ -17,11 +17,13 @@ EditorContext selectedContext() {
   final context = EditorContext(
     document: Document.fromFeatures([
       Feature(
+        localRotationAngle: 0,
         origin: const Offset(10, 20),
         size: const Size(40, 60),
         kind: FeatureKindRectangle(),
       ),
       Feature(
+        localRotationAngle: 0,
         origin: const Offset(100, 200),
         size: const Size(50, 70),
         kind: FeatureKindCircle(),
@@ -165,11 +167,12 @@ void main() {
     (tester) async {
       final context = selectedContext();
       final child = Feature(
+        localRotationAngle: 0,
         origin: Offset.zero,
         size: const Size(20, 20),
         kind: FeatureKindRectangle(),
       );
-      final group = Group(origin: Offset.zero, children: [child]);
+      final group = Group(localRotationAngle: 0, origin: Offset.zero, children: [child]);
       context.document.addNode(group);
       for (final ids in [
         [NodeId.newId(999)],

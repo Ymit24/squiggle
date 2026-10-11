@@ -174,7 +174,7 @@ void main() {
   test('begin and run forward the container and share one history stack', () {
     final child = _rectangle();
     final container = document.insert(
-      Group(origin: Offset.zero, children: [child]),
+      Group(localRotationAngle: 0, origin: Offset.zero, children: [child]),
     );
     history.begin('Move child', container: container);
     history.active.update(child, (node) => node.origin = const Offset(5, 0));
@@ -199,6 +199,7 @@ void main() {
 }
 
 Feature _rectangle() => Feature(
+  localRotationAngle: 0,
   origin: Offset.zero,
   size: const Size(100, 80),
   kind: FeatureKindRectangle(),

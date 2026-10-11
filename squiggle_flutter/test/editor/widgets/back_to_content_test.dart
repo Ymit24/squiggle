@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 void main() {
   test('jumps to the closest node and cancels viewport motion', () {
     final nearby = Feature(
+      localRotationAngle: 0,
       origin: const Offset(300, 200),
       size: const Size(20, 20),
       kind: FeatureKindRectangle(),
@@ -17,6 +18,7 @@ void main() {
         EditorContext(
             document: Document.fromFeatures([
               Feature(
+                localRotationAngle: 0,
                 origin: const Offset(-1000, -1000),
                 size: const Size(20, 20),
                 kind: FeatureKindRectangle(),

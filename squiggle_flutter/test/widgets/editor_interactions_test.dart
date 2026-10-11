@@ -54,6 +54,7 @@ Future<void> _rightClick(WidgetTester tester, Offset position) async {
 }
 
 Feature _rectangle(Offset origin) => Feature(
+  localRotationAngle: 0,
   origin: origin,
   size: const Size(100, 100),
   kind: FeatureKindRectangle(),

@@ -40,6 +40,7 @@ void main() {
 
 Future<ByteData> _paintFeature(FeatureKind kind) async {
   final feature = Feature(
+    localRotationAngle: 0,
     origin: const Offset(10, 10),
     size: const Size(100, 60),
     kind: kind,

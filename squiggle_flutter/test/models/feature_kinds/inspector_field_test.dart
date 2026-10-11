@@ -9,8 +9,8 @@ void main() {
     final firstKind = FeatureKindCircle(strokeWidth: 1);
     final secondKind = FeatureKindCircle(strokeWidth: 3);
     final features = [
-      Feature(origin: Offset.zero, size: const Size(10, 10), kind: firstKind),
-      Feature(origin: Offset.zero, size: const Size(20, 20), kind: secondKind),
+      Feature(localRotationAngle: 0, origin: Offset.zero, size: const Size(10, 10), kind: firstKind),
+      Feature(localRotationAngle: 0, origin: Offset.zero, size: const Size(20, 20), kind: secondKind),
     ];
 
     final fields = InspectorField.byKeyForFeatures(features);

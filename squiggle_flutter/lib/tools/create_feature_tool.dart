@@ -122,7 +122,12 @@ class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
   Feature _buildFeature(EditorContext context, Rect bounds) {
     final styledKind = kind.clone();
     context.brushes.active.applyTo(styledKind);
-    return Feature(origin: bounds.topLeft, size: bounds.size, kind: styledKind);
+    return Feature(
+      origin: bounds.topLeft,
+      localRotationAngle: 0,
+      size: bounds.size,
+      kind: styledKind,
+    );
   }
 
   Rect _boundsFromDrag(

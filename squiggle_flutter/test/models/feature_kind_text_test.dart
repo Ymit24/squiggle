@@ -66,6 +66,7 @@ void main() {
     test('preserves width and font size while fitting height to contents', () {
       final kind = FeatureKindText('short', fontSize: 24);
       final feature = Feature(
+        localRotationAngle: 0,
         origin: const Offset(10, 20),
         size: const Size(100, 200),
         kind: kind,
@@ -85,6 +86,7 @@ void main() {
     test('empty content has the height of one line', () {
       final kind = FeatureKindText('text', fontSize: 24);
       final feature = Feature(
+        localRotationAngle: 0,
         origin: Offset.zero,
         size: const Size(100, 200),
         kind: kind,

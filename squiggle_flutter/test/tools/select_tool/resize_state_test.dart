@@ -118,12 +118,13 @@ void main() {
       final document = harness.context.document;
       document.removeAll(document.nodes.map((node) => node.id).toList());
       final feature = Feature(
+        localRotationAngle: 0,
         origin: Offset.zero,
         size: const Size(100, 100),
         kind: FeatureKindRectangle(),
       );
-      final nested = Group(origin: Offset.zero, children: [feature]);
-      final outer = Group(origin: const Offset(100, 200), children: [nested]);
+      final nested = Group(localRotationAngle: 0, origin: Offset.zero, children: [feature]);
+      final outer = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: [nested]);
       document.addNode(outer);
       harness.context.selection.selectNode(outer.id);
       final handle = ResizeHandleUtil.getResizeHandles(outer, harness.camera)
@@ -148,7 +149,7 @@ void main() {
       final document = harness.context.document;
       final children = document.nodes.toList();
       document.removeAll(children.map((node) => node.id));
-      final group = Group(origin: const Offset(100, 200), children: children);
+      final group = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: children);
       document.addNode(group);
       harness.context.selection.selectNode(group.id);
       final before = document.toDataModel().nodes;
@@ -412,6 +413,7 @@ EditorContext _textContext({required String contents, required Size size}) =>
     EditorContext(
       document: Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: Offset.zero,
           size: size,
           kind: FeatureKindText(contents, strokeColor: const Color(0xFFFFFFFF)),

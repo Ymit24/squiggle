@@ -21,6 +21,7 @@ EditorContext selectedContext() {
     document: Document.fromFeatures([
       for (var i = 0; i < 3; i++)
         Feature(
+          localRotationAngle: 0,
           origin: Offset(i * 100, 20),
           size: const Size(40, 60),
           kind: FeatureKindRectangle(),

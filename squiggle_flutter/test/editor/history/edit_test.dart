@@ -101,6 +101,7 @@ void main() {
 
     test('captures and restores groups through Node data models', () {
       final group = Group(
+        localRotationAngle: 0,
         id: NodeId.newId(1),
         origin: const Offset(10, 20),
         children: [_rectangle(2, Offset.zero)],
@@ -124,6 +125,7 @@ void main() {
       final document = Document();
       final edit = DocumentTransaction(document: document, label: 'Add group');
       final group = Group(
+        localRotationAngle: 0,
         origin: Offset.zero,
         children: [_rectangle(2, Offset.zero)],
       );
@@ -148,6 +150,7 @@ void main() {
 }
 
 Feature _rectangle(int id, Offset origin) => Feature(
+  localRotationAngle: 0,
   id: NodeId.newId(id),
   origin: origin,
   size: const Size(100, 80),

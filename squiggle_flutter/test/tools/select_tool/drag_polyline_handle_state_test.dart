@@ -59,6 +59,7 @@ void main() {
         document: Document.fromFeatures([
           for (final x in [0.0, 200.0])
             Feature(
+              localRotationAngle: 0,
               origin: Offset(x, 0),
               size: const Size(100, 1),
               kind: FeatureKindPolyline([

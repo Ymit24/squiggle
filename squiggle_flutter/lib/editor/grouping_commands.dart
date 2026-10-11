@@ -56,6 +56,7 @@ void groupSelectedNodes(EditorContext context) {
     final group = Group(
       children: selectedNodes.toList(),
       origin: bounds.center,
+      localRotationAngle: 0,
     );
     transaction.add(group, index: insertionIndex);
     context.selection.setSelection([group.id]);

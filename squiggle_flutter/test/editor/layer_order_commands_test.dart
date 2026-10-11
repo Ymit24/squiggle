@@ -11,6 +11,7 @@ EditorContext makeContext() => EditorContext(
   document: Document.fromFeatures([
     for (var i = 0; i < 4; i++)
       Feature(
+        localRotationAngle: 0,
         origin: Offset(i * 10.0, 0),
         size: const Size(10, 10),
         kind: FeatureKindRectangle(),
@@ -71,7 +72,7 @@ void main() {
     final children = context.document.nodes.toList();
     context.document.removeAll(children.map((node) => node.id));
     final group =
-        context.document.addNode(Group(origin: Offset.zero, children: children))
+        context.document.addNode(Group(localRotationAngle: 0, origin: Offset.zero, children: children))
             as Group;
     context.selection.setSelection([children.first.id]);
     reorderSelectedNodes(context, LayerOrder.front);

@@ -10,7 +10,7 @@ import 'package:squiggle_flutter/models/node_id.dart';
 
 void main() {
   test('duplicated subtrees receive fresh IDs and replay independently', () {
-    final original = Group(origin: Offset.zero, children: [rect(12)]);
+    final original = Group(localRotationAngle: 0, origin: Offset.zero, children: [rect(12)]);
     final doc = Document()..insert(original);
     final edit = DocumentTransaction(document: doc, label: 'Duplicate');
     final copy = edit.add(original.copyWith(id: noId));
@@ -35,7 +35,7 @@ void main() {
 
   test('containers maintain ownership, views and global descendant IDs', () {
     final child = rect(40);
-    final group = Group(origin: Offset.zero, children: [child]);
+    final group = Group(localRotationAngle: 0, origin: Offset.zero, children: [child]);
     final doc = Document()..insert(group);
     final roots = doc.nodes;
     expect(identical(roots, doc.nodes), isTrue);
@@ -67,7 +67,7 @@ void main() {
     a.origin -= const Offset(10, 10);
     b.origin -= const Offset(10, 10);
     final group = grouping.add(
-      Group(origin: const Offset(10, 10), children: [a, b]),
+      Group(localRotationAngle: 0, origin: const Offset(10, 10), children: [a, b]),
     );
     final grouped = grouping.commit()!;
 
@@ -112,7 +112,7 @@ void main() {
 
   test('nested grouping cancellation restores only its container', () {
     final a = rect(1), b = rect(2);
-    final parent = Group(origin: Offset.zero, children: [a, b]);
+    final parent = Group(localRotationAngle: 0, origin: Offset.zero, children: [a, b]);
     final doc = Document()..insert(parent);
     final edit = DocumentTransaction(
       document: doc,
@@ -120,7 +120,7 @@ void main() {
       label: 'Group',
     );
     edit.removeAll([a.id, b.id]);
-    final added = edit.add(Group(origin: Offset.zero, children: [a, b]));
+    final added = edit.add(Group(localRotationAngle: 0, origin: Offset.zero, children: [a, b]));
     edit.cancel();
     expect(parent.children.map((node) => node.id), [a.id, b.id]);
     expect(doc.nodeById(added.id), isNull);
@@ -130,7 +130,7 @@ void main() {
 
   test('nested stacking and deletion restore order and global index', () {
     final a = rect(1), b = rect(2), c = rect(3);
-    final parent = Group(origin: Offset.zero, children: [a, b, c]);
+    final parent = Group(localRotationAngle: 0, origin: Offset.zero, children: [a, b, c]);
     final doc = Document()..insert(parent);
     final reorder = DocumentTransaction(
       document: doc,
@@ -173,12 +173,12 @@ void main() {
 
   test('rejects foreign children, duplicate subtree IDs and cycles', () {
     final child = rect(9);
-    final group = Group(origin: Offset.zero, children: [child]);
+    final group = Group(localRotationAngle: 0, origin: Offset.zero, children: [child]);
     final doc = Document()..insert(group);
     final edit = DocumentTransaction(document: doc, label: 'Root');
     expect(() => edit.watch([child]), throwsArgumentError);
     expect(() => doc.insert(child), throwsStateError);
-    final duplicate = Group(origin: Offset.zero, children: [rect(9)]);
+    final duplicate = Group(localRotationAngle: 0, origin: Offset.zero, children: [rect(9)]);
     expect(() => doc.insert(duplicate), throwsArgumentError);
     expect(duplicate.parent, isNull);
     expect(doc.nodeById(child.id), same(child));
@@ -188,6 +188,7 @@ void main() {
 }
 
 Feature rect([int id = 0]) => Feature(
+  localRotationAngle: 0,
   id: NodeId.newId(id),
   origin: Offset.zero,
   size: const Size(10, 10),
@@ -197,6 +198,7 @@ Feature rect([int id = 0]) => Feature(
 class FailingFeature extends Feature {
   FailingFeature()
     : super(
+        localRotationAngle: 0,
         origin: Offset.zero,
         size: const Size(10, 10),
         kind: FeatureKindRectangle(),

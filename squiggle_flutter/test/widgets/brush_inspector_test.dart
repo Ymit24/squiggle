@@ -301,6 +301,7 @@ void main() {
       expect(editor.tool.activeTool, isA<CreateFeatureTool>());
       final feature = editor.document.addNode(
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(400, 200),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
@@ -417,6 +418,7 @@ void main() {
       final feature =
           editor.document.addNode(
                 Feature(
+                  localRotationAngle: 0,
                   origin: const Offset(400, 220),
                   size: const Size(180, 120),
                   kind: FeatureKindRectangle(),
@@ -497,6 +499,7 @@ void main() {
       editor.brushes.setField('endEndCap', LineEndCap.arrow.name);
       editor.document.addNode(
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(430, 200),
           size: const Size(240, 150),
           kind: FeatureKindRectangle(
@@ -507,6 +510,7 @@ void main() {
       );
       editor.document.addNode(
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(800, 390),
           size: const Size(160, 160),
           kind: FeatureKindCircle(
@@ -519,6 +523,7 @@ void main() {
       );
       editor.document.addNode(
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(530, 440),
           size: const Size(240, 60),
           kind: FeatureKindText(

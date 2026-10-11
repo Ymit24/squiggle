@@ -61,6 +61,7 @@ void main() {
     final parent =
         document.addNode(
               Group(
+                localRotationAngle: 0,
                 origin: const Offset(300, 400),
                 children: [first, middle, second],
               ),
@@ -103,11 +104,12 @@ void main() {
     final second = document.nodes.last;
     final middle = second.copyWith(id: noId, origin: const Offset(150, 20));
     document.removeAll([first.id, second.id]);
-    final firstGroup = Group(origin: const Offset(30, 40), children: [first]);
-    final secondGroup = Group(origin: const Offset(50, 60), children: [second]);
+    final firstGroup = Group(localRotationAngle: 0, origin: const Offset(30, 40), children: [first]);
+    final secondGroup = Group(localRotationAngle: 0, origin: const Offset(50, 60), children: [second]);
     final parent =
         document.addNode(
               Group(
+                localRotationAngle: 0,
                 origin: const Offset(300, 400),
                 children: [firstGroup, middle, secondGroup],
               ),
@@ -168,14 +170,14 @@ void main() {
           context.selection.setSelection([nodes.first.id]);
         case 'different parents':
           document.removeAll([nodes.first.id]);
-          document.addNode(Group(origin: Offset.zero, children: [nodes.first]));
+          document.addNode(Group(localRotationAngle: 0, origin: Offset.zero, children: [nodes.first]));
           context.selection.setSelection(nodes.map((node) => node.id));
         case 'groups with different parents':
           document.removeAll(nodes.map((node) => node.id));
-          final inner = Group(origin: Offset.zero, children: [nodes.first]);
-          document.addNode(Group(origin: Offset.zero, children: [inner]));
+          final inner = Group(localRotationAngle: 0, origin: Offset.zero, children: [nodes.first]);
+          document.addNode(Group(localRotationAngle: 0, origin: Offset.zero, children: [inner]));
           final outer = document.addNode(
-            Group(origin: Offset.zero, children: [nodes.last]),
+            Group(localRotationAngle: 0, origin: Offset.zero, children: [nodes.last]),
           );
           context.selection.setSelection([inner.id, outer.id]);
       }
@@ -200,7 +202,7 @@ void main() {
     final children = document.nodes.toList();
     document.removeAll(children.map((node) => node.id));
     final group = document.addNode(
-      Group(origin: Offset.zero, children: children),
+      Group(localRotationAngle: 0, origin: Offset.zero, children: children),
     );
     context.selection.setSelection([group.id]);
     await openMenu(tester, context);

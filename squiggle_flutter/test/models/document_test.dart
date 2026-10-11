@@ -11,6 +11,7 @@ void main() {
   group('Document node lookup', () {
     test('requireNodeById returns the node', () {
       final feature = Feature(
+        localRotationAngle: 0,
         origin: Offset.zero,
         size: const Size(10, 10),
         kind: FeatureKindRectangle(),
@@ -39,12 +40,14 @@ void main() {
   group('Document.nodeAtPoint', () {
     test('returns the top-most root node, including group interiors', () {
       final child = Feature(
+        localRotationAngle: 0,
         origin: const Offset(10, 20),
         size: const Size(20, 20),
         kind: FeatureKindRectangle(),
       );
-      final group = Group(origin: const Offset(100, 200), children: [child]);
+      final group = Group(localRotationAngle: 0, origin: const Offset(100, 200), children: [child]);
       final foreground = Feature(
+        localRotationAngle: 0,
         origin: const Offset(120, 220),
         size: const Size(20, 20),
         kind: FeatureKindRectangle(),
@@ -59,11 +62,13 @@ void main() {
     test('returns top-most feature at point', () {
       final doc = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
         ),
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(50, 50),
           size: const Size(100, 100),
           kind: FeatureKindRectangle(),
@@ -79,6 +84,7 @@ void main() {
     test('returns null when no feature contains point', () {
       final doc = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(50, 50),
           kind: FeatureKindRectangle(),
@@ -91,11 +97,13 @@ void main() {
 
   test('nodesInBounds returns overlapping root nodes', () {
     final overlapping = Feature(
+      localRotationAngle: 0,
       origin: const Offset(5, 5),
       size: const Size(10, 10),
       kind: FeatureKindRectangle(),
     );
     final outside = Feature(
+      localRotationAngle: 0,
       origin: const Offset(30, 30),
       size: const Size(10, 10),
       kind: FeatureKindRectangle(),
@@ -156,12 +164,14 @@ void main() {
       test('toDataModel encodes all features', () {
         final document = Document.fromFeatures([
           Feature(
+            localRotationAngle: 0,
             id: NodeId.newId(4),
             origin: const Offset(1, 2),
             size: const Size(3, 4),
             kind: FeatureKindRectangle(),
           ),
           Feature(
+            localRotationAngle: 0,
             id: NodeId.newId(7),
             origin: const Offset(5, 6),
             size: const Size(8, 9),
@@ -180,12 +190,14 @@ void main() {
       test('toDataModel preserves feature order', () {
         final document = Document.fromFeatures([
           Feature(
+            localRotationAngle: 0,
             id: NodeId.newId(10),
             origin: Offset.zero,
             size: const Size(1, 1),
             kind: FeatureKindCircle(),
           ),
           Feature(
+            localRotationAngle: 0,
             id: NodeId.newId(20),
             origin: Offset.zero,
             size: const Size(1, 1),
@@ -205,6 +217,7 @@ void main() {
     test('addFeature assigns an id when feature has noId', () {
       final doc = Document();
       final feature = Feature(
+        localRotationAngle: 0,
         origin: const Offset(1, 2),
         size: const Size(3, 4),
         kind: FeatureKindRectangle(),
@@ -220,11 +233,13 @@ void main() {
       final doc = Document();
       final features = [
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(10, 10),
           kind: FeatureKindRectangle(),
         ),
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(20, 0),
           size: const Size(10, 10),
           kind: FeatureKindCircle(),
@@ -240,6 +255,7 @@ void main() {
     test('removeFeature removes by id', () {
       final doc = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(10, 10),
           kind: FeatureKindRectangle(),
@@ -255,6 +271,7 @@ void main() {
     test('moveFeature updates origin', () {
       final doc = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(10, 10),
           kind: FeatureKindRectangle(),
@@ -270,6 +287,7 @@ void main() {
     test('setFeatureBounds updates bounds', () {
       final doc = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(10, 10),
           kind: FeatureKindRectangle(),
@@ -285,6 +303,7 @@ void main() {
     test('replaceFrom replaces contents and next id', () {
       final doc = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(0, 0),
           size: const Size(10, 10),
           kind: FeatureKindRectangle(),
@@ -292,11 +311,13 @@ void main() {
       ]);
       final replacement = Document.fromFeatures([
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(5, 5),
           size: const Size(20, 20),
           kind: FeatureKindCircle(),
         ),
         Feature(
+          localRotationAngle: 0,
           origin: const Offset(30, 30),
           size: const Size(20, 20),
           kind: FeatureKindCircle(),

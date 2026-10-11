@@ -17,6 +17,7 @@ EditorContext layoutContext() => EditorContext(
       const Offset(100, 100),
     ])
       Feature(
+        localRotationAngle: 0,
         origin: origin,
         size: const Size(10, 10),
         kind: FeatureKindRectangle(),
@@ -88,7 +89,7 @@ void main() {
       if (invalidSelection == 'different parents') {
         context.document.removeAll([nodes.first.id]);
         context.document.addNode(
-          Group(origin: Offset.zero, children: [nodes.first]),
+          Group(localRotationAngle: 0, origin: Offset.zero, children: [nodes.first]),
         );
       }
       context.selection.setSelection([
@@ -132,7 +133,7 @@ void main() {
         final nodes = context.document.nodes.toList();
         context.document.removeAll(nodes.map((node) => node.id));
         context.document.addNode(
-          Group(origin: const Offset(300, 400), children: nodes),
+          Group(localRotationAngle: 0, origin: const Offset(300, 400), children: nodes),
         );
         context.selection.setSelection(nodes.reversed.map((node) => node.id));
         final selectedIds = context.selection.selectedNodeIds;

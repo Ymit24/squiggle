@@ -79,7 +79,7 @@ void main() {
       ];
       final features = [
         for (final kind in kinds)
-          Feature(origin: Offset.zero, size: const Size(100, 60), kind: kind),
+          Feature(localRotationAngle: 0, origin: Offset.zero, size: const Size(100, 60), kind: kind),
       ];
       final context = EditorContext(document: Document.fromFeatures(features));
       List<StrokeType> types() => [

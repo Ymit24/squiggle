@@ -15,23 +15,26 @@ void main() {
   }) {
     return Document.fromFeatures([
       for (final origin in origins)
-        Feature(origin: origin, size: size, kind: FeatureKindRectangle()),
+        Feature(localRotationAngle: 0, origin: origin, size: size, kind: FeatureKindRectangle()),
     ]);
   }
 
   test('centering preserves group contents, relative positions, and IDs', () {
     final child = Feature(
+      localRotationAngle: 0,
       id: NodeId.newId(2),
       origin: const Offset(5, 10),
       size: const Size(20, 30),
       kind: FeatureKindRectangle(),
     );
     final group = Group(
+      localRotationAngle: 0,
       id: NodeId.newId(1),
       origin: const Offset(100, 200),
       children: [child],
     );
     final sibling = Feature(
+      localRotationAngle: 0,
       id: NodeId.newId(3),
       origin: const Offset(200, 300),
       size: const Size(40, 50),

@@ -12,6 +12,7 @@ import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import '../tools/select_tool/select_tool_test_harness.dart';
 
 Feature rectangle(Offset origin) => Feature(
+  localRotationAngle: 0,
   origin: origin,
   size: const Size(40, 60),
   kind: FeatureKindRectangle(fillColor: const Color(0xFF123456)),
@@ -31,9 +32,10 @@ void main() {
     'duplicates sibling trees in paint order with fresh IDs and one edit',
     () {
       final first = rectangle(const Offset(10, 20));
-      final nested = Group(origin: const Offset(30, 40), children: [first]);
+      final nested = Group(localRotationAngle: 0, origin: const Offset(30, 40), children: [first]);
       final second = rectangle(const Offset(100, 200));
       final parent = Group(
+        localRotationAngle: 0,
         origin: const Offset(300, 400),
         children: [nested, second],
       );
@@ -71,7 +73,7 @@ void main() {
     'empty, stale, ancestor/descendant and mixed-parent selections are no-ops',
     () {
       final child = rectangle(Offset.zero);
-      final group = Group(origin: Offset.zero, children: [child]);
+      final group = Group(localRotationAngle: 0, origin: Offset.zero, children: [child]);
       final sibling = rectangle(const Offset(200, 0));
       final document = Document()..addNodes([group, sibling]);
       final context = EditorContext(document: document);

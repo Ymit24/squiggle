@@ -30,11 +30,13 @@ void main() {
 
   test('getNodesInViewport uses the camera world bounds', () {
     final visible = Feature(
+      localRotationAngle: 0,
       origin: const Offset(120, 220),
       size: const Size(10, 10),
       kind: FeatureKindRectangle(),
     );
     final hidden = Feature(
+      localRotationAngle: 0,
       origin: const Offset(400, 400),
       size: const Size(10, 10),
       kind: FeatureKindRectangle(),
