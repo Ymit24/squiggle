@@ -26,8 +26,6 @@ class ClickRotateHandleState extends SelectInteractionState {
     final centerRelative = worldPosition - node.center();
     final angle = atan2(centerRelative.dy, centerRelative.dx);
 
-    print("moving mouse while grabbing rotate handle! ${angle * 180 / pi}");
-
     node.localRotationAngle = (angle * 180 / pi) + 90;
   }
 
