@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
@@ -39,5 +40,14 @@ class ClickRotateHandleState extends SelectInteractionState {
     required bool isAltPressed,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
+  }
+
+  @override
+  EditorCursor resolveCursor(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera,
+  ) {
+    return EditorCursor.grabbing;
   }
 }
