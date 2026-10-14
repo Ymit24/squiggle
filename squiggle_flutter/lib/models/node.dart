@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:data_models/data_models.dart' as data;
@@ -53,6 +54,18 @@ abstract class Node {
 
   Rect globalBounds() {
     return localBounds().shift(parent?.globalOrigin ?? Offset.zero);
+  }
+
+  /// Returns an axis-aligned rectangle enclosing this node's rotated bounds.
+  ///
+  /// The rectangle remains in the same coordinate space as [localBounds].
+  Rect screenBounds() {
+    final bounds = localBounds();
+    final cosAngle = math.cos(localRotationAngle * math.pi / 180).abs();
+    final sinAngle = math.sin(localRotationAngle * math.pi / 180).abs();
+    final width = bounds.width * cosAngle + bounds.height * sinAngle;
+    final height = bounds.width * sinAngle + bounds.height * cosAngle;
+    return Rect.fromCenter(center: bounds.center, width: width, height: height);
   }
 
   Rect localBounds();

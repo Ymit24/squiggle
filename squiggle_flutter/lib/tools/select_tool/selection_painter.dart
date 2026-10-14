@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/utils/painting.dart';
 
@@ -36,6 +37,16 @@ abstract final class SelectionPainter {
     final showResizeHandles = context.selection.selectedNodeIds.length == 1;
     for (final featureId in context.selection.selectedNodeIds) {
       final node = context.document.requireNodeById(featureId);
+      if (!showResizeHandles || node is Group) {
+        paintSelectionBox(
+          canvas,
+          camera,
+          node.screenBounds(),
+          showResizeHandles: showResizeHandles,
+        );
+        continue;
+      }
+
       canvas.save();
       final center = node.center();
       canvas.translate(center.dx, center.dy);

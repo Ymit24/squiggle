@@ -28,6 +28,17 @@ class Group extends Node with NodeContainer {
   Rect localBounds() => Node.localBoundsOfNodes(children).shift(origin);
 
   @override
+  Rect screenBounds() {
+    if (children.isEmpty) return Rect.fromLTWH(origin.dx, origin.dy, 0, 0);
+
+    var bounds = children.first.screenBounds();
+    for (final child in children.skip(1)) {
+      bounds = bounds.expandToInclude(child.screenBounds());
+    }
+    return bounds.shift(origin);
+  }
+
+  @override
   Group copyWith({NodeId? id, Offset? origin, double? localRotationAngle}) =>
       Group(
         id: id ?? this.id,
