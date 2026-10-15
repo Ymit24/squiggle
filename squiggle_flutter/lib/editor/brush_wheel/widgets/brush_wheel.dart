@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/brush_wheel_geometry.dart';
+import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_label.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_slot.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -80,55 +81,14 @@ class BrushWheel extends StatelessWidget {
             top: radius * 2 + BrushWheelGeometry.labelGap,
             height: BrushWheelGeometry.labelHeight,
             child: Center(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.mantle,
-                  border: Border.all(color: colors.surface1),
-                  borderRadius: BorderRadius.circular(
-                    BrushWheelGeometry.labelHeight / 2,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Center(
-                    widthFactor: 1,
-                    child: Text.rich(
-                      _label(hovered, colors),
-                      key: const ValueKey('brush-wheel-label'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.typography.menuItemLabel.copyWith(
-                        color: colors.text,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                  ),
-                ),
+              child: BrushWheelLabel(
+                active: brushes.firstWhere((brush) => brush.id == activeId),
+                hovered: hovered,
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  TextSpan _label(BrushProfile? hovered, SquiggleColorScheme colors) {
-    final muted = TextStyle(color: colors.subtext0);
-    if (hovered == null) {
-      return TextSpan(text: 'Release to cancel', style: muted);
-    }
-    if (hovered.id == activeId) {
-      return TextSpan(
-        text: hovered.name,
-        children: [TextSpan(text: ' · current', style: muted)],
-      );
-    }
-    final active = brushes.firstWhere((brush) => brush.id == activeId);
-    return TextSpan(
-      children: [
-        TextSpan(text: '${active.name} → ', style: muted),
-        TextSpan(text: hovered.name),
-      ],
     );
   }
 }
@@ -157,7 +117,10 @@ class _DiscPainter extends CustomPainter {
         ..style = PaintingStyle.stroke,
     );
     final index = hoveredIndex;
-    if (index == null) return;
+    if (index == null) {
+      return;
+    }
+
     // Highlight the whole slice, which is the real hit area, not just the slot.
     final sweep = BrushWheelGeometry.sweep(count);
     final start = BrushWheelGeometry.slotAngle(index, count) - sweep / 2;

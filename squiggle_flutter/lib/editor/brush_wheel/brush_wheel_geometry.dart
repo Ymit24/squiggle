@@ -41,9 +41,15 @@ abstract final class BrushWheelGeometry {
   /// The slot under [offset] from the wheel center, or null in the dead zone
   /// and outside the disc.
   static int? slotAt(Offset offset, int count) {
-    if (count == 0) return null;
+    if (count == 0) {
+      return null;
+    }
+
     final distance = offset.distance;
-    if (distance < innerRadius || distance > outerRadius) return null;
+    if (distance < innerRadius || distance > outerRadius) {
+      return null;
+    }
+
     final step = sweep(count);
     final fromTop = (offset.direction + math.pi / 2 + step / 2) % (2 * math.pi);
     return (fromTop ~/ step) % count;
@@ -58,7 +64,10 @@ abstract final class BrushWheelGeometry {
     double clampAxis(double value, double before, double after, double extent) {
       final min = before + margin;
       final max = extent - after - margin;
-      if (min > max) return extent / 2;
+      if (min > max) {
+        return extent / 2;
+      }
+
       return value.clamp(min, max);
     }
 

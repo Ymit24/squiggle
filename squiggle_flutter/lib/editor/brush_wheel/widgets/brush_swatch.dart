@@ -43,7 +43,10 @@ class _SwatchPainter extends CustomPainter {
     final sample = kind.clone();
     BrushProfile(id: 'swatch', name: '', values: values).applyTo(sample);
     final feature = _place(sample, size);
-    if (feature == null) return;
+    if (feature == null) {
+      return;
+    }
+
     canvas.save();
     canvas.clipRect(Offset.zero & size);
     feature.paint(canvas, imageRepository);

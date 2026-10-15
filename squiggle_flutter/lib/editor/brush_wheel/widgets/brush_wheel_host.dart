@@ -58,6 +58,26 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
   FeatureKind? _kind;
   int? _hovered;
 
+  bool get _isOpen => _center != null;
+
+  int get _brushCount => widget.editorContext.brushes.profiles.length;
+
+  /// Mirrors the Cmd/Ctrl+number brush shortcut: brushes only apply to new
+  /// drawings, so the wheel is unavailable with a selection or a non-drawing
+  /// tool.
+  bool get _canOpen {
+    final keyboard = HardwareKeyboard.instance;
+    final hasModifier =
+        keyboard.isMetaPressed ||
+        keyboard.isControlPressed ||
+        keyboard.isAltPressed;
+
+    return !widget.textEditOpen &&
+        !hasModifier &&
+        widget.editorContext.selection.selectedNodeIds.isEmpty &&
+        widget.editorContext.tool.activeTool is DrawingTool;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -85,7 +105,9 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
         focusNode: _focusNode,
         onKeyEvent: _onKeyEvent,
         onFocusChange: (focused) {
-          if (!focused) _close(commit: false);
+          if (!focused) {
+            _close(commit: false);
+          }
         },
         child: Stack(
           fit: StackFit.expand,
@@ -118,87 +140,129 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
   }
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
-    final key = event.logicalKey;
-    if (_center == null) {
-      if (key == LogicalKeyboardKey.keyB && event is KeyDownEvent && _open()) {
-        return KeyEventResult.handled;
-      }
-      return KeyEventResult.ignored;
+    if (_isOpen) {
+      _onKeyEventWhileOpen(event);
+
+      // The wheel is modal while B is held.
+      return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.keyB && event is KeyUpEvent) {
-      _close(commit: true);
-    } else if (key == LogicalKeyboardKey.escape && event is KeyDownEvent) {
-      _close(commit: false);
-    } else if (_digitKeys.indexOf(key) case final index
-        when index >= 0 && event is KeyDownEvent) {
-      if (index < widget.editorContext.brushes.profiles.length) {
-        setState(() => _hovered = index);
-      }
-    }
-    // The wheel is modal while B is held.
-    return KeyEventResult.handled;
+
+    final opensWheel =
+        event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.keyB &&
+        _open();
+
+    return opensWheel ? KeyEventResult.handled : KeyEventResult.ignored;
   }
 
-  /// Mirrors the Cmd/Ctrl+number brush shortcut: brushes only apply to new
-  /// drawings, so the wheel is unavailable with a selection or a non-drawing
-  /// tool.
+  void _onKeyEventWhileOpen(KeyEvent event) {
+    final key = event.logicalKey;
+
+    if (event is KeyUpEvent) {
+      if (key == LogicalKeyboardKey.keyB) {
+        _close(commit: true);
+      }
+
+      return;
+    }
+
+    if (event is! KeyDownEvent) {
+      return;
+    }
+
+    if (key == LogicalKeyboardKey.escape) {
+      _close(commit: false);
+
+      return;
+    }
+
+    final index = _digitKeys.indexOf(key);
+    final hasBrush = index >= 0 && index < _brushCount;
+
+    if (hasBrush) {
+      setState(() => _hovered = index);
+    }
+  }
+
   bool _open() {
-    final editor = widget.editorContext;
-    final keyboard = HardwareKeyboard.instance;
-    if (widget.textEditOpen ||
-        keyboard.isMetaPressed ||
-        keyboard.isControlPressed ||
-        keyboard.isAltPressed ||
-        editor.selection.selectedNodeIds.isNotEmpty) {
+    if (!_canOpen) {
       return false;
     }
-    if (editor.tool.activeTool is! DrawingTool) return false;
-    final tool = editor.tool.activeTool as DrawingTool;
+
+    final tool = widget.editorContext.tool.activeTool as DrawingTool;
     final size = context.size ?? Size.zero;
     final pointer = _pointer ?? size.center(Offset.zero);
+
+    // Focus moves to the wheel so the release, digits and Escape stay out of
+    // the tool shortcuts. The previous focus is restored on close.
+    _restoreFocus = FocusManager.instance.primaryFocus;
+    _focusNode.requestFocus();
+
     setState(() {
       _kind = tool.createDrawingKind();
       _center = BrushWheelGeometry.clampCenter(pointer, size);
       _hovered = _slotAt(pointer);
     });
-    _restoreFocus = FocusManager.instance.primaryFocus;
-    _focusNode.requestFocus();
+
     return true;
   }
 
   void _close({required bool commit}) {
-    if (_center == null) return;
+    if (!_isOpen) {
+      return;
+    }
+
     final hovered = _hovered;
+
     if (commit && hovered != null) {
       final brushes = widget.editorContext.brushes;
+
       // activate() ignores the already active brush.
       brushes.activate(brushes.profiles[hovered].id);
     }
+
     setState(() {
       _center = null;
       _kind = null;
       _hovered = null;
     });
-    final restore = _restoreFocus;
+
+    _restorePreviousFocus();
+  }
+
+  void _restorePreviousFocus() {
+    final previous = _restoreFocus;
     _restoreFocus = null;
-    if (_focusNode.hasFocus && restore != null && restore.context != null) {
-      restore.requestFocus();
+
+    final canRestore =
+        _focusNode.hasFocus && previous != null && previous.context != null;
+
+    if (canRestore) {
+      previous.requestFocus();
     }
   }
 
   void _trackPointer(Offset? position) {
     _pointer = position;
-    if (_center == null) return;
+
+    if (!_isOpen) {
+      return;
+    }
+
     final hovered = position == null ? null : _slotAt(position);
-    if (hovered != _hovered) setState(() => _hovered = hovered);
+
+    if (hovered != _hovered) {
+      setState(() => _hovered = hovered);
+    }
   }
 
   int? _slotAt(Offset position) {
     final center = _center;
-    if (center == null) return null;
-    return BrushWheelGeometry.slotAt(
-      position - center,
-      widget.editorContext.brushes.profiles.length,
-    );
+
+    if (center == null) {
+      return null;
+    }
+
+    return BrushWheelGeometry.slotAt(position - center, _brushCount);
   }
 }
