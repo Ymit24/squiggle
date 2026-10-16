@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_shortcut_hint.dart';
 
 class BrushWheelSlot extends StatelessWidget {
   const BrushWheelSlot({
@@ -55,7 +56,12 @@ class BrushWheelSlot extends StatelessWidget {
             Positioned(
               left: 4,
               top: 4,
-              child: Text('$number', style: theme.typography.hotkey),
+              width: BrushWheelGeometry.slotSize - 18,
+              child: SquiggleShortcutHint(
+                label: '⌘$number',
+                style: theme.typography.hotkey,
+                alignment: Alignment.centerLeft,
+              ),
             ),
             if (active)
               Positioned(
