@@ -81,7 +81,13 @@ class SelectToolTestHarness {
 
   void doubleClick(Offset world) {
     click(world);
-    context.tool.onDoubleClick(context, world, camera);
+    context.tool.onDoubleClick(
+      context,
+      world,
+      camera,
+      isShiftPressed: false,
+      isAltPressed: false,
+    );
   }
 
   bool keyDown(LogicalKeyboardKey key) => context.tool.onKeyEvent(

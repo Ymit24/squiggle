@@ -218,6 +218,54 @@ void main() {
       ]);
     });
 
+    test('double-clicking the final vertex adds it only once', () {
+      activateLineTool();
+
+      pointerDown(const Offset(0, 0));
+      pointerUp(const Offset(0, 0));
+      pointerDown(const Offset(100, 0));
+      pointerUp(const Offset(100, 0));
+      pointerDown(const Offset(100, 100));
+      pointerUp(const Offset(100, 100));
+      pointerDown(const Offset(100, 100));
+      context.tool.onDoubleClick(
+        context,
+        const Offset(100, 100),
+        camera,
+        isShiftPressed: false,
+        isAltPressed: false,
+      );
+
+      expect(worldPointsFor(context.document.nodes.single as Feature), [
+        const Offset(0, 0),
+        const Offset(100, 0),
+        const Offset(100, 100),
+      ]);
+    });
+
+    test(
+      'double-clicking immediately after the first click keeps both points',
+      () {
+        activateLineTool();
+
+        pointerDown(const Offset(0, 0));
+        pointerUp(const Offset(0, 0));
+        pointerDown(const Offset(100, 100));
+        context.tool.onDoubleClick(
+          context,
+          const Offset(100, 100),
+          camera,
+          isShiftPressed: false,
+          isAltPressed: false,
+        );
+
+        expect(worldPointsFor(context.document.nodes.single as Feature), [
+          const Offset(0, 0),
+          const Offset(100, 100),
+        ]);
+      },
+    );
+
     test('three clicks then Escape commits polyline with 3 points', () {
       activateLineTool();
 

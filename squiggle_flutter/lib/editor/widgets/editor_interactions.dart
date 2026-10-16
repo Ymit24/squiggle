@@ -107,18 +107,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
           }
         },
         onPointerHover: _onPointerHover,
-        onPointerUp: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-
-          // TODO: This sucks for state machine
-          if (_isPrimaryDragging) {
-            _onLeftPointerUp(event);
-          } else if (_secondaryPointerDownAt != null) {
-            _onRightPointerUp(context, event);
-          }
-
-          _checkForDoubleClick(event);
-        },
+        onPointerUp: _onPointerUp,
         onPointerCancel: (event) {
           if (!widget.canvasInteractionsEnabled) return;
           // TODO: This sucks for state machine
@@ -212,8 +201,27 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _flingController.stop();
   }
 
-  void _checkForDoubleClick(PointerUpEvent event) {
+  void _onPointerUp(PointerUpEvent event) {
+    if (!widget.canvasInteractionsEnabled) return;
+
+    final isDoubleClick = _checkForDoubleClick(event);
+
+    // TODO: This sucks for state machine
+    if (_isPrimaryDragging) {
+      if (isDoubleClick) {
+        _isPrimaryDragging = false;
+        _onLeftPointerDouble(event);
+      } else {
+        _onLeftPointerUp(event);
+      }
+    } else if (_secondaryPointerDownAt != null) {
+      _onRightPointerUp(context, event);
+    }
+  }
+
+  bool _checkForDoubleClick(PointerUpEvent event) {
     final pointerDownButtons = _pointerDownButtons;
+    var isDoubleClick = false;
     if (pointerDownButtons != null && lastPointerRecord != null) {
       final recentEnough =
           event.timeStamp - lastPointerRecord!.timeStamp <=
@@ -224,7 +232,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
       final isLeftClick = pointerDownButtons == kPrimaryButton;
 
       if (recentEnough && sameButton && closeEnough && isLeftClick) {
-        _onLeftPointerDouble(event);
+        isDoubleClick = true;
       }
     }
     if (pointerDownButtons != null) {
@@ -236,6 +244,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
       );
     }
     _pointerDownButtons = null;
+    return isDoubleClick;
   }
 
   Offset? _canvasLocal(PointerEvent event) {
@@ -279,7 +288,13 @@ class _EditorInteractionsState extends State<EditorInteractions>
     final world = _screenToWorld(event);
     if (world == null) return;
 
-    widget.context.tool.onDoubleClick(widget.context, world, _camera);
+    widget.context.tool.onDoubleClick(
+      widget.context,
+      world,
+      _camera,
+      isShiftPressed: _isShiftPressed,
+      isAltPressed: _isAltPressed,
+    );
   }
 
   void _onLeftPointerUpdate(PointerMoveEvent event) {

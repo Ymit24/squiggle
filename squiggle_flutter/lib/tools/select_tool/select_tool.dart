@@ -123,10 +123,7 @@ class SelectTool extends Tool {
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
-    if (_hasTransaction) {
-      context.history.commit();
-      _hasTransaction = false;
-    }
+    _commitTransaction(context);
     // TODO: Update how change detection works to not be bool response based.
     return true;
   }
@@ -135,9 +132,27 @@ class SelectTool extends Tool {
   bool onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) {
-    _activeInteractionState.onDoubleClick(context, worldPosition, camera);
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    _activeInteractionState.onPointerUp(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
+    _commitTransaction(context);
+    final idleState = IdleInteractionState(parent: this);
+    transition(idleState, context);
+    idleState.onDoubleClick(
+      context,
+      worldPosition,
+      camera,
+      isShiftPressed: isShiftPressed,
+      isAltPressed: isAltPressed,
+    );
     return true;
   }
 
@@ -165,5 +180,11 @@ class SelectTool extends Tool {
       worldPosition,
       camera,
     );
+  }
+
+  void _commitTransaction(EditorContext context) {
+    if (!_hasTransaction) return;
+    context.history.commit();
+    _hasTransaction = false;
   }
 }

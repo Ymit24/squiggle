@@ -54,6 +54,21 @@ void main() {
       expect(polylineWorldPoints(feature).last, const Offset(100, 100));
     });
 
+    test('double-click release commits the handle transaction', () {
+      harness.pointerDown(const Offset(100, 100));
+      expect(harness.context.history.isActive, isTrue);
+
+      harness.context.tool.onDoubleClick(
+        harness.context,
+        const Offset(100, 100),
+        harness.camera,
+        isShiftPressed: false,
+        isAltPressed: false,
+      );
+
+      expect(harness.context.history.isActive, isFalse);
+    });
+
     test('does not expose vertex handles for multiple selections', () {
       harness.context = EditorContext(
         document: Document.fromFeatures([

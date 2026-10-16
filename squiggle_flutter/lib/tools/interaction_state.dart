@@ -51,8 +51,10 @@ abstract class InteractionState<T extends Tool> {
   void onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) {}
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {}
 
   void paint(
     Canvas canvas,

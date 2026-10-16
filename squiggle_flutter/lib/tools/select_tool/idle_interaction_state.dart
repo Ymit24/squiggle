@@ -89,8 +89,10 @@ class IdleInteractionState extends SelectInteractionState {
   void onDoubleClick(
     EditorContext context,
     Offset worldPosition,
-    Camera camera,
-  ) {
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
     final target = getTargetUnderCursor(context, worldPosition);
     if (target case NodeTarget(
       node: final Feature feature,
