@@ -1,7 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:squiggle_flutter/editor/brush_controller.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 import 'package:squiggle_flutter/widgets/squiggle_dialog.dart';
 import 'package:squiggle_flutter/widgets/squiggle_text_field.dart';
+
+/// Prompts for a name and creates a brush from the active one, unless the
+/// active brush changed or the document filled up while the dialog was open.
+Future<void> showCreateBrushDialog(
+  BuildContext context,
+  BrushController brushes,
+) async {
+  final sourceId = brushes.active.id;
+  final name = await showDialog<String>(
+    context: context,
+    builder: (_) => const BrushNameDialog(creating: true),
+  );
+
+  if (!context.mounted ||
+      name == null ||
+      brushes.active.id != sourceId ||
+      !brushes.canCreate) {
+    return;
+  }
+
+  brushes.create(name);
+}
 
 class BrushNameDialog extends StatefulWidget {
   const BrushNameDialog({super.key, this.initialName, required this.creating});

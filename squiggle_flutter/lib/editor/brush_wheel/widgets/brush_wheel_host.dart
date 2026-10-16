@@ -242,27 +242,8 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
     _restorePreviousFocus();
 
     if (createBrush) {
-      _createBrush();
+      showCreateBrushDialog(context, widget.editorContext.brushes);
     }
-  }
-
-  /// Same flow as the inspector's Create brush item.
-  Future<void> _createBrush() async {
-    final brushes = widget.editorContext.brushes;
-    final sourceId = brushes.active.id;
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => const BrushNameDialog(creating: true),
-    );
-
-    if (!mounted ||
-        name == null ||
-        brushes.active.id != sourceId ||
-        !brushes.canCreate) {
-      return;
-    }
-
-    brushes.create(name);
   }
 
   void _restorePreviousFocus() {
