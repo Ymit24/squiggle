@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'state.dart';
@@ -9,6 +9,7 @@ part of 'state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $EditorStateCopyWith<EditorState> get copyWith => _$EditorStateCopyWithImpl<Edit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other.selectedNodeIds, selectedNodeIds));
+  final _this = this as EditorState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorState&&(identical(other.document, _this.document) || other.document == _this.document)&&const DeepCollectionEquality().equals(other.selectedNodeIds, _this.selectedNodeIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,document,const DeepCollectionEquality().hash(selectedNodeIds));
+int get hashCode {
+  final _this = this as EditorState;
+  return Object.hash(runtimeType,_this.document,const DeepCollectionEquality().hash(_this.selectedNodeIds));
+}
 
 @override
 String toString() {
-  return 'EditorState(document: $document, selectedNodeIds: $selectedNodeIds)';
+  final _this = this as EditorState;
+  return 'EditorState(document: ${_this.document}, selectedNodeIds: ${_this.selectedNodeIds})';
 }
 
 
@@ -63,7 +69,7 @@ class _$EditorStateCopyWithImpl<$Res>
 /// Create a copy of EditorState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? document = null,Object? selectedNodeIds = null,}) {
-  return _then(_self.copyWith(
+  return _then(EditorState(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
 as Document,selectedNodeIds: null == selectedNodeIds ? _self.selectedNodeIds : selectedNodeIds // ignore: cast_nullable_to_non_nullable
 as List<NodeId>,
@@ -207,7 +213,7 @@ return $default(_that.document,_that.selectedNodeIds);case _:
 
 
 class _EditorState implements EditorState {
-  const _EditorState({required this.document, required final  List<NodeId> selectedNodeIds}): _selectedNodeIds = selectedNodeIds;
+  const _EditorState({required this.document, required  List<NodeId> selectedNodeIds}): _selectedNodeIds = selectedNodeIds;
   
 
 @override final  Document document;
@@ -229,16 +235,18 @@ _$EditorStateCopyWith<_EditorState> get copyWith => __$EditorStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other._selectedNodeIds, _selectedNodeIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditorState&&(identical(other.document, document) || other.document == document)&&const DeepCollectionEquality().equals(other.selectedNodeIds, _selectedNodeIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,document,const DeepCollectionEquality().hash(_selectedNodeIds));
+int get hashCode {
+    return Object.hash(runtimeType,document,const DeepCollectionEquality().hash(_selectedNodeIds));
+}
 
 @override
 String toString() {
-  return 'EditorState(document: $document, selectedNodeIds: $selectedNodeIds)';
+    return 'EditorState(document: $document, selectedNodeIds: $selectedNodeIds)';
 }
 
 
