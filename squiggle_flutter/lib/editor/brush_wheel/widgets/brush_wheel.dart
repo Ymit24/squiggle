@@ -116,6 +116,9 @@ class BrushWheel extends StatelessWidget {
 class _DiscPainter extends CustomPainter {
   _DiscPainter(this.colors, this.count, this.hoveredIndex);
 
+  static const _discAlpha = 0.9;
+  static const _wedgeAlpha = 0.14;
+
   final SquiggleColorScheme colors;
   final int count;
   final int? hoveredIndex;
@@ -127,7 +130,7 @@ class _DiscPainter extends CustomPainter {
     canvas.drawCircle(
       center,
       radius,
-      Paint()..color = colors.mantle.withValues(alpha: 0.9),
+      Paint()..color = colors.mantle.withValues(alpha: _discAlpha),
     );
     canvas.drawCircle(
       center,
@@ -161,7 +164,7 @@ class _DiscPainter extends CustomPainter {
       ..close();
     canvas.drawPath(
       wedge,
-      Paint()..color = colors.accent.withValues(alpha: 0.14),
+      Paint()..color = colors.accent.withValues(alpha: _wedgeAlpha),
     );
   }
 
