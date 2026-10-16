@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/brush_wheel_geometry.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_name_dialog.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
@@ -61,6 +62,10 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
   bool get _isOpen => _center != null;
 
   int get _brushCount => widget.editorContext.brushes.profiles.length;
+
+  /// The wheel ends with a "new brush" slot until the document is full.
+  int get _slotCount =>
+      _brushCount + (widget.editorContext.brushes.canCreate ? 1 : 0);
 
   /// Mirrors the Cmd/Ctrl+number brush shortcut: brushes only apply to new
   /// drawings, so the wheel is unavailable with a selection or a non-drawing
@@ -126,6 +131,7 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
                         brushes: brushes.profiles,
                         activeId: brushes.active.id,
                         hoveredIndex: _hovered,
+                        canCreate: brushes.canCreate,
                         kind: kind,
                         imageRepository: widget.imageRepository,
                       ),
@@ -214,11 +220,17 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
 
     final hovered = _hovered;
 
+    var createBrush = false;
+
     if (commit && hovered != null) {
       final brushes = widget.editorContext.brushes;
 
-      // activate() ignores the already active brush.
-      brushes.activate(brushes.profiles[hovered].id);
+      if (hovered >= _brushCount) {
+        createBrush = brushes.canCreate;
+      } else {
+        // activate() ignores the already active brush.
+        brushes.activate(brushes.profiles[hovered].id);
+      }
     }
 
     setState(() {
@@ -228,6 +240,29 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
     });
 
     _restorePreviousFocus();
+
+    if (createBrush) {
+      _createBrush();
+    }
+  }
+
+  /// Same flow as the inspector's Create brush item.
+  Future<void> _createBrush() async {
+    final brushes = widget.editorContext.brushes;
+    final sourceId = brushes.active.id;
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => const BrushNameDialog(creating: true),
+    );
+
+    if (!mounted ||
+        name == null ||
+        brushes.active.id != sourceId ||
+        !brushes.canCreate) {
+      return;
+    }
+
+    brushes.create(name);
   }
 
   void _restorePreviousFocus() {
@@ -263,6 +298,6 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
       return null;
     }
 
-    return BrushWheelGeometry.slotAt(position - center, _brushCount);
+    return BrushWheelGeometry.slotAt(position - center, _slotCount);
   }
 }

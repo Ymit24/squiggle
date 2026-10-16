@@ -4,12 +4,18 @@ import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 
 /// Names the pending change under the wheel: "Active → Hovered", the current
-/// brush when it is hovered, or a cancel hint when nothing is.
+/// brush when it is hovered, a new brush hint, or a cancel hint when nothing is.
 class BrushWheelLabel extends StatelessWidget {
-  const BrushWheelLabel({super.key, required this.active, this.hovered});
+  const BrushWheelLabel({
+    super.key,
+    required this.active,
+    this.hovered,
+    this.adding = false,
+  });
 
   final BrushProfile active;
   final BrushProfile? hovered;
+  final bool adding;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +48,10 @@ class BrushWheelLabel extends StatelessWidget {
   }
 
   TextSpan _text(TextStyle muted) {
+    if (adding) {
+      return const TextSpan(text: 'New brush…');
+    }
+
     final target = hovered;
 
     if (target == null) {

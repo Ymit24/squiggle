@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/brush_wheel_geometry.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel.dart';
+import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_add_slot.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_name_dialog.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
@@ -61,7 +63,10 @@ void main() {
 
   Offset slot(EditorContext editor, int index) =>
       pointer +
-      BrushWheelGeometry.slotCenter(index, editor.brushes.profiles.length);
+      BrushWheelGeometry.slotCenter(
+        index,
+        editor.brushes.profiles.length + (editor.brushes.canCreate ? 1 : 0),
+      );
 
   testWidgets('holding B opens the wheel and releasing activates the '
       'hovered brush', (tester) async {
@@ -81,6 +86,36 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(BrushWheel), findsNothing);
     expect(editor.brushes.active.name, 'Blueprint');
+  });
+
+  testWidgets('releasing on the add slot opens the name dialog', (
+    tester,
+  ) async {
+    final editor = drawingEditor();
+    final mouse = await mount(tester, editor);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyB);
+    await tester.pump();
+    await mouse.moveTo(slot(editor, 3));
+    await tester.pump();
+    expect(find.text('New brush…'), findsOneWidget);
+
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyB);
+    await tester.pumpAndSettle();
+    expect(find.byType(BrushWheel), findsNothing);
+    expect(find.byType(BrushNameDialog), findsOneWidget);
+  });
+
+  testWidgets('the add slot is hidden at nine brushes', (tester) async {
+    final editor = drawingEditor();
+    while (editor.brushes.canCreate) {
+      editor.brushes.create('Extra');
+    }
+    await mount(tester, editor);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyB);
+    await tester.pump();
+    expect(find.byType(BrushWheelAddSlot), findsNothing);
   });
 
   testWidgets('releasing in the hub or outside the wheel changes nothing', (
