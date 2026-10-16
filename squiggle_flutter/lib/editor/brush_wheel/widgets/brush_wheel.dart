@@ -61,7 +61,6 @@ class BrushWheel extends StatelessWidget {
               child: BrushWheelSlot(
                 key: ValueKey(brush.id),
                 brush: brush,
-                number: index + 1,
                 kind: kind,
                 active: brush.id == activeId,
                 hovered: index == hoveredIndex,

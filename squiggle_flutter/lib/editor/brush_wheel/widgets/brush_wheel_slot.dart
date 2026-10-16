@@ -5,13 +5,11 @@ import 'package:squiggle_flutter/models/brush_profile.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
-import 'package:squiggle_flutter/widgets/squiggle_shortcut_hint.dart';
 
 class BrushWheelSlot extends StatelessWidget {
   const BrushWheelSlot({
     super.key,
     required this.brush,
-    required this.number,
     required this.kind,
     required this.active,
     required this.hovered,
@@ -19,7 +17,6 @@ class BrushWheelSlot extends StatelessWidget {
   });
 
   final BrushProfile brush;
-  final int number;
   final FeatureKind kind;
   final bool active;
   final bool hovered;
@@ -52,35 +49,6 @@ class BrushWheelSlot extends StatelessWidget {
               brush: brush,
               kind: kind,
               imageRepository: imageRepository,
-            ),
-            Positioned(
-              left: 3,
-              top: 3,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: BrushWheelGeometry.slotSize - 18,
-                ),
-                // Backed so the hint stays readable over the swatch.
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.mantle.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                      vertical: 2,
-                    ),
-                    child: SquiggleShortcutHint(
-                      label: '⌘$number',
-                      style: theme.typography.hotkey.copyWith(
-                        color: colors.text,
-                      ),
-                      alignment: Alignment.centerLeft,
-                    ),
-                  ),
-                ),
-              ),
             ),
             if (active)
               Positioned(
