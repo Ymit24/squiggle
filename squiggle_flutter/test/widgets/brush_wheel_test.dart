@@ -157,22 +157,6 @@ void main() {
     expect(notifications, 0);
   });
 
-  testWidgets('digits pick a slot without switching tools', (tester) async {
-    final editor = drawingEditor();
-    await mount(tester, editor);
-    final tool = editor.tool.activeTool;
-
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyB);
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
-    await tester.pump();
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyB);
-    await tester.pumpAndSettle();
-
-    expect(editor.brushes.active.name, 'Scratch');
-    expect(editor.tool.activeTool, same(tool));
-  });
-
   testWidgets('Escape cancels and shortcuts work again afterwards', (
     tester,
   ) async {

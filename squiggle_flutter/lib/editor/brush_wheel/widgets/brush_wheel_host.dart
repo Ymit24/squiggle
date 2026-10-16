@@ -8,24 +8,12 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 
-const _digitKeys = [
-  LogicalKeyboardKey.digit1,
-  LogicalKeyboardKey.digit2,
-  LogicalKeyboardKey.digit3,
-  LogicalKeyboardKey.digit4,
-  LogicalKeyboardKey.digit5,
-  LogicalKeyboardKey.digit6,
-  LogicalKeyboardKey.digit7,
-  LogicalKeyboardKey.digit8,
-  LogicalKeyboardKey.digit9,
-];
-
 /// Shows the brush wheel at the pointer while B is held, and activates the
 /// hovered brush when B is released.
 ///
 /// Must wrap the editor's shortcut scope: B presses reach this widget only
 /// after descendants ignore them. While open it takes primary focus, so the
-/// release, digits and Escape never reach the tool shortcuts below.
+/// release and Escape never reach the tool shortcuts below.
 class BrushWheelHost extends StatefulWidget {
   const BrushWheelHost({
     super.key,
@@ -172,21 +160,8 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
       return;
     }
 
-    if (event is! KeyDownEvent) {
-      return;
-    }
-
-    if (key == LogicalKeyboardKey.escape) {
+    if (event is KeyDownEvent && key == LogicalKeyboardKey.escape) {
       _close(commit: false);
-
-      return;
-    }
-
-    final index = _digitKeys.indexOf(key);
-    final hasBrush = index >= 0 && index < _brushCount;
-
-    if (hasBrush) {
-      setState(() => _hovered = index);
     }
   }
 
@@ -199,7 +174,7 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
     final size = context.size ?? Size.zero;
     final pointer = _pointer ?? size.center(Offset.zero);
 
-    // Focus moves to the wheel so the release, digits and Escape stay out of
+    // Focus moves to the wheel so the release and Escape stay out of
     // the tool shortcuts. The previous focus is restored on close.
     _restoreFocus = FocusManager.instance.primaryFocus;
     _focusNode.requestFocus();
