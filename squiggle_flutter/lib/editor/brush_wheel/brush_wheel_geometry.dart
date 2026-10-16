@@ -17,6 +17,10 @@ abstract final class BrushWheelGeometry {
   static const slotSize = 50.0;
   static const hubSize = 44.0;
 
+  /// How much a slot grows while hovered, and how fast.
+  static const hoverScale = 1.12;
+  static const hoverDuration = Duration(milliseconds: 70);
+
   /// Space below the disc reserved for the name label.
   static const labelGap = 10.0;
   static const labelHeight = 28.0;
