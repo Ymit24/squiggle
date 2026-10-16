@@ -154,9 +154,9 @@ class ImagesDao extends DatabaseAccessor<AppDatabase> {
 
 ## Learned while implementing PR 6
 
-- `drift_dev` >= 2.34.6 needs `analyzer` >= 13, which conflicts with `freezed` 3.x (`freezed` 4 needs Dart SDK 3.13). So `drift_dev` is pinned to 2.34.0 and `drift` to 2.34.0 (drift_dev's `schema dump` breaks against newer drift). Revisit when the SDK/freezed can be upgraded.
+- `drift_dev` >= 2.34.6 needs `analyzer` >= 13, which `freezed` 3.x could not resolve against and `freezed` 4 needs Dart 3.13. Resolved by PR #164 (Flutter 3.47.7 / Dart 3.13, `freezed` 4); `drift` and `drift_dev` are unpinned (`^2.35`).
 - `sqlite3_flutter_libs` is end-of-life and not needed: `sqlite3` 3.x bundles the native library via build hooks. `flutter test` on Linux opens in-memory and file DBs with no extra setup.
-- `store_date_time_values_as_text: true` in `build.yaml`: drift's default stores whole seconds, which makes `updatedAt` ordering ambiguous. `generate_for` is limited to `lib/database/**` to keep build_runner from scanning every file.
+- Timestamps use drift's default (whole-second unix integers). Text mode was tried and dropped: it stores local time with an offset (`... -04:00`), and SQLite sorts that as a string, so ordering breaks across DST/timezone changes. Same-second ties in `updatedAt` are not a real concern for this app. `generate_for` is limited to `lib/database/**` in `build.yaml` to keep build_runner from scanning every file.
 - Table row classes use `@DataClassName(...Row)` to avoid clashing with the app and data_models `Document`.
 - The `name` column is authoritative: `save` ignores the name in the document, and `load` overrides the stored body's name with the column.
 - `load` returns null only for an unknown id and throws if the body cannot be decoded (policy still deferred, see below). `save` on a deleted document is a silent no-op (autosave racing a delete).
