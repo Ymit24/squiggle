@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/brush_wheel_geometry.dart';
+import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_add_slot.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_label.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_slot.dart';
 import 'package:squiggle_flutter/models/brush_profile.dart';
@@ -7,14 +8,17 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 
-/// The brush quick picker: one slot per brush around a cancel hub, with the
-/// pending change named below. Purely visual; the host owns input.
+/// The brush quick picker: one slot per brush around a cancel hub, plus a
+/// trailing "new brush" slot when [canCreate], with the pending change named
+/// below. Purely visual; the host owns input. A [hoveredIndex] equal to
+/// `brushes.length` is the new brush slot.
 class BrushWheel extends StatelessWidget {
   const BrushWheel({
     super.key,
     required this.brushes,
     required this.activeId,
     required this.hoveredIndex,
+    required this.canCreate,
     required this.kind,
     required this.imageRepository,
   });
@@ -22,6 +26,7 @@ class BrushWheel extends StatelessWidget {
   final List<BrushProfile> brushes;
   final String activeId;
   final int? hoveredIndex;
+  final bool canCreate;
   final FeatureKind kind;
   final ImageRepository imageRepository;
 
@@ -30,7 +35,11 @@ class BrushWheel extends StatelessWidget {
     final theme = context.squiggleTheme;
     final colors = theme.colors;
     const radius = BrushWheelGeometry.outerRadius;
-    final hovered = hoveredIndex == null ? null : brushes[hoveredIndex!];
+    final slotCount = brushes.length + (canCreate ? 1 : 0);
+    final hoveringAdd = canCreate && hoveredIndex == brushes.length;
+    final hovered = hoveredIndex == null || hoveringAdd
+        ? null
+        : brushes[hoveredIndex!];
     return SizedBox.fromSize(
       size: BrushWheelGeometry.size,
       child: Stack(
@@ -38,26 +47,36 @@ class BrushWheel extends StatelessWidget {
         children: [
           CustomPaint(
             size: BrushWheelGeometry.discSize,
-            painter: _DiscPainter(colors, brushes.length, hoveredIndex),
+            painter: _DiscPainter(colors, slotCount, hoveredIndex),
           ),
           for (final (index, brush) in brushes.indexed)
             Positioned.fromRect(
               rect: Rect.fromCenter(
                 center:
                     const Offset(radius, radius) +
-                    BrushWheelGeometry.slotCenter(index, brushes.length),
+                    BrushWheelGeometry.slotCenter(index, slotCount),
                 width: BrushWheelGeometry.slotSize,
                 height: BrushWheelGeometry.slotSize,
               ),
               child: BrushWheelSlot(
                 key: ValueKey(brush.id),
                 brush: brush,
-                number: index + 1,
                 kind: kind,
                 active: brush.id == activeId,
                 hovered: index == hoveredIndex,
                 imageRepository: imageRepository,
               ),
+            ),
+          if (canCreate)
+            Positioned.fromRect(
+              rect: Rect.fromCenter(
+                center:
+                    const Offset(radius, radius) +
+                    BrushWheelGeometry.slotCenter(brushes.length, slotCount),
+                width: BrushWheelGeometry.slotSize,
+                height: BrushWheelGeometry.slotSize,
+              ),
+              child: BrushWheelAddSlot(hovered: hoveringAdd),
             ),
           Positioned.fromRect(
             rect: Rect.fromCircle(
@@ -70,7 +89,7 @@ class BrushWheel extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: colors.surface1),
               ),
-              child: hovered == null
+              child: hovered == null && !hoveringAdd
                   ? Icon(Icons.close, size: 14, color: colors.subtext0)
                   : null,
             ),
@@ -84,6 +103,7 @@ class BrushWheel extends StatelessWidget {
               child: BrushWheelLabel(
                 active: brushes.firstWhere((brush) => brush.id == activeId),
                 hovered: hovered,
+                adding: hoveringAdd,
               ),
             ),
           ),

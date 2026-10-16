@@ -131,21 +131,8 @@ class _BrushPickerState extends State<BrushPicker> {
     );
   }
 
-  Future<void> _create() async {
-    final editor = widget.editorContext;
-    final sourceId = editor.brushes.active.id;
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => const BrushNameDialog(creating: true),
-    );
-    if (!mounted ||
-        name == null ||
-        editor.brushes.active.id != sourceId ||
-        !editor.brushes.canCreate) {
-      return;
-    }
-    editor.brushes.create(name);
-  }
+  Future<void> _create() =>
+      showCreateBrushDialog(context, widget.editorContext.brushes);
 
   Future<void> _rename() async {
     final editor = widget.editorContext;

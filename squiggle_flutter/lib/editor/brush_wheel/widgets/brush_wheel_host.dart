@@ -3,28 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/brush_wheel_geometry.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/brush_name_dialog.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
-
-const _digitKeys = [
-  LogicalKeyboardKey.digit1,
-  LogicalKeyboardKey.digit2,
-  LogicalKeyboardKey.digit3,
-  LogicalKeyboardKey.digit4,
-  LogicalKeyboardKey.digit5,
-  LogicalKeyboardKey.digit6,
-  LogicalKeyboardKey.digit7,
-  LogicalKeyboardKey.digit8,
-  LogicalKeyboardKey.digit9,
-];
 
 /// Shows the brush wheel at the pointer while B is held, and activates the
 /// hovered brush when B is released.
 ///
 /// Must wrap the editor's shortcut scope: B presses reach this widget only
 /// after descendants ignore them. While open it takes primary focus, so the
-/// release, digits and Escape never reach the tool shortcuts below.
+/// release and Escape never reach the tool shortcuts below.
 class BrushWheelHost extends StatefulWidget {
   const BrushWheelHost({
     super.key,
@@ -61,6 +50,10 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
   bool get _isOpen => _center != null;
 
   int get _brushCount => widget.editorContext.brushes.profiles.length;
+
+  /// The wheel ends with a "new brush" slot until the document is full.
+  int get _slotCount =>
+      _brushCount + (widget.editorContext.brushes.canCreate ? 1 : 0);
 
   /// Mirrors the Cmd/Ctrl+number brush shortcut: brushes only apply to new
   /// drawings, so the wheel is unavailable with a selection or a non-drawing
@@ -126,6 +119,7 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
                         brushes: brushes.profiles,
                         activeId: brushes.active.id,
                         hoveredIndex: _hovered,
+                        canCreate: brushes.canCreate,
                         kind: kind,
                         imageRepository: widget.imageRepository,
                       ),
@@ -166,21 +160,8 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
       return;
     }
 
-    if (event is! KeyDownEvent) {
-      return;
-    }
-
-    if (key == LogicalKeyboardKey.escape) {
+    if (event is KeyDownEvent && key == LogicalKeyboardKey.escape) {
       _close(commit: false);
-
-      return;
-    }
-
-    final index = _digitKeys.indexOf(key);
-    final hasBrush = index >= 0 && index < _brushCount;
-
-    if (hasBrush) {
-      setState(() => _hovered = index);
     }
   }
 
@@ -193,7 +174,7 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
     final size = context.size ?? Size.zero;
     final pointer = _pointer ?? size.center(Offset.zero);
 
-    // Focus moves to the wheel so the release, digits and Escape stay out of
+    // Focus moves to the wheel so the release and Escape stay out of
     // the tool shortcuts. The previous focus is restored on close.
     _restoreFocus = FocusManager.instance.primaryFocus;
     _focusNode.requestFocus();
@@ -214,11 +195,17 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
 
     final hovered = _hovered;
 
+    var createBrush = false;
+
     if (commit && hovered != null) {
       final brushes = widget.editorContext.brushes;
 
-      // activate() ignores the already active brush.
-      brushes.activate(brushes.profiles[hovered].id);
+      if (hovered >= _brushCount) {
+        createBrush = brushes.canCreate;
+      } else {
+        // activate() ignores the already active brush.
+        brushes.activate(brushes.profiles[hovered].id);
+      }
     }
 
     setState(() {
@@ -228,6 +215,10 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
     });
 
     _restorePreviousFocus();
+
+    if (createBrush) {
+      showCreateBrushDialog(context, widget.editorContext.brushes);
+    }
   }
 
   void _restorePreviousFocus() {
@@ -263,6 +254,6 @@ class _BrushWheelHostState extends State<BrushWheelHost> {
       return null;
     }
 
-    return BrushWheelGeometry.slotAt(position - center, _brushCount);
+    return BrushWheelGeometry.slotAt(position - center, _slotCount);
   }
 }
