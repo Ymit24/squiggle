@@ -54,13 +54,32 @@ class BrushWheelSlot extends StatelessWidget {
               imageRepository: imageRepository,
             ),
             Positioned(
-              left: 4,
-              top: 4,
-              width: BrushWheelGeometry.slotSize - 18,
-              child: SquiggleShortcutHint(
-                label: '⌘$number',
-                style: theme.typography.hotkey,
-                alignment: Alignment.centerLeft,
+              left: 3,
+              top: 3,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: BrushWheelGeometry.slotSize - 18,
+                ),
+                // Backed so the hint stays readable over the swatch.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.mantle.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 3,
+                      vertical: 2,
+                    ),
+                    child: SquiggleShortcutHint(
+                      label: '⌘$number',
+                      style: theme.typography.hotkey.copyWith(
+                        color: colors.text,
+                      ),
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                ),
               ),
             ),
             if (active)
