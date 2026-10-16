@@ -37,10 +37,7 @@ class BrushWheelLabel extends StatelessWidget {
             key: const ValueKey('brush-wheel-label'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.menuItemLabel.copyWith(
-              color: colors.text,
-              fontSize: 12.5,
-            ),
+            style: theme.typography.menuItemLabel.copyWith(color: colors.text),
           ),
         ),
       ),
