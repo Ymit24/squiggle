@@ -1,24 +1,36 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/label_layout.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 sealed class TextEditSession {
-  const TextEditSession({
-    required this.initialContents,
-    required this.canvasLocalBounds,
-  });
+  const TextEditSession({required this.initialContents, required this.layout});
 
   final String initialContents;
-  final Rect canvasLocalBounds;
+
+  /// Where the edited text is typeset, in document (root) world coordinates.
+  final LabelLayout layout;
 }
 
 final class EditTextEditSession extends TextEditSession {
   const EditTextEditSession({
     required this.featureId,
     required super.initialContents,
-    required super.canvasLocalBounds,
+    required super.layout,
   });
+
+  factory EditTextEditSession.forFeature(Feature feature) {
+    final kind = feature.kind as LabelCapable;
+    return EditTextEditSession(
+      featureId: feature.id,
+      initialContents: kind.label,
+      layout: kind
+          .labelLayout(feature)
+          .shifted(feature.parent?.globalOrigin ?? Offset.zero),
+    );
+  }
 
   final NodeId featureId;
 }
@@ -27,7 +39,7 @@ final class CreateTextEditSession extends TextEditSession {
   const CreateTextEditSession({
     required this.worldOrigin,
     required super.initialContents,
-    required super.canvasLocalBounds,
+    required super.layout,
   });
 
   final Offset worldOrigin;

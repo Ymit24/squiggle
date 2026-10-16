@@ -113,16 +113,17 @@ final class FeatureKindRectangle extends FeatureKind
       strokeType,
     );
 
-    text_painter.paintText(
-      canvas,
-      label,
-      _paddedLabelBounds(bounds),
-      fontSize: labelFontSize,
-      fillColor: Color.fromARGB(255, 255, 255, 255),
-      horizontalAlignment: labelHorizontalAlignment,
-      verticalAlignment: labelVerticalAlignment,
-    );
+    if (!feature.hideLabel) labelLayout(feature).paint(canvas, label);
   }
+
+  @override
+  LabelLayout labelLayout(Feature feature) => LabelLayout(
+    bounds: _paddedLabelBounds(feature.localBounds()),
+    fontSize: labelFontSize,
+    color: _labelColor,
+    horizontalAlignment: labelHorizontalAlignment,
+    verticalAlignment: labelVerticalAlignment,
+  );
 
   @override
   Iterable<InspectorField> buildInspectorFields() {

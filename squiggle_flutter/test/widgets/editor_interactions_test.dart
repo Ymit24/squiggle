@@ -33,7 +33,6 @@ Future<EditorContext> _pumpEditor(
           context: editor,
           canvasKey: canvasKey,
           imageRepository: images,
-          canvasInteractionsEnabled: true,
           child: SizedBox.expand(key: canvasKey),
         ),
       ),

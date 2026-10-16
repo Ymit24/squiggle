@@ -55,22 +55,18 @@ void main() {
         expect(context.document.nodes, isEmpty);
         expect(context.tool.activeTool, isA<SelectTool>());
 
-        final openState =
-            await textEditBloc.stream.firstWhere(
-                  (state) => state is CreateTextEditOpen,
-                )
-                as CreateTextEditOpen;
+        final openState = await textEditBloc.stream.firstWhere(
+          (state) => state is CreateTextEditOpen,
+        ) as CreateTextEditOpen;
 
         expect(openState.worldOrigin, click);
         expect(openState.initialContents, '');
-        expect(
-          openState.canvasLocalBounds,
-          camera.worldToScreenBounds(newTextBoundsAt(click)),
-        );
+        expect(openState.layout.bounds.topLeft, click);
+        expect(openState.layout.bounds.width, defaultNewTextWidth);
       },
     );
 
-    test('locked text tool stays ready after submit and cancel', () async {
+    test('locked text tool stays ready after submit and empty submit', () async {
       context.tool.toggleLock();
       context.setTool(CreateTextTool());
       final textTool = context.tool.activeTool;
@@ -84,16 +80,14 @@ void main() {
           isShiftPressed: false,
           isAltPressed: false,
         );
-        final open =
-            await textEditBloc.stream.firstWhere(
-                  (state) => state is CreateTextEditOpen,
-                )
-                as CreateTextEditOpen;
+        final open = await textEditBloc.stream.firstWhere(
+          (state) => state is CreateTextEditOpen,
+        ) as CreateTextEditOpen;
         expect(open.worldOrigin, click);
         expect(context.tool.activeTool, same(textTool));
 
         textEditBloc.add(
-          submit ? const TextEditSubmitted('hello') : const TextEditCancelled(),
+          TextEditSubmitted(submit ? 'hello' : ''),
         );
         await textEditBloc.stream.firstWhere(
           (state) => state is TextEditClosed,

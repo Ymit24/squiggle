@@ -47,8 +47,10 @@ void main() {
           expect(session.featureId, feature.id);
           expect(session.initialContents, 'hello world');
           expect(
-            session.canvasLocalBounds,
-            harness.camera.worldToScreenBounds(feature.localBounds()),
+            session.layout.bounds,
+            ((feature as Feature).kind as LabelCapable)
+                .labelLayout(feature)
+                .bounds,
           );
           await subscription.cancel();
         },
@@ -85,10 +87,8 @@ void main() {
       final session = harness.context.textEdit.session as CreateTextEditSession;
       expect(session.worldOrigin, click);
       expect(session.initialContents, isEmpty);
-      expect(
-        session.canvasLocalBounds,
-        harness.camera.worldToScreenBounds(newTextBoundsAt(click)),
-      );
+      expect(session.layout.bounds.topLeft, click);
+      expect(session.layout.bounds.width, defaultNewTextWidth);
     });
 
     for (final key in [

@@ -1,13 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/fling_controller.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_record.dart';
 import 'package:squiggle_flutter/models/camera.dart';
@@ -21,14 +19,12 @@ class EditorInteractions extends StatefulWidget {
     required this.context,
     required this.canvasKey,
     required this.imageRepository,
-    required this.canvasInteractionsEnabled,
   });
 
   final Widget child;
   final GlobalKey canvasKey;
   final EditorContext context;
   final ImageRepository imageRepository;
-  final bool canvasInteractionsEnabled;
 
   @override
   State<EditorInteractions> createState() => _EditorInteractionsState();
@@ -52,6 +48,11 @@ class _EditorInteractionsState extends State<EditorInteractions>
   Offset? _secondaryPointerDownAt;
   bool _isSecondaryDragging = false;
   bool _panZoomHadSignificantPinch = false;
+
+  /// Pointers pressed on the inline text editor. It sits inside this listener
+  /// so wheel and pinch zoom work over it, but its clicks and drags are the
+  /// text field's, not the tools'.
+  final _textEditorPointers = <int>{};
 
   VelocityTracker _panVelocityTracker = VelocityTracker.withKind(
     PointerDeviceKind.trackpad,
@@ -79,92 +80,99 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<TextEditBloc, TextEditState>(
-      listenWhen: (previous, current) =>
-          current is TextEditOpen && previous is! TextEditOpen,
-      listener: (context, state) => _resetPointerState(),
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) {
+        if (_claimedByTextEditor(event)) return;
+        _pointerDownButtons = event.buttons;
 
-          _pointerDownButtons = event.buttons;
+        if (event.buttons == kPrimaryButton) {
+          _onLeftPointerDown(event);
+        } else if (event.buttons == kSecondaryButton) {
+          _onRightPointerDown(event);
+        }
+      },
+      onPointerMove: (event) {
+        if (_ownedByTextEditor(event)) return;
+        // TODO: This sucks for state machine
+        if (_isPrimaryDragging) {
+          _onLeftPointerUpdate(event);
+        } else if (_secondaryPointerDownAt != null) {
+          _onRightPointerUpdate(event);
+        }
+      },
+      onPointerHover: _onPointerHover,
+      onPointerUp: (event) {
+        if (_ownedByTextEditor(event)) return;
+        // TODO: This sucks for state machine
+        if (_isPrimaryDragging) {
+          _onLeftPointerUp(event);
+        } else if (_secondaryPointerDownAt != null) {
+          _onRightPointerUp(context, event);
+        }
 
-          if (event.buttons == kPrimaryButton) {
-            _onLeftPointerDown(event);
-          } else if (event.buttons == kSecondaryButton) {
-            _onRightPointerDown(event);
-          }
-        },
-        onPointerMove: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-
-          // TODO: This sucks for state machine
-          if (_isPrimaryDragging) {
-            _onLeftPointerUpdate(event);
-          } else if (_secondaryPointerDownAt != null) {
-            _onRightPointerUpdate(event);
-          }
-        },
-        onPointerHover: _onPointerHover,
-        onPointerUp: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-
-          // TODO: This sucks for state machine
-          if (_isPrimaryDragging) {
-            _onLeftPointerUp(event);
-          } else if (_secondaryPointerDownAt != null) {
-            _onRightPointerUp(context, event);
-          }
-
-          _checkForDoubleClick(event);
-        },
-        onPointerCancel: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          // TODO: This sucks for state machine
-          _pointerDownButtons = null;
-          if (_isPrimaryDragging) {
-            _onLeftPointerCancel(event);
-          } else if (_secondaryPointerDownAt != null) {
-            _onRightPointerCancel(event);
-          }
-        },
-        onPointerPanZoomStart: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          _flingController.stop();
-          _panVelocityTracker = VelocityTracker.withKind(
-            PointerDeviceKind.trackpad,
-          );
-          _panZoomHadSignificantPinch = false;
-          _initialZoom = _camera.zoom;
-          _initialLocation = _camera.location;
-          _pointerInCanvas = _canvasLocal(event);
-        },
-        onPointerPanZoomEnd: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          if (_panZoomHadSignificantPinch) return;
-          final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
-          if (velocity.distance < kMinFlingVelocity) return;
-          _flingController.fling(velocity);
-        },
-        onPointerSignal: (event) {
-          if (!widget.canvasInteractionsEnabled) return;
-          if (event is! PointerScrollEvent) return;
-          _flingController.stop();
-          final focal = _canvasLocal(event);
-          if (focal == null) return;
-          final factor = math.exp(-event.scrollDelta.dy * 0.002);
-          _camera.zoomToward(focal, 1 / factor);
-          widget.context.notifyViewportChanged();
-        },
-        onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
-        child: widget.child,
-      ),
+        _checkForDoubleClick(event);
+      },
+      onPointerCancel: (event) {
+        if (_ownedByTextEditor(event)) return;
+        // TODO: This sucks for state machine
+        _pointerDownButtons = null;
+        if (_isPrimaryDragging) {
+          _onLeftPointerCancel(event);
+        } else if (_secondaryPointerDownAt != null) {
+          _onRightPointerCancel(event);
+        }
+      },
+      onPointerPanZoomStart: (event) {
+        _flingController.stop();
+        _panVelocityTracker = VelocityTracker.withKind(
+          PointerDeviceKind.trackpad,
+        );
+        _panZoomHadSignificantPinch = false;
+        _initialZoom = _camera.zoom;
+        _initialLocation = _camera.location;
+        _pointerInCanvas = _canvasLocal(event);
+      },
+      onPointerPanZoomEnd: (event) {
+        if (_panZoomHadSignificantPinch) return;
+        final velocity = _panVelocityTracker.getVelocity().pixelsPerSecond;
+        if (velocity.distance < kMinFlingVelocity) return;
+        _flingController.fling(velocity);
+      },
+      onPointerSignal: (event) {
+        if (event is! PointerScrollEvent) return;
+        _flingController.stop();
+        final focal = _canvasLocal(event);
+        if (focal == null) return;
+        final factor = math.exp(-event.scrollDelta.dy * 0.002);
+        _camera.zoomToward(focal, 1 / factor);
+        widget.context.notifyViewportChanged();
+      },
+      onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
+      child: widget.child,
     );
   }
 
+  bool _isOverTextEditor(PointerEvent event) {
+    if (widget.context.textEdit.session == null) return false;
+    final hits = HitTestResult();
+    WidgetsBinding.instance.hitTestInView(hits, event.position, event.viewId);
+    return hits.path.any((entry) => entry.target is RenderEditable);
+  }
+
+  bool _claimedByTextEditor(PointerDownEvent event) {
+    if (!_isOverTextEditor(event)) return false;
+    _textEditorPointers.add(event.pointer);
+    return true;
+  }
+
+  bool _ownedByTextEditor(PointerEvent event) =>
+      event is PointerUpEvent || event is PointerCancelEvent
+      ? _textEditorPointers.remove(event.pointer)
+      : _textEditorPointers.contains(event.pointer);
+
   void _onPointerHover(PointerHoverEvent event) {
-    if (!widget.canvasInteractionsEnabled) return;
+    if (_isOverTextEditor(event)) return;
     _pointerInCanvas = _canvasLocal(event);
     final world = _screenToWorld(event);
     if (world == null) return;
@@ -178,7 +186,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
   }
 
   void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
-    if (!widget.canvasInteractionsEnabled) return;
     if (!event.synthesized) {
       _panVelocityTracker.addPosition(event.timeStamp, event.pan);
     }
@@ -201,15 +208,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
   void _onFlingPan(Offset delta) {
     _camera.panByScreenDelta(delta);
     widget.context.notifyViewportChanged();
-  }
-
-  void _resetPointerState() {
-    _isPrimaryDragging = false;
-    _secondaryPointerDownAt = null;
-    _isSecondaryDragging = false;
-    _pointerDownButtons = null;
-    _pointerInCanvas = null;
-    _flingController.stop();
   }
 
   void _checkForDoubleClick(PointerUpEvent event) {
