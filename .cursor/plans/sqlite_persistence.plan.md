@@ -6,25 +6,25 @@ todos:
     content: "PR 1: Move clipboard image reading out of ImageRepository into services/clipboard.dart (pure move)"
     status: pending
   - id: pr2-rename-image-cache
-    content: "PR 2: Rename ImageRepository to the decode-cache name (mechanical, ~60 files, own PR)"
+    content: "PR 2: Rename ImageRepository to the decode-cache name (mechanical, ~60 files, own PR). Deferred until the cache-provision design is settled."
     status: pending
   - id: pr3-image-store-hash-ids
     content: "PR 3: Split decode cache from a file-backed ImageStore; ids become sha256 of bytes (adds crypto dep)"
     status: pending
   - id: pr4-reshape-document-storage
-    content: "PR 4: Reshape DocumentStorage API in place (drop StoredDocument, unused imageRepository field, initialize() ceremony; metadata-only list; UUID v4 document ids)"
-    status: pending
+    content: "PR 4: DROPPED. Subsumed by PR 8 (DocumentStorage is replaced by DocumentsDao, which already has UUID ids and a metadata-only list)."
+    status: cancelled
   - id: pr5-split-library-repository
     content: "PR 5: Split DocumentLibraryRepository into list notifier + active-document coordinator"
     status: pending
   - id: pr6-drift-schema
-    content: "PR 6: Drift schema + DAOs, additive and not wired in (design sign-off point)"
-    status: in_progress
+    content: "PR 6: Drift schema + DAOs, additive and not wired in (design sign-off point). This is the feature branch itself (#162)."
+    status: completed
   - id: pr7-images-on-db
     content: "PR 7: Images onto the DB (ImageStore becomes ImagesDao), startup GC"
     status: pending
   - id: pr8-documents-on-db
-    content: "PR 8: Documents onto the DB, previewPng column, delete file code and obsolete tests"
+    content: "PR 8: Documents onto the DB, previewPng column, startup image GC, failed-load policy, delete file code and obsolete tests"
     status: pending
   - id: pr9-migration-screen
     content: "PR 9: Temporary migration debug screen (throwaway branch, never merged to main)"
@@ -34,7 +34,7 @@ isProject: false
 
 # SQLite Persistence (drift)
 
-Status: design agreed in brainstorm, nothing implemented yet.
+Status: PR 6 (schema and DAOs) is the feature branch `t3/sqlite-drift-persistence-port` (PR #162 into `main`). Every other PR targets that branch, and the whole port merges to `main` once.
 
 ## PR stack
 
@@ -43,7 +43,7 @@ Status: design agreed in brainstorm, nothing implemented yet.
 | # | PR | Notes |
 |---|---|---|
 | 1 | Move clipboard image reading out of `ImageRepository` into `services/clipboard.dart` | Pure move |
-| 2 | Rename `ImageRepository` to the decode-cache name | Mechanical, ~60 files. Own PR so nobody reads logic inside a rename. Avoid the name `ImageCache` (clashes with Flutter); candidates `DecodedImages` / `CanvasImages`. |
+| 2 | Rename `ImageRepository` to the decode-cache name | **Deferred** until the cache-provision design is settled (it likely touches the same ~60 call sites). Mechanical, ~60 files. Own PR so nobody reads logic inside a rename. Avoid the name `ImageCache` (clashes with Flutter); candidates `DecodedImages` / `CanvasImages`. |
 | 3 | Split the cache from a file-backed `ImageStore` (`put(bytes)` returns an id, `get(id)`), and make ids the sha256 of the bytes | Adds `crypto`. Dedupes pastes and removes the `importedIds` remapping in the clipboard path. Old `img_..png` ids still load. |
 | 4 | Reshape the `DocumentStorage` API in place | Drop `StoredDocument` and the unused `imageRepository` field. Make `listDocuments` a metadata-only call shape. Remove the `initialize()` ceremony. Document ids become `const Uuid().v4()` (replaces `_generateDocumentId`); backward compatible, existing `doc_..json` files keep loading. |
 | 5 | Split `DocumentLibraryRepository` into a list notifier and an active-document coordinator | No re-list per autosave, list refreshed on entering the library screen, flush on document switch. |
@@ -55,15 +55,16 @@ No interface with a file implementation and a DB implementation: PRs 3 and 4 cha
 | # | PR | Notes |
 |---|---|---|
 | 6 | Drift schema + DAOs, additive and not wired in | Design sign-off point. Large generated diff; review the hand-written files in `lib/database/` only. Commit `*.g.dart` like the existing freezed files. |
-| 7 | Images onto the DB (`ImageStore` becomes `ImagesDao`) | Small because PR 3 fixed the shape. Adds startup GC. |
-| 8 | Documents onto the DB, `previewPng` column, delete the file code and obsolete tests | Old documents are not visible after this until the migration runs. 7 and 8 land together. |
+| 7 | Images onto the DB (`ImageStore` becomes `ImagesDao`) | Small because PR 3 fixed the shape. Opens the DB file (path via `path_provider`). Must await `insertIfAbsent` before the node referencing the image exists (FK). No GC here: `image_refs` is empty until documents are on the DB. Must come before 8 because of the FK. |
+| 8 | Documents onto the DB, `previewPng` column, startup image GC, delete the file code and obsolete tests | Absorbs old PR 4. Gate: decide the failed-load policy first. Old documents and images are not visible until the migration runs. |
 | 9 | Temporary migration screen | Throwaway branch, never merged to `main`. |
 
 ### Notes on ordering
 
-- Phase 1 PRs ship a fully working app, so they can merge early. Each merge to `main` triggers `linux-release.yml` (one release per merge).
-- PR 6 is additive and independent. It can be opened first and reviewed in parallel if the schema should be locked earlier; that would also surface any drift/Linux/CI build problem sooner.
-- PRs 3 and 4 shape the API from the DAO sketch below before the DAO exists. If PR 6 finds a mismatch, touch up the earlier API in the DB PRs.
+- **Branching:** the feature branch `t3/sqlite-drift-persistence-port` is the integration branch (PR #162, retitled as the umbrella). Each sub-PR is its own branch opened against it; later sub-PRs rebase onto it after earlier ones merge. One merge to `main` at the end, so intermediate states never release.
+- Order: 1, 3, 5, then 7, then 8. 2 is deferred. 7 before 8 because `image_refs.image_hash` is a foreign key to `images.hash`.
+- PRs 3 and 5 shape the API from the DAO sketch below before it is wired in. If a mismatch shows up, touch up the earlier API in the DB PRs.
+- **Gates before PR 8:** (a) decide the failed-load policy (see Deferred); (b) real-data check: a throwaway migration run into an on-disk DB against the real documents, to confirm save time on the largest document and that nothing trips the FK; (c) `flutter build linux --release` once on the branch to confirm the bundled SQLite compiles.
 - Validation per PR (from `squiggle_flutter/AGENTS.md`): `flutter analyze`, `dart run dart_code_linter:metrics analyze lib packages/data_models/lib test`, plus relevant tests. Semantic commits.
 
 ## Decisions
