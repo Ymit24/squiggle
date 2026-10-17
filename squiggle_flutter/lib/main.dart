@@ -5,7 +5,8 @@ import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/app/squiggle_app.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
-import 'package:squiggle_flutter/repositories/document_library_repository.dart';
+import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
+import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:window_manager/window_manager.dart';
@@ -30,11 +31,13 @@ void main() async {
 
   final documentStorage = DocumentStorage(imageRepository: imageRepository);
   final context = EditorContext(document: Document());
-  final documentLibraryRepository = DocumentLibraryRepository(
+  final documentList = DocumentListNotifier(documentStorage: documentStorage);
+  final activeDocument = ActiveDocumentCoordinator(
     documentStorage: documentStorage,
+    documentList: documentList,
     context: context,
   );
-  await documentLibraryRepository.initialize();
+  await activeDocument.initialize();
 
   final appRouter = AppRouter();
 
@@ -44,7 +47,8 @@ void main() async {
       imageRepository: imageRepository,
       context: context,
       documentStorage: documentStorage,
-      documentLibraryRepository: documentLibraryRepository,
+      documentList: documentList,
+      activeDocument: activeDocument,
     ),
   );
 }
