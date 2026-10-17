@@ -33,6 +33,8 @@ abstract final class SelectionPainter {
   ) {
     final showResizeHandles = context.selection.selectedNodeIds.length == 1;
     for (final featureId in context.selection.selectedNodeIds) {
+      // The inline text editor is the frame while a feature's text is edited.
+      if (context.textEdit.isEditing(featureId)) continue;
       final node = context.document.requireNodeById(featureId);
       paintSelectionBox(
         canvas,

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/fling_controller.dart';
+import 'package:squiggle_flutter/editor/text_edit/commit_text_edit.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_record.dart';
 import 'package:squiggle_flutter/models/camera.dart';
@@ -84,6 +85,8 @@ class _EditorInteractionsState extends State<EditorInteractions>
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
         if (_claimedByTextEditor(event)) return;
+        // Whatever this press does, it acts on the committed text.
+        widget.context.commitTextEdit(selectCreated: false);
         _pointerDownButtons = event.buttons;
 
         if (event.buttons == kPrimaryButton) {

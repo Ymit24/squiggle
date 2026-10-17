@@ -49,10 +49,21 @@ final class CreateTextEditSession extends TextEditSession {
 class TextEditModel extends ChangeNotifier {
   TextEditSession? _session;
 
+  /// What the text field currently contains. Kept here, not just in the
+  /// field's controller, so anything that ends the edit can commit it.
+  String draft = '';
+
   TextEditSession? get session => _session;
+
+  /// Whether the text of the node [id] is being edited right now.
+  bool isEditing(NodeId id) => switch (_session) {
+    EditTextEditSession(:final featureId) => featureId == id,
+    _ => false,
+  };
 
   void begin(TextEditSession session) {
     _session = session;
+    draft = session.initialContents;
     notifyListeners();
   }
 

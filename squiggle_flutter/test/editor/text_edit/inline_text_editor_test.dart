@@ -40,7 +40,7 @@ void main() {
                   InlineTextEditor(
                     controller: controller,
                     focusNode: focusNode,
-                    layout: layout,
+                    layout: () => layout,
                     editorContext: editorContext,
                     onTapOutside: () {},
                   ),
@@ -101,7 +101,7 @@ void main() {
             InlineTextEditor(
               controller: controller,
               focusNode: focusNode,
-              layout: const LabelLayout(
+              layout: () => const LabelLayout(
                 bounds: Rect.fromLTWH(100, 100, 200, 40),
                 fontSize: 20,
                 color: Colors.white,

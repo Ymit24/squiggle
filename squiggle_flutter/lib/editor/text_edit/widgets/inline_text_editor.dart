@@ -24,13 +24,17 @@ class InlineTextEditor extends StatelessWidget {
     required this.layout,
     required this.editorContext,
     required this.onTapOutside,
+    this.outlined = true,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
-  final LabelLayout layout;
+  final ValueGetter<LabelLayout> layout;
   final EditorContext editorContext;
   final VoidCallback onTapOutside;
+
+  /// Whether to frame the field. Shapes already have their own outline.
+  final bool outlined;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,7 @@ class InlineTextEditor extends StatelessWidget {
         final camera = editorContext.camera;
         final pixel = camera.zoom;
         final cursorWidth = 1.5 * pixel;
+        final layout = this.layout();
         final origin = camera.worldToScreen(layout.textOrigin(controller.text));
         return Positioned(
           left: origin.dx,
@@ -67,8 +72,8 @@ class InlineTextEditor extends StatelessWidget {
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        _outline(accent, pixel),
-                        _textField(cursorWidth),
+                        if (outlined) _outline(accent, pixel),
+                        _textField(layout, cursorWidth),
                       ],
                     ),
                   ),
@@ -97,7 +102,7 @@ class InlineTextEditor extends StatelessWidget {
     );
   }
 
-  Widget _textField(double cursorWidth) {
+  Widget _textField(LabelLayout layout, double cursorWidth) {
     return TextField(
       controller: controller,
       focusNode: focusNode,

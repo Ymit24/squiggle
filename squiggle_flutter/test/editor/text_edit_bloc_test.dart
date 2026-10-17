@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
+import 'package:squiggle_flutter/editor/text_edit/commit_text_edit.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -75,7 +76,7 @@ void main() {
         createKind: () => FeatureKindCircle(label: 'initial text'),
       ),
     ]) {
-      test('TextEditSubmitted updates ${testCase.name} label as one undoable '
+      test('commitTextEdit updates ${testCase.name} label as one undoable '
           'command', () async {
         context = EditorContext(
           document: Document.fromFeatures([
@@ -104,7 +105,7 @@ void main() {
         );
         await bloc.stream.firstWhere((state) => state is EditTextEditOpen);
 
-        bloc.add(const TextEditSubmitted('updated text'));
+        context.commitTextEdit(contents: 'updated text');
         final closedState = await bloc.stream.firstWhere(
           (state) => state is TextEditClosed,
         );
@@ -158,7 +159,7 @@ void main() {
 
       expect(context.document.nodes, hasLength(1));
 
-      bloc.add(const TextEditSubmitted('new text'));
+      context.commitTextEdit(contents: 'new text');
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
       expect(context.document.nodes, hasLength(2));
@@ -183,7 +184,7 @@ void main() {
       );
       await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-      bloc.add(const TextEditSubmitted('new text', selectCreated: false));
+      context.commitTextEdit(contents: 'new text', selectCreated: false);
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
       expect(context.document.nodes, hasLength(2));
@@ -207,7 +208,7 @@ void main() {
         );
         await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-        bloc.add(const TextEditSubmitted(''));
+        context.commitTextEdit(contents: '');
         await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
         expect(context.document.nodes, hasLength(1));

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
 import 'package:squiggle_flutter/models/document.dart';
@@ -237,5 +238,41 @@ void main() {
     await tester.pumpAndSettle();
     await _rightClick(tester, const Offset(600, 400));
     expect(editor.selection.selectedNodeIds, [first.id, second.id]);
+  });
+
+  group('while editing text', () {
+    Future<(EditorContext, Feature)> pumpEditing(WidgetTester tester) async {
+      final rect = _rectangle(const Offset(100, 100));
+      final editor = await _pumpEditor(
+        tester,
+        document: Document.fromFeatures([rect]),
+      );
+      editor.startTextEdit(EditTextEditSession.forFeature(rect));
+      editor.textEdit.draft = 'typed';
+      return (editor, rect);
+    }
+
+    testWidgets('pressing empty canvas commits the draft', (tester) async {
+      final (editor, rect) = await pumpEditing(tester);
+
+      await tester.tapAt(const Offset(600, 400));
+      await tester.pumpAndSettle();
+
+      expect(editor.textEdit.session, isNull);
+      expect((rect.kind as FeatureKindRectangle).label, 'typed');
+    });
+
+    testWidgets('dragging the shape commits first, then moves it', (
+      tester,
+    ) async {
+      final (editor, rect) = await pumpEditing(tester);
+
+      await tester.dragFrom(const Offset(150, 150), const Offset(200, 0));
+      await tester.pumpAndSettle();
+
+      expect(editor.textEdit.session, isNull);
+      expect((rect.kind as FeatureKindRectangle).label, 'typed');
+      expect(rect.origin, const Offset(300, 100));
+    });
   });
 }
