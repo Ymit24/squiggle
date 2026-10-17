@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
-import 'package:squiggle_flutter/database/tables/documents.dart';
 import 'package:squiggle_flutter/database/tables/images.dart';
 
 part 'images_dao.g.dart';
 
-@DriftAccessor(tables: [Images, ImageRefs, Documents])
+@DriftAccessor(tables: [Images, ImageRefs])
 class ImagesDao extends DatabaseAccessor<AppDatabase> with _$ImagesDaoMixin {
   ImagesDao(super.attachedDatabase);
 

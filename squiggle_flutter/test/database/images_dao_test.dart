@@ -44,5 +44,23 @@ void main() {
       expect(await database.imagesDao.bytes('kept'), isNotNull);
       expect(await database.imagesDao.bytes('gone'), isNull);
     });
+
+    test('a referenced image cannot be deleted directly', () async {
+      final document = await database.documentsDao.create(name: 'Doc');
+      await database.imagesDao.insertIfAbsent('kept', Uint8List.fromList([1]));
+      await database
+          .into(database.imageRefs)
+          .insert(
+            ImageRefsCompanion.insert(
+              documentId: document.id,
+              imageHash: 'kept',
+            ),
+          );
+
+      await expectLater(
+        database.delete(database.images).go(),
+        throwsA(anything),
+      );
+    });
   });
 }

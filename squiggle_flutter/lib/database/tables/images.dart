@@ -14,13 +14,13 @@ class Images extends Table {
 
 /// Which images each document references, rebuilt on every document save.
 ///
-/// [imageHash] deliberately has no foreign key: a document that references an
-/// image missing from [Images] must still save.
+/// [imageHash] is a foreign key: an image must be stored before a document
+/// that references it can be saved, and a referenced image cannot be deleted.
 @DataClassName('ImageRefRow')
 class ImageRefs extends Table {
   TextColumn get documentId =>
-      text().references(Documents, #id, onDelete: KeyAction.cascade)();
-  TextColumn get imageHash => text()();
+      text().references(DocumentMetadatas, #id, onDelete: KeyAction.cascade)();
+  TextColumn get imageHash => text().references(Images, #hash)();
 
   @override
   Set<Column<Object>> get primaryKey => {documentId, imageHash};

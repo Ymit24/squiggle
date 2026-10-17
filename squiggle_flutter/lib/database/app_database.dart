@@ -14,7 +14,7 @@ part 'app_database.g.dart';
 
 /// The single SQLite database holding all documents and images.
 @DriftDatabase(
-  tables: [Documents, DocumentBodies, Images, ImageRefs, AppState],
+  tables: [DocumentMetadatas, DocumentBodies, Images, ImageRefs, AppState],
   daos: [DocumentsDao, ImagesDao, AppStateDao],
 )
 class AppDatabase extends _$AppDatabase {

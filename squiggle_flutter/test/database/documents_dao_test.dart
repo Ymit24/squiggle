@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:data_models/data_models.dart' as data;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -20,6 +22,12 @@ void main() {
     late AppDatabase database;
 
     DocumentsDao dao() => database.documentsDao;
+
+    Future<void> storeImages(Iterable<String> hashes) async {
+      for (final hash in hashes) {
+        await database.imagesDao.insertIfAbsent(hash, Uint8List(1));
+      }
+    }
 
     setUp(() {
       now = DateTime.utc(2026, 1, 1);
@@ -54,6 +62,7 @@ void main() {
 
     test('save round-trips nodes and the brush session', () async {
       final info = await dao().create(name: 'Doc');
+      await storeImages(['a']);
       final document = data.Document(
         name: 'Doc',
         nodes: [_image(1, 'a')],
@@ -97,6 +106,7 @@ void main() {
 
     test('save rebuilds image references', () async {
       final info = await dao().create(name: 'Doc');
+      await storeImages(['a', 'b']);
 
       await dao().save(
         info.id,
@@ -108,9 +118,26 @@ void main() {
       expect(refs.map((ref) => ref.imageHash), ['b']);
     });
 
+    test('save fails and changes nothing if an image is not stored', () async {
+      final info = await dao().create(name: 'Doc');
+      await storeImages(['a']);
+      await dao().save(info.id, data.Document(nodes: [_image(1, 'a')]));
+
+      await expectLater(
+        dao().save(info.id, data.Document(nodes: [_image(1, 'missing')])),
+        throwsA(anything),
+      );
+
+      final loaded = await dao().load(info.id);
+      expect(loaded!.nodes, [_image(1, 'a')]);
+      final refs = await database.select(database.imageRefs).get();
+      expect(refs.map((ref) => ref.imageHash), ['a']);
+    });
+
     test('save for a deleted document is a no-op', () async {
       final info = await dao().create(name: 'Doc');
       await dao().remove(info.id);
+      await storeImages(['a']);
 
       await dao().save(info.id, data.Document(nodes: [_image(1, 'a')]));
 
@@ -121,6 +148,7 @@ void main() {
     test('remove cascades to the body and image references', () async {
       final kept = await dao().create(name: 'Kept');
       final removed = await dao().create(name: 'Removed');
+      await storeImages(['a']);
       await dao().save(removed.id, data.Document(nodes: [_image(1, 'a')]));
       await dao().save(kept.id, data.Document(nodes: [_image(1, 'a')]));
 

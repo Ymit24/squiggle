@@ -3,12 +3,12 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $DocumentsTable extends Documents
-    with TableInfo<$DocumentsTable, DocumentRow> {
+class $DocumentMetadatasTable extends DocumentMetadatas
+    with TableInfo<$DocumentMetadatasTable, DocumentMetadata> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $DocumentsTable(this.attachedDatabase, [this._alias]);
+  $DocumentMetadatasTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -72,10 +72,10 @@ class $DocumentsTable extends Documents
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'documents';
+  static const String $name = 'document_metadata';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DocumentRow> instance, {
+    Insertable<DocumentMetadata> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -121,9 +121,9 @@ class $DocumentsTable extends Documents
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DocumentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+  DocumentMetadata map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DocumentRow(
+    return DocumentMetadata(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -148,12 +148,13 @@ class $DocumentsTable extends Documents
   }
 
   @override
-  $DocumentsTable createAlias(String alias) {
-    return $DocumentsTable(attachedDatabase, alias);
+  $DocumentMetadatasTable createAlias(String alias) {
+    return $DocumentMetadatasTable(attachedDatabase, alias);
   }
 }
 
-class DocumentRow extends DataClass implements Insertable<DocumentRow> {
+class DocumentMetadata extends DataClass
+    implements Insertable<DocumentMetadata> {
   final String id;
   final String name;
   final DateTime createdAt;
@@ -161,7 +162,7 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
 
   /// Cached library thumbnail; null until previews are generated.
   final Uint8List? previewPng;
-  const DocumentRow({
+  const DocumentMetadata({
     required this.id,
     required this.name,
     required this.createdAt,
@@ -181,8 +182,8 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
     return map;
   }
 
-  DocumentsCompanion toCompanion(bool nullToAbsent) {
-    return DocumentsCompanion(
+  DocumentMetadatasCompanion toCompanion(bool nullToAbsent) {
+    return DocumentMetadatasCompanion(
       id: Value(id),
       name: Value(name),
       createdAt: Value(createdAt),
@@ -193,12 +194,12 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
     );
   }
 
-  factory DocumentRow.fromJson(
+  factory DocumentMetadata.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DocumentRow(
+    return DocumentMetadata(
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -218,21 +219,21 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
     };
   }
 
-  DocumentRow copyWith({
+  DocumentMetadata copyWith({
     String? id,
     String? name,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<Uint8List?> previewPng = const Value.absent(),
-  }) => DocumentRow(
+  }) => DocumentMetadata(
     id: id ?? this.id,
     name: name ?? this.name,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     previewPng: previewPng.present ? previewPng.value : this.previewPng,
   );
-  DocumentRow copyWithCompanion(DocumentsCompanion data) {
-    return DocumentRow(
+  DocumentMetadata copyWithCompanion(DocumentMetadatasCompanion data) {
+    return DocumentMetadata(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -245,7 +246,7 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
 
   @override
   String toString() {
-    return (StringBuffer('DocumentRow(')
+    return (StringBuffer('DocumentMetadata(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('createdAt: $createdAt, ')
@@ -266,7 +267,7 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DocumentRow &&
+      (other is DocumentMetadata &&
           other.id == this.id &&
           other.name == this.name &&
           other.createdAt == this.createdAt &&
@@ -274,14 +275,14 @@ class DocumentRow extends DataClass implements Insertable<DocumentRow> {
           $driftBlobEquality.equals(other.previewPng, this.previewPng));
 }
 
-class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
+class DocumentMetadatasCompanion extends UpdateCompanion<DocumentMetadata> {
   final Value<String> id;
   final Value<String> name;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<Uint8List?> previewPng;
   final Value<int> rowid;
-  const DocumentsCompanion({
+  const DocumentMetadatasCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -289,7 +290,7 @@ class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
     this.previewPng = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  DocumentsCompanion.insert({
+  DocumentMetadatasCompanion.insert({
     required String id,
     required String name,
     required DateTime createdAt,
@@ -300,7 +301,7 @@ class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
        name = Value(name),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
-  static Insertable<DocumentRow> custom({
+  static Insertable<DocumentMetadata> custom({
     Expression<String>? id,
     Expression<String>? name,
     Expression<DateTime>? createdAt,
@@ -318,7 +319,7 @@ class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
     });
   }
 
-  DocumentsCompanion copyWith({
+  DocumentMetadatasCompanion copyWith({
     Value<String>? id,
     Value<String>? name,
     Value<DateTime>? createdAt,
@@ -326,7 +327,7 @@ class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
     Value<Uint8List?>? previewPng,
     Value<int>? rowid,
   }) {
-    return DocumentsCompanion(
+    return DocumentMetadatasCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
@@ -362,7 +363,7 @@ class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
 
   @override
   String toString() {
-    return (StringBuffer('DocumentsCompanion(')
+    return (StringBuffer('DocumentMetadatasCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('createdAt: $createdAt, ')
@@ -375,7 +376,7 @@ class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
 }
 
 class $DocumentBodiesTable extends DocumentBodies
-    with TableInfo<$DocumentBodiesTable, DocumentBodyRow> {
+    with TableInfo<$DocumentBodiesTable, DocumentBody> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -391,7 +392,7 @@ class $DocumentBodiesTable extends DocumentBodies
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES documents (id) ON DELETE CASCADE',
+      'REFERENCES document_metadata (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _formatVersionMeta = const VerificationMeta(
@@ -423,7 +424,7 @@ class $DocumentBodiesTable extends DocumentBodies
   static const String $name = 'document_bodies';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DocumentBodyRow> instance, {
+    Insertable<DocumentBody> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -461,9 +462,9 @@ class $DocumentBodiesTable extends DocumentBodies
   @override
   Set<GeneratedColumn> get $primaryKey => {documentId};
   @override
-  DocumentBodyRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+  DocumentBody map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DocumentBodyRow(
+    return DocumentBody(
       documentId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}document_id'],
@@ -485,7 +486,7 @@ class $DocumentBodiesTable extends DocumentBodies
   }
 }
 
-class DocumentBodyRow extends DataClass implements Insertable<DocumentBodyRow> {
+class DocumentBody extends DataClass implements Insertable<DocumentBody> {
   final String documentId;
 
   /// `dataModelFormatVersion` the [body] was written with.
@@ -493,7 +494,7 @@ class DocumentBodyRow extends DataClass implements Insertable<DocumentBodyRow> {
 
   /// `data.Document.encode()`.
   final String body;
-  const DocumentBodyRow({
+  const DocumentBody({
     required this.documentId,
     required this.formatVersion,
     required this.body,
@@ -515,12 +516,12 @@ class DocumentBodyRow extends DataClass implements Insertable<DocumentBodyRow> {
     );
   }
 
-  factory DocumentBodyRow.fromJson(
+  factory DocumentBody.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DocumentBodyRow(
+    return DocumentBody(
       documentId: serializer.fromJson<String>(json['documentId']),
       formatVersion: serializer.fromJson<int>(json['formatVersion']),
       body: serializer.fromJson<String>(json['body']),
@@ -536,17 +537,17 @@ class DocumentBodyRow extends DataClass implements Insertable<DocumentBodyRow> {
     };
   }
 
-  DocumentBodyRow copyWith({
+  DocumentBody copyWith({
     String? documentId,
     int? formatVersion,
     String? body,
-  }) => DocumentBodyRow(
+  }) => DocumentBody(
     documentId: documentId ?? this.documentId,
     formatVersion: formatVersion ?? this.formatVersion,
     body: body ?? this.body,
   );
-  DocumentBodyRow copyWithCompanion(DocumentBodiesCompanion data) {
-    return DocumentBodyRow(
+  DocumentBody copyWithCompanion(DocumentBodiesCompanion data) {
+    return DocumentBody(
       documentId: data.documentId.present
           ? data.documentId.value
           : this.documentId,
@@ -559,7 +560,7 @@ class DocumentBodyRow extends DataClass implements Insertable<DocumentBodyRow> {
 
   @override
   String toString() {
-    return (StringBuffer('DocumentBodyRow(')
+    return (StringBuffer('DocumentBody(')
           ..write('documentId: $documentId, ')
           ..write('formatVersion: $formatVersion, ')
           ..write('body: $body')
@@ -572,13 +573,13 @@ class DocumentBodyRow extends DataClass implements Insertable<DocumentBodyRow> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DocumentBodyRow &&
+      (other is DocumentBody &&
           other.documentId == this.documentId &&
           other.formatVersion == this.formatVersion &&
           other.body == this.body);
 }
 
-class DocumentBodiesCompanion extends UpdateCompanion<DocumentBodyRow> {
+class DocumentBodiesCompanion extends UpdateCompanion<DocumentBody> {
   final Value<String> documentId;
   final Value<int> formatVersion;
   final Value<String> body;
@@ -597,7 +598,7 @@ class DocumentBodiesCompanion extends UpdateCompanion<DocumentBodyRow> {
   }) : documentId = Value(documentId),
        formatVersion = Value(formatVersion),
        body = Value(body);
-  static Insertable<DocumentBodyRow> custom({
+  static Insertable<DocumentBody> custom({
     Expression<String>? documentId,
     Expression<int>? formatVersion,
     Expression<String>? body,
@@ -934,7 +935,7 @@ class $ImageRefsTable extends ImageRefs
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES documents (id) ON DELETE CASCADE',
+      'REFERENCES document_metadata (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _imageHashMeta = const VerificationMeta(
@@ -947,6 +948,9 @@ class $ImageRefsTable extends ImageRefs
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES images (hash)',
+    ),
   );
   @override
   List<GeneratedColumn> get $columns => [documentId, imageHash];
@@ -1350,7 +1354,8 @@ class AppStateCompanion extends UpdateCompanion<AppStateRow> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
-  late final $DocumentsTable documents = $DocumentsTable(this);
+  late final $DocumentMetadatasTable documentMetadatas =
+      $DocumentMetadatasTable(this);
   late final $DocumentBodiesTable documentBodies = $DocumentBodiesTable(this);
   late final $ImagesTable images = $ImagesTable(this);
   late final $ImageRefsTable imageRefs = $ImageRefsTable(this);
@@ -1363,7 +1368,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    documents,
+    documentMetadatas,
     documentBodies,
     images,
     imageRefs,
@@ -1373,14 +1378,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'documents',
+        'document_metadata',
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('document_bodies', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'documents',
+        'document_metadata',
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('image_refs', kind: UpdateKind.delete)],
@@ -1388,31 +1393,42 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ]);
 }
 
-typedef $$DocumentsTableCreateCompanionBuilder = DocumentsCompanion Function({
-  required String id,
-  required String name,
-  required DateTime createdAt,
-  required DateTime updatedAt,
-  Value<Uint8List?> previewPng,
-  Value<int> rowid,
-});
-typedef $$DocumentsTableUpdateCompanionBuilder = DocumentsCompanion Function({
-  Value<String> id,
-  Value<String> name,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<Uint8List?> previewPng,
-  Value<int> rowid,
-});
+typedef $$DocumentMetadatasTableCreateCompanionBuilder =
+    DocumentMetadatasCompanion Function({
+      required String id,
+      required String name,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<Uint8List?> previewPng,
+      Value<int> rowid,
+    });
+typedef $$DocumentMetadatasTableUpdateCompanionBuilder =
+    DocumentMetadatasCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<Uint8List?> previewPng,
+      Value<int> rowid,
+    });
 
-final class $$DocumentsTableReferences
-    extends BaseReferences<_$AppDatabase, $DocumentsTable, DocumentRow> {
-  $$DocumentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+final class $$DocumentMetadatasTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $DocumentMetadatasTable,
+          DocumentMetadata
+        > {
+  $$DocumentMetadatasTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
 
-  static MultiTypedResultKey<$DocumentBodiesTable, List<DocumentBodyRow>>
+  static MultiTypedResultKey<$DocumentBodiesTable, List<DocumentBody>>
   _documentBodiesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.documentBodies,
-    aliasName: 'documents__id__document_bodies__document_id',
+    aliasName: 'document_metadata__id__document_bodies__document_id',
   );
 
   $$DocumentBodiesTableProcessedTableManager get documentBodiesRefs {
@@ -1430,7 +1446,7 @@ final class $$DocumentsTableReferences
   static MultiTypedResultKey<$ImageRefsTable, List<ImageRefRow>>
   _imageRefsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.imageRefs,
-    aliasName: 'documents__id__image_refs__document_id',
+    aliasName: 'document_metadata__id__image_refs__document_id',
   );
 
   $$ImageRefsTableProcessedTableManager get imageRefsRefs {
@@ -1446,9 +1462,9 @@ final class $$DocumentsTableReferences
   }
 }
 
-class $$DocumentsTableFilterComposer
-    extends Composer<_$AppDatabase, $DocumentsTable> {
-  $$DocumentsTableFilterComposer({
+class $$DocumentMetadatasTableFilterComposer
+    extends Composer<_$AppDatabase, $DocumentMetadatasTable> {
+  $$DocumentMetadatasTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1531,9 +1547,9 @@ class $$DocumentsTableFilterComposer
   }
 }
 
-class $$DocumentsTableOrderingComposer
-    extends Composer<_$AppDatabase, $DocumentsTable> {
-  $$DocumentsTableOrderingComposer({
+class $$DocumentMetadatasTableOrderingComposer
+    extends Composer<_$AppDatabase, $DocumentMetadatasTable> {
+  $$DocumentMetadatasTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1566,9 +1582,9 @@ class $$DocumentsTableOrderingComposer
   );
 }
 
-class $$DocumentsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DocumentsTable> {
-  $$DocumentsTableAnnotationComposer({
+class $$DocumentMetadatasTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DocumentMetadatasTable> {
+  $$DocumentMetadatasTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1643,32 +1659,37 @@ class $$DocumentsTableAnnotationComposer
   }
 }
 
-class $$DocumentsTableTableManager
+class $$DocumentMetadatasTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $DocumentsTable,
-          DocumentRow,
-          $$DocumentsTableFilterComposer,
-          $$DocumentsTableOrderingComposer,
-          $$DocumentsTableAnnotationComposer,
-          $$DocumentsTableCreateCompanionBuilder,
-          $$DocumentsTableUpdateCompanionBuilder,
-          (DocumentRow, $$DocumentsTableReferences),
-          DocumentRow,
+          $DocumentMetadatasTable,
+          DocumentMetadata,
+          $$DocumentMetadatasTableFilterComposer,
+          $$DocumentMetadatasTableOrderingComposer,
+          $$DocumentMetadatasTableAnnotationComposer,
+          $$DocumentMetadatasTableCreateCompanionBuilder,
+          $$DocumentMetadatasTableUpdateCompanionBuilder,
+          (DocumentMetadata, $$DocumentMetadatasTableReferences),
+          DocumentMetadata,
           PrefetchHooks Function({bool documentBodiesRefs, bool imageRefsRefs})
         > {
-  $$DocumentsTableTableManager(_$AppDatabase db, $DocumentsTable table)
-    : super(
+  $$DocumentMetadatasTableTableManager(
+    _$AppDatabase db,
+    $DocumentMetadatasTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$DocumentsTableFilterComposer($db: db, $table: table),
+              $$DocumentMetadatasTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$DocumentsTableOrderingComposer($db: db, $table: table),
+              $$DocumentMetadatasTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$DocumentsTableAnnotationComposer($db: db, $table: table),
+              $$DocumentMetadatasTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -1677,7 +1698,7 @@ class $$DocumentsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<Uint8List?> previewPng = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DocumentsCompanion(
+              }) => DocumentMetadatasCompanion(
                 id: id,
                 name: name,
                 createdAt: createdAt,
@@ -1693,7 +1714,7 @@ class $$DocumentsTableTableManager
                 required DateTime updatedAt,
                 Value<Uint8List?> previewPng = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DocumentsCompanion.insert(
+              }) => DocumentMetadatasCompanion.insert(
                 id: id,
                 name: name,
                 createdAt: createdAt,
@@ -1704,8 +1725,8 @@ class $$DocumentsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$DocumentsTable, DocumentRow>(table),
-                  $$DocumentsTableReferences(db, table, e),
+                  e.readTable<$DocumentMetadatasTable, DocumentMetadata>(table),
+                  $$DocumentMetadatasTableReferences(db, table, e),
                 ),
               )
               .toList(),
@@ -1722,15 +1743,15 @@ class $$DocumentsTableTableManager
                     return [
                       if (documentBodiesRefs)
                         await $_getPrefetchedData<
-                          DocumentRow,
-                          $DocumentsTable,
-                          DocumentBodyRow
+                          DocumentMetadata,
+                          $DocumentMetadatasTable,
+                          DocumentBody
                         >(
                           currentTable: table,
-                          referencedTable: $$DocumentsTableReferences
+                          referencedTable: $$DocumentMetadatasTableReferences
                               ._documentBodiesRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$DocumentsTableReferences(
+                              $$DocumentMetadatasTableReferences(
                                 db,
                                 table,
                                 p0,
@@ -1743,15 +1764,15 @@ class $$DocumentsTableTableManager
                         ),
                       if (imageRefsRefs)
                         await $_getPrefetchedData<
-                          DocumentRow,
-                          $DocumentsTable,
+                          DocumentMetadata,
+                          $DocumentMetadatasTable,
                           ImageRefRow
                         >(
                           currentTable: table,
-                          referencedTable: $$DocumentsTableReferences
+                          referencedTable: $$DocumentMetadatasTableReferences
                               ._imageRefsRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$DocumentsTableReferences(
+                              $$DocumentMetadatasTableReferences(
                                 db,
                                 table,
                                 p0,
@@ -1770,18 +1791,18 @@ class $$DocumentsTableTableManager
       );
 }
 
-typedef $$DocumentsTableProcessedTableManager =
+typedef $$DocumentMetadatasTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $DocumentsTable,
-      DocumentRow,
-      $$DocumentsTableFilterComposer,
-      $$DocumentsTableOrderingComposer,
-      $$DocumentsTableAnnotationComposer,
-      $$DocumentsTableCreateCompanionBuilder,
-      $$DocumentsTableUpdateCompanionBuilder,
-      (DocumentRow, $$DocumentsTableReferences),
-      DocumentRow,
+      $DocumentMetadatasTable,
+      DocumentMetadata,
+      $$DocumentMetadatasTableFilterComposer,
+      $$DocumentMetadatasTableOrderingComposer,
+      $$DocumentMetadatasTableAnnotationComposer,
+      $$DocumentMetadatasTableCreateCompanionBuilder,
+      $$DocumentMetadatasTableUpdateCompanionBuilder,
+      (DocumentMetadata, $$DocumentMetadatasTableReferences),
+      DocumentMetadata,
       PrefetchHooks Function({bool documentBodiesRefs, bool imageRefsRefs})
     >;
 typedef $$DocumentBodiesTableCreateCompanionBuilder =
@@ -1800,23 +1821,23 @@ typedef $$DocumentBodiesTableUpdateCompanionBuilder =
     });
 
 final class $$DocumentBodiesTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $DocumentBodiesTable, DocumentBodyRow> {
+    extends BaseReferences<_$AppDatabase, $DocumentBodiesTable, DocumentBody> {
   $$DocumentBodiesTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
-      db.documents.createAlias('document_bodies__document_id__documents__id');
+  static $DocumentMetadatasTable _documentIdTable(_$AppDatabase db) => db
+      .documentMetadatas
+      .createAlias('document_bodies__document_id__document_metadata__id');
 
-  $$DocumentsTableProcessedTableManager get documentId {
+  $$DocumentMetadatasTableProcessedTableManager get documentId {
     final $_column = $_itemColumn<String>('document_id')!;
 
-    final manager = $$DocumentsTableTableManager(
+    final manager = $$DocumentMetadatasTableTableManager(
       $_db,
-      $_db.documents,
+      $_db.documentMetadatas,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_documentIdTable($_db));
     if (item == null) return manager;
@@ -1845,20 +1866,20 @@ class $$DocumentBodiesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$DocumentsTableFilterComposer get documentId {
-    final $$DocumentsTableFilterComposer composer = $composerBuilder(
+  $$DocumentMetadatasTableFilterComposer get documentId {
+    final $$DocumentMetadatasTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.documentId,
-      referencedTable: $db.documents,
+      referencedTable: $db.documentMetadatas,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableFilterComposer(
+          }) => $$DocumentMetadatasTableFilterComposer(
             $db: $db,
-            $table: $db.documents,
+            $table: $db.documentMetadatas,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1888,20 +1909,20 @@ class $$DocumentBodiesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$DocumentsTableOrderingComposer get documentId {
-    final $$DocumentsTableOrderingComposer composer = $composerBuilder(
+  $$DocumentMetadatasTableOrderingComposer get documentId {
+    final $$DocumentMetadatasTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.documentId,
-      referencedTable: $db.documents,
+      referencedTable: $db.documentMetadatas,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableOrderingComposer(
+          }) => $$DocumentMetadatasTableOrderingComposer(
             $db: $db,
-            $table: $db.documents,
+            $table: $db.documentMetadatas,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1929,26 +1950,27 @@ class $$DocumentBodiesTableAnnotationComposer
   GeneratedColumn<String> get body =>
       $composableBuilder(column: $table.body, builder: (column) => column);
 
-  $$DocumentsTableAnnotationComposer get documentId {
-    final $$DocumentsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.documentId,
-      referencedTable: $db.documents,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
+  $$DocumentMetadatasTableAnnotationComposer get documentId {
+    final $$DocumentMetadatasTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.documentId,
+          referencedTable: $db.documentMetadatas,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-          ),
-    );
+              }) => $$DocumentMetadatasTableAnnotationComposer(
+                $db: $db,
+                $table: $db.documentMetadatas,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return composer;
   }
 }
@@ -1958,14 +1980,14 @@ class $$DocumentBodiesTableTableManager
         RootTableManager<
           _$AppDatabase,
           $DocumentBodiesTable,
-          DocumentBodyRow,
+          DocumentBody,
           $$DocumentBodiesTableFilterComposer,
           $$DocumentBodiesTableOrderingComposer,
           $$DocumentBodiesTableAnnotationComposer,
           $$DocumentBodiesTableCreateCompanionBuilder,
           $$DocumentBodiesTableUpdateCompanionBuilder,
-          (DocumentBodyRow, $$DocumentBodiesTableReferences),
-          DocumentBodyRow,
+          (DocumentBody, $$DocumentBodiesTableReferences),
+          DocumentBody,
           PrefetchHooks Function({bool documentId})
         > {
   $$DocumentBodiesTableTableManager(
@@ -2008,7 +2030,7 @@ class $$DocumentBodiesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$DocumentBodiesTable, DocumentBodyRow>(table),
+                  e.readTable<$DocumentBodiesTable, DocumentBody>(table),
                   $$DocumentBodiesTableReferences(db, table, e),
                 ),
               )
@@ -2060,14 +2082,14 @@ typedef $$DocumentBodiesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $DocumentBodiesTable,
-      DocumentBodyRow,
+      DocumentBody,
       $$DocumentBodiesTableFilterComposer,
       $$DocumentBodiesTableOrderingComposer,
       $$DocumentBodiesTableAnnotationComposer,
       $$DocumentBodiesTableCreateCompanionBuilder,
       $$DocumentBodiesTableUpdateCompanionBuilder,
-      (DocumentBodyRow, $$DocumentBodiesTableReferences),
-      DocumentBodyRow,
+      (DocumentBody, $$DocumentBodiesTableReferences),
+      DocumentBody,
       PrefetchHooks Function({bool documentId})
     >;
 typedef $$ImagesTableCreateCompanionBuilder = ImagesCompanion Function({
@@ -2082,6 +2104,29 @@ typedef $$ImagesTableUpdateCompanionBuilder = ImagesCompanion Function({
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
+
+final class $$ImagesTableReferences
+    extends BaseReferences<_$AppDatabase, $ImagesTable, ImageRow> {
+  $$ImagesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ImageRefsTable, List<ImageRefRow>>
+  _imageRefsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.imageRefs,
+    aliasName: 'images__hash__image_refs__image_hash',
+  );
+
+  $$ImageRefsTableProcessedTableManager get imageRefsRefs {
+    final manager = $$ImageRefsTableTableManager(
+      $_db,
+      $_db.imageRefs,
+    ).filter((f) => f.imageHash.hash.sqlEquals($_itemColumn<String>('hash')!));
+
+    final cache = $_typedResult.readTableOrNull(_imageRefsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$ImagesTableFilterComposer
     extends Composer<_$AppDatabase, $ImagesTable> {
@@ -2106,6 +2151,31 @@ class $$ImagesTableFilterComposer
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> imageRefsRefs(
+    Expression<bool> Function($$ImageRefsTableFilterComposer f) f,
+  ) {
+    final $$ImageRefsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.hash,
+      referencedTable: $db.imageRefs,
+      getReferencedColumn: (t) => t.imageHash,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImageRefsTableFilterComposer(
+            $db: $db,
+            $table: $db.imageRefs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ImagesTableOrderingComposer
@@ -2150,6 +2220,31 @@ class $$ImagesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> imageRefsRefs<T extends Object>(
+    Expression<T> Function($$ImageRefsTableAnnotationComposer a) f,
+  ) {
+    final $$ImageRefsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.hash,
+      referencedTable: $db.imageRefs,
+      getReferencedColumn: (t) => t.imageHash,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImageRefsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.imageRefs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ImagesTableTableManager
@@ -2163,9 +2258,9 @@ class $$ImagesTableTableManager
           $$ImagesTableAnnotationComposer,
           $$ImagesTableCreateCompanionBuilder,
           $$ImagesTableUpdateCompanionBuilder,
-          (ImageRow, BaseReferences<_$AppDatabase, $ImagesTable, ImageRow>),
+          (ImageRow, $$ImagesTableReferences),
           ImageRow,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool imageRefsRefs})
         > {
   $$ImagesTableTableManager(_$AppDatabase db, $ImagesTable table)
     : super(
@@ -2206,15 +2301,38 @@ class $$ImagesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ImagesTable, ImageRow>(table),
-                  BaseReferences<_$AppDatabase, $ImagesTable, ImageRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  $$ImagesTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({imageRefsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (imageRefsRefs) db.imageRefs],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (imageRefsRefs)
+                    await $_getPrefetchedData<
+                      ImageRow,
+                      $ImagesTable,
+                      ImageRefRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ImagesTableReferences
+                          ._imageRefsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ImagesTableReferences(db, table, p0).imageRefsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.imageHash == item.hash,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -2229,9 +2347,9 @@ typedef $$ImagesTableProcessedTableManager =
       $$ImagesTableAnnotationComposer,
       $$ImagesTableCreateCompanionBuilder,
       $$ImagesTableUpdateCompanionBuilder,
-      (ImageRow, BaseReferences<_$AppDatabase, $ImagesTable, ImageRow>),
+      (ImageRow, $$ImagesTableReferences),
       ImageRow,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool imageRefsRefs})
     >;
 typedef $$ImageRefsTableCreateCompanionBuilder = ImageRefsCompanion Function({
   required String documentId,
@@ -2248,17 +2366,35 @@ final class $$ImageRefsTableReferences
     extends BaseReferences<_$AppDatabase, $ImageRefsTable, ImageRefRow> {
   $$ImageRefsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
-      db.documents.createAlias('image_refs__document_id__documents__id');
+  static $DocumentMetadatasTable _documentIdTable(_$AppDatabase db) => db
+      .documentMetadatas
+      .createAlias('image_refs__document_id__document_metadata__id');
 
-  $$DocumentsTableProcessedTableManager get documentId {
+  $$DocumentMetadatasTableProcessedTableManager get documentId {
     final $_column = $_itemColumn<String>('document_id')!;
 
-    final manager = $$DocumentsTableTableManager(
+    final manager = $$DocumentMetadatasTableTableManager(
       $_db,
-      $_db.documents,
+      $_db.documentMetadatas,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_documentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ImagesTable _imageHashTable(_$AppDatabase db) =>
+      db.images.createAlias('image_refs__image_hash__images__hash');
+
+  $$ImagesTableProcessedTableManager get imageHash {
+    final $_column = $_itemColumn<String>('image_hash')!;
+
+    final manager = $$ImagesTableTableManager(
+      $_db,
+      $_db.images,
+    ).filter((f) => f.hash.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_imageHashTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -2275,25 +2411,43 @@ class $$ImageRefsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get imageHash => $composableBuilder(
-    column: $table.imageHash,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$DocumentsTableFilterComposer get documentId {
-    final $$DocumentsTableFilterComposer composer = $composerBuilder(
+  $$DocumentMetadatasTableFilterComposer get documentId {
+    final $$DocumentMetadatasTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.documentId,
-      referencedTable: $db.documents,
+      referencedTable: $db.documentMetadatas,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableFilterComposer(
+          }) => $$DocumentMetadatasTableFilterComposer(
             $db: $db,
-            $table: $db.documents,
+            $table: $db.documentMetadatas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ImagesTableFilterComposer get imageHash {
+    final $$ImagesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.imageHash,
+      referencedTable: $db.images,
+      getReferencedColumn: (t) => t.hash,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImagesTableFilterComposer(
+            $db: $db,
+            $table: $db.images,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2313,25 +2467,43 @@ class $$ImageRefsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get imageHash => $composableBuilder(
-    column: $table.imageHash,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$DocumentsTableOrderingComposer get documentId {
-    final $$DocumentsTableOrderingComposer composer = $composerBuilder(
+  $$DocumentMetadatasTableOrderingComposer get documentId {
+    final $$DocumentMetadatasTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.documentId,
-      referencedTable: $db.documents,
+      referencedTable: $db.documentMetadatas,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableOrderingComposer(
+          }) => $$DocumentMetadatasTableOrderingComposer(
             $db: $db,
-            $table: $db.documents,
+            $table: $db.documentMetadatas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ImagesTableOrderingComposer get imageHash {
+    final $$ImagesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.imageHash,
+      referencedTable: $db.images,
+      getReferencedColumn: (t) => t.hash,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.images,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2351,23 +2523,44 @@ class $$ImageRefsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get imageHash =>
-      $composableBuilder(column: $table.imageHash, builder: (column) => column);
+  $$DocumentMetadatasTableAnnotationComposer get documentId {
+    final $$DocumentMetadatasTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.documentId,
+          referencedTable: $db.documentMetadatas,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$DocumentMetadatasTableAnnotationComposer(
+                $db: $db,
+                $table: $db.documentMetadatas,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
 
-  $$DocumentsTableAnnotationComposer get documentId {
-    final $$DocumentsTableAnnotationComposer composer = $composerBuilder(
+  $$ImagesTableAnnotationComposer get imageHash {
+    final $$ImagesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.documentId,
-      referencedTable: $db.documents,
-      getReferencedColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.imageHash,
+      referencedTable: $db.images,
+      getReferencedColumn: (t) => t.hash,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableAnnotationComposer(
+          }) => $$ImagesTableAnnotationComposer(
             $db: $db,
-            $table: $db.documents,
+            $table: $db.images,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2391,7 +2584,7 @@ class $$ImageRefsTableTableManager
           $$ImageRefsTableUpdateCompanionBuilder,
           (ImageRefRow, $$ImageRefsTableReferences),
           ImageRefRow,
-          PrefetchHooks Function({bool documentId})
+          PrefetchHooks Function({bool documentId, bool imageHash})
         > {
   $$ImageRefsTableTableManager(_$AppDatabase db, $ImageRefsTable table)
     : super(
@@ -2432,7 +2625,7 @@ class $$ImageRefsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({documentId = false}) {
+          prefetchHooksCallback: ({documentId = false, imageHash = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -2463,6 +2656,17 @@ class $$ImageRefsTableTableManager
                             .id,
                       ) as T;
                     }
+                    if (imageHash) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.imageHash,
+                        referencedTable: $$ImageRefsTableReferences
+                            ._imageHashTable(db),
+                        referencedColumn: $$ImageRefsTableReferences
+                            ._imageHashTable(db)
+                            .hash,
+                      ) as T;
+                    }
 
                     return state;
                   },
@@ -2487,7 +2691,7 @@ typedef $$ImageRefsTableProcessedTableManager =
       $$ImageRefsTableUpdateCompanionBuilder,
       (ImageRefRow, $$ImageRefsTableReferences),
       ImageRefRow,
-      PrefetchHooks Function({bool documentId})
+      PrefetchHooks Function({bool documentId, bool imageHash})
     >;
 typedef $$AppStateTableCreateCompanionBuilder = AppStateCompanion Function({
   required String key,
@@ -2630,8 +2834,8 @@ typedef $$AppStateTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$DocumentsTableTableManager get documents =>
-      $$DocumentsTableTableManager(_db, _db.documents);
+  $$DocumentMetadatasTableTableManager get documentMetadatas =>
+      $$DocumentMetadatasTableTableManager(_db, _db.documentMetadatas);
   $$DocumentBodiesTableTableManager get documentBodies =>
       $$DocumentBodiesTableTableManager(_db, _db.documentBodies);
   $$ImagesTableTableManager get images =>

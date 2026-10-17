@@ -84,7 +84,7 @@ No interface with a file implementation and a DB implementation: PRs 3 and 4 cha
 `lib/database/` (app side; `packages/data_models` stays Flutter- and DB-free and remains the codec).
 
 ```dart
-class Documents extends Table {
+class DocumentMetadatas extends Table {          // row class DocumentMetadata, SQL table `document_metadata`
   TextColumn get id => text()();                 // UUID v4, generated in Dart by DocumentsDao.create
   TextColumn get name => text()();
   DateTimeColumn get createdAt => dateTime()();
@@ -95,7 +95,7 @@ class Documents extends Table {
 
 class DocumentBodies extends Table {            // split out so list queries never touch it
   TextColumn get documentId =>
-      text().references(Documents, #id, onDelete: KeyAction.cascade)();
+      text().references(DocumentMetadatas, #id, onDelete: KeyAction.cascade)();
   IntColumn get formatVersion => integer()();
   TextColumn get body => text()();               // data.Document.encode()
   @override Set<Column> get primaryKey => {documentId};
@@ -110,8 +110,8 @@ class Images extends Table {
 
 class ImageRefs extends Table {                  // rebuilt in the same transaction as each save
   TextColumn get documentId =>
-      text().references(Documents, #id, onDelete: KeyAction.cascade)();
-  TextColumn get imageHash => text()();          // no FK: a dangling ref must not fail a save
+      text().references(DocumentMetadatas, #id, onDelete: KeyAction.cascade)();
+  TextColumn get imageHash => text().references(Images, #hash)();  // FK: store the image before saving a doc that uses it
   @override Set<Column> get primaryKey => {documentId, imageHash};
 }
 
@@ -125,7 +125,7 @@ class AppState extends Table {                   // replaces active_document.txt
 DAO surface:
 
 ```dart
-@DriftAccessor(tables: [Documents, DocumentBodies, ImageRefs])
+@DriftAccessor(tables: [DocumentMetadatas, DocumentBodies, ImageRefs])
 class DocumentsDao extends DatabaseAccessor<AppDatabase> {
   Future<List<DocumentInfo>> list();                  // metadata only, never touches bodies
   Future<DocumentInfo> create({String? name});
@@ -170,3 +170,8 @@ class ImagesDao extends DatabaseAccessor<AppDatabase> {
 - Real preview thumbnails.
 - How the decode cache is provided to painters (the ~60-site parameter threading).
 - Multiple app instances sharing one DB; `-wal`/`-shm` sidecar files if the folder is synced.
+
+## Review changes to PR 6
+
+- `Documents` renamed `DocumentMetadatas` (row `DocumentMetadata`, SQL table `document_metadata`); `DocumentBodies` row is `DocumentBody`.
+- `ImageRefs.imageHash` now has a foreign key to `Images.hash`. A save that references an image that was not stored first fails and rolls back. Consequences for later PRs: the image store must `insertIfAbsent` (awaited) before the node referencing it is created, and the one-off migration must handle JSON documents whose PNG file is missing.

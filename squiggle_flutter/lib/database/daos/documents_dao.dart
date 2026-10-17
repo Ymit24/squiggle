@@ -9,10 +9,10 @@ import 'package:uuid/uuid.dart';
 
 part 'documents_dao.g.dart';
 
-/// Documents are identified by [Documents.id]. The [Documents.name] column is
-/// the source of truth for a document's name; the name inside the stored body
-/// is ignored on load.
-@DriftAccessor(tables: [Documents, DocumentBodies, ImageRefs])
+/// Documents are identified by [DocumentMetadatas.id]. The
+/// [DocumentMetadatas.name] column is the source of truth for a document's
+/// name; the name inside the stored body is ignored on load.
+@DriftAccessor(tables: [DocumentMetadatas, DocumentBodies, ImageRefs])
 class DocumentsDao extends DatabaseAccessor<AppDatabase>
     with _$DocumentsDaoMixin {
   DocumentsDao(super.attachedDatabase);
@@ -20,7 +20,7 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
   /// Document metadata, most recently updated first. Never reads bodies.
   Future<List<DocumentInfo>> list() async {
     final rows = await (select(
-      documents,
+      documentMetadatas,
     )..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])).get();
     return rows.map(_toInfo).toList();
   }
@@ -30,8 +30,8 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
     final now = attachedDatabase.clock();
     final id = const Uuid().v4();
     return transaction(() async {
-      await into(documents).insert(
-        DocumentsCompanion.insert(
+      await into(documentMetadatas).insert(
+        DocumentMetadatasCompanion.insert(
           id: id,
           name: name,
           createdAt: now,
@@ -48,12 +48,12 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
   /// Throws if the stored body cannot be decoded; callers decide how to
   /// surface that, and the stored row is left untouched.
   Future<data.Document?> load(String id) async {
-    final query = select(documents).join([
+    final query = select(documentMetadatas).join([
       innerJoin(
         documentBodies,
-        documentBodies.documentId.equalsExp(documents.id),
+        documentBodies.documentId.equalsExp(documentMetadatas.id),
       ),
-    ])..where(documents.id.equals(id));
+    ])..where(documentMetadatas.id.equals(id));
     final row = await query.getSingleOrNull();
     if (row == null) {
       return null;
@@ -61,7 +61,7 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
 
     final stored = data.Document.decode(row.read(documentBodies.body)!);
     return data.Document(
-      name: row.read(documents.name)!,
+      name: row.read(documentMetadatas.name)!,
       nodes: stored.nodes,
       session: stored.session,
     );
@@ -73,9 +73,13 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
   /// [id] no longer exists, e.g. an autosave racing a delete.
   Future<void> save(String id, data.Document document) {
     return transaction(() async {
-      final updated = await (update(documents)..where((t) => t.id.equals(id)))
-          .write(
-            DocumentsCompanion(updatedAt: Value(attachedDatabase.clock())),
+      final updated =
+          await (update(
+            documentMetadatas,
+          )..where((t) => t.id.equals(id))).write(
+            DocumentMetadatasCompanion(
+              updatedAt: Value(attachedDatabase.clock()),
+            ),
           );
       if (updated == 0) {
         return;
@@ -93,8 +97,8 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<void> rename(String id, String name) =>
-      (update(documents)..where((t) => t.id.equals(id))).write(
-        DocumentsCompanion(
+      (update(documentMetadatas)..where((t) => t.id.equals(id))).write(
+        DocumentMetadatasCompanion(
           name: Value(name),
           updatedAt: Value(attachedDatabase.clock()),
         ),
@@ -102,7 +106,7 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
 
   /// Deletes the document and, by cascade, its body and image references.
   Future<void> remove(String id) =>
-      (delete(documents)..where((t) => t.id.equals(id))).go();
+      (delete(documentMetadatas)..where((t) => t.id.equals(id))).go();
 
   Future<void> _writeBody(String id, data.Document document) =>
       into(documentBodies).insertOnConflictUpdate(
@@ -113,6 +117,6 @@ class DocumentsDao extends DatabaseAccessor<AppDatabase>
         ),
       );
 
-  DocumentInfo _toInfo(DocumentRow row) =>
+  DocumentInfo _toInfo(DocumentMetadata row) =>
       DocumentInfo(id: row.id, name: row.name, updatedAt: row.updatedAt);
 }

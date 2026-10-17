@@ -12,7 +12,7 @@
       "references": [],
       "type": "table",
       "data": {
-        "name": "documents",
+        "name": "document_metadata",
         "was_declared_in_moor": false,
         "columns": [
           {
@@ -90,9 +90,9 @@
             "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES documents (id) ON DELETE CASCADE",
+            "defaultConstraints": "REFERENCES document_metadata (id) ON DELETE CASCADE",
             "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES documents (id) ON DELETE CASCADE"
+              "sqlite": "REFERENCES document_metadata (id) ON DELETE CASCADE"
             },
             "default_dart": null,
             "default_client_dart": null,
@@ -100,7 +100,7 @@
               {
                 "foreign_key": {
                   "to": {
-                    "table": "documents",
+                    "table": "document_metadata",
                     "column": "id"
                   },
                   "initially_deferred": false,
@@ -189,7 +189,8 @@
     {
       "id": 3,
       "references": [
-        0
+        0,
+        2
       ],
       "type": "table",
       "data": {
@@ -202,9 +203,9 @@
             "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES documents (id) ON DELETE CASCADE",
+            "defaultConstraints": "REFERENCES document_metadata (id) ON DELETE CASCADE",
             "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES documents (id) ON DELETE CASCADE"
+              "sqlite": "REFERENCES document_metadata (id) ON DELETE CASCADE"
             },
             "default_dart": null,
             "default_client_dart": null,
@@ -212,7 +213,7 @@
               {
                 "foreign_key": {
                   "to": {
-                    "table": "documents",
+                    "table": "document_metadata",
                     "column": "id"
                   },
                   "initially_deferred": false,
@@ -228,9 +229,25 @@
             "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
+            "defaultConstraints": "REFERENCES images (hash)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES images (hash)"
+            },
             "default_dart": null,
             "default_client_dart": null,
-            "dsl_features": []
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "images",
+                    "column": "hash"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
           }
         ],
         "is_virtual": false,
@@ -282,11 +299,11 @@
   ],
   "fixed_sql": [
     {
-      "name": "documents",
+      "name": "document_metadata",
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"documents\" (\"id\" TEXT NOT NULL, \"name\" TEXT NOT NULL, \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, \"preview_png\" BLOB NULL, PRIMARY KEY (\"id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"document_metadata\" (\"id\" TEXT NOT NULL, \"name\" TEXT NOT NULL, \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, \"preview_png\" BLOB NULL, PRIMARY KEY (\"id\"));"
         }
       ]
     },
@@ -295,7 +312,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"document_bodies\" (\"document_id\" TEXT NOT NULL REFERENCES documents (id) ON DELETE CASCADE, \"format_version\" INTEGER NOT NULL, \"body\" TEXT NOT NULL, PRIMARY KEY (\"document_id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"document_bodies\" (\"document_id\" TEXT NOT NULL REFERENCES document_metadata (id) ON DELETE CASCADE, \"format_version\" INTEGER NOT NULL, \"body\" TEXT NOT NULL, PRIMARY KEY (\"document_id\"));"
         }
       ]
     },
@@ -313,7 +330,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"image_refs\" (\"document_id\" TEXT NOT NULL REFERENCES documents (id) ON DELETE CASCADE, \"image_hash\" TEXT NOT NULL, PRIMARY KEY (\"document_id\", \"image_hash\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"image_refs\" (\"document_id\" TEXT NOT NULL REFERENCES document_metadata (id) ON DELETE CASCADE, \"image_hash\" TEXT NOT NULL REFERENCES images (hash), PRIMARY KEY (\"document_id\", \"image_hash\"));"
         }
       ]
     },
