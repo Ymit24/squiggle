@@ -16,7 +16,7 @@ todos:
     status: cancelled
   - id: pr5-split-library-repository
     content: "PR 5: Split DocumentLibraryRepository into list notifier + active-document coordinator"
-    status: pending
+    status: completed
   - id: pr6-drift-schema
     content: "PR 6: Drift schema + DAOs, additive and not wired in (design sign-off point). This is the feature branch itself (#162)."
     status: completed
@@ -46,7 +46,7 @@ Status: PR 6 (schema and DAOs) is the feature branch `t3/sqlite-drift-persistenc
 | 2 | Rename `ImageRepository` to the decode-cache name | **Deferred** until the cache-provision design is settled (it likely touches the same ~60 call sites). Mechanical, ~60 files. Own PR so nobody reads logic inside a rename. Avoid the name `ImageCache` (clashes with Flutter); candidates `DecodedImages` / `CanvasImages`. |
 | 3 | Split the cache from a file-backed `ImageStore` (`put(bytes)` returns an id, `get(id)`), and make ids the sha256 of the bytes | Adds `crypto`. Dedupes pastes. Old `img_..png` ids still load (files are named by id). The `importedIds` remapping in the clipboard path stays: payloads and documents still containing old `img_..png` ids need them rewritten to hash ids on paste. It can go once the migration has rewritten everything. `ImageStore` resolves its directory lazily, so `ImageRepository.initialize()` is gone. |
 | 4 | Reshape the `DocumentStorage` API in place | Drop `StoredDocument` and the unused `imageRepository` field. Make `listDocuments` a metadata-only call shape. Remove the `initialize()` ceremony. Document ids become `const Uuid().v4()` (replaces `_generateDocumentId`); backward compatible, existing `doc_..json` files keep loading. |
-| 5 | Split `DocumentLibraryRepository` into a list notifier and an active-document coordinator | No re-list per autosave, list refreshed on entering the library screen, flush on document switch. |
+| 5 | Split `DocumentLibraryRepository` into `DocumentListNotifier` and `ActiveDocumentCoordinator` | Done. Autosave no longer re-reads or notifies the list. The list is refreshed on create/rename/delete and when returning from the editor to the library. The coordinator flushes before switching documents. Both are `ChangeNotifier`s provided via `ChangeNotifierProvider`. |
 
 No interface with a file implementation and a DB implementation: PRs 3 and 4 change the API directly, since only one implementation remains after the swap. Tests move to an in-memory DB.
 

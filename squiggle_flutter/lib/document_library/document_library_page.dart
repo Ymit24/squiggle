@@ -12,7 +12,8 @@ import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
 import 'package:squiggle_flutter/document_library/widgets/new_document_card.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
-import 'package:squiggle_flutter/repositories/document_library_repository.dart';
+import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
+import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 @RoutePage()
@@ -41,7 +42,8 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    final library = context.read<DocumentLibraryRepository>();
+    final documentList = context.read<DocumentListNotifier>();
+    final activeDocument = context.read<ActiveDocumentCoordinator>();
 
     return Scaffold(
       backgroundColor: theme.colors.mantle,
@@ -77,12 +79,16 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                   onCreateNamed: () => _createNamedDocument(context),
                 ),
                 Expanded(
-                  child: StreamBuilder<void>(
-                    stream: library.changesStream,
-                    initialData: null,
+                  child: ListenableBuilder(
+                    listenable: Listenable.merge([
+                      documentList,
+                      activeDocument,
+                    ]),
                     builder: (context, _) {
-                      final documents = _sorted(_filtered(library.documents));
-                      final currentId = library.currentDocument?.id;
+                      final documents = _sorted(
+                        _filtered(documentList.documents),
+                      );
+                      final currentId = activeDocument.activeId;
                       final hPad = libraryHorizontalPadding(context);
                       final query = _query.trim();
                       final isSearching = query.isNotEmpty;
@@ -162,17 +168,17 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                           document: document,
                                           isCurrent: document.id == currentId,
                                           canDelete:
-                                              library.documents.length > 1,
+                                              documentList.documents.length > 1,
                                           onOpen: () =>
                                               _openDocument(document.id),
                                           onRename: () => _renameDocument(
                                             context,
-                                            library,
+                                            activeDocument,
                                             document,
                                           ),
                                           onDelete: () => _deleteDocument(
                                             context,
-                                            library,
+                                            activeDocument,
                                             document,
                                           ),
                                         );
@@ -203,11 +209,11 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
   }
 
   Future<void> _createAndOpen({String? name}) async {
-    final library = context.read<DocumentLibraryRepository>();
-    await library.createDocument(name: name);
+    final activeDocument = context.read<ActiveDocumentCoordinator>();
+    final created = await activeDocument.createDocument(name: name);
 
     if (!mounted) return;
-    await context.router.replace(EditorRoute(id: library.currentDocument!.id));
+    await context.router.replace(EditorRoute(id: created.id));
   }
 
   List<DocumentInfo> _filtered(List<DocumentInfo> documents) {
@@ -254,7 +260,7 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
 
   Future<void> _renameDocument(
     BuildContext context,
-    DocumentLibraryRepository library,
+    ActiveDocumentCoordinator activeDocument,
     DocumentInfo document,
   ) async {
     final name = await showDocumentNameDialog(
@@ -264,12 +270,12 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
       initialName: document.name,
     );
     if (name == null || !context.mounted) return;
-    await library.renameDocument(document.id, name);
+    await activeDocument.renameDocument(document.id, name);
   }
 
   Future<void> _deleteDocument(
     BuildContext context,
-    DocumentLibraryRepository library,
+    ActiveDocumentCoordinator activeDocument,
     DocumentInfo document,
   ) async {
     final confirmed = await showDialog<bool>(
@@ -277,6 +283,6 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
       builder: (context) => DeleteDocumentDialog(document: document),
     );
     if (confirmed != true || !context.mounted) return;
-    await library.deleteDocument(document.id);
+    await activeDocument.deleteDocument(document.id);
   }
 }
