@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:super_clipboard/super_clipboard.dart';
 
 /// Result of importing a clipboard image into app storage.
 class ImportedImage {
@@ -61,14 +60,6 @@ class ImageRepository {
     });
   }
 
-  Future<ImportedImage?> importFromClipboard() async {
-    final bytes = await _readClipboardPngBytes();
-    if (bytes == null) {
-      return null;
-    }
-    return importPngBytes(bytes);
-  }
-
   Future<Uint8List?> readPngBytes(String imageId) async {
     await initialize();
     final file = fileFor(imageId);
@@ -104,41 +95,6 @@ class ImageRepository {
   Future<Directory> _defaultImagesDirectory() async {
     final supportDir = await getApplicationSupportDirectory();
     return Directory('${supportDir.path}/Squiggle/images');
-  }
-
-  Future<Uint8List?> _readClipboardPngBytes() async {
-    final clipboard = SystemClipboard.instance;
-    if (clipboard == null) {
-      return null;
-    }
-
-    final reader = await clipboard.read();
-    for (final item in reader.items) {
-      if (!item.canProvide(Formats.png)) {
-        continue;
-      }
-
-      final completer = Completer<Uint8List?>();
-      final progress = item.getFile(
-        Formats.png,
-        (file) async {
-          try {
-            completer.complete(await file.readAll());
-          } catch (_) {
-            completer.complete(null);
-          }
-        },
-        onError: (_) {
-          completer.complete(null);
-        },
-      );
-      if (progress == null) {
-        continue;
-      }
-      return completer.future;
-    }
-
-    return null;
   }
 
   Future<ui.Image?> _loadImage(String imageId) async {
