@@ -27,7 +27,6 @@ void main() async {
   await windowManager.setMinimumSize(const Size(640, 480));
 
   final imageRepository = ImageRepository();
-  await imageRepository.initialize();
 
   final documentStorage = DocumentStorage(imageRepository: imageRepository);
   final context = EditorContext(document: Document());

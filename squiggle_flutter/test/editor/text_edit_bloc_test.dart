@@ -46,9 +46,9 @@ void main() {
         ),
       );
 
-      final openState =
-          await bloc.stream.firstWhere((state) => state is EditTextEditOpen)
-              as EditTextEditOpen;
+      final openState = await bloc.stream.firstWhere(
+        (state) => state is EditTextEditOpen,
+      ) as EditTextEditOpen;
 
       expect(openState.featureId, feature.id);
       expect(openState.initialContents, 'initial text');

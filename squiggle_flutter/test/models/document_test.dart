@@ -136,21 +136,18 @@ void main() {
         expect(document.nodes[1].id.value, 2);
         expect((document.nodes[1] as Feature).kind, isA<FeatureKindCircle>());
       });
-      test(
-        'Factory fromDataModel with non-empty document has correct nextFeatureId',
-        () {
-          final document = Document.fromDataModel(
-            data.Document(
-              nodes: [
-                _rawFeature(id: 3, type: 'rectangle'),
-                _rawFeature(id: 8, type: 'circle'),
-              ],
-            ),
-          );
+      test('Factory fromDataModel with non-empty document has correct nextFeatureId', () {
+        final document = Document.fromDataModel(
+          data.Document(
+            nodes: [
+              _rawFeature(id: 3, type: 'rectangle'),
+              _rawFeature(id: 8, type: 'circle'),
+            ],
+          ),
+        );
 
-          expect(document.nextId, 9);
-        },
-      );
+        expect(document.nextId, 9);
+      });
     });
     group('Encode', () {
       test('toDataModel encodes all features', () {

@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:squiggle_flutter/repositories/image_store.dart';
 
 /// Result of importing a clipboard image into app storage.
 class ImportedImage {
@@ -15,33 +14,17 @@ class ImportedImage {
   final Size intrinsicSize;
 }
 
-/// Stores pasted images on disk and lazily decodes them for canvas rendering.
+/// Decodes stored images lazily and caches them for canvas rendering.
 class ImageRepository {
-  ImageRepository({Directory? imagesDirectory})
-    : _imagesDirectory = imagesDirectory; // ignore: prefer_initializing_formals
+  ImageRepository({ImageStore? store}) : _store = store ?? ImageStore();
 
-  Directory? _imagesDirectory;
+  final ImageStore _store;
   final Map<String, ui.Image> _cache = {};
   final Map<String, Future<ui.Image?>> _loading = {};
   final StreamController<void> _repaintController =
       StreamController<void>.broadcast();
 
   Stream<void> get repaintStream => _repaintController.stream;
-
-  Directory? get imagesDirectory => _imagesDirectory;
-
-  Future<void> initialize() async {
-    _imagesDirectory ??= await _defaultImagesDirectory();
-    await _imagesDirectory!.create(recursive: true);
-  }
-
-  File fileFor(String imageId) {
-    final directory = _imagesDirectory;
-    if (directory == null) {
-      throw StateError('ImageRepository.initialize() must be called first.');
-    }
-    return File('${directory.path}/$imageId');
-  }
 
   ui.Image? getCached(String imageId) => _cache[imageId];
 
@@ -60,26 +43,24 @@ class ImageRepository {
     });
   }
 
-  Future<Uint8List?> readPngBytes(String imageId) async {
-    await initialize();
-    final file = fileFor(imageId);
-    if (!await file.exists()) {
-      return null;
-    }
-    return file.readAsBytes();
-  }
+  Future<Uint8List?> readPngBytes(String imageId) => _store.get(imageId);
 
+  /// Stores [bytes] and caches the decoded image under the content-hash id.
+  ///
+  /// Importing bytes that are already stored returns the same id.
   Future<ImportedImage?> importPngBytes(Uint8List bytes) async {
-    await initialize();
-
     final decoded = await _decodeImage(bytes);
     if (decoded == null) {
       return null;
     }
 
-    final imageId = _generateImageId();
-    await fileFor(imageId).writeAsBytes(bytes, flush: true);
-    _cache[imageId] = decoded.image;
+    final imageId = await _store.put(bytes);
+    final cached = _cache[imageId];
+    if (cached == null) {
+      _cache[imageId] = decoded.image;
+    } else {
+      decoded.image.dispose();
+    }
 
     return ImportedImage(imageId: imageId, intrinsicSize: decoded.size);
   }
@@ -92,20 +73,12 @@ class ImageRepository {
     _repaintController.close();
   }
 
-  Future<Directory> _defaultImagesDirectory() async {
-    final supportDir = await getApplicationSupportDirectory();
-    return Directory('${supportDir.path}/Squiggle/images');
-  }
-
   Future<ui.Image?> _loadImage(String imageId) async {
-    await initialize();
-
-    final file = fileFor(imageId);
-    if (!await file.exists()) {
+    final bytes = await _store.get(imageId);
+    if (bytes == null) {
       return null;
     }
 
-    final bytes = await file.readAsBytes();
     final decoded = await _decodeImage(bytes);
     return decoded?.image;
   }
@@ -118,12 +91,6 @@ class ImageRepository {
       image: image,
       size: Size(image.width.toDouble(), image.height.toDouble()),
     );
-  }
-
-  String _generateImageId() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final random = math.Random().nextInt(0xFFFFFF);
-    return 'img_${timestamp}_${random.toRadixString(16).padLeft(6, '0')}.png';
   }
 }
 

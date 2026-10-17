@@ -55,11 +55,9 @@ void main() {
         expect(context.document.nodes, isEmpty);
         expect(context.tool.activeTool, isA<SelectTool>());
 
-        final openState =
-            await textEditBloc.stream.firstWhere(
-                  (state) => state is CreateTextEditOpen,
-                )
-                as CreateTextEditOpen;
+        final openState = await textEditBloc.stream.firstWhere(
+          (state) => state is CreateTextEditOpen,
+        ) as CreateTextEditOpen;
 
         expect(openState.worldOrigin, click);
         expect(openState.initialContents, '');
@@ -84,11 +82,9 @@ void main() {
           isShiftPressed: false,
           isAltPressed: false,
         );
-        final open =
-            await textEditBloc.stream.firstWhere(
-                  (state) => state is CreateTextEditOpen,
-                )
-                as CreateTextEditOpen;
+        final open = await textEditBloc.stream.firstWhere(
+          (state) => state is CreateTextEditOpen,
+        ) as CreateTextEditOpen;
         expect(open.worldOrigin, click);
         expect(context.tool.activeTool, same(textTool));
 
