@@ -92,9 +92,8 @@ class IdleInteractionState extends SelectInteractionState {
     Camera camera,
   ) {
     final target = getTargetUnderCursor(context, worldPosition);
-    if (target case NodeTarget(
-      node: final Feature feature,
-    ) when feature.kind is LabelCapable) {
+    if (target case NodeTarget(node: final Feature feature)
+        when feature.kind is LabelCapable) {
       final text = feature.kind as LabelCapable;
       context.selection.setSelection([feature.id]);
       context.startTextEdit(

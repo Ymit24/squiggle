@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_library_repository.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/repositories/image_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,9 +21,8 @@ void main() {
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('squiggle_library_');
       final imageRepository = ImageRepository(
-        imagesDirectory: Directory('${tempDir.path}/images'),
+        store: ImageStore(directory: Directory('${tempDir.path}/images')),
       );
-      await imageRepository.initialize();
       final documentStorage = DocumentStorage(
         imageRepository: imageRepository,
         storageDirectory: tempDir,
@@ -52,18 +52,16 @@ void main() {
         final brush = context.brushes.create('Construction');
         context.brushes.setField('strokeWidth', 3.0);
         // Loading waits for the queued autosave, with no explicit save call.
-        final saved = (await library.documentStorage.loadDocument(
-          firstId,
-        ))!.document;
+        final saved = (await library.documentStorage.loadDocument(firstId))!
+            .document;
         expect(saved.session.activeBrushId, brush.id);
         expect(saved.session.activeBrush.values['strokeWidth'], 3.0);
         expect(context.history.canUndo, isFalse);
         final other = context.brushes.create('Actual');
         context.brushes.activate(brush.id);
         context.brushes.move(brush.id, toIndex: 2);
-        final reordered = (await library.documentStorage.loadDocument(
-          firstId,
-        ))!.document;
+        final reordered = (await library.documentStorage.loadDocument(firstId))!
+            .document;
         expect(reordered.session.brushes.map((profile) => profile.id), [
           'scratch',
           other.id,

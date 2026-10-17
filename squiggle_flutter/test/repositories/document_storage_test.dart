@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/repositories/image_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,9 +21,8 @@ void main() {
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('squiggle_docs_');
       imageRepository = ImageRepository(
-        imagesDirectory: Directory('${tempDir.path}/images'),
+        store: ImageStore(directory: Directory('${tempDir.path}/images')),
       );
-      await imageRepository.initialize();
       storage = DocumentStorage(
         imageRepository: imageRepository,
         storageDirectory: tempDir,
@@ -106,9 +106,8 @@ void main() {
       final currentJson = jsonDecode(await currentFile.readAsString()) as Map;
       expect(currentJson['version'], 2);
 
-      await File(
-        '${tempDir.path}/documents/old.json',
-      ).writeAsString('{"version":1,"name":"Old","nodes":[]}');
+      await File('${tempDir.path}/documents/old.json')
+          .writeAsString('{"version":1,"name":"Old","nodes":[]}');
       expect(await storage.loadDocument('old'), isNull);
       expect(
         (await storage.listDocuments()).map((document) => document.id),

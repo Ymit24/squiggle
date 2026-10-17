@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/repositories/image_store.dart';
 
 Future<Uint8List> _createTestPngBytes({
   int width = 100,
@@ -45,8 +46,7 @@ void main() {
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('squiggle_image_test');
-      repository = ImageRepository(imagesDirectory: tempDir);
-      await repository.initialize();
+      repository = ImageRepository(store: ImageStore(directory: tempDir));
     });
 
     tearDown(() async {
@@ -64,8 +64,23 @@ void main() {
 
         expect(imported, isNotNull);
         expect(imported!.intrinsicSize, const Size(100, 50));
-        expect(await repository.fileFor(imported.imageId).exists(), isTrue);
+        expect(await repository.readPngBytes(imported.imageId), bytes);
         expect(repository.getCached(imported.imageId), isNotNull);
+      },
+    );
+
+    test(
+      'importing the same bytes twice returns one id and one file',
+      () async {
+        final bytes = await _createTestPngBytes();
+
+        final first = await repository.importPngBytes(bytes);
+        final cached = repository.getCached(first!.imageId);
+        final second = await repository.importPngBytes(bytes);
+
+        expect(second!.imageId, first.imageId);
+        expect(repository.getCached(first.imageId), same(cached));
+        expect(await tempDir.list().length, 1);
       },
     );
 
@@ -74,8 +89,9 @@ void main() {
       final imported = await repository.importPngBytes(bytes);
       expect(imported, isNotNull);
 
-      final freshRepository = ImageRepository(imagesDirectory: tempDir);
-      await freshRepository.initialize();
+      final freshRepository = ImageRepository(
+        store: ImageStore(directory: tempDir),
+      );
 
       expect(freshRepository.getCached(imported!.imageId), isNull);
 
