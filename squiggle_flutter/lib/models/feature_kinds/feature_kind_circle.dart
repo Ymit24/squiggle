@@ -115,16 +115,17 @@ final class FeatureKindCircle extends FeatureKind
       strokeType,
     );
 
-    text_painter.paintText(
-      canvas,
-      label,
-      _inscribedLabelBounds(bounds),
-      fontSize: labelFontSize,
-      fillColor: Color.fromARGB(255, 255, 255, 255),
-      verticalAlignment: labelVerticalAlignment,
-      horizontalAlignment: labelHorizontalAlignment,
-    );
+    if (!feature.hideLabel) labelLayout(feature).paint(canvas, label);
   }
+
+  @override
+  LabelLayout labelLayout(Feature feature) => LabelLayout(
+    bounds: _inscribedLabelBounds(feature.localBounds()),
+    fontSize: labelFontSize,
+    color: _labelColor,
+    horizontalAlignment: labelHorizontalAlignment,
+    verticalAlignment: labelVerticalAlignment,
+  );
 
   @override
   Iterable<InspectorField> buildInspectorFields() {

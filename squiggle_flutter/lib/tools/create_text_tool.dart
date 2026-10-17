@@ -1,10 +1,8 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
@@ -58,15 +56,7 @@ class CreateTextTool extends Tool implements DrawingTool {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    context.startTextEdit(
-      CreateTextEditSession(
-        worldOrigin: worldPosition,
-        initialContents: '',
-        canvasLocalBounds: camera.worldToScreenBounds(
-          newTextBoundsAt(worldPosition),
-        ),
-      ),
-    );
+    context.startCreateText(worldPosition);
     context.resetToSelectTool();
     return true;
   }

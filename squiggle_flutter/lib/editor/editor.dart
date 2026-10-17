@@ -9,7 +9,6 @@ import 'package:squiggle_flutter/editor/inspector/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
 import 'package:squiggle_flutter/editor/widgets/document_viewport.dart';
@@ -50,60 +49,44 @@ class Editor extends StatelessWidget {
               textEditOpen: textEditOpen,
               child: ToolShortcuts(
                 textEditOpen: textEditOpen,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final viewportSize = Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    );
-
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        DocumentViewport(
-                          editorContext: editorContext,
-                          imageRepository: imageRepository,
-                        ),
-                        Positioned(
-                          top: context.squiggleTheme.spacing.overlayTop,
-                          bottom: context.squiggleTheme.spacing.overlayTop,
-                          left: context.squiggleTheme.spacing.overlaySide,
-                          child: Column(
-                            spacing: 8,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SquiggleButton(
-                                onPressed: onBackToLibrary,
-                                icon: Icons.grid_view_rounded,
-                                label: 'Canvas library',
-                                variant: SquiggleButtonVariant.secondary,
-                                compact: true,
-                              ),
-                              Flexible(
-                                child: InspectorPanel(
-                                  editorContext: editorContext,
-                                ),
-                              ),
-                            ],
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    DocumentViewport(
+                      editorContext: editorContext,
+                      imageRepository: imageRepository,
+                    ),
+                    Positioned(
+                      top: context.squiggleTheme.spacing.overlayTop,
+                      bottom: context.squiggleTheme.spacing.overlayTop,
+                      left: context.squiggleTheme.spacing.overlaySide,
+                      child: Column(
+                        spacing: 8,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SquiggleButton(
+                            onPressed: onBackToLibrary,
+                            icon: Icons.grid_view_rounded,
+                            label: 'Canvas library',
+                            variant: SquiggleButtonVariant.secondary,
+                            compact: true,
                           ),
-                        ),
-                        const EditorToolbar(),
-                        if (textEditOpen)
-                          TextEditOverlay(
-                            state: textEditState,
-                            viewportSize: viewportSize,
+                          Flexible(
+                            child: InspectorPanel(editorContext: editorContext),
                           ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: context.squiggleTheme.spacing.overlayTop,
-                          child: Center(
-                            child: BackToContent(editorContext: editorContext),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                        ],
+                      ),
+                    ),
+                    const EditorToolbar(),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: context.squiggleTheme.spacing.overlayTop,
+                      child: Center(
+                        child: BackToContent(editorContext: editorContext),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

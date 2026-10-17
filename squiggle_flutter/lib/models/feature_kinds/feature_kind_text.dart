@@ -111,17 +111,18 @@ final class FeatureKindText extends FeatureKind
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
-    text_painter.paintText(
-      canvas,
-      label,
-      feature.localBounds(),
-      fontSize: fontSize,
-      fillColor: strokeColor,
-      horizontalAlignment: horizontalAlignment,
-      verticalAlignment: verticalAlignment,
-      clipToBounds: false,
-    );
+    if (feature.hideLabel) return;
+    labelLayout(feature).paint(canvas, label, clipToBounds: false);
   }
+
+  @override
+  LabelLayout labelLayout(Feature feature) => LabelLayout(
+    bounds: feature.localBounds(),
+    fontSize: fontSize,
+    color: strokeColor,
+    horizontalAlignment: horizontalAlignment,
+    verticalAlignment: verticalAlignment,
+  );
 
   @override
   Iterable<InspectorField> buildInspectorFields() {

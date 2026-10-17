@@ -8,7 +8,16 @@ import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/label_layout.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
+
+const _layout = LabelLayout(
+  bounds: Rect.fromLTWH(10, 20, 200, 48),
+  fontSize: 24,
+  color: Color(0xFFFFFFFF),
+  horizontalAlignment: TextHorizontalAlignment.left,
+  verticalAlignment: TextVerticalAlignment.top,
+);
 
 void main() {
   group('TextEditBloc', () {
@@ -37,22 +46,21 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final feature = (context.document.nodes.first as Feature);
-      const bounds = Rect.fromLTWH(10, 20, 200, 48);
       context.startTextEdit(
         EditTextEditSession(
           featureId: feature.id,
           initialContents: 'initial text',
-          canvasLocalBounds: bounds,
+          layout: _layout,
         ),
       );
 
-      final openState =
-          await bloc.stream.firstWhere((state) => state is EditTextEditOpen)
-              as EditTextEditOpen;
+      final openState = await bloc.stream.firstWhere(
+        (state) => state is EditTextEditOpen,
+      ) as EditTextEditOpen;
 
       expect(openState.featureId, feature.id);
       expect(openState.initialContents, 'initial text');
-      expect(openState.canvasLocalBounds, bounds);
+      expect(openState.layout, _layout);
       await bloc.close();
     });
 
@@ -91,7 +99,7 @@ void main() {
           EditTextEditSession(
             featureId: feature.id,
             initialContents: 'initial text',
-            canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 48),
+            layout: _layout,
           ),
         );
         await bloc.stream.firstWhere((state) => state is EditTextEditOpen);
@@ -123,33 +131,14 @@ void main() {
       });
     }
 
-    test('TextEditCancelled emits TextEditClosed without command', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchTextEditStateEvent());
-      await Future<void>.delayed(Duration.zero);
+    test('editing hides the feature label until the session ends', () {
+      final feature = context.document.nodes.first as Feature;
 
-      final feature = (context.document.nodes.first as Feature);
-      context.startTextEdit(
-        EditTextEditSession(
-          featureId: feature.id,
-          initialContents: 'initial text',
-          canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 48),
-        ),
-      );
-      await bloc.stream.firstWhere((state) => state is EditTextEditOpen);
+      context.startTextEdit(EditTextEditSession.forFeature(feature));
+      expect(feature.hideLabel, isTrue);
 
-      bloc.add(const TextEditCancelled());
-      final closedState = await bloc.stream.firstWhere(
-        (state) => state is TextEditClosed,
-      );
-
-      expect(closedState, isA<TextEditClosed>());
-      expect(
-        ((context.document.nodes.first as Feature).kind as FeatureKindText)
-            .label,
-        'initial text',
-      );
-      await bloc.close();
+      context.endTextEdit();
+      expect(feature.hideLabel, isFalse);
     });
 
     test('CreateTextEditSession submit adds feature', () async {
@@ -162,7 +151,7 @@ void main() {
         CreateTextEditSession(
           worldOrigin: origin,
           initialContents: '',
-          canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 24),
+          layout: _layout,
         ),
       );
       await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
@@ -180,7 +169,7 @@ void main() {
       await bloc.close();
     });
 
-    test('CreateTextEditSession cancel leaves document unchanged', () async {
+    test('outside-click submit creates text without selecting it', () async {
       final bloc = createBloc();
       bloc.add(const RequestWatchTextEditStateEvent());
       await Future<void>.delayed(Duration.zero);
@@ -189,15 +178,16 @@ void main() {
         CreateTextEditSession(
           worldOrigin: const Offset(100, 200),
           initialContents: '',
-          canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 24),
+          layout: _layout,
         ),
       );
       await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-      bloc.add(const TextEditCancelled());
+      bloc.add(const TextEditSubmitted('new text', selectCreated: false));
       await bloc.stream.firstWhere((state) => state is TextEditClosed);
 
-      expect(context.document.nodes, hasLength(1));
+      expect(context.document.nodes, hasLength(2));
+      expect(context.selection.isEmpty, isTrue);
       await bloc.close();
     });
 
@@ -212,7 +202,7 @@ void main() {
           CreateTextEditSession(
             worldOrigin: const Offset(100, 200),
             initialContents: '',
-            canvasLocalBounds: const Rect.fromLTWH(0, 0, 200, 24),
+            layout: _layout,
           ),
         );
         await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);

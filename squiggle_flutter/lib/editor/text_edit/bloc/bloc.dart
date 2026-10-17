@@ -12,7 +12,6 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
   TextEditBloc({required this.context}) : super(const TextEditClosed()) {
     on<RequestWatchTextEditStateEvent>(_onRequestWatchTextEditState);
     on<TextEditSubmitted>(_onTextEditSubmitted);
-    on<TextEditCancelled>(_onTextEditCancelled);
   }
 
   final EditorContext context;
@@ -30,22 +29,22 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
         EditTextEditSession(
           :final featureId,
           :final initialContents,
-          :final canvasLocalBounds,
+          :final layout,
         ) =>
           EditTextEditOpen(
             featureId: featureId,
             initialContents: initialContents,
-            canvasLocalBounds: canvasLocalBounds,
+            layout: layout,
           ),
         CreateTextEditSession(
           :final worldOrigin,
           :final initialContents,
-          :final canvasLocalBounds,
+          :final layout,
         ) =>
           CreateTextEditOpen(
             worldOrigin: worldOrigin,
             initialContents: initialContents,
-            canvasLocalBounds: canvasLocalBounds,
+            layout: layout,
           ),
       },
     );
@@ -71,17 +70,9 @@ class TextEditBloc extends Bloc<TextEditEvent, TextEditState> {
           context.history.run('Create text', (transaction) {
             transaction.add(feature);
           });
-          context.selectCreatedFeature(feature);
+          if (event.selectCreated) context.selectCreatedFeature(feature);
         }
     }
-    context.endTextEdit();
-    emit(const TextEditClosed());
-  }
-
-  void _onTextEditCancelled(
-    TextEditCancelled event,
-    Emitter<TextEditState> emit,
-  ) {
     context.endTextEdit();
     emit(const TextEditClosed());
   }

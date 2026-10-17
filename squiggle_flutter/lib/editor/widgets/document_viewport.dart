@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
 import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
+import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/widgets/document_canvas.dart';
 import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
 import 'package:squiggle_flutter/editor/widgets/viewport_tool_cursor.dart';
@@ -41,18 +42,27 @@ class _DocumentViewportState extends State<DocumentViewport> {
               context: widget.editorContext,
               canvasKey: _canvasKey,
               imageRepository: widget.imageRepository,
-              canvasInteractionsEnabled: textEditState is! TextEditOpen,
-              child: Container(
-                color: SquiggleColors.base,
-                child: ViewportToolCursor(
-                  context: widget.editorContext,
-                  canvasKey: _canvasKey,
-                  child: DocumentCanvas(
-                    key: _canvasKey,
-                    context: widget.editorContext,
-                    imageRepository: widget.imageRepository,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    color: SquiggleColors.base,
+                    child: ViewportToolCursor(
+                      context: widget.editorContext,
+                      canvasKey: _canvasKey,
+                      child: DocumentCanvas(
+                        key: _canvasKey,
+                        context: widget.editorContext,
+                        imageRepository: widget.imageRepository,
+                      ),
+                    ),
                   ),
-                ),
+                  if (textEditState is TextEditOpen)
+                    TextEditOverlay(
+                      state: textEditState,
+                      editorContext: widget.editorContext,
+                    ),
+                ],
               ),
             );
           },

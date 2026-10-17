@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
+import 'package:squiggle_flutter/models/label_layout.dart';
 import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/stroke_painter.dart';
@@ -95,10 +96,14 @@ mixin LabelCapable {
   set label(String value);
 
   void setLabel(Feature feature, String value) => label = value;
+
+  /// Where and how the label is typeset; drives painting and inline editing.
+  LabelLayout labelLayout(Feature feature);
 }
 
 const double _labelFontSize = 24;
 const double _labelPadding = 8;
+const Color _labelColor = Color(0xFFFFFFFF);
 
 Rect _paddedLabelBounds(Rect bounds) {
   final width = math.max(0.0, bounds.width - 2 * _labelPadding);

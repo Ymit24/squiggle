@@ -1,18 +1,20 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/label_layout.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
 
 export 'package:squiggle_flutter/theme/document_colors.dart'
     show defaultNewTextWidth;
 
-Rect newTextBoundsAt(Offset origin) {
-  final kind = FeatureKindText('', strokeColor: defaultNewTextFillColor);
-  final size = kind.measureContents(
-    width: defaultNewTextWidth,
-    fontSize: defaultFontSize,
-  );
-  return Rect.fromLTWH(origin.dx, origin.dy, size.width, size.height);
+/// Layout of an empty text feature created at [origin], styled by
+/// [configureKind] exactly as [newTextFeatureAt] would style it.
+LabelLayout newTextLayoutAt(
+  Offset origin, {
+  void Function(FeatureKindText)? configureKind,
+}) {
+  final feature = newTextFeatureAt(origin, '', configureKind: configureKind);
+  return (feature.kind as FeatureKindText).labelLayout(feature);
 }
 
 Feature newTextFeatureAt(
