@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
@@ -28,11 +28,8 @@ void main() {
         home: Stack(
           children: [
             TextEditOverlay(
-              state: EditTextEditOpen(
-                featureId: rect.id,
-                initialContents: session.initialContents,
-                layout: session.layout,
-              ),
+              session: session,
+              pointerClaims: PointerClaims(),
               editorContext: editor,
             ),
           ],
@@ -70,11 +67,8 @@ void main() {
         home: Stack(
           children: [
             TextEditOverlay(
-              state: EditTextEditOpen(
-                featureId: rect.id,
-                initialContents: session.initialContents,
-                layout: session.layout,
-              ),
+              session: session,
+              pointerClaims: PointerClaims(),
               editorContext: editor,
             ),
           ],

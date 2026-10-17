@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
 import 'package:squiggle_flutter/painting/text_painter.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
@@ -24,6 +25,7 @@ class InlineTextEditor extends StatelessWidget {
     required this.layout,
     required this.editorContext,
     required this.onTapOutside,
+    required this.pointerClaims,
     this.outlined = true,
   });
 
@@ -32,6 +34,9 @@ class InlineTextEditor extends StatelessWidget {
   final ValueGetter<LabelLayout> layout;
   final EditorContext editorContext;
   final VoidCallback onTapOutside;
+
+  /// Told about presses on the field, so the canvas beneath ignores them.
+  final PointerClaims pointerClaims;
 
   /// Whether to frame the field. Shapes already have their own outline.
   final bool outlined;
@@ -103,18 +108,21 @@ class InlineTextEditor extends StatelessWidget {
   }
 
   Widget _textField(LabelLayout layout, double cursorWidth) {
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      autofocus: true,
-      maxLines: null,
-      keyboardType: TextInputType.multiline,
-      textAlign: layout.horizontalAlignment.textAlign,
-      style: canvasTextStyle(layout.fontSize, color: layout.color),
-      cursorColor: layout.color,
-      cursorWidth: cursorWidth,
-      onTapOutside: (_) => onTapOutside(),
-      decoration: const InputDecoration.collapsed(hintText: null),
+    return Listener(
+      onPointerDown: pointerClaims.claim,
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        autofocus: true,
+        maxLines: null,
+        keyboardType: TextInputType.multiline,
+        textAlign: layout.horizontalAlignment.textAlign,
+        style: canvasTextStyle(layout.fontSize, color: layout.color),
+        cursorColor: layout.color,
+        cursorWidth: cursorWidth,
+        onTapOutside: (_) => onTapOutside(),
+        decoration: const InputDecoration.collapsed(hintText: null),
+      ),
     );
   }
 }

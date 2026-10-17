@@ -56,8 +56,6 @@ class EditorContext extends ChangeNotifier {
   // TODO: Consider a better way to coordinate camera motion.
   VoidCallback? _cancelViewportMotion;
 
-  Feature? _editedFeature;
-
   SelectionModel get selection => _selection;
 
   ToolModel get tool => _tool;
@@ -144,14 +142,7 @@ class EditorContext extends ChangeNotifier {
     selection.setSelection([feature.id]);
   }
 
-  void startTextEdit(TextEditSession session) {
-    _setEditedFeature(
-      session is EditTextEditSession
-          ? document.featureById(session.featureId)
-          : null,
-    );
-    _textEdit.begin(session);
-  }
+  void startTextEdit(TextEditSession session) => _textEdit.begin(session);
 
   /// Opens the inline editor for new text; the document is untouched until it
   /// commits non-empty contents.
@@ -166,10 +157,7 @@ class EditorContext extends ChangeNotifier {
     ),
   );
 
-  void endTextEdit() {
-    _setEditedFeature(null);
-    _textEdit.end();
-  }
+  void endTextEdit() => _textEdit.end();
 
   /// Replaces the document contents and resets transient state.
   void loadDocument(Document newDocument) {
@@ -200,12 +188,6 @@ class EditorContext extends ChangeNotifier {
       previewTool.refreshBrushPreview(this);
     }
     notifyListeners();
-  }
-
-  /// Hides the edited feature's label so the inline editor can draw it instead.
-  void _setEditedFeature(Feature? feature) {
-    _editedFeature?.hideLabel = false;
-    _editedFeature = feature?..hideLabel = true;
   }
 
   void _refreshSelectionAfterHistoryChange() {

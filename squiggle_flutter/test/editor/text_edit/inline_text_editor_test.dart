@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/inline_text_editor.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
@@ -43,6 +44,7 @@ void main() {
                     layout: () => layout,
                     editorContext: editorContext,
                     onTapOutside: () {},
+                    pointerClaims: PointerClaims(),
                   ),
                 ],
               ),
@@ -110,6 +112,7 @@ void main() {
               ),
               editorContext: editorContext,
               onTapOutside: () => tappedOutside++,
+              pointerClaims: PointerClaims(),
             ),
           ],
         ),

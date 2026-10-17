@@ -16,7 +16,7 @@ sealed class TextEditSession {
 
 final class EditTextEditSession extends TextEditSession {
   const EditTextEditSession({
-    required this.featureId,
+    required this.feature,
     required super.initialContents,
     required super.layout,
   });
@@ -24,7 +24,7 @@ final class EditTextEditSession extends TextEditSession {
   factory EditTextEditSession.forFeature(Feature feature) {
     final kind = feature.kind as LabelCapable;
     return EditTextEditSession(
-      featureId: feature.id,
+      feature: feature,
       initialContents: kind.label,
       layout: kind
           .labelLayout(feature)
@@ -32,7 +32,9 @@ final class EditTextEditSession extends TextEditSession {
     );
   }
 
-  final NodeId featureId;
+  final Feature feature;
+
+  NodeId get featureId => feature.id;
 }
 
 final class CreateTextEditSession extends TextEditSession {
@@ -49,6 +51,10 @@ final class CreateTextEditSession extends TextEditSession {
 class TextEditModel extends ChangeNotifier {
   TextEditSession? _session;
 
+  /// Feature whose label is hidden on the canvas because the inline editor is
+  /// drawing it instead.
+  Feature? _labelHiddenFeature;
+
   /// What the text field currently contains. Kept here, not just in the
   /// field's controller, so anything that ends the edit can commit it.
   String draft = '';
@@ -62,14 +68,24 @@ class TextEditModel extends ChangeNotifier {
   };
 
   void begin(TextEditSession session) {
+    _showHiddenLabel();
     _session = session;
     draft = session.initialContents;
+    if (session case EditTextEditSession(:final feature)) {
+      _labelHiddenFeature = feature..hideLabel = true;
+    }
     notifyListeners();
   }
 
   void end() {
     if (_session == null) return;
+    _showHiddenLabel();
     _session = null;
     notifyListeners();
+  }
+
+  void _showHiddenLabel() {
+    _labelHiddenFeature?.hideLabel = false;
+    _labelHiddenFeature = null;
   }
 }

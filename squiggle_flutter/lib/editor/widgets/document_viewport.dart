@@ -1,11 +1,9 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/widgets/document_canvas.dart';
 import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/editor/widgets/viewport_tool_cursor.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
@@ -27,11 +25,14 @@ class DocumentViewport extends StatefulWidget {
 
 class _DocumentViewportState extends State<DocumentViewport> {
   final GlobalKey _canvasKey = GlobalKey();
+  final _pointerClaims = PointerClaims();
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TextEditBloc, TextEditState>(
-      builder: (context, textEditState) {
+    return ListenableBuilder(
+      listenable: widget.editorContext.textEdit,
+      builder: (context, _) {
+        final session = widget.editorContext.textEdit.session;
         return LayoutBuilder(
           builder: (context, constraints) {
             widget.editorContext.viewportSize = Size(
@@ -42,6 +43,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
               context: widget.editorContext,
               canvasKey: _canvasKey,
               imageRepository: widget.imageRepository,
+              pointerClaims: _pointerClaims,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -57,9 +59,11 @@ class _DocumentViewportState extends State<DocumentViewport> {
                       ),
                     ),
                   ),
-                  if (textEditState is TextEditOpen)
+                  if (session != null)
                     TextEditOverlay(
-                      state: textEditState,
+                      key: ObjectKey(session),
+                      session: session,
+                      pointerClaims: _pointerClaims,
                       editorContext: widget.editorContext,
                     ),
                 ],

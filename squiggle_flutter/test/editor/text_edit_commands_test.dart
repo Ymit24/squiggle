@@ -2,10 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/editor/text_edit/commit_text_edit.dart';
+import 'package:squiggle_flutter/editor/text_edit_commands.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -21,7 +18,7 @@ const _layout = LabelLayout(
 );
 
 void main() {
-  group('TextEditBloc', () {
+  group('commitTextEdit', () {
     late EditorContext context;
 
     setUp(() {
@@ -39,31 +36,7 @@ void main() {
       );
     });
 
-    TextEditBloc createBloc() => TextEditBloc(context: context);
-
-    test('beginEdit emits EditTextEditOpen', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchTextEditStateEvent());
-      await Future<void>.delayed(Duration.zero);
-
-      final feature = (context.document.nodes.first as Feature);
-      context.startTextEdit(
-        EditTextEditSession(
-          featureId: feature.id,
-          initialContents: 'initial text',
-          layout: _layout,
-        ),
-      );
-
-      final openState = await bloc.stream.firstWhere(
-        (state) => state is EditTextEditOpen,
-      ) as EditTextEditOpen;
-
-      expect(openState.featureId, feature.id);
-      expect(openState.initialContents, 'initial text');
-      expect(openState.layout, _layout);
-      await bloc.close();
-    });
+    tearDown(() => context.dispose());
 
     for (final testCase in <({String name, FeatureKind Function() createKind})>[
       (name: 'text', createKind: () => FeatureKindText('initial text')),
@@ -76,8 +49,7 @@ void main() {
         createKind: () => FeatureKindCircle(label: 'initial text'),
       ),
     ]) {
-      test('commitTextEdit updates ${testCase.name} label as one undoable '
-          'command', () async {
+      test('updates ${testCase.name} label as one undoable command', () {
         context = EditorContext(
           document: Document.fromFeatures([
             Feature(
@@ -87,30 +59,22 @@ void main() {
             ),
           ]),
         );
-        final bloc = createBloc();
-        bloc.add(const RequestWatchTextEditStateEvent());
-        await Future<void>.delayed(Duration.zero);
-
-        final feature = (context.document.nodes.first as Feature);
+        final feature = context.document.nodes.first as Feature;
         final originalSize = feature.size;
         final originalKindData = Map<String, dynamic>.of(
           feature.kind.toDataModel(),
         )..remove('label');
         context.startTextEdit(
           EditTextEditSession(
-            featureId: feature.id,
+            feature: feature,
             initialContents: 'initial text',
             layout: _layout,
           ),
         );
-        await bloc.stream.firstWhere((state) => state is EditTextEditOpen);
 
-        context.commitTextEdit(contents: 'updated text');
-        final closedState = await bloc.stream.firstWhere(
-          (state) => state is TextEditClosed,
-        );
+        commitTextEdit(context, contents: 'updated text');
 
-        expect(closedState, isA<TextEditClosed>());
+        expect(context.textEdit.session, isNull);
         expect((feature.kind as LabelCapable).label, 'updated text');
         final updatedSize = feature.size;
         if (feature.kind is! FeatureKindText) {
@@ -128,9 +92,24 @@ void main() {
         context.history.redo();
         expect((feature.kind as LabelCapable).label, 'updated text');
         expect(feature.size, updatedSize);
-        await bloc.close();
       });
     }
+
+    test('defaults to the draft typed so far', () {
+      final feature = context.document.nodes.first as Feature;
+      context.startTextEdit(EditTextEditSession.forFeature(feature));
+      context.textEdit.draft = 'from the draft';
+
+      commitTextEdit(context);
+
+      expect((feature.kind as LabelCapable).label, 'from the draft');
+    });
+
+    test('does nothing when no edit is open', () {
+      commitTextEdit(context, contents: 'ignored');
+
+      expect(context.history.canUndo, isFalse);
+    });
 
     test('editing hides the feature label until the session ends', () {
       final feature = context.document.nodes.first as Feature;
@@ -142,11 +121,23 @@ void main() {
       expect(feature.hideLabel, isFalse);
     });
 
-    test('CreateTextEditSession submit adds feature', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchTextEditStateEvent());
-      await Future<void>.delayed(Duration.zero);
+    test('starting another session shows the previous label again', () {
+      final first = context.document.nodes.first as Feature;
+      final second = Feature(
+        origin: const Offset(300, 0),
+        size: const Size(200, 48),
+        kind: FeatureKindText('other'),
+      );
+      context.history.run('Add', (transaction) => transaction.add(second));
 
+      context.startTextEdit(EditTextEditSession.forFeature(first));
+      context.startTextEdit(EditTextEditSession.forFeature(second));
+
+      expect(first.hideLabel, isFalse);
+      expect(second.hideLabel, isTrue);
+    });
+
+    test('CreateTextEditSession commit adds and selects the feature', () {
       const origin = Offset(100, 200);
       context.startTextEdit(
         CreateTextEditSession(
@@ -155,26 +146,19 @@ void main() {
           layout: _layout,
         ),
       );
-      await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
-
       expect(context.document.nodes, hasLength(1));
 
-      context.commitTextEdit(contents: 'new text');
-      await bloc.stream.firstWhere((state) => state is TextEditClosed);
+      commitTextEdit(context, contents: 'new text');
 
       expect(context.document.nodes, hasLength(2));
-      final created = (context.document.nodes.last as Feature);
+      final created = context.document.nodes.last as Feature;
       expect(created.origin, origin);
       expect((created.kind as FeatureKindText).label, 'new text');
       expect(created.size.width, defaultNewTextWidth);
-      await bloc.close();
+      expect(context.selection.selectedNodeIds, [created.id]);
     });
 
-    test('outside-click submit creates text without selecting it', () async {
-      final bloc = createBloc();
-      bloc.add(const RequestWatchTextEditStateEvent());
-      await Future<void>.delayed(Duration.zero);
-
+    test('outside-click commit creates text without selecting it', () {
       context.startTextEdit(
         CreateTextEditSession(
           worldOrigin: const Offset(100, 200),
@@ -182,38 +166,26 @@ void main() {
           layout: _layout,
         ),
       );
-      await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
 
-      context.commitTextEdit(contents: 'new text', selectCreated: false);
-      await bloc.stream.firstWhere((state) => state is TextEditClosed);
+      commitTextEdit(context, contents: 'new text', selectCreated: false);
 
       expect(context.document.nodes, hasLength(2));
       expect(context.selection.isEmpty, isTrue);
-      await bloc.close();
     });
 
-    test(
-      'CreateTextEditSession empty submit leaves document unchanged',
-      () async {
-        final bloc = createBloc();
-        bloc.add(const RequestWatchTextEditStateEvent());
-        await Future<void>.delayed(Duration.zero);
+    test('empty create commit leaves the document unchanged', () {
+      context.startTextEdit(
+        CreateTextEditSession(
+          worldOrigin: const Offset(100, 200),
+          initialContents: '',
+          layout: _layout,
+        ),
+      );
 
-        context.startTextEdit(
-          CreateTextEditSession(
-            worldOrigin: const Offset(100, 200),
-            initialContents: '',
-            layout: _layout,
-          ),
-        );
-        await bloc.stream.firstWhere((state) => state is CreateTextEditOpen);
+      commitTextEdit(context, contents: '');
 
-        context.commitTextEdit(contents: '');
-        await bloc.stream.firstWhere((state) => state is TextEditClosed);
-
-        expect(context.document.nodes, hasLength(1));
-        await bloc.close();
-      },
-    );
+      expect(context.document.nodes, hasLength(1));
+      expect(context.textEdit.session, isNull);
+    });
   });
 }

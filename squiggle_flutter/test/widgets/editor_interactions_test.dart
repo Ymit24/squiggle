@@ -1,13 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
+import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -16,6 +16,8 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 Future<EditorContext> _pumpEditor(
   WidgetTester tester, {
   Document? document,
+  PointerClaims? claims,
+  Widget? overlay,
 }) async {
   final editor = EditorContext(document: document ?? Document());
   final canvasKey = GlobalKey();
@@ -28,13 +30,16 @@ Future<EditorContext> _pumpEditor(
   await tester.pumpWidget(
     MaterialApp(
       theme: SquiggleThemeData.dark(),
-      home: BlocProvider(
-        create: (_) => TextEditBloc(context: editor),
-        child: EditorInteractions(
-          context: editor,
-          canvasKey: canvasKey,
-          imageRepository: images,
-          child: SizedBox.expand(key: canvasKey),
+      home: EditorInteractions(
+        context: editor,
+        canvasKey: canvasKey,
+        imageRepository: images,
+        pointerClaims: claims ?? PointerClaims(),
+        child: Stack(
+          children: [
+            SizedBox.expand(key: canvasKey),
+            ?overlay,
+          ],
         ),
       ),
     ),
@@ -260,6 +265,87 @@ void main() {
 
       expect(editor.textEdit.session, isNull);
       expect((rect.kind as FeatureKindRectangle).label, 'typed');
+    });
+
+    testWidgets('pressing the text field itself keeps the edit open', (
+      tester,
+    ) async {
+      final claims = PointerClaims();
+      final rect = _rectangle(const Offset(100, 100));
+      final editor = EditorContext(document: Document.fromFeatures([rect]));
+      final canvasKey = GlobalKey();
+      final images = ImageRepository();
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        images.dispose();
+        editor.dispose();
+      });
+      final session = EditTextEditSession.forFeature(rect);
+      editor.startTextEdit(session);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: SquiggleThemeData.dark(),
+          home: EditorInteractions(
+            context: editor,
+            canvasKey: canvasKey,
+            imageRepository: images,
+            pointerClaims: claims,
+            child: Stack(
+              children: [
+                SizedBox.expand(key: canvasKey),
+                TextEditOverlay(
+                  session: session,
+                  pointerClaims: claims,
+                  editorContext: editor,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+
+      expect(editor.textEdit.session, same(session));
+      expect(editor.history.canUndo, isFalse);
+
+      await tester.tapAt(const Offset(700, 500));
+      await tester.pumpAndSettle();
+
+      expect(editor.textEdit.session, isNull);
+    });
+
+    testWidgets('a press claimed by a widget above the canvas is left alone', (
+      tester,
+    ) async {
+      final claims = PointerClaims();
+      final rect = _rectangle(const Offset(100, 100));
+      final editor = await _pumpEditor(
+        tester,
+        document: Document.fromFeatures([rect]),
+        claims: claims,
+        overlay: Positioned(
+          left: 500,
+          top: 300,
+          width: 200,
+          height: 100,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: claims.claim,
+          ),
+        ),
+      );
+      editor.startTextEdit(EditTextEditSession.forFeature(rect));
+
+      final gesture = await tester.startGesture(const Offset(550, 350));
+      await gesture.moveTo(const Offset(900, 350));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // Not committed by the press, and released again at pointer-up.
+      expect(editor.textEdit.session, isNotNull);
     });
 
     testWidgets('dragging the shape commits first, then moves it', (

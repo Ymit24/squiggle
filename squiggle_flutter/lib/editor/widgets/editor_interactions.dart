@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/fling_controller.dart';
-import 'package:squiggle_flutter/editor/text_edit/commit_text_edit.dart';
+import 'package:squiggle_flutter/editor/text_edit_commands.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_record.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -20,12 +20,18 @@ class EditorInteractions extends StatefulWidget {
     required this.context,
     required this.canvasKey,
     required this.imageRepository,
+    required this.pointerClaims,
   });
 
   final Widget child;
   final GlobalKey canvasKey;
   final EditorContext context;
   final ImageRepository imageRepository;
+
+  /// Pointers claimed by widgets inside [child], such as the inline text
+  /// editor. They sit under this listener so wheel and pinch zoom reach it,
+  /// but their presses and drags are theirs, not the tools'.
+  final PointerClaims pointerClaims;
 
   @override
   State<EditorInteractions> createState() => _EditorInteractionsState();
@@ -50,14 +56,11 @@ class _EditorInteractionsState extends State<EditorInteractions>
   bool _isSecondaryDragging = false;
   bool _panZoomHadSignificantPinch = false;
 
-  /// Pointers pressed on the inline text editor. It sits inside this listener
-  /// so wheel and pinch zoom work over it, but its clicks and drags are the
-  /// text field's, not the tools'.
-  final _textEditorPointers = <int>{};
-
   VelocityTracker _panVelocityTracker = VelocityTracker.withKind(
     PointerDeviceKind.trackpad,
   );
+
+  PointerClaims get _claims => widget.pointerClaims;
 
   Camera get _camera => widget.context.camera;
 
@@ -84,9 +87,9 @@ class _EditorInteractionsState extends State<EditorInteractions>
     return Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
-        if (_claimedByTextEditor(event)) return;
+        if (_claims.isClaimed(event)) return;
         // Whatever this press does, it acts on the committed text.
-        widget.context.commitTextEdit(selectCreated: false);
+        commitTextEdit(widget.context, selectCreated: false);
         _pointerDownButtons = event.buttons;
 
         if (event.buttons == kPrimaryButton) {
@@ -96,7 +99,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
         }
       },
       onPointerMove: (event) {
-        if (_ownedByTextEditor(event)) return;
+        if (_claims.isClaimed(event)) return;
         // TODO: This sucks for state machine
         if (_isPrimaryDragging) {
           _onLeftPointerUpdate(event);
@@ -106,7 +109,10 @@ class _EditorInteractionsState extends State<EditorInteractions>
       },
       onPointerHover: _onPointerHover,
       onPointerUp: (event) {
-        if (_ownedByTextEditor(event)) return;
+        if (_claims.isClaimed(event)) {
+          _claims.release(event);
+          return;
+        }
         // TODO: This sucks for state machine
         if (_isPrimaryDragging) {
           _onLeftPointerUp(event);
@@ -117,7 +123,10 @@ class _EditorInteractionsState extends State<EditorInteractions>
         _checkForDoubleClick(event);
       },
       onPointerCancel: (event) {
-        if (_ownedByTextEditor(event)) return;
+        if (_claims.isClaimed(event)) {
+          _claims.release(event);
+          return;
+        }
         // TODO: This sucks for state machine
         _pointerDownButtons = null;
         if (_isPrimaryDragging) {
@@ -156,26 +165,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     );
   }
 
-  bool _isOverTextEditor(PointerEvent event) {
-    if (widget.context.textEdit.session == null) return false;
-    final hits = HitTestResult();
-    WidgetsBinding.instance.hitTestInView(hits, event.position, event.viewId);
-    return hits.path.any((entry) => entry.target is RenderEditable);
-  }
-
-  bool _claimedByTextEditor(PointerDownEvent event) {
-    if (!_isOverTextEditor(event)) return false;
-    _textEditorPointers.add(event.pointer);
-    return true;
-  }
-
-  bool _ownedByTextEditor(PointerEvent event) =>
-      event is PointerUpEvent || event is PointerCancelEvent
-      ? _textEditorPointers.remove(event.pointer)
-      : _textEditorPointers.contains(event.pointer);
-
   void _onPointerHover(PointerHoverEvent event) {
-    if (_isOverTextEditor(event)) return;
     _pointerInCanvas = _canvasLocal(event);
     final world = _screenToWorld(event);
     if (world == null) return;
