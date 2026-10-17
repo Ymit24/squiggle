@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:data_models/data_models.dart' as data;
 import 'package:flutter/widgets.dart';
@@ -163,7 +165,10 @@ Future<List<Node>> _readImageForPaste({
   required EditorContext context,
   required ImageRepository imageRepository,
 }) async {
-  final imported = await imageRepository.importFromClipboard();
+  final bytes = await _readClipboardPngBytes();
+  if (bytes == null) return [];
+
+  final imported = await imageRepository.importPngBytes(bytes);
   if (imported == null) return [];
 
   final feature = Feature(
@@ -238,5 +243,34 @@ Future<String?> _readClipboardPlainText() async {
       return item.readValue(Formats.plainText);
     }
   }
+  return null;
+}
+
+Future<Uint8List?> _readClipboardPngBytes() async {
+  final clipboard = SystemClipboard.instance;
+  if (clipboard == null) return null;
+
+  final reader = await clipboard.read();
+  for (final item in reader.items) {
+    if (!item.canProvide(Formats.png)) continue;
+
+    final completer = Completer<Uint8List?>();
+    final progress = item.getFile(
+      Formats.png,
+      (file) async {
+        try {
+          completer.complete(await file.readAll());
+        } catch (_) {
+          completer.complete(null);
+        }
+      },
+      onError: (_) {
+        completer.complete(null);
+      },
+    );
+    if (progress == null) continue;
+    return completer.future;
+  }
+
   return null;
 }
