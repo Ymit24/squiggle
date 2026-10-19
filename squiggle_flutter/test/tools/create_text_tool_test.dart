@@ -1,8 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
+import 'package:squiggle_flutter/editor/text_edit_commands.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -14,20 +13,14 @@ import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 void main() {
   group('CreateTextTool', () {
     late EditorContext context;
-    late TextEditBloc textEditBloc;
     late Camera camera;
 
     setUp(() {
       context = EditorContext(document: Document());
-      textEditBloc = TextEditBloc(context: context);
-      textEditBloc.add(const RequestWatchTextEditStateEvent());
       camera = Camera();
     });
 
-    tearDown(() async {
-      await textEditBloc.close();
-      context.dispose();
-    });
+    tearDown(() => context.dispose());
 
     test('resolves crosshair cursor', () {
       context.setTool(CreateTextTool());
@@ -55,57 +48,45 @@ void main() {
         expect(context.document.nodes, isEmpty);
         expect(context.tool.activeTool, isA<SelectTool>());
 
-        final openState =
-            await textEditBloc.stream.firstWhere(
-                  (state) => state is CreateTextEditOpen,
-                )
-                as CreateTextEditOpen;
+        final openState = context.textEdit.session as CreateTextEditSession;
 
         expect(openState.worldOrigin, click);
         expect(openState.initialContents, '');
-        expect(
-          openState.canvasLocalBounds,
-          camera.worldToScreenBounds(newTextBoundsAt(click)),
-        );
+        expect(openState.layout.bounds.topLeft, click);
+        expect(openState.layout.bounds.width, defaultNewTextWidth);
       },
     );
 
-    test('locked text tool stays ready after submit and cancel', () async {
-      context.tool.toggleLock();
-      context.setTool(CreateTextTool());
-      final textTool = context.tool.activeTool;
+    test(
+      'locked text tool stays ready after submit and empty submit',
+      () async {
+        context.tool.toggleLock();
+        context.setTool(CreateTextTool());
+        final textTool = context.tool.activeTool;
 
-      for (final submit in [true, false]) {
-        final click = submit ? const Offset(50, 75) : const Offset(150, 175);
-        context.tool.onPointerUp(
-          context,
-          click,
-          camera,
-          isShiftPressed: false,
-          isAltPressed: false,
-        );
-        final open =
-            await textEditBloc.stream.firstWhere(
-                  (state) => state is CreateTextEditOpen,
-                )
-                as CreateTextEditOpen;
-        expect(open.worldOrigin, click);
-        expect(context.tool.activeTool, same(textTool));
+        for (final submit in [true, false]) {
+          final click = submit ? const Offset(50, 75) : const Offset(150, 175);
+          context.tool.onPointerUp(
+            context,
+            click,
+            camera,
+            isShiftPressed: false,
+            isAltPressed: false,
+          );
+          final open = context.textEdit.session as CreateTextEditSession;
+          expect(open.worldOrigin, click);
+          expect(context.tool.activeTool, same(textTool));
 
-        textEditBloc.add(
-          submit ? const TextEditSubmitted('hello') : const TextEditCancelled(),
-        );
-        await textEditBloc.stream.firstWhere(
-          (state) => state is TextEditClosed,
-        );
-        expect(context.tool.activeTool, same(textTool));
-        expect(context.textEdit.session, isNull);
-      }
-      expect(context.document.nodes, hasLength(1));
-      expect(context.selection.isEmpty, isTrue);
-    });
+          commitTextEdit(context, contents: submit ? 'hello' : '');
+          expect(context.tool.activeTool, same(textTool));
+          expect(context.textEdit.session, isNull);
+        }
+        expect(context.document.nodes, hasLength(1));
+        expect(context.selection.isEmpty, isTrue);
+      },
+    );
 
-    test('document unchanged until modal submit', () async {
+    test('document unchanged until the edit commits', () async {
       context.setTool(CreateTextTool());
 
       context.tool.onPointerUp(
@@ -115,14 +96,10 @@ void main() {
         isShiftPressed: false,
         isAltPressed: false,
       );
-      await textEditBloc.stream.firstWhere(
-        (state) => state is CreateTextEditOpen,
-      );
 
       expect(context.document.nodes, isEmpty);
 
-      textEditBloc.add(const TextEditSubmitted('hello'));
-      await textEditBloc.stream.firstWhere((state) => state is TextEditClosed);
+      commitTextEdit(context, contents: 'hello');
 
       expect(context.document.nodes, hasLength(1));
       expect(context.selection.selectedNodeIds, [

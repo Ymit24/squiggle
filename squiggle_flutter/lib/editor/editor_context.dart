@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/editor/widgets/context_menu.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
@@ -142,6 +143,19 @@ class EditorContext extends ChangeNotifier {
   }
 
   void startTextEdit(TextEditSession session) => _textEdit.begin(session);
+
+  /// Opens the inline editor for new text; the document is untouched until it
+  /// commits non-empty contents.
+  void startCreateText(Offset worldOrigin) => startTextEdit(
+    CreateTextEditSession(
+      worldOrigin: worldOrigin,
+      initialContents: '',
+      layout: newTextLayoutAt(
+        worldOrigin,
+        configureKind: brushes.active.applyTo,
+      ),
+    ),
+  );
 
   void endTextEdit() => _textEdit.end();
 

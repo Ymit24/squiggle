@@ -8,7 +8,6 @@ const squiggleSurface1Color = Color(0xFF363636);
 const squiggleSubtext0Color = Color(0xFFA0A0A0);
 const squiggleTextColor = Color(0xFFE4E4E4);
 const squiggleAccentColor = Color(0xFFA8B3C2);
-const squiggleScrimColor = Color(0x33000000);
 const squiggleSelectionFillColor = Color(0x1AA8B3C2);
 const squiggleDangerColor = Color.fromARGB(255, 242, 139, 139);
 const squiggleOnDangerColor = Color.fromARGB(255, 217, 95, 95);
@@ -24,7 +23,6 @@ class SquiggleColorScheme {
     required this.subtext0,
     required this.text,
     required this.accent,
-    required this.scrim,
     required this.selectionFill,
     required this.danger,
     required this.onDanger,
@@ -37,7 +35,6 @@ class SquiggleColorScheme {
   final Color subtext0;
   final Color text;
   final Color accent;
-  final Color scrim;
   final Color selectionFill;
   final Color danger;
   final Color onDanger;
@@ -50,7 +47,6 @@ class SquiggleColorScheme {
     subtext0: squiggleSubtext0Color,
     text: squiggleTextColor,
     accent: squiggleAccentColor,
-    scrim: squiggleScrimColor,
     selectionFill: squiggleSelectionFillColor,
     danger: squiggleDangerColor,
     onDanger: squiggleOnDangerColor,
@@ -64,7 +60,6 @@ class SquiggleColorScheme {
     Color? subtext0,
     Color? text,
     Color? accent,
-    Color? scrim,
     Color? selectionFill,
     Color? danger,
     Color? onDanger,
@@ -77,7 +72,6 @@ class SquiggleColorScheme {
       subtext0: subtext0 ?? this.subtext0,
       text: text ?? this.text,
       accent: accent ?? this.accent,
-      scrim: scrim ?? this.scrim,
       selectionFill: selectionFill ?? this.selectionFill,
       danger: danger ?? this.danger,
       onDanger: onDanger ?? this.onDanger,
@@ -93,7 +87,6 @@ class SquiggleColorScheme {
       subtext0: Color.lerp(subtext0, other.subtext0, t)!,
       text: Color.lerp(text, other.text, t)!,
       accent: Color.lerp(accent, other.accent, t)!,
-      scrim: Color.lerp(scrim, other.scrim, t)!,
       selectionFill: Color.lerp(selectionFill, other.selectionFill, t)!,
       danger: Color.lerp(danger, other.danger, t)!,
       onDanger: Color.lerp(onDanger, other.onDanger, t)!,
