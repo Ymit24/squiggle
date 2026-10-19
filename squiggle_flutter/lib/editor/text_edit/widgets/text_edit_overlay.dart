@@ -13,10 +13,8 @@ class _CommitTextIntent extends Intent {
 }
 
 /// Hosts the [InlineTextEditor] over the canvas. Escape, Cmd/Ctrl+Enter, or a
-/// click anywhere else commits; there is no separate cancel. It does not cover
-/// or block the canvas, so zoom and pan keep working. Canvas clicks and drags
-/// commit first (see `EditorInteractions`), so tools never act on a feature
-/// whose text edit is still pending.
+/// click anywhere else commits; there is no separate cancel. It does not block
+/// the canvas, so zoom and pan keep working and presses still reach the tools.
 class TextEditOverlay extends StatefulWidget {
   const TextEditOverlay({
     super.key,
@@ -88,6 +86,15 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
             child: Stack(
               fit: StackFit.expand,
               children: [
+                // A press anywhere but the field commits the edit before the
+                // tools see it, so they never act on a feature whose text is
+                // still pending. The field sits above this in the Stack, so
+                // presses on it stop there. Being a descendant of
+                // `EditorInteractions`, this runs before its listener.
+                Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: (_) => _commit(selectCreated: false),
+                ),
                 InlineTextEditor(
                   controller: _controller,
                   focusNode: _focusNode,

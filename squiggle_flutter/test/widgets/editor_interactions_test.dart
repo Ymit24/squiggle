@@ -18,9 +18,16 @@ Future<EditorContext> _pumpEditor(
   Document? document,
   PointerClaims? claims,
   Widget? overlay,
+  Widget? underlay,
+  Feature? editing,
 }) async {
   final editor = EditorContext(document: document ?? Document());
+  final session = editing == null
+      ? null
+      : EditTextEditSession.forFeature(editing);
+  if (session != null) editor.startTextEdit(session);
   final canvasKey = GlobalKey();
+  final pointerClaims = claims ?? PointerClaims();
   final images = ImageRepository();
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
@@ -34,11 +41,18 @@ Future<EditorContext> _pumpEditor(
         context: editor,
         canvasKey: canvasKey,
         imageRepository: images,
-        pointerClaims: claims ?? PointerClaims(),
+        pointerClaims: pointerClaims,
         child: Stack(
           children: [
             SizedBox.expand(key: canvasKey),
+            ?underlay,
             ?overlay,
+            if (session != null)
+              TextEditOverlay(
+                session: session,
+                pointerClaims: pointerClaims,
+                editorContext: editor,
+              ),
           ],
         ),
       ),
@@ -251,8 +265,8 @@ void main() {
       final editor = await _pumpEditor(
         tester,
         document: Document.fromFeatures([rect]),
+        editing: rect,
       );
-      editor.startTextEdit(EditTextEditSession.forFeature(rect));
       editor.textEdit.draft = 'typed';
       return (editor, rect);
     }
@@ -270,40 +284,8 @@ void main() {
     testWidgets('pressing the text field itself keeps the edit open', (
       tester,
     ) async {
-      final claims = PointerClaims();
-      final rect = _rectangle(const Offset(100, 100));
-      final editor = EditorContext(document: Document.fromFeatures([rect]));
-      final canvasKey = GlobalKey();
-      final images = ImageRepository();
-      addTearDown(() async {
-        await tester.pumpWidget(const SizedBox.shrink());
-        images.dispose();
-        editor.dispose();
-      });
-      final session = EditTextEditSession.forFeature(rect);
-      editor.startTextEdit(session);
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: SquiggleThemeData.dark(),
-          home: EditorInteractions(
-            context: editor,
-            canvasKey: canvasKey,
-            imageRepository: images,
-            pointerClaims: claims,
-            child: Stack(
-              children: [
-                SizedBox.expand(key: canvasKey),
-                TextEditOverlay(
-                  session: session,
-                  pointerClaims: claims,
-                  editorContext: editor,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      final (editor, _) = await pumpEditing(tester);
+      final session = editor.textEdit.session;
 
       await tester.tap(find.byType(TextField));
       await tester.pumpAndSettle();
@@ -315,6 +297,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(editor.textEdit.session, isNull);
+    });
+
+    testWidgets('the edit is already committed when the press reaches the '
+        'canvas', (tester) async {
+      final rect = _rectangle(const Offset(100, 100));
+      EditorContext? editor;
+      final sessionsAtPress = <TextEditSession?>[];
+      editor = await _pumpEditor(
+        tester,
+        document: Document.fromFeatures([rect]),
+        editing: rect,
+        // Below the text edit overlay, like the canvas, and above the tools.
+        underlay: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) => sessionsAtPress.add(editor!.textEdit.session),
+        ),
+      );
+
+      await tester.tapAt(const Offset(600, 400));
+
+      expect(sessionsAtPress, [null]);
     });
 
     testWidgets('a press claimed by a widget above the canvas is left alone', (
@@ -353,7 +356,7 @@ void main() {
     ) async {
       final (editor, rect) = await pumpEditing(tester);
 
-      await tester.dragFrom(const Offset(150, 150), const Offset(200, 0));
+      await tester.dragFrom(const Offset(110, 110), const Offset(200, 0));
       await tester.pumpAndSettle();
 
       expect(editor.textEdit.session, isNull);

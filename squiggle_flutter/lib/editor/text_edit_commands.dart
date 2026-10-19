@@ -4,7 +4,8 @@ import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
 
 /// Applies [contents] (default: the field's current draft) as one undoable
-/// step and closes the text edit; does nothing when no edit is open.
+/// step and closes the text edit; does nothing when no edit is open, which
+/// happens when several commit triggers fire for the same click.
 ///
 /// Synchronous on purpose: callers commit right before something else acts on
 /// the document, such as a tool starting a drag. Set [selectCreated] to false
