@@ -81,6 +81,13 @@ class PlacingState extends InteractionState<CreateLineTool> {
     Offset worldPosition,
     Camera camera,
   ) {
+    // The second click's pointer-up already added a point at (nearly) the same
+    // spot as the first click's; drop it so the final point isn't duplicated.
+    if (points.length > 1 &&
+        (points.last - points[points.length - 2]).distance * camera.zoom <
+            10) {
+      points.removeLast();
+    }
     parent.finish(context, points);
   }
 
