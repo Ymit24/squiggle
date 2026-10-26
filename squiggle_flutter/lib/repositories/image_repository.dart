@@ -3,8 +3,9 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
-import 'package:squiggle_flutter/repositories/image_store.dart';
+import 'package:squiggle_flutter/database/daos/images_dao.dart';
 
 /// Result of importing a clipboard image into app storage.
 class ImportedImage {
@@ -15,10 +16,16 @@ class ImportedImage {
 }
 
 /// Decodes stored images lazily and caches them for canvas rendering.
+///
+/// An image id is the sha256 hex digest of its PNG bytes, so importing the
+/// same image twice yields one id and one stored row. Bytes live in the
+/// database ([ImagesDao]); without one the repository can still decode and
+/// cache, but cannot store or load images.
 class ImageRepository {
-  ImageRepository({ImageStore? store}) : _store = store ?? ImageStore();
+  ImageRepository({ImagesDao? images})
+    : _images = images; // ignore: prefer_initializing_formals
 
-  final ImageStore _store;
+  final ImagesDao? _images;
   final Map<String, ui.Image> _cache = {};
   final Map<String, Future<ui.Image?>> _loading = {};
   final StreamController<void> _repaintController =
@@ -43,7 +50,8 @@ class ImageRepository {
     });
   }
 
-  Future<Uint8List?> readPngBytes(String imageId) => _store.get(imageId);
+  Future<Uint8List?> readPngBytes(String imageId) async =>
+      _images?.bytes(imageId);
 
   /// Stores [bytes] and caches the decoded image under the content-hash id.
   ///
@@ -54,7 +62,16 @@ class ImageRepository {
       return null;
     }
 
-    final imageId = await _store.put(bytes);
+    final images = _images;
+    if (images == null) {
+      decoded.image.dispose();
+      throw StateError('ImageRepository has no database to store images in.');
+    }
+
+    // Awaited before the caller creates a node referencing the id, because
+    // saving a document that references a missing image fails.
+    final imageId = sha256.convert(bytes).toString();
+    await images.insertIfAbsent(imageId, bytes);
     final cached = _cache[imageId];
     if (cached == null) {
       _cache[imageId] = decoded.image;
@@ -74,7 +91,7 @@ class ImageRepository {
   }
 
   Future<ui.Image?> _loadImage(String imageId) async {
-    final bytes = await _store.get(imageId);
+    final bytes = await readPngBytes(imageId);
     if (bytes == null) {
       return null;
     }

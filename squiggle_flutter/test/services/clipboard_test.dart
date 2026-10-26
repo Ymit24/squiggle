@@ -1,34 +1,35 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/image_store.dart';
 import 'package:squiggle_flutter/services/clipboard.dart';
+
+import '../support/test_database.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  late Directory sourceDirectory;
-  late Directory targetDirectory;
+  late AppDatabase sourceDatabase;
+  late AppDatabase targetDatabase;
   late ImageRepository source;
   late ImageRepository target;
 
   setUp(() async {
-    sourceDirectory = await Directory.systemTemp.createTemp('clipboard_source');
-    targetDirectory = await Directory.systemTemp.createTemp('clipboard_target');
-    source = ImageRepository(store: ImageStore(directory: sourceDirectory));
-    target = ImageRepository(store: ImageStore(directory: targetDirectory));
+    sourceDatabase = createTestDatabase();
+    targetDatabase = createTestDatabase();
+    source = ImageRepository(images: sourceDatabase.imagesDao);
+    target = ImageRepository(images: targetDatabase.imagesDao);
   });
   tearDown(() async {
     source.dispose();
     target.dispose();
-    await sourceDirectory.delete(recursive: true);
-    await targetDirectory.delete(recursive: true);
+    await sourceDatabase.close();
+    await targetDatabase.close();
   });
 
   test('nested groups transfer a shared PNG once with fresh node IDs and the same hash id', () async {
@@ -78,7 +79,10 @@ void main() {
     expect(firstKind.imageId, imported.imageId);
     expect(secondKind.imageId, firstKind.imageId);
     expect(await target.readPngBytes(firstKind.imageId), orderedEquals(png));
-    expect(await targetDirectory.list().length, 1);
+    expect(
+      await targetDatabase.select(targetDatabase.images).get(),
+      hasLength(1),
+    );
     expect(group.toDataModel().toJson(), before);
   });
 
@@ -95,7 +99,7 @@ void main() {
       decoded.single.toDataModel().toJson(),
       feature.copyWith(id: noId).toDataModel().toJson(),
     );
-    expect(await targetDirectory.list().isEmpty, isTrue);
+    expect(await targetDatabase.select(targetDatabase.images).get(), isEmpty);
   });
 
   test('rejects malformed nodes and missing or invalid images', () async {
@@ -128,7 +132,7 @@ void main() {
     for (final payload in payloads) {
       expect(await decodeNodesFromClipboard(payload, target), isNull);
     }
-    expect(await targetDirectory.list().isEmpty, isTrue);
+    expect(await targetDatabase.select(targetDatabase.images).get(), isEmpty);
     await expectLater(
       encodeNodesForClipboard([image], source),
       throwsStateError,

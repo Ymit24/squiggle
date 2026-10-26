@@ -9,7 +9,6 @@ import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/image_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,9 +22,7 @@ void main() {
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('squiggle_library_');
-      final imageRepository = ImageRepository(
-        store: ImageStore(directory: Directory('${tempDir.path}/images')),
-      );
+      final imageRepository = ImageRepository();
       documentStorage = DocumentStorage(
         imageRepository: imageRepository,
         storageDirectory: tempDir,
