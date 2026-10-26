@@ -13,10 +13,6 @@ const kPanelLabelSpacing = 8.0;
 const kSwatchSize = 26.0;
 const kSwatchGap = 6.0;
 const kSwatchBorderWidth = 2.0;
-const kTextEditPanelPadding = 12.0;
-const kTextEditButtonSpacing = 8.0;
-const kTextEditButtonHorizontalPadding = 12.0;
-const kTextEditButtonVerticalPadding = 6.0;
 const kButtonHeight = 38.0;
 const kButtonHorizontalPadding = 14.0;
 const kButtonIconSize = 18.0;
@@ -47,10 +43,6 @@ class SquiggleSpacing {
     required this.swatchSize,
     required this.swatchGap,
     required this.swatchBorderWidth,
-    required this.textEditPanelPadding,
-    required this.textEditButtonSpacing,
-    required this.textEditButtonHorizontalPadding,
-    required this.textEditButtonVerticalPadding,
     required this.buttonHeight,
     required this.buttonHorizontalPadding,
     required this.buttonIconSize,
@@ -77,10 +69,6 @@ class SquiggleSpacing {
   final double swatchSize;
   final double swatchGap;
   final double swatchBorderWidth;
-  final double textEditPanelPadding;
-  final double textEditButtonSpacing;
-  final double textEditButtonHorizontalPadding;
-  final double textEditButtonVerticalPadding;
   final double buttonHeight;
   final double buttonHorizontalPadding;
   final double buttonIconSize;
@@ -107,10 +95,6 @@ class SquiggleSpacing {
     swatchSize: kSwatchSize,
     swatchGap: kSwatchGap,
     swatchBorderWidth: kSwatchBorderWidth,
-    textEditPanelPadding: kTextEditPanelPadding,
-    textEditButtonSpacing: kTextEditButtonSpacing,
-    textEditButtonHorizontalPadding: kTextEditButtonHorizontalPadding,
-    textEditButtonVerticalPadding: kTextEditButtonVerticalPadding,
     buttonHeight: kButtonHeight,
     buttonHorizontalPadding: kButtonHorizontalPadding,
     buttonIconSize: kButtonIconSize,
@@ -138,10 +122,6 @@ class SquiggleSpacing {
     double? swatchSize,
     double? swatchGap,
     double? swatchBorderWidth,
-    double? textEditPanelPadding,
-    double? textEditButtonSpacing,
-    double? textEditButtonHorizontalPadding,
-    double? textEditButtonVerticalPadding,
     double? buttonHeight,
     double? buttonHorizontalPadding,
     double? buttonIconSize,
@@ -168,14 +148,6 @@ class SquiggleSpacing {
       swatchSize: swatchSize ?? this.swatchSize,
       swatchGap: swatchGap ?? this.swatchGap,
       swatchBorderWidth: swatchBorderWidth ?? this.swatchBorderWidth,
-      textEditPanelPadding: textEditPanelPadding ?? this.textEditPanelPadding,
-      textEditButtonSpacing:
-          textEditButtonSpacing ?? this.textEditButtonSpacing,
-      textEditButtonHorizontalPadding:
-          textEditButtonHorizontalPadding ??
-          this.textEditButtonHorizontalPadding,
-      textEditButtonVerticalPadding:
-          textEditButtonVerticalPadding ?? this.textEditButtonVerticalPadding,
       buttonHeight: buttonHeight ?? this.buttonHeight,
       buttonHorizontalPadding:
           buttonHorizontalPadding ?? this.buttonHorizontalPadding,
@@ -225,26 +197,6 @@ class SquiggleSpacing {
       swatchBorderWidth: _lerpDouble(
         swatchBorderWidth,
         other.swatchBorderWidth,
-        t,
-      ),
-      textEditPanelPadding: _lerpDouble(
-        textEditPanelPadding,
-        other.textEditPanelPadding,
-        t,
-      ),
-      textEditButtonSpacing: _lerpDouble(
-        textEditButtonSpacing,
-        other.textEditButtonSpacing,
-        t,
-      ),
-      textEditButtonHorizontalPadding: _lerpDouble(
-        textEditButtonHorizontalPadding,
-        other.textEditButtonHorizontalPadding,
-        t,
-      ),
-      textEditButtonVerticalPadding: _lerpDouble(
-        textEditButtonVerticalPadding,
-        other.textEditButtonVerticalPadding,
         t,
       ),
       buttonHeight: _lerpDouble(buttonHeight, other.buttonHeight, t),

@@ -17,11 +17,6 @@ class SquiggleDecorations {
     borderRadius: BorderRadius.circular(radii.floatingPanel),
   );
 
-  BoxDecoration textEditPanel() => BoxDecoration(
-    border: Border.all(color: colors.surface1),
-    borderRadius: BorderRadius.circular(radii.textEditPanel),
-  );
-
   BoxDecoration toolbarButton({
     required bool isActive,
     required bool isHovering,
@@ -36,24 +31,6 @@ class SquiggleDecorations {
   }) => BoxDecoration(
     color: _panelButtonColor(isPrimary, isHovering),
     borderRadius: BorderRadius.circular(radii.button),
-  );
-
-  InputDecoration textField() => InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: colors.surface0,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(radii.input),
-      borderSide: BorderSide(color: colors.surface1),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(radii.input),
-      borderSide: BorderSide(color: colors.surface1),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(radii.input),
-      borderSide: BorderSide(color: colors.accent),
-    ),
   );
 
   SquiggleDecorations copyWith({

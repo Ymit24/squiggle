@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:data_models/data_models.dart' as data;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
@@ -34,30 +33,33 @@ void main() {
     expect(restored.session.scratch.id, 'scratch');
   });
 
-  test('drawing capability supplies fresh defaults without changing tool templates', () {
-    final editor = EditorContext(document: Document());
-    addTearDown(editor.dispose);
-    final rectangleTool = CreateFeatureTool.rect();
-    editor.brushes.setField('strokeWidth', 16.0);
-    for (final tool in [rectangleTool, CreateLineTool(), CreateTextTool()]) {
-      editor.setTool(tool);
-      expect(tool, isA<DrawingTool>());
-      final first = editor.drawingInspectorKind!;
-      final second = editor.drawingInspectorKind!;
-      expect(identical(first, second), isFalse);
+  test(
+    'drawing capability supplies fresh defaults without changing tool templates',
+    () {
+      final editor = EditorContext(document: Document());
+      addTearDown(editor.dispose);
+      final rectangleTool = CreateFeatureTool.rect();
+      editor.brushes.setField('strokeWidth', 16.0);
+      for (final tool in [rectangleTool, CreateLineTool(), CreateTextTool()]) {
+        editor.setTool(tool);
+        expect(tool, isA<DrawingTool>());
+        final first = editor.drawingInspectorKind!;
+        final second = editor.drawingInspectorKind!;
+        expect(identical(first, second), isFalse);
+        expect(
+          first.toDataModel()['strokeWidth'] ?? defaultStrokeWidth,
+          tool is CreateTextTool ? defaultStrokeWidth : 16.0,
+        );
+      }
       expect(
-        first.toDataModel()['strokeWidth'] ?? defaultStrokeWidth,
-        tool is CreateTextTool ? defaultStrokeWidth : 16.0,
+        (rectangleTool.kind as FeatureKindRectangle).strokeWidth,
+        defaultStrokeWidth,
       );
-    }
-    expect(
-      (rectangleTool.kind as FeatureKindRectangle).strokeWidth,
-      defaultStrokeWidth,
-    );
-    editor.setTool(SelectTool());
-    expect(editor.tool.activeTool, isNot(isA<DrawingTool>()));
-    expect(editor.drawingInspectorKind, isNull);
-  });
+      editor.setTool(SelectTool());
+      expect(editor.tool.activeTool, isNot(isA<DrawingTool>()));
+      expect(editor.drawingInspectorKind, isNull);
+    },
+  );
 
   test(
     'reordering keeps Scratch fixed, preserves activation and persists once',
@@ -122,30 +124,36 @@ void main() {
     expect(restored.session.activeBrush.isScratch, isTrue);
   });
 
-  test('session round trips serialized styles, Scratch, active ID and unknown fields', () {
-    final editor = EditorContext(document: Document());
-    addTearDown(editor.dispose);
-    editor.brushes.setField('fontSize', 36.0);
-    editor.brushes.setField('futureStyle', {'kind': 'shadow'});
-    final brush = editor.brushes.create('Construction');
-    editor.brushes.setField('strokeColor', const Color(0xFFFFAA00).toARGB32());
-    editor.brushes.setField('strokeType', StrokeType.dashed.name);
-    editor.brushes.setField('strokeWidth', 3.0);
-    editor.brushes.setField('endEndCap', LineEndCap.arrow.name);
-    final restored = Document.fromDataModel(
-      data.Document.decode(editor.document.toDataModel().encode()),
-    );
-    expect(restored.session.activeBrushId, brush.id);
-    expect(restored.session.activeBrush.values, brush.values);
-    expect(restored.session.scratch.values, {
-      'fontSize': 36.0,
-      'futureStyle': {'kind': 'shadow'},
-    });
-    expect(
-      restored.toDataModel().session.brushes.last.values['strokeType'],
-      'dashed',
-    );
-  });
+  test(
+    'session round trips serialized styles, Scratch, active ID and unknown fields',
+    () {
+      final editor = EditorContext(document: Document());
+      addTearDown(editor.dispose);
+      editor.brushes.setField('fontSize', 36.0);
+      editor.brushes.setField('futureStyle', {'kind': 'shadow'});
+      final brush = editor.brushes.create('Construction');
+      editor.brushes.setField(
+        'strokeColor',
+        const Color(0xFFFFAA00).toARGB32(),
+      );
+      editor.brushes.setField('strokeType', StrokeType.dashed.name);
+      editor.brushes.setField('strokeWidth', 3.0);
+      editor.brushes.setField('endEndCap', LineEndCap.arrow.name);
+      final restored = Document.fromDataModel(
+        data.Document.decode(editor.document.toDataModel().encode()),
+      );
+      expect(restored.session.activeBrushId, brush.id);
+      expect(restored.session.activeBrush.values, brush.values);
+      expect(restored.session.scratch.values, {
+        'fontSize': 36.0,
+        'futureStyle': {'kind': 'shadow'},
+      });
+      expect(
+        restored.toDataModel().session.brushes.last.values['strokeType'],
+        'dashed',
+      );
+    },
+  );
 
   test('named edits are direct, sparse and never enter canvas history', () {
     final editor = EditorContext(document: Document());

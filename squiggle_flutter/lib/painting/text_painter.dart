@@ -1,5 +1,6 @@
-import 'dart:ui';
+import 'dart:ui' hide TextStyle;
 
+import 'package:flutter/painting.dart' show TextBaseline, TextStyle;
 import 'package:squiggle_flutter/models/text_alignment.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
 
@@ -64,6 +65,18 @@ double? fontSizeFillingBounds(
   return low;
 }
 
+/// The one style shared by canvas painting and the inline editor, so wrapping
+/// and glyph metrics match when switching between them. Not inherited from the
+/// widget theme, and never text-scaled.
+TextStyle canvasTextStyle(double fontSize, {Color? color, Paint? foreground}) =>
+    TextStyle(
+      inherit: false,
+      fontSize: fontSize,
+      textBaseline: TextBaseline.alphabetic,
+      color: color,
+      foreground: foreground,
+    );
+
 /// Lays out text identically for measurement and painting.
 /// The caller owns and must dispose the returned paragraph.
 Paragraph _layoutTextParagraph(
@@ -76,15 +89,15 @@ Paragraph _layoutTextParagraph(
   assert(width.isFinite && width > 0);
   assert(fontSize.isFinite && fontSize > 0);
 
+  final style = canvasTextStyle(fontSize, foreground: foreground);
   final builder =
       ParagraphBuilder(
-          ParagraphStyle(
+          style.getParagraphStyle(
             textAlign: horizontalAlignment.textAlign,
-            fontSize: fontSize,
             textDirection: TextDirection.ltr,
           ),
         )
-        ..pushStyle(TextStyle(fontSize: fontSize, foreground: foreground))
+        ..pushStyle(style.getTextStyle())
         ..addText(text);
   return builder.build()..layout(ParagraphConstraints(width: width));
 }

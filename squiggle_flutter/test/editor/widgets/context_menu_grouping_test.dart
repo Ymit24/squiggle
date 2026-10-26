@@ -58,9 +58,14 @@ void main() {
     final second = document.nodes.last;
     final middle = second.copyWith(id: noId, origin: const Offset(150, 20));
     document.removeAll([first.id, second.id]);
-    final parent = document.addNode(
-      Group(origin: const Offset(300, 400), children: [first, middle, second]),
-    ) as Group;
+    final parent =
+        document.addNode(
+              Group(
+                origin: const Offset(300, 400),
+                children: [first, middle, second],
+              ),
+            )
+            as Group;
     context.selection.setSelection([second.id, first.id]);
     final before = document.toDataModel().nodes;
     final bounds = [first.globalBounds(), second.globalBounds()];
@@ -100,12 +105,14 @@ void main() {
     document.removeAll([first.id, second.id]);
     final firstGroup = Group(origin: const Offset(30, 40), children: [first]);
     final secondGroup = Group(origin: const Offset(50, 60), children: [second]);
-    final parent = document.addNode(
-      Group(
-        origin: const Offset(300, 400),
-        children: [firstGroup, middle, secondGroup],
-      ),
-    ) as Group;
+    final parent =
+        document.addNode(
+              Group(
+                origin: const Offset(300, 400),
+                children: [firstGroup, middle, secondGroup],
+              ),
+            )
+            as Group;
     context.selection.setSelection([secondGroup.id, middle.id, firstGroup.id]);
     final before = document.toDataModel().nodes;
     final bounds = [first.globalBounds(), second.globalBounds()];

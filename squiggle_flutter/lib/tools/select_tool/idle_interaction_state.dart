@@ -4,7 +4,6 @@ import 'package:squiggle_flutter/editor/grouping_commands.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/click_canvas_state.dart';
@@ -94,26 +93,11 @@ class IdleInteractionState extends SelectInteractionState {
     final target = getTargetUnderCursor(context, worldPosition);
     if (target case NodeTarget(node: final Feature feature)
         when feature.kind is LabelCapable) {
-      final text = feature.kind as LabelCapable;
       context.selection.setSelection([feature.id]);
-      context.startTextEdit(
-        EditTextEditSession(
-          featureId: feature.id,
-          initialContents: text.label,
-          canvasLocalBounds: camera.worldToScreenBounds(feature.localBounds()),
-        ),
-      );
+      context.startTextEdit(EditTextEditSession.forFeature(feature));
       return;
     } else if (target is CanvasTarget) {
-      context.startTextEdit(
-        CreateTextEditSession(
-          worldOrigin: worldPosition,
-          initialContents: '',
-          canvasLocalBounds: camera.worldToScreenBounds(
-            newTextBoundsAt(worldPosition),
-          ),
-        ),
-      );
+      context.startCreateText(worldPosition);
     }
   }
 

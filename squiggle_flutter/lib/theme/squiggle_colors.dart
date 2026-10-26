@@ -13,7 +13,6 @@ abstract final class SquiggleColors {
   static const subtext0 = squiggleSubtext0Color;
   static const text = squiggleTextColor;
   static const accent = squiggleAccentColor;
-  static const scrim = squiggleScrimColor;
   static const selectionFill = squiggleSelectionFillColor;
   static const danger = squiggleDangerColor;
   static const onDanger = squiggleOnDangerColor;
