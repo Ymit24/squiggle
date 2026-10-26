@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/app/squiggle_app.dart';
+import 'package:squiggle_flutter/database/open_database.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
@@ -27,7 +28,8 @@ void main() async {
   await windowManager.setTitle(appTitle);
   await windowManager.setMinimumSize(const Size(640, 480));
 
-  final imageRepository = ImageRepository();
+  final database = await openAppDatabase();
+  final imageRepository = ImageRepository(images: database.imagesDao);
 
   final documentStorage = DocumentStorage(imageRepository: imageRepository);
   final context = EditorContext(document: Document());

@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/image_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,9 +17,7 @@ void main() {
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('squiggle_list_');
       storage = DocumentStorage(
-        imageRepository: ImageRepository(
-          store: ImageStore(directory: Directory('${tempDir.path}/images')),
-        ),
+        imageRepository: ImageRepository(),
         storageDirectory: tempDir,
       );
       list = DocumentListNotifier(documentStorage: storage);

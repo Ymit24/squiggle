@@ -1,11 +1,13 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/repositories/image_store.dart';
+
+import '../support/test_database.dart';
 
 Future<Uint8List> _createTestPngBytes({
   int width = 100,
@@ -41,57 +43,48 @@ void main() {
   });
 
   group('ImageRepository', () {
-    late Directory tempDir;
+    late AppDatabase database;
     late ImageRepository repository;
 
-    setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('squiggle_image_test');
-      repository = ImageRepository(store: ImageStore(directory: tempDir));
+    setUp(() {
+      database = createTestDatabase();
+      repository = ImageRepository(images: database.imagesDao);
     });
 
     tearDown(() async {
       repository.dispose();
-      if (await tempDir.exists()) {
-        await tempDir.delete(recursive: true);
-      }
+      await database.close();
     });
 
-    test(
-      'importPngBytes writes file, caches image, and returns intrinsic size',
-      () async {
-        final bytes = await _createTestPngBytes();
-        final imported = await repository.importPngBytes(bytes);
+    test('importPngBytes stores the bytes, caches the image, and returns the hash id', () async {
+      final bytes = await _createTestPngBytes();
+      final imported = await repository.importPngBytes(bytes);
 
-        expect(imported, isNotNull);
-        expect(imported!.intrinsicSize, const Size(100, 50));
-        expect(await repository.readPngBytes(imported.imageId), bytes);
-        expect(repository.getCached(imported.imageId), isNotNull);
-      },
-    );
+      expect(imported, isNotNull);
+      expect(imported!.imageId, sha256.convert(bytes).toString());
+      expect(imported.intrinsicSize, const Size(100, 50));
+      expect(await repository.readPngBytes(imported.imageId), bytes);
+      expect(repository.getCached(imported.imageId), isNotNull);
+    });
 
-    test(
-      'importing the same bytes twice returns one id and one file',
-      () async {
-        final bytes = await _createTestPngBytes();
+    test('importing the same bytes twice returns one id and one row', () async {
+      final bytes = await _createTestPngBytes();
 
-        final first = await repository.importPngBytes(bytes);
-        final cached = repository.getCached(first!.imageId);
-        final second = await repository.importPngBytes(bytes);
+      final first = await repository.importPngBytes(bytes);
+      final cached = repository.getCached(first!.imageId);
+      final second = await repository.importPngBytes(bytes);
 
-        expect(second!.imageId, first.imageId);
-        expect(repository.getCached(first.imageId), same(cached));
-        expect(await tempDir.list().length, 1);
-      },
-    );
+      expect(second!.imageId, first.imageId);
+      expect(repository.getCached(first.imageId), same(cached));
+      expect(await database.select(database.images).get(), hasLength(1));
+    });
 
-    test('requestImage loads from disk when not cached', () async {
+    test('requestImage loads from the database when not cached', () async {
       final bytes = await _createTestPngBytes(width: 64, height: 32);
       final imported = await repository.importPngBytes(bytes);
       expect(imported, isNotNull);
 
-      final freshRepository = ImageRepository(
-        store: ImageStore(directory: tempDir),
-      );
+      final freshRepository = ImageRepository(images: database.imagesDao);
 
       expect(freshRepository.getCached(imported!.imageId), isNull);
 
@@ -101,6 +94,14 @@ void main() {
 
       expect(freshRepository.getCached(imported.imageId), isNotNull);
       freshRepository.dispose();
+    });
+
+    test('an image that is not stored is never cached', () async {
+      repository.requestImage('missing');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(repository.getCached('missing'), isNull);
+      expect(await repository.readPngBytes('missing'), isNull);
     });
   });
 }
