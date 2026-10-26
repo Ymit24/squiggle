@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/app/squiggle_app.dart';
+import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/database/open_database.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/migration/legacy_importer.dart';
+import 'package:squiggle_flutter/migration/migration_app.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
@@ -28,6 +33,25 @@ void main() async {
   await windowManager.setMinimumSize(const Size(640, 480));
 
   final database = await openAppDatabase();
+  final legacyRoot = await legacyStorageDirectory();
+  final importer = LegacyImporter(legacyRoot: legacyRoot, database: database);
+  // The old files stay in place, so only offer the import into an empty database.
+  final needsImport =
+      await importer.hasLegacyDocuments() &&
+      (await database.documentsDao.list()).isEmpty;
+  if (needsImport) {
+    runApp(
+      MigrationApp(
+        importer: importer,
+        onContinue: () => unawaited(_startApp(database)),
+      ),
+    );
+  } else {
+    await _startApp(database);
+  }
+}
+
+Future<void> _startApp(AppDatabase database) async {
   final imageRepository = ImageRepository(images: database.imagesDao);
 
   // Safe now: nothing has loaded a document yet, so no undo history can bring
