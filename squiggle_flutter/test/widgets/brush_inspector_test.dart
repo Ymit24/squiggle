@@ -414,13 +414,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(editor.brushes.active.values, isEmpty);
 
-      final feature = editor.document.addNode(
-        Feature(
-          origin: const Offset(400, 220),
-          size: const Size(180, 120),
-          kind: FeatureKindRectangle(),
-        ),
-      ) as Feature;
+      final feature =
+          editor.document.addNode(
+                Feature(
+                  origin: const Offset(400, 220),
+                  size: const Size(180, 120),
+                  kind: FeatureKindRectangle(),
+                ),
+              )
+              as Feature;
       editor.selection.setSelection([feature.id]);
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('brush-picker-trigger')), findsNothing);

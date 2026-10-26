@@ -6,10 +6,6 @@ import 'package:squiggle_flutter/editor/bloc/event.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_host.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/inspector/inspector_panel.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
 import 'package:squiggle_flutter/editor/widgets/document_viewport.dart';
@@ -34,81 +30,61 @@ class Editor extends StatelessWidget {
 
     return BlocProvider(
       create: (context) =>
-          TextEditBloc(context: editorContext)
-            ..add(const RequestWatchTextEditStateEvent()),
-      child: BlocProvider(
-        create: (context) =>
-            EditorBloc(context: editorContext)
-              ..add(const RequestWatchEditorStateEvent()),
-        child: BlocBuilder<TextEditBloc, TextEditState>(
-          builder: (context, textEditState) {
-            final textEditOpen = textEditState is TextEditOpen;
+          EditorBloc(context: editorContext)
+            ..add(const RequestWatchEditorStateEvent()),
+      child: ListenableBuilder(
+        listenable: editorContext.textEdit,
+        builder: (context, _) {
+          final textEditOpen = editorContext.textEdit.session != null;
 
-            return BrushWheelHost(
-              editorContext: editorContext,
-              imageRepository: imageRepository,
+          return BrushWheelHost(
+            editorContext: editorContext,
+            imageRepository: imageRepository,
+            textEditOpen: textEditOpen,
+            child: ToolShortcuts(
               textEditOpen: textEditOpen,
-              child: ToolShortcuts(
-                textEditOpen: textEditOpen,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final viewportSize = Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    );
-
-                    return Stack(
-                      fit: StackFit.expand,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  DocumentViewport(
+                    editorContext: editorContext,
+                    imageRepository: imageRepository,
+                  ),
+                  Positioned(
+                    top: context.squiggleTheme.spacing.overlayTop,
+                    bottom: context.squiggleTheme.spacing.overlayTop,
+                    left: context.squiggleTheme.spacing.overlaySide,
+                    child: Column(
+                      spacing: 8,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DocumentViewport(
-                          editorContext: editorContext,
-                          imageRepository: imageRepository,
+                        SquiggleButton(
+                          onPressed: onBackToLibrary,
+                          icon: Icons.grid_view_rounded,
+                          label: 'Canvas library',
+                          variant: SquiggleButtonVariant.secondary,
+                          compact: true,
                         ),
-                        Positioned(
-                          top: context.squiggleTheme.spacing.overlayTop,
-                          bottom: context.squiggleTheme.spacing.overlayTop,
-                          left: context.squiggleTheme.spacing.overlaySide,
-                          child: Column(
-                            spacing: 8,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SquiggleButton(
-                                onPressed: onBackToLibrary,
-                                icon: Icons.grid_view_rounded,
-                                label: 'Canvas library',
-                                variant: SquiggleButtonVariant.secondary,
-                                compact: true,
-                              ),
-                              Flexible(
-                                child: InspectorPanel(
-                                  editorContext: editorContext,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const EditorToolbar(),
-                        if (textEditOpen)
-                          TextEditOverlay(
-                            state: textEditState,
-                            viewportSize: viewportSize,
-                          ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: context.squiggleTheme.spacing.overlayTop,
-                          child: Center(
-                            child: BackToContent(editorContext: editorContext),
-                          ),
+                        Flexible(
+                          child: InspectorPanel(editorContext: editorContext),
                         ),
                       ],
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                  const EditorToolbar(),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: context.squiggleTheme.spacing.overlayTop,
+                    child: Center(
+                      child: BackToContent(editorContext: editorContext),
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

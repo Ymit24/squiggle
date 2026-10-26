@@ -45,7 +45,7 @@ final class FeatureKindImage extends FeatureKind
         image,
         Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
         bounds,
-        Paint(),
+        Paint()..filterQuality = FilterQuality.medium,
       );
     } else {
       imageRepository.requestImage(imageId);

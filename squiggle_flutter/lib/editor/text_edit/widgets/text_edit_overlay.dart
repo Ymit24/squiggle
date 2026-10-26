@@ -1,109 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/bloc.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/event.dart';
-import 'package:squiggle_flutter/editor/text_edit/bloc/state.dart';
-import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_panel.dart';
-import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/text_edit/widgets/inline_text_editor.dart';
+import 'package:squiggle_flutter/editor/text_edit_commands.dart';
+import 'package:squiggle_flutter/editor/text_edit_model.dart';
+import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
+import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
+import 'package:squiggle_flutter/models/label_layout.dart';
 
-const _panelMaxWidth = 400.0;
-const _panelMaxHeight = 200.0;
-const _panelOffsetBelow = 4.0;
+class _CommitTextIntent extends Intent {
+  const _CommitTextIntent();
+}
 
+/// Hosts the [InlineTextEditor] over the canvas. Escape, Cmd/Ctrl+Enter, or a
+/// click anywhere else commits; there is no separate cancel. It does not block
+/// the canvas, so zoom and pan keep working and presses still reach the tools.
 class TextEditOverlay extends StatefulWidget {
   const TextEditOverlay({
     super.key,
-    required this.state,
-    required this.viewportSize,
+    required this.session,
+    required this.pointerClaims,
+    required this.editorContext,
   });
 
-  final TextEditOpen state;
-  final Size viewportSize;
+  final TextEditSession session;
+  final PointerClaims pointerClaims;
+  final EditorContext editorContext;
 
   @override
   State<TextEditOverlay> createState() => _TextEditOverlayState();
 }
 
 class _TextEditOverlayState extends State<TextEditOverlay> {
-  final _textFocusNode = FocusNode();
-  final _panelKey = GlobalKey();
-  double? _panelHeight;
+  final _focusNode = FocusNode();
+  late final TextEditingController _controller;
+
+  bool get _editsText {
+    final session = widget.session;
+    return session is EditTextEditSession &&
+        session.feature.kind is FeatureKindText;
+  }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _textFocusNode.requestFocus();
-      _measurePanel();
-    });
+    final text = widget.session.initialContents;
+    // Editing existing text starts with everything selected, ready to replace.
+    _controller = TextEditingController(text: text)
+      ..selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: widget.session is EditTextEditSession ? text.length : 0,
+      );
+    _controller.addListener(_syncDraft);
   }
 
   @override
   void dispose() {
-    _textFocusNode.dispose();
+    _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.squiggleTheme;
-    final bounds = widget.state.canvasLocalBounds;
-    final panelWidth = bounds.width.clamp(
-      textEditPanelMinWidth,
-      _panelMaxWidth,
-    );
-    final left = bounds.left.clamp(0.0, widget.viewportSize.width - panelWidth);
-    var top = bounds.top + _panelOffsetBelow;
-    final panelHeight = _panelHeight;
-    if (panelHeight != null) {
-      top = top.clamp(0.0, widget.viewportSize.height - panelHeight);
-    }
-
     return Positioned.fill(
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerSignal: (_) {},
-        onPointerPanZoomStart: (_) {},
-        onPointerPanZoomUpdate: (_) {},
-        onPointerPanZoomEnd: (_) {},
-        child: FocusScope(
-          autofocus: true,
-          child: Focus(
+      child: Shortcuts(
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.escape): _CommitTextIntent(),
+          SingleActivator(LogicalKeyboardKey.enter, meta: true):
+              _CommitTextIntent(),
+          SingleActivator(LogicalKeyboardKey.enter, control: true):
+              _CommitTextIntent(),
+        },
+        child: Actions(
+          actions: {
+            _CommitTextIntent: CallbackAction<_CommitTextIntent>(
+              onInvoke: (_) {
+                _commit();
+                return null;
+              },
+            ),
+          },
+          child: FocusScope(
             autofocus: true,
-            onKeyEvent: (node, event) {
-              if (event is KeyDownEvent &&
-                  event.logicalKey == LogicalKeyboardKey.escape) {
-                _cancel();
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
-            },
             child: Stack(
               fit: StackFit.expand,
               children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _cancel,
-                  child: ColoredBox(color: theme.colors.scrim),
+                // A press anywhere but the field commits the edit before the
+                // tools see it, so they never act on a feature whose text is
+                // still pending. The field sits above this in the Stack, so
+                // presses on it stop there. Being a descendant of
+                // `EditorInteractions`, this runs before its listener.
+                Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: (_) => _commit(selectCreated: false),
                 ),
-                Positioned(
-                  left: left,
-                  top: top,
-                  width: panelWidth,
-                  child: TextEditPanel(
-                    key: _panelKey,
-                    textFocusNode: _textFocusNode,
-                    initialContents: widget.state.initialContents,
-                    maxHeight: _panelMaxHeight,
-                    onCancel: _cancel,
-                    onAccept: (contents) {
-                      context.read<TextEditBloc>().add(
-                        TextEditSubmitted(contents),
-                      );
-                    },
-                  ),
+                InlineTextEditor(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  layout: _layout,
+                  outlined:
+                      widget.session is! EditTextEditSession || _editsText,
+                  editorContext: widget.editorContext,
+                  pointerClaims: widget.pointerClaims,
+                  // The click that lands outside also picks the new selection.
+                  onTapOutside: () => _commit(selectCreated: false),
                 ),
               ],
             ),
@@ -113,16 +114,19 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
     );
   }
 
-  void _measurePanel() {
-    final box = _panelKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
-    final height = box.size.height;
-    if (_panelHeight != height) {
-      setState(() => _panelHeight = height);
+  void _syncDraft() => widget.editorContext.textEdit.draft = _controller.text;
+
+  /// Edited text follows its feature, so anything that changes the feature
+  /// mid-edit cannot leave the field behind.
+  LabelLayout _layout() {
+    final session = widget.session;
+    if (session is EditTextEditSession &&
+        session.feature.kind is LabelCapable) {
+      return EditTextEditSession.forFeature(session.feature).layout;
     }
+    return session.layout;
   }
 
-  void _cancel() {
-    context.read<TextEditBloc>().add(const TextEditCancelled());
-  }
+  void _commit({bool selectCreated = true}) =>
+      commitTextEdit(widget.editorContext, selectCreated: selectCreated);
 }

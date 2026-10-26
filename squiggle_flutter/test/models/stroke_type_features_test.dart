@@ -35,10 +35,8 @@ void main() {
         (kind as StrokeTypeCapable).strokeType = type;
         expect(kind.toDataModel()['strokeType'], type.name);
         expect(
-          (decode(
-            entry.key,
-            kind.toDataModel(),
-          ) as StrokeTypeCapable).strokeType,
+          (decode(entry.key, kind.toDataModel()) as StrokeTypeCapable)
+              .strokeType,
           type,
         );
         expect((kind.clone() as StrokeTypeCapable).strokeType, type);

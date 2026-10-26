@@ -44,6 +44,10 @@ class Feature extends Node {
   Size size;
   FeatureKind kind;
 
+  /// Set while the inline editor is drawing this feature's label in its place.
+  /// Transient: never persisted or cloned.
+  bool hideLabel = false;
+
   double get width => size.width;
 
   double get height => size.height;
