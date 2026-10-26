@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/editor/widgets/unreadable_document_view.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 
@@ -38,6 +39,12 @@ class _EditorPageState extends State<EditorPage> {
           if (asyncSnapshot.hasError ||
               asyncSnapshot.connectionState != ConnectionState.done) {
             return SizedBox.shrink();
+          }
+
+          if (context.read<ActiveDocumentCoordinator>().loadError != null) {
+            return UnreadableDocumentView(
+              onBackToLibrary: () => _returnToLibrary(context),
+            );
           }
 
           return Editor(

@@ -21,11 +21,11 @@ todos:
     content: "PR 6: Drift schema + DAOs, additive and not wired in (design sign-off point). This is the feature branch itself (#162)."
     status: completed
   - id: pr7-images-on-db
-    content: "PR 7: Images onto the DB (ImageStore becomes ImagesDao), startup GC"
-    status: pending
+    content: "PR 7: Images onto the DB (ImageStore becomes ImagesDao)"
+    status: completed
   - id: pr8-documents-on-db
-    content: "PR 8: Documents onto the DB, previewPng column, startup image GC, failed-load policy, delete file code and obsolete tests"
-    status: pending
+    content: "PR 8: Documents onto the DB, startup image GC, failed-load policy, delete file code and obsolete tests"
+    status: completed
   - id: pr9-migration-screen
     content: "PR 9: Temporary migration debug screen (throwaway branch, never merged to main)"
     status: pending
@@ -163,6 +163,15 @@ class ImagesDao extends DatabaseAccessor<AppDatabase> {
 - `load` returns null only for an unknown id and throws if the body cannot be decoded (policy still deferred, see below). `save` on a deleted document is a silent no-op (autosave racing a delete).
 - `AppDatabase` takes an injectable `clock` so tests control `updatedAt` ordering.
 - The database location (path_provider) is deliberately not in PR 6; `AppDatabase.file(File)` is, and wiring picks the path in PR 7/8.
+
+## Learned while implementing PR 7 and 8
+
+- `ImageRepository({ImagesDao? images})`: without a DAO it only decodes and caches (widget tests), and storing throws. The id is the sha256 hex, computed in the repository; the insert is awaited before the id is returned.
+- Autosave writes go through a coalescing loop in `ActiveDocumentCoordinator` (one write in flight, one more if edits arrived meanwhile) instead of a per-document queue. The document is read when each write starts, so the latest state wins.
+- Failed-load policy: `loadError` is set, the editor shows `UnreadableDocumentView`, and autosave and `flush` are skipped for that document. The stored row is never touched. Opening another document clears the error.
+- `previewPng` stays null and unused: `DocumentPreviewLoader` loads the body through `DocumentsDao.load` (as before) and treats an unreadable document as empty.
+- Startup GC (`ImagesDao.deleteUnreferenced`) runs in `main` before any document is loaded.
+- `DocumentListNotifier.nextUntitledName()` replaced `DocumentStorage._nextUntitledName`.
 
 ## Deferred / open
 
