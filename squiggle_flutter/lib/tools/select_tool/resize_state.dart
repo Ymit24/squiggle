@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/selection_resize_handle.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
@@ -23,6 +25,9 @@ class ResizeState extends SelectInteractionState {
   final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.localBounds();
 
+  /// Copy of the node before any pointer move has resized it.
+  late final Node _initialNode = _handle.node.copyWith();
+
   bool get _resizesHorizontally =>
       _handle.handle == SelectionResizeHandle.left ||
       _handle.handle == SelectionResizeHandle.right;
@@ -31,33 +36,10 @@ class ResizeState extends SelectInteractionState {
       _handle.handle == SelectionResizeHandle.top ||
       _handle.handle == SelectionResizeHandle.bottom;
 
-  bool get _movesLeft => switch (_handle.handle) {
-    SelectionResizeHandle.topLeft ||
-    SelectionResizeHandle.left ||
-    SelectionResizeHandle.bottomLeft => true,
-    _ => false,
-  };
-
-  bool get _movesRight => switch (_handle.handle) {
-    SelectionResizeHandle.topRight ||
-    SelectionResizeHandle.right ||
-    SelectionResizeHandle.bottomRight => true,
-    _ => false,
-  };
-
-  bool get _movesTop => switch (_handle.handle) {
-    SelectionResizeHandle.topLeft ||
-    SelectionResizeHandle.top ||
-    SelectionResizeHandle.topRight => true,
-    _ => false,
-  };
-
-  bool get _movesBottom => switch (_handle.handle) {
-    SelectionResizeHandle.bottomLeft ||
-    SelectionResizeHandle.bottom ||
-    SelectionResizeHandle.bottomRight => true,
-    _ => false,
-  };
+  bool get _movesLeft => _handle.handle.movesLeft;
+  bool get _movesRight => _handle.handle.movesRight;
+  bool get _movesTop => _handle.handle.movesTop;
+  bool get _movesBottom => _handle.handle.movesBottom;
 
   @override
   void onEnter(EditorContext context) {
@@ -81,12 +63,13 @@ class ResizeState extends SelectInteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
+    final initial = _initialNode;
     final newBounds = getNewBounds(
       worldPosition - _resizeOffset,
       lockAspectRatio: isShiftPressed,
       symmetric: isAltPressed,
     );
-    _handle.node.resize(newBounds);
+    _handle.node.resizeFromHandle(newBounds, _handle.handle, initial);
   }
 
   Rect getNewBounds(

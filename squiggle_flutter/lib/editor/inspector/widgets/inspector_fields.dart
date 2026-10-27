@@ -22,7 +22,7 @@ class InspectorFields extends StatelessWidget {
       (field) => field.build(context, (result) {
         editorContext.history.run('Inspector Update', (transaction) {
           transaction.watch(features);
-          field.apply(result);
+          _applyAndRefit(field, result);
         });
       }),
     );
@@ -33,5 +33,12 @@ class InspectorFields extends StatelessWidget {
       spacing: spacing.panelSectionSpacing,
       children: inspectorFieldWidgets.toList(),
     );
+  }
+
+  void _applyAndRefit<T>(InspectorField<T> field, T value) {
+    field.apply(value);
+    for (final feature in features) {
+      feature.kind.refit(feature);
+    }
   }
 }

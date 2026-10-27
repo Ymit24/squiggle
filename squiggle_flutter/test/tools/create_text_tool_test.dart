@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
@@ -53,7 +52,7 @@ void main() {
         expect(openState.worldOrigin, click);
         expect(openState.initialContents, '');
         expect(openState.layout.bounds.topLeft, click);
-        expect(openState.layout.bounds.width, defaultNewTextWidth);
+        expect(openState.layout.bounds.width, lessThan(30));
       },
     );
 

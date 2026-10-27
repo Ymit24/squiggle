@@ -4,11 +4,19 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
+/// Click to place auto-sized text; drag to set the width it wraps at.
 class CreateTextTool extends Tool implements DrawingTool {
+  /// Screen pixels the pointer must travel before a press counts as a drag.
+  static const _dragThreshold = 6.0;
+
+  Offset? _pressWorld;
+  Rect? _dragRect;
+
   @override
   FeatureKind createDrawingKind() => FeatureKindText('');
 
@@ -25,10 +33,25 @@ class CreateTextTool extends Tool implements DrawingTool {
     Camera camera,
     EditorContext context,
     ImageRepository imageRepository,
-  ) {}
+  ) {
+    final rect = _dragRect;
+    if (rect == null) return;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = SquiggleColors.accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = camera.screenLengthToWorldLength(1),
+    );
+  }
 
   @override
-  void deactivate(EditorContext context) {}
+  void deactivate(EditorContext context) => _reset();
+
+  void _reset() {
+    _pressWorld = null;
+    _dragRect = null;
+  }
 
   @override
   bool onPointerDown(
@@ -37,7 +60,10 @@ class CreateTextTool extends Tool implements DrawingTool {
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
-  }) => true;
+  }) {
+    _pressWorld = worldPosition;
+    return true;
+  }
 
   @override
   bool onPointerMove(
@@ -46,7 +72,16 @@ class CreateTextTool extends Tool implements DrawingTool {
     Camera camera, {
     required bool isShiftPressed,
     required bool isAltPressed,
-  }) => false;
+  }) {
+    final press = _pressWorld;
+    if (press == null) return false;
+    final travelled = camera.worldLengthToScreenLength(
+      (worldPosition - press).distance,
+    );
+    if (travelled < _dragThreshold && _dragRect == null) return false;
+    _dragRect = Rect.fromPoints(press, worldPosition);
+    return true;
+  }
 
   @override
   bool onPointerUp(
@@ -56,7 +91,13 @@ class CreateTextTool extends Tool implements DrawingTool {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    context.startCreateText(worldPosition);
+    final rect = _dragRect;
+    final fixedWidth = rect != null && rect.width > 0 ? rect.width : null;
+    context.startCreateText(
+      rect?.topLeft ?? _pressWorld ?? worldPosition,
+      fixedWidth: fixedWidth,
+    );
+    _reset();
     context.resetToSelectTool();
     return true;
   }

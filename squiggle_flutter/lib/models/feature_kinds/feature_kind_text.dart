@@ -4,6 +4,7 @@ final class FeatureKindText extends FeatureKind
     with StrokeColorCapable, LabelCapable {
   FeatureKindText(
     this.label, {
+    this.sizing = TextSizing.auto,
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
     this.verticalAlignment = TextVerticalAlignment.top,
@@ -13,6 +14,7 @@ final class FeatureKindText extends FeatureKind
   factory FeatureKindText.fromDataModel(Map<String, dynamic> content) =>
       FeatureKindText(
         content['contents'] as String,
+        sizing: decodeStyleEnum(content['sizing'], TextSizing.values),
         fontSize: _doubleFromDataModel(content, 'fontSize'),
         horizontalAlignment: decodeStyleEnum(
           content['horizontalAlignment'],
@@ -31,6 +33,7 @@ final class FeatureKindText extends FeatureKind
   @override
   String label;
 
+  TextSizing sizing;
   double fontSize;
   TextHorizontalAlignment horizontalAlignment;
   TextVerticalAlignment verticalAlignment;
@@ -40,6 +43,7 @@ final class FeatureKindText extends FeatureKind
     return {
       'type': 'text',
       'contents': label,
+      'sizing': sizing.name,
       'fontSize': fontSize,
       'horizontalAlignment': horizontalAlignment.name,
       'verticalAlignment': verticalAlignment.name,
@@ -50,63 +54,165 @@ final class FeatureKindText extends FeatureKind
   @override
   FeatureKindText clone() => FeatureKindText(
     label,
+    sizing: sizing,
     fontSize: fontSize,
     horizontalAlignment: horizontalAlignment,
     verticalAlignment: verticalAlignment,
     strokeColor: strokeColor,
   );
 
-  Size measureContents({required double width, required double fontSize}) =>
-      text_painter.measureText(
-        label.isEmpty ? ' ' : label,
-        width: width,
-        fontSize: fontSize,
-        horizontalAlignment: horizontalAlignment,
-      );
+  /// Fraction of the box width that stays put when auto-sized text grows:
+  /// left-aligned text grows rightward, centered text both ways, and so on.
+  double get anchorFraction => switch (horizontalAlignment) {
+    TextHorizontalAlignment.left => 0,
+    TextHorizontalAlignment.center => 0.5,
+    TextHorizontalAlignment.right => 1,
+  };
 
-  double? fontSizeFillingBounds({
-    required double width,
-    required double height,
-  }) => text_painter.fontSizeFillingBounds(
-    label,
-    width: width,
-    height: height,
-    horizontalAlignment: horizontalAlignment,
-  );
-
-  /// Sets [feature] to [fontSize] and a height measured from [label].
-  void applySizeFromFontSize(
-    Feature feature, {
-    required double width,
-    required Offset origin,
+  /// Size of [text] at [fontSize], wrapped at [width] or, when null, not
+  /// wrapped at all.
+  Size measureContents({
     required double fontSize,
+    double? width,
+    String? text,
   }) {
-    feature.origin = origin;
-    feature.size = measureContents(width: width, fontSize: fontSize);
-    this.fontSize = fontSize;
+    final contents = (text ?? label).isEmpty ? ' ' : (text ?? label);
+    return width == null
+        ? text_painter.measureTextIntrinsic(
+            contents,
+            fontSize: fontSize,
+            horizontalAlignment: horizontalAlignment,
+          )
+        : text_painter.measureText(
+            contents,
+            width: width,
+            fontSize: fontSize,
+            horizontalAlignment: horizontalAlignment,
+          );
+  }
+
+  /// Where [feature] sits once its box matches [contents] at [fontSize].
+  ///
+  /// Auto-sized text keeps its alignment point fixed as the width changes;
+  /// fixed-width text keeps its width and only its height follows.
+  Rect fittedBounds(Feature feature, {String? contents, double? fontSize}) {
+    final current = feature.localBounds();
+    final size = measureContents(
+      text: contents,
+      fontSize: fontSize ?? this.fontSize,
+      width: sizing == TextSizing.fixedWidth ? current.width : null,
+    );
+    return Rect.fromLTWH(
+      current.left + (current.width - size.width) * anchorFraction,
+      current.top,
+      size.width,
+      size.height,
+    );
   }
 
   @override
   void setLabel(Feature feature, String value) {
     label = value;
-    feature.size = measureContents(width: feature.width, fontSize: fontSize);
+    feature.setBounds(fittedBounds(feature));
   }
 
   @override
+  void refit(Feature feature) => feature.setBounds(fittedBounds(feature));
+
+  /// Scales by dragging an edge or by a group resize: the font grows with the
+  /// larger of the two relative size changes.
+  @override
   void applyBounds(Feature feature, Rect bounds) {
-    final clampedWidth = bounds.width < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : bounds.width;
-    final clampedHeight = bounds.height < kMinEnvelopeDimension
-        ? kMinEnvelopeDimension
-        : bounds.height;
-    feature.origin = bounds.topLeft;
-    feature.size = Size(clampedWidth, clampedHeight);
-    if (label.isNotEmpty) {
-      fontSize =
-          fontSizeFillingBounds(width: clampedWidth, height: clampedHeight) ??
-          text_painter.kMinTextFontSize;
+    final current = feature.localBounds();
+    final scale = _dominantScale(bounds.size, current.size);
+    final scaled = _scaledFrom(fontSize, current, scale);
+    fontSize = scaled.fontSize;
+    feature.setBounds(
+      Rect.fromLTWH(
+        bounds.left,
+        bounds.top,
+        scaled.size.width,
+        scaled.size.height,
+      ),
+    );
+  }
+
+  /// Corner handles scale the text about the opposite corner. Left and right
+  /// handles only change the wrap width, which makes the text fixed-width.
+  /// Top and bottom handles are not offered, since height follows the text.
+  @override
+  void applyHandleResize(
+    Feature feature,
+    Feature initial,
+    Rect bounds,
+    SelectionResizeHandle handle,
+  ) {
+    final start = (initial.kind as FeatureKindText);
+    final startBounds = initial.localBounds();
+    if (handle.isCorner) {
+      final scaled = start._scaledFrom(
+        start.fontSize,
+        startBounds,
+        _dominantScale(bounds.size, startBounds.size),
+      );
+      fontSize = scaled.fontSize;
+      feature.setBounds(
+        Rect.fromLTWH(
+          handle.movesLeft ? bounds.right - scaled.size.width : bounds.left,
+          handle.movesTop ? bounds.bottom - scaled.size.height : bounds.top,
+          scaled.size.width,
+          scaled.size.height,
+        ),
+      );
+    } else if (handle == SelectionResizeHandle.left ||
+        handle == SelectionResizeHandle.right) {
+      sizing = TextSizing.fixedWidth;
+      fontSize = start.fontSize;
+      final width = math.max(bounds.width, fontSize);
+      final size = measureContents(fontSize: fontSize, width: width);
+      feature.setBounds(
+        Rect.fromLTWH(
+          handle.movesLeft ? bounds.right - width : bounds.left,
+          startBounds.top,
+          width,
+          size.height,
+        ),
+      );
     }
+  }
+
+  @override
+  bool supportsResizeHandle(SelectionResizeHandle handle) =>
+      handle != SelectionResizeHandle.top &&
+      handle != SelectionResizeHandle.bottom;
+
+  /// Font size and box size after scaling the text laid out in [base] at
+  /// [baseFontSize] by [scale]; the font is clamped to its limits and a fixed
+  /// width follows the font actually reached.
+  ({double fontSize, Size size}) _scaledFrom(
+    double baseFontSize,
+    Rect base,
+    double scale,
+  ) {
+    final scaledFont = (baseFontSize * scale).clamp(
+      text_painter.kMinTextFontSize,
+      text_painter.kMaxTextFontSize,
+    );
+    return (
+      fontSize: scaledFont,
+      size: measureContents(
+        fontSize: scaledFont,
+        width: sizing == TextSizing.fixedWidth
+            ? base.width * scaledFont / baseFontSize
+            : null,
+      ),
+    );
+  }
+
+  static double _dominantScale(Size target, Size base) {
+    final scaleX = base.width == 0 ? 1.0 : target.width / base.width;
+    final scaleY = base.height == 0 ? 1.0 : target.height / base.height;
+    return (scaleX - 1).abs() >= (scaleY - 1).abs() ? scaleX : scaleY;
   }
 
   @override
@@ -116,8 +222,15 @@ final class FeatureKindText extends FeatureKind
   }
 
   @override
-  LabelLayout labelLayout(Feature feature) => LabelLayout(
-    bounds: feature.localBounds(),
+  LabelLayout labelLayout(Feature feature) => _layoutIn(feature.localBounds());
+
+  /// The layout [feature] would have if its label were [contents]; the inline
+  /// editor follows it as the draft grows.
+  LabelLayout labelLayoutFor(Feature feature, String contents) =>
+      _layoutIn(fittedBounds(feature, contents: contents));
+
+  LabelLayout _layoutIn(Rect bounds) => LabelLayout(
+    bounds: bounds,
     fontSize: fontSize,
     color: strokeColor,
     horizontalAlignment: horizontalAlignment,
@@ -149,6 +262,14 @@ final class FeatureKindText extends FeatureKind
         value: horizontalAlignment,
         onTextAlignChanged: (value) {
           horizontalAlignment = value;
+        },
+      ),
+      InspectorTextSizingField(
+        fieldKey: 'sizing',
+        label: 'Sizing',
+        value: sizing,
+        onSizingChanged: (value) {
+          sizing = value;
         },
       ),
       InspectorFontSizeField(

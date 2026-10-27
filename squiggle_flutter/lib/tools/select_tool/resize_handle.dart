@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/models/selection_resize_handle.dart';
 
 class ResizeHandle {
   ResizeHandle({

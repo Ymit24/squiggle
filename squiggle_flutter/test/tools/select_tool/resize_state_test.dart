@@ -5,7 +5,8 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
-import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/models/selection_resize_handle.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
 
 import 'select_tool_test_harness.dart';
@@ -358,63 +359,63 @@ void main() {
       expect(polylineWorldPoints(feature).last, isNot(endBefore));
     });
 
-    test('corner resize scales text to fill the new bounds', () {
-      harness.context = _textContext(
-        contents: 'Line one\nLine two\nLine three',
-        size: const Size(200, 80),
-      );
+    test('corner resize scales the text font with the drag', () {
+      harness.context = _textContext(contents: 'Line one\nLine two');
       final feature = (harness.context.document.nodes.first as Feature);
       harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
       final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
+      final target =
+          bounds.topLeft + Offset(bounds.width * 2, bounds.height * 2);
 
       harness.pointerDown(down);
-      harness.pointerMove(const Offset(300, 300) + grabOffset);
-      harness.pointerUp(const Offset(300, 300) + grabOffset);
+      harness.pointerMove(target + grabOffset);
+      harness.pointerUp(target + grabOffset);
 
       final text = feature.kind as FeatureKindText;
-      expect(feature.size, const Size(300, 300));
-      expect(text.fontSize, greaterThan(initialFontSize));
-      expect(
-        text.measureContents(width: 300, fontSize: text.fontSize).height,
-        lessThanOrEqualTo(300),
-      );
+      expect(text.fontSize, closeTo(initialFontSize * 2, 1e-6));
+      expect(text.sizing, TextSizing.auto);
+      expect(feature.origin, bounds.topLeft);
     });
 
-    test('vertical resize scales text to fill the taller box', () {
-      harness.context = _textContext(
-        contents: 'hello world',
-        size: const Size(200, 48),
-      );
+    test('right edge resize wraps the text without scaling it', () {
+      harness.context = _textContext(contents: 'one two three four five six');
       final feature = (harness.context.document.nodes.first as Feature);
       harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
       final bounds = feature.localBounds();
-      final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.bottom);
-      final grabOffset = down - bounds.bottomRight;
+      final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.right);
+      final grabOffset = down - bounds.centerRight;
+      final target = Offset(bounds.left + 150, bounds.center.dy);
 
       harness.pointerDown(down);
-      harness.pointerMove(const Offset(200, 200) + grabOffset);
-      harness.pointerUp(const Offset(200, 200) + grabOffset);
+      harness.pointerMove(target + grabOffset);
+      harness.pointerUp(target + grabOffset);
 
-      expect(feature.size, const Size(200, 200));
-      expect(
-        (feature.kind as FeatureKindText).fontSize,
-        greaterThan(initialFontSize),
-      );
+      final text = feature.kind as FeatureKindText;
+      expect(text.sizing, TextSizing.fixedWidth);
+      expect(text.fontSize, initialFontSize);
+      expect(feature.width, 150);
+      expect(feature.height, greaterThan(bounds.height));
+    });
+
+    test('text has no top or bottom resize handles', () {
+      harness.context = _textContext(contents: 'hello');
+      final feature = (harness.context.document.nodes.first as Feature);
+      final handles = ResizeHandleUtil.getResizeHandles(
+        feature,
+        harness.camera,
+      ).map((handle) => handle.handle);
+
+      expect(handles, isNot(contains(SelectionResizeHandle.top)));
+      expect(handles, isNot(contains(SelectionResizeHandle.bottom)));
+      expect(handles, contains(SelectionResizeHandle.left));
     });
   });
 }
 
-EditorContext _textContext({required String contents, required Size size}) =>
-    EditorContext(
-      document: Document.fromFeatures([
-        Feature(
-          origin: Offset.zero,
-          size: size,
-          kind: FeatureKindText(contents, strokeColor: const Color(0xFFFFFFFF)),
-        ),
-      ]),
-    );
+EditorContext _textContext({required String contents}) => EditorContext(
+  document: Document.fromFeatures([newTextFeatureAt(Offset.zero, contents)]),
+);

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/models/selection_resize_handle.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 export 'feature_kinds/feature_kind.dart';
@@ -12,6 +13,7 @@ export 'line_end_cap.dart';
 export 'stroke_type.dart';
 export 'stroke_width_preset.dart';
 export 'text_alignment.dart';
+export 'text_sizing.dart';
 
 /// A drawable shape or label in world space.
 class Feature extends Node {
@@ -80,6 +82,17 @@ class Feature extends Node {
 
   @override
   void resize(Rect bounds) => kind.applyBounds(this, bounds);
+
+  @override
+  void resizeFromHandle(
+    Rect bounds,
+    SelectionResizeHandle handle,
+    Node initial,
+  ) => kind.applyHandleResize(this, initial as Feature, bounds, handle);
+
+  @override
+  bool supportsResizeHandle(SelectionResizeHandle handle) =>
+      kind.supportsResizeHandle(handle);
 
   void setBounds(Rect bounds) {
     origin = bounds.topLeft;

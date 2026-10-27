@@ -27,43 +27,29 @@ Size measureText(
   }
 }
 
-/// Largest font size, within 0.25 units, whose wrapped layout fits [height].
+/// Measures [text] with no wrapping beyond its explicit line breaks.
 ///
-/// Returns null if the minimum size does not fit. This checks paragraph height,
-/// not glyph or outline containment; painting can clip any overflow.
-double? fontSizeFillingBounds(
+/// The width is rounded up so laying the text out at it never wraps.
+Size measureTextIntrinsic(
   String text, {
-  required double width,
-  required double height,
+  required double fontSize,
   TextHorizontalAlignment horizontalAlignment = TextHorizontalAlignment.left,
 }) {
-  assert(width.isFinite && width > 0);
-  assert(height.isFinite && height >= 0);
-
-  bool fits(double size) =>
-      measureText(
-        text,
-        width: width,
-        fontSize: size,
-        horizontalAlignment: horizontalAlignment,
-      ).height <=
-      height;
-
-  var low = kMinTextFontSize;
-  var high = kMaxTextFontSize;
-  if (!fits(low)) return null;
-  if (fits(high)) return high;
-
-  while (high - low > 0.25) {
-    final mid = (low + high) / 2;
-    if (fits(mid)) {
-      low = mid;
-    } else {
-      high = mid;
-    }
+  final paragraph = _layoutTextParagraph(
+    text,
+    width: _unwrappedLayoutWidth,
+    fontSize: fontSize,
+    horizontalAlignment: horizontalAlignment,
+  );
+  try {
+    return Size(paragraph.maxIntrinsicWidth.ceilToDouble(), paragraph.height);
+  } finally {
+    paragraph.dispose();
   }
-  return low;
 }
+
+/// Wide enough that no realistic line wraps.
+const _unwrappedLayoutWidth = 1e6;
 
 /// The one style shared by canvas painting and the inline editor, so wrapping
 /// and glyph metrics match when switching between them. Not inherited from the

@@ -7,7 +7,6 @@ import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 
 const _layout = LabelLayout(
   bounds: Rect.fromLTWH(10, 20, 200, 48),
@@ -143,7 +142,7 @@ void main() {
         CreateTextEditSession(
           worldOrigin: origin,
           initialContents: '',
-          layout: _layout,
+          layoutFor: (_) => _layout,
         ),
       );
       expect(context.document.nodes, hasLength(1));
@@ -154,8 +153,27 @@ void main() {
       final created = context.document.nodes.last as Feature;
       expect(created.origin, origin);
       expect((created.kind as FeatureKindText).label, 'new text');
-      expect(created.size.width, defaultNewTextWidth);
+      expect((created.kind as FeatureKindText).sizing, TextSizing.auto);
       expect(context.selection.selectedNodeIds, [created.id]);
+    });
+
+    test('dragged CreateTextEditSession commits fixed-width text', () {
+      context.startTextEdit(
+        CreateTextEditSession(
+          worldOrigin: const Offset(10, 20),
+          fixedWidth: 90,
+          initialContents: '',
+          layoutFor: (_) => _layout,
+        ),
+      );
+
+      commitTextEdit(context, contents: 'wrap me please, I am long');
+
+      final created = context.document.nodes.last as Feature;
+      expect((created.kind as FeatureKindText).sizing, TextSizing.fixedWidth);
+      expect(created.origin, const Offset(10, 20));
+      expect(created.size.width, 90);
+      expect(created.size.height, greaterThan(40));
     });
 
     test('outside-click commit creates text without selecting it', () {
@@ -163,7 +181,7 @@ void main() {
         CreateTextEditSession(
           worldOrigin: const Offset(100, 200),
           initialContents: '',
-          layout: _layout,
+          layoutFor: (_) => _layout,
         ),
       );
 
@@ -178,7 +196,7 @@ void main() {
         CreateTextEditSession(
           worldOrigin: const Offset(100, 200),
           initialContents: '',
-          layout: _layout,
+          layoutFor: (_) => _layout,
         ),
       );
 

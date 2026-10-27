@@ -38,13 +38,20 @@ final class EditTextEditSession extends TextEditSession {
 }
 
 final class CreateTextEditSession extends TextEditSession {
-  const CreateTextEditSession({
+  CreateTextEditSession({
     required this.worldOrigin,
     required super.initialContents,
-    required super.layout,
-  });
+    required this.layoutFor,
+    this.fixedWidth,
+  }) : super(layout: layoutFor(initialContents));
 
   final Offset worldOrigin;
+
+  /// Wrap width of a text dragged out with the text tool; null for auto-sized.
+  final double? fixedWidth;
+
+  /// Where the text would be typeset were its contents [contents].
+  final LabelLayout Function(String contents) layoutFor;
 }
 
 /// Observable state of the active text edit session, if any.

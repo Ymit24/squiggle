@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/models/selection_resize_handle.dart';
 
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
 
@@ -56,7 +56,9 @@ class ResizeHandleUtil {
       (SelectionResizeHandle.left, inflated.centerLeft, verticalSize),
     ];
 
-    return handles.map((entry) {
+    return handles.where((entry) => node.supportsResizeHandle(entry.$1)).map((
+      entry,
+    ) {
       final (handle, center, size) = entry;
       return ResizeHandle(
         node: node,

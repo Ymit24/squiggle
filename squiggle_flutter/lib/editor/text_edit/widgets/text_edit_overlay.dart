@@ -120,11 +120,22 @@ class _TextEditOverlayState extends State<TextEditOverlay> {
   /// mid-edit cannot leave the field behind.
   LabelLayout _layout() {
     final session = widget.session;
-    if (session is EditTextEditSession &&
-        session.feature.kind is LabelCapable) {
-      return EditTextEditSession.forFeature(session.feature).layout;
+    final draft = _controller.text;
+    switch (session) {
+      case CreateTextEditSession(:final layoutFor):
+        return layoutFor(draft);
+      case EditTextEditSession(:final feature)
+          when feature.kind is FeatureKindText:
+        final kind = feature.kind as FeatureKindText;
+        return kind
+            .labelLayoutFor(feature, draft)
+            .shifted(feature.parent?.globalOrigin ?? Offset.zero);
+      case EditTextEditSession(:final feature)
+          when feature.kind is LabelCapable:
+        return EditTextEditSession.forFeature(feature).layout;
+      case EditTextEditSession():
+        return session.layout;
     }
-    return session.layout;
   }
 
   void _commit({bool selectCreated = true}) =>

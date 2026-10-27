@@ -28,11 +28,12 @@ void commitTextEdit(
           label.setLabel(feature, text);
         }, container: feature.parent);
       }
-    case CreateTextEditSession(:final worldOrigin):
+    case CreateTextEditSession(:final worldOrigin, :final fixedWidth):
       if (text.isNotEmpty) {
         final feature = newTextFeatureAt(
           worldOrigin,
           text,
+          fixedWidth: fixedWidth,
           configureKind: context.brushes.active.applyTo,
         );
         context.history.run('Create text', (transaction) {

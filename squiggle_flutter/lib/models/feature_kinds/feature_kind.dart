@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
+import 'package:squiggle_flutter/models/selection_resize_handle.dart';
 import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/stroke_painter.dart';
@@ -44,6 +45,19 @@ sealed class FeatureKind {
       boundsFor(feature).overlaps(rect);
 
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
+
+  /// Resizes [feature] by dragging [handle]; see [Node.resizeFromHandle].
+  void applyHandleResize(
+    Feature feature,
+    Feature initial,
+    Rect bounds,
+    SelectionResizeHandle handle,
+  ) => applyBounds(feature, bounds);
+
+  bool supportsResizeHandle(SelectionResizeHandle handle) => true;
+
+  /// Re-derives size-dependent geometry after style fields changed.
+  void refit(Feature feature) {}
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }
