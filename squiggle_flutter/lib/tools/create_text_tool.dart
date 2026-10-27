@@ -48,11 +48,6 @@ class CreateTextTool extends Tool implements DrawingTool {
   @override
   void deactivate(EditorContext context) => _reset();
 
-  void _reset() {
-    _pressWorld = null;
-    _dragRect = null;
-  }
-
   @override
   bool onPointerDown(
     EditorContext context,
@@ -100,5 +95,10 @@ class CreateTextTool extends Tool implements DrawingTool {
     _reset();
     context.resetToSelectTool();
     return true;
+  }
+
+  void _reset() {
+    _pressWorld = null;
+    _dragRect = null;
   }
 }

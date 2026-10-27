@@ -190,6 +190,33 @@ void main() {
       expect(feature.width, closeTo(start.width * 2, 3));
     });
 
+    test('font size changes smoothly as the corner moves in any direction', () {
+      final feature = textFeature();
+      final initial = feature.copyWith();
+      final start = feature.localBounds();
+      final kind = feature.kind as FeatureKindText;
+      double? previous;
+
+      // Sweep the pointer from a horizontal-heavy to a vertical-heavy drag.
+      for (var step = 0; step <= 100; step++) {
+        final t = step / 100;
+        final corner = Offset(
+          start.right + 40 * (1 - t),
+          start.bottom + 40 * t,
+        );
+        feature.resizeFromHandle(
+          Rect.fromPoints(start.topLeft, corner),
+          SelectionResizeHandle.bottomRight,
+          initial,
+        );
+
+        if (previous != null) {
+          expect((kind.fontSize - previous).abs(), lessThan(0.5));
+        }
+        previous = kind.fontSize;
+      }
+    });
+
     test('top-left corner keeps the bottom-right corner fixed', () {
       final feature = textFeature();
       final initial = feature.copyWith();
