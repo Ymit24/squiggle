@@ -1,0 +1,83 @@
+name: Linux debug build (temporary)
+
+# Throwaway workflow: builds a Linux debug bundle of PR #174 (text sizing)
+# and publishes it as a prerelease that never becomes "Latest".
+
+on:
+  push:
+    branches:
+      - t3/linux-debug-build-text-resizing
+
+permissions:
+  contents: write
+
+env:
+  APP_SHA: 03a95f775f759336a573c493839bf373e4720a13
+
+jobs:
+  build:
+    name: Build and publish Linux debug bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: squiggle_flutter
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            libstdc++-12-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.7
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Linux debug
+        run: flutter build linux --debug
+
+      - name: Package Linux bundle
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -nE 's/^version: ([0-9]+\.[0-9]+\.[0-9]+)\+[0-9]+$/\1/p' pubspec.yaml)"
+          short_sha="${APP_SHA:0:7}"
+          name="squiggle-linux-x64-v${version}-debug-pr174-${short_sha}"
+          tar \
+            -C build/linux/x64/debug/bundle \
+            -czf "${GITHUB_WORKSPACE}/squiggle_flutter/${name}.tar.gz" \
+            .
+          echo "archive=${name}.tar.gz" >> "$GITHUB_OUTPUT"
+          echo "tag=debug-pr174-${short_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+          TAG: ${{ steps.package.outputs.tag }}
+        run: |
+          gh release delete "$TAG" --cleanup-tag --yes || true
+          gh release create "$TAG" \
+            "$ARCHIVE" \
+            --target "$APP_SHA" \
+            --title "Squiggle debug build: PR #174 text sizing (${APP_SHA:0:7})" \
+            --notes "Debug build of PR #174 (auto-width and fixed-width text with scale and reflow resizing) at ${APP_SHA}. Not a versioned release." \
+            --prerelease \
+            --latest=false
