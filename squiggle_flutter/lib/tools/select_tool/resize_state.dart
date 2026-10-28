@@ -76,18 +76,6 @@ class ResizeState extends SelectInteractionState {
       ..resize(newBounds, drag: _dragFor(isAltPressed));
   }
 
-  /// The dragged edge or corner moves, so the opposite one stays; Alt keeps the
-  /// centre instead.
-  ResizeDrag _dragFor(bool symmetric) => ResizeDrag(
-    fixedPoint: symmetric
-        ? Alignment.center
-        : Alignment(
-            _movesLeft ? 1 : (_movesRight ? -1 : 0),
-            _movesTop ? 1 : (_movesBottom ? -1 : 0),
-          ),
-    isCorner: _handle.handle.isCorner,
-  );
-
   Rect getNewBounds(
     Offset worldPosition, {
     bool lockAspectRatio = false,
@@ -108,6 +96,27 @@ class ResizeState extends SelectInteractionState {
     required bool isAltPressed,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
+  }
+
+  /// The dragged edge or corner moves, so the opposite one stays; Alt keeps the
+  /// centre instead.
+  ResizeDrag _dragFor(bool symmetric) => ResizeDrag(
+    fixedPoint: symmetric
+        ? Alignment.center
+        : Alignment(
+            _fixedSide(movesNegative: _movesLeft, movesPositive: _movesRight),
+            _fixedSide(movesNegative: _movesTop, movesPositive: _movesBottom),
+          ),
+    isCorner: _handle.handle.isCorner,
+  );
+
+  /// -1 or 1 for the side that stays put on an axis, 0 if neither does.
+  static double _fixedSide({
+    required bool movesNegative,
+    required bool movesPositive,
+  }) {
+    if (movesNegative) return 1;
+    return movesPositive ? -1 : 0;
   }
 
   Rect _symmetricBounds(Offset worldPosition, bool lockAspectRatio) {

@@ -49,6 +49,8 @@ final class CreateTextEditSession extends TextEditSession {
       );
 
   final Feature draft;
+
+  FeatureKindText get kind => draft.kind as FeatureKindText;
 }
 
 /// Observable state of the active text edit session, if any.

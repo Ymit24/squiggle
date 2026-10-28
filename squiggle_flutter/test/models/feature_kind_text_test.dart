@@ -206,6 +206,25 @@ void main() {
       expect(end.bottom, closeTo(start.bottom, 1e-9));
     });
 
+    test('dragging a corner past the fixed corner grows the other way', () {
+      final feature = textFeature();
+      final start = feature.localBounds();
+
+      feature.resize(
+        Rect.fromLTRB(
+          start.left - start.width,
+          start.top - start.height,
+          start.left,
+          start.top,
+        ),
+        drag: bottomRightCorner,
+      );
+
+      final end = feature.localBounds();
+      expect(end.right, closeTo(start.left, 1e-9));
+      expect(end.bottom, closeTo(start.top, 1e-9));
+    });
+
     test('a symmetric corner drag keeps the centre fixed', () {
       final feature = textFeature();
       final start = feature.localBounds();

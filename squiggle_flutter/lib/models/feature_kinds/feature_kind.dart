@@ -22,6 +22,8 @@ part 'feature_kind_rectangle.dart';
 part 'feature_kind_text.dart';
 
 sealed class FeatureKind {
+  bool get supportsVerticalResize => true;
+
   Map<String, dynamic> toDataModel();
 
   // TODO: port this to reflection
@@ -46,8 +48,6 @@ sealed class FeatureKind {
 
   void applyBounds(Feature feature, Rect bounds, {ResizeDrag? drag}) =>
       feature.setBounds(bounds);
-
-  bool get supportsVerticalResize => true;
 
   /// Re-derives size-dependent geometry after style fields changed.
   void refit(Feature feature) {}

@@ -31,6 +31,9 @@ abstract class Node {
 
   Document? get document => parent?.document;
 
+  /// Whether top and bottom resize handles do anything for this node.
+  bool get supportsVerticalResize => true;
+
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
 
   /// Returns the union of [nodes] bounds in local world space.
@@ -66,9 +69,6 @@ abstract class Node {
   /// Resizes this node, which is in its state from before the drag, to
   /// [bounds]. [drag] is null for programmatic resizes such as scaling a group.
   void resize(Rect bounds, {ResizeDrag? drag});
-
-  /// Whether top and bottom resize handles do anything for this node.
-  bool get supportsVerticalResize => true;
 
   Offset center() => localBounds().center;
 }

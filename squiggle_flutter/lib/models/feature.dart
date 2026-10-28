@@ -55,6 +55,9 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
+  bool get supportsVerticalResize => kind.supportsVerticalResize;
+
+  @override
   data.Feature toDataModel() {
     return data.Feature(
       id: id.value,
@@ -83,9 +86,6 @@ class Feature extends Node {
   @override
   void resize(Rect bounds, {ResizeDrag? drag}) =>
       kind.applyBounds(this, bounds, drag: drag);
-
-  @override
-  bool get supportsVerticalResize => kind.supportsVerticalResize;
 
   void setBounds(Rect bounds) {
     origin = bounds.topLeft;

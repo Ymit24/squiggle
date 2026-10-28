@@ -44,6 +44,9 @@ final class FeatureKindText extends FeatureKind
   double get minWrapWidth => fontSize;
 
   @override
+  bool get supportsVerticalResize => false;
+
+  @override
   Map<String, dynamic> toDataModel() {
     return {
       'type': 'text',
@@ -142,9 +145,6 @@ final class FeatureKindText extends FeatureKind
   }
 
   @override
-  bool get supportsVerticalResize => false;
-
-  @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     if (feature.hideLabel) return;
     labelLayout(feature).paint(canvas, label, clipToBounds: false);
@@ -198,16 +198,28 @@ final class FeatureKindText extends FeatureKind
 
   /// Where a box of [size] goes so that [drag]'s fixed point of [from] stays
   /// put; without a drag it takes the top-left of [to].
+  ///
+  /// Dragging past the fixed point makes the box grow to its other side, like
+  /// a shape's bounds do, so the text keeps following the cursor.
   static Rect _placed(Size size, Rect from, Rect to, ResizeDrag? drag) {
     if (drag == null) return to.topLeft & size;
     final fixed = drag.fixedPoint;
     final anchor = fixed.withinRect(from);
     return Rect.fromLTWH(
-      anchor.dx - size.width * (fixed.x + 1) / 2,
-      drag.isCorner ? anchor.dy - size.height * (fixed.y + 1) / 2 : from.top,
+      anchor.dx - size.width * _growth(fixed.x, anchor.dx, to.center.dx),
+      drag.isCorner
+          ? anchor.dy - size.height * _growth(fixed.y, anchor.dy, to.center.dy)
+          : from.top,
       size.width,
       size.height,
     );
+  }
+
+  /// Fraction of the box that lies before the fixed point on one axis.
+  static double _growth(double fixed, double anchor, double toCenter) {
+    if (fixed < 0 && toCenter < anchor) return 1;
+    if (fixed > 0 && toCenter > anchor) return 0;
+    return (fixed + 1) / 2;
   }
 
   /// Scale of [base] that [target] corresponds to, taken by projecting the

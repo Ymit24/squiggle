@@ -27,9 +27,9 @@ void commitTextEdit(
           label.setLabel(feature, text);
         }, container: feature.parent);
       }
-    case CreateTextEditSession(:final draft):
+    case CreateTextEditSession(:final draft, :final kind):
       if (text.isNotEmpty) {
-        (draft.kind as FeatureKindText).setLabel(draft, text);
+        kind.setLabel(draft, text);
         context.history.run('Create text', (transaction) {
           transaction.add(draft);
         });
