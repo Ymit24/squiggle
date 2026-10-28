@@ -1,25 +1,8 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/label_layout.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
-
-/// Layout of a text feature holding [contents] created at [origin], styled by
-/// [configureKind] exactly as [newTextFeatureAt] would style it.
-LabelLayout newTextLayoutAt(
-  Offset origin, {
-  String contents = '',
-  double? fixedWidth,
-  void Function(FeatureKindText)? configureKind,
-}) {
-  final feature = newTextFeatureAt(
-    origin,
-    contents,
-    fixedWidth: fixedWidth,
-    configureKind: configureKind,
-  );
-  return (feature.kind as FeatureKindText).labelLayout(feature);
-}
 
 /// A new text feature placed at [origin].
 ///
@@ -32,16 +15,15 @@ Feature newTextFeatureAt(
   double? fixedWidth,
   void Function(FeatureKindText)? configureKind,
 }) {
-  final kind = FeatureKindText(
-    contents,
-    sizing: fixedWidth == null ? TextSizing.auto : TextSizing.fixedWidth,
-    strokeColor: defaultNewTextFillColor,
-  );
+  final kind = FeatureKindText(contents, strokeColor: defaultNewTextFillColor);
   configureKind?.call(kind);
-  final size = kind.measureContents(fontSize: kind.fontSize, width: fixedWidth);
-  final anchorShift = fixedWidth == null
-      ? size.width * kind.anchorFraction
-      : 0.0;
+  // The gesture decides the sizing, whatever the brush says.
+  kind.sizing = fixedWidth == null ? TextSizing.auto : TextSizing.fixedWidth;
+  final width = fixedWidth == null
+      ? null
+      : math.max(fixedWidth, kind.minWrapWidth);
+  final size = kind.measureContents(fontSize: kind.fontSize, width: width);
+  final anchorShift = width == null ? size.width * kind.anchorFraction : 0.0;
   return Feature(
     origin: origin - Offset(anchorShift, 0),
     size: size,

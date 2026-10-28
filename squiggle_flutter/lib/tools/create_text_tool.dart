@@ -11,7 +11,8 @@ import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Click to place auto-sized text; drag to set the width it wraps at.
 class CreateTextTool extends Tool implements DrawingTool {
-  /// Screen pixels the pointer must travel before a press counts as a drag.
+  /// Screen pixels the pointer must travel sideways before a press counts as
+  /// a drag; the dragged width is what matters, not the height.
   static const _dragThreshold = 6.0;
 
   Offset? _pressWorld;
@@ -71,7 +72,7 @@ class CreateTextTool extends Tool implements DrawingTool {
     final press = _pressWorld;
     if (press == null) return false;
     final travelled = camera.worldLengthToScreenLength(
-      (worldPosition - press).distance,
+      (worldPosition.dx - press.dx).abs(),
     );
     if (travelled < _dragThreshold && _dragRect == null) return false;
     _dragRect = Rect.fromPoints(press, worldPosition);

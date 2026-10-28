@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 class Group extends Node with NodeContainer {
@@ -72,7 +73,7 @@ class Group extends Node with NodeContainer {
   }
 
   @override
-  void resize(Rect bounds) {
+  void resize(Rect bounds, {ResizeDrag? drag}) {
     final childBounds = Node.localBoundsOfNodes(children);
     final scaleX = childBounds.width == 0
         ? 1.0

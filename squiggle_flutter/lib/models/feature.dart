@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
-import 'package:squiggle_flutter/models/selection_resize_handle.dart';
+import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 export 'feature_kinds/feature_kind.dart';
@@ -81,18 +81,11 @@ class Feature extends Node {
   Rect localBounds() => kind.boundsFor(this);
 
   @override
-  void resize(Rect bounds) => kind.applyBounds(this, bounds);
+  void resize(Rect bounds, {ResizeDrag? drag}) =>
+      kind.applyBounds(this, bounds, drag: drag);
 
   @override
-  void resizeFromHandle(
-    Rect bounds,
-    SelectionResizeHandle handle,
-    Node initial,
-  ) => kind.applyHandleResize(this, initial as Feature, bounds, handle);
-
-  @override
-  bool supportsResizeHandle(SelectionResizeHandle handle) =>
-      kind.supportsResizeHandle(handle);
+  bool get supportsVerticalResize => kind.supportsVerticalResize;
 
   void setBounds(Rect bounds) {
     origin = bounds.topLeft;

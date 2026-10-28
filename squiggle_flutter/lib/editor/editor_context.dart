@@ -151,12 +151,9 @@ class EditorContext extends ChangeNotifier {
   void startCreateText(Offset worldOrigin, {double? fixedWidth}) =>
       startTextEdit(
         CreateTextEditSession(
-          worldOrigin: worldOrigin,
-          initialContents: '',
-          fixedWidth: fixedWidth,
-          layoutFor: (contents) => newTextLayoutAt(
+          draft: newTextFeatureAt(
             worldOrigin,
-            contents: contents,
+            '',
             fixedWidth: fixedWidth,
             configureKind: brushes.active.applyTo,
           ),

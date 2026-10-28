@@ -1,7 +1,6 @@
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 
 /// Applies [contents] (default: the field's current draft) as one undoable
 /// step and closes the text edit; does nothing when no edit is open, which
@@ -28,18 +27,13 @@ void commitTextEdit(
           label.setLabel(feature, text);
         }, container: feature.parent);
       }
-    case CreateTextEditSession(:final worldOrigin, :final fixedWidth):
+    case CreateTextEditSession(:final draft):
       if (text.isNotEmpty) {
-        final feature = newTextFeatureAt(
-          worldOrigin,
-          text,
-          fixedWidth: fixedWidth,
-          configureKind: context.brushes.active.applyTo,
-        );
+        (draft.kind as FeatureKindText).setLabel(draft, text);
         context.history.run('Create text', (transaction) {
-          transaction.add(feature);
+          transaction.add(draft);
         });
-        if (selectCreated) context.selectCreatedFeature(feature);
+        if (selectCreated) context.selectCreatedFeature(draft);
       }
   }
   context.endTextEdit();

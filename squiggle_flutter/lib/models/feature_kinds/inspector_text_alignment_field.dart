@@ -71,6 +71,8 @@ class InspectorTextSizingField extends InspectorField<TextSizing> {
     required ValueChanged<TextSizing> onSizingChanged,
   }) : super(values: [value], callbacks: [onSizingChanged]);
   @override
+  bool get isBrushable => false;
+  @override
   Object? encodeValue(TextSizing value) => value.name;
 
   @override

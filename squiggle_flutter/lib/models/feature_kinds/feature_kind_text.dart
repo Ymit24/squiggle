@@ -7,7 +7,6 @@ final class FeatureKindText extends FeatureKind
     this.sizing = TextSizing.auto,
     this.fontSize = defaultFontSize,
     this.horizontalAlignment = TextHorizontalAlignment.left,
-    this.verticalAlignment = TextVerticalAlignment.top,
     this.strokeColor = defaultFeatureStrokeColor,
   });
 
@@ -19,10 +18,6 @@ final class FeatureKindText extends FeatureKind
         horizontalAlignment: decodeStyleEnum(
           content['horizontalAlignment'],
           TextHorizontalAlignment.values,
-        ),
-        verticalAlignment: decodeStyleEnum(
-          content['verticalAlignment'],
-          TextVerticalAlignment.values,
         ),
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
       );
@@ -36,7 +31,6 @@ final class FeatureKindText extends FeatureKind
   TextSizing sizing;
   double fontSize;
   TextHorizontalAlignment horizontalAlignment;
-  TextVerticalAlignment verticalAlignment;
 
   /// Fraction of the box width that stays put when auto-sized text grows:
   /// left-aligned text grows rightward, centered text both ways, and so on.
@@ -46,6 +40,9 @@ final class FeatureKindText extends FeatureKind
     TextHorizontalAlignment.right => 1,
   };
 
+  /// Narrowest wrap width: one em, so a column is never one glyph per line.
+  double get minWrapWidth => fontSize;
+
   @override
   Map<String, dynamic> toDataModel() {
     return {
@@ -54,7 +51,6 @@ final class FeatureKindText extends FeatureKind
       'sizing': sizing.name,
       'fontSize': fontSize,
       'horizontalAlignment': horizontalAlignment.name,
-      'verticalAlignment': verticalAlignment.name,
       'strokeColor': strokeColor.toARGB32(),
     };
   }
@@ -65,7 +61,6 @@ final class FeatureKindText extends FeatureKind
     sizing: sizing,
     fontSize: fontSize,
     horizontalAlignment: horizontalAlignment,
-    verticalAlignment: verticalAlignment,
     strokeColor: strokeColor,
   );
 
@@ -95,11 +90,11 @@ final class FeatureKindText extends FeatureKind
   ///
   /// Auto-sized text keeps its alignment point fixed as the width changes;
   /// fixed-width text keeps its width and only its height follows.
-  Rect fittedBounds(Feature feature, {String? contents, double? fontSize}) {
+  Rect fittedBounds(Feature feature, {String? contents}) {
     final current = feature.localBounds();
     final size = measureContents(
       text: contents,
-      fontSize: fontSize ?? this.fontSize,
+      fontSize: fontSize,
       width: sizing == TextSizing.fixedWidth ? current.width : null,
     );
     return Rect.fromLTWH(
@@ -119,71 +114,35 @@ final class FeatureKindText extends FeatureKind
   @override
   void refit(Feature feature) => feature.setBounds(fittedBounds(feature));
 
-  /// Scales for a group resize: the font follows the box's overall size change.
+  /// Corner drags and programmatic resizes scale the font with the box. Side
+  /// drags only change the wrap width, which makes the text fixed-width. Height
+  /// always follows the contents, so top and bottom handles are not offered.
   @override
-  void applyBounds(Feature feature, Rect bounds) {
+  void applyBounds(Feature feature, Rect bounds, {ResizeDrag? drag}) {
     final current = feature.localBounds();
-    final scale = _projectedScale(bounds.size, current.size);
-    final scaled = _scaledFrom(fontSize, current, scale);
-    fontSize = scaled.fontSize;
-    feature.setBounds(
-      Rect.fromLTWH(
-        bounds.left,
-        bounds.top,
-        scaled.size.width,
-        scaled.size.height,
-      ),
-    );
-  }
-
-  /// Corner handles scale the text about the opposite corner. Left and right
-  /// handles only change the wrap width, which makes the text fixed-width.
-  /// Top and bottom handles are not offered, since height follows the text.
-  @override
-  void applyHandleResize(
-    Feature feature,
-    Feature initial,
-    Rect bounds,
-    SelectionResizeHandle handle,
-  ) {
-    final start = (initial.kind as FeatureKindText);
-    final startBounds = initial.localBounds();
-    if (handle.isCorner) {
-      final scaled = start._scaledFrom(
-        start.fontSize,
-        startBounds,
-        _projectedScale(bounds.size, startBounds.size),
-      );
-      fontSize = scaled.fontSize;
-      feature.setBounds(
-        Rect.fromLTWH(
-          handle.movesLeft ? bounds.right - scaled.size.width : bounds.left,
-          handle.movesTop ? bounds.bottom - scaled.size.height : bounds.top,
-          scaled.size.width,
-          scaled.size.height,
-        ),
-      );
-    } else if (handle == SelectionResizeHandle.left ||
-        handle == SelectionResizeHandle.right) {
+    final Size size;
+    if (drag != null && !drag.isCorner) {
       sizing = TextSizing.fixedWidth;
-      fontSize = start.fontSize;
-      final width = math.max(bounds.width, fontSize);
-      final size = measureContents(fontSize: fontSize, width: width);
-      feature.setBounds(
-        Rect.fromLTWH(
-          handle.movesLeft ? bounds.right - width : bounds.left,
-          startBounds.top,
-          width,
-          size.height,
-        ),
+      size = measureContents(
+        fontSize: fontSize,
+        width: math.max(bounds.width, minWrapWidth),
+      );
+    } else {
+      final baseFontSize = fontSize;
+      fontSize = (baseFontSize * _projectedScale(bounds.size, current.size))
+          .clamp(text_painter.kMinTextFontSize, text_painter.kMaxTextFontSize);
+      size = measureContents(
+        fontSize: fontSize,
+        width: sizing == TextSizing.fixedWidth
+            ? current.width * fontSize / baseFontSize
+            : null,
       );
     }
+    feature.setBounds(_placed(size, current, bounds, drag));
   }
 
   @override
-  bool supportsResizeHandle(SelectionResizeHandle handle) =>
-      handle != SelectionResizeHandle.top &&
-      handle != SelectionResizeHandle.bottom;
+  bool get supportsVerticalResize => false;
 
   @override
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
@@ -208,14 +167,6 @@ final class FeatureKindText extends FeatureKind
         value: strokeColor,
         onColorChanged: (color) {
           strokeColor = color;
-        },
-      ),
-      InspectorVerticalTextAlignmentField(
-        fieldKey: 'verticalAlignment',
-        label: 'Vertical Alignment',
-        value: verticalAlignment,
-        onTextAlignChanged: (value) {
-          verticalAlignment = value;
         },
       ),
       InspectorHorizontalTextAlignmentField(
@@ -245,26 +196,17 @@ final class FeatureKindText extends FeatureKind
     ];
   }
 
-  /// Font size and box size after scaling the text laid out in [base] at
-  /// [baseFontSize] by [scale]; the font is clamped to its limits and a fixed
-  /// width follows the font actually reached.
-  ({double fontSize, Size size}) _scaledFrom(
-    double baseFontSize,
-    Rect base,
-    double scale,
-  ) {
-    final scaledFont = (baseFontSize * scale).clamp(
-      text_painter.kMinTextFontSize,
-      text_painter.kMaxTextFontSize,
-    );
-    return (
-      fontSize: scaledFont,
-      size: measureContents(
-        fontSize: scaledFont,
-        width: sizing == TextSizing.fixedWidth
-            ? base.width * scaledFont / baseFontSize
-            : null,
-      ),
+  /// Where a box of [size] goes so that [drag]'s fixed point of [from] stays
+  /// put; without a drag it takes the top-left of [to].
+  static Rect _placed(Size size, Rect from, Rect to, ResizeDrag? drag) {
+    if (drag == null) return to.topLeft & size;
+    final fixed = drag.fixedPoint;
+    final anchor = fixed.withinRect(from);
+    return Rect.fromLTWH(
+      anchor.dx - size.width * (fixed.x + 1) / 2,
+      drag.isCorner ? anchor.dy - size.height * (fixed.y + 1) / 2 : from.top,
+      size.width,
+      size.height,
     );
   }
 
@@ -283,6 +225,6 @@ final class FeatureKindText extends FeatureKind
     fontSize: fontSize,
     color: strokeColor,
     horizontalAlignment: horizontalAlignment,
-    verticalAlignment: verticalAlignment,
+    verticalAlignment: TextVerticalAlignment.top,
   );
 }

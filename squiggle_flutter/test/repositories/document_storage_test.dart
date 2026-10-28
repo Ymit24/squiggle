@@ -106,9 +106,8 @@ void main() {
       final currentJson = jsonDecode(await currentFile.readAsString()) as Map;
       expect(currentJson['version'], 2);
 
-      await File(
-        '${tempDir.path}/documents/old.json',
-      ).writeAsString('{"version":1,"name":"Old","nodes":[]}');
+      await File('${tempDir.path}/documents/old.json')
+          .writeAsString('{"version":1,"name":"Old","nodes":[]}');
       expect(await storage.loadDocument('old'), isNull);
       expect(
         (await storage.listDocuments()).map((document) => document.id),

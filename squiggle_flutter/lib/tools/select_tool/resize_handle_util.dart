@@ -2,9 +2,8 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/models/selection_resize_handle.dart';
-
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 class ResizeHandleUtil {
   static ResizeHandle? hitTest(Node node, Offset worldPoint, Camera camera) {
@@ -56,9 +55,7 @@ class ResizeHandleUtil {
       (SelectionResizeHandle.left, inflated.centerLeft, verticalSize),
     ];
 
-    return handles.where((entry) => node.supportsResizeHandle(entry.$1)).map((
-      entry,
-    ) {
+    return handles.where((entry) => _isOffered(node, entry.$1)).map((entry) {
       final (handle, center, size) = entry;
       return ResizeHandle(
         node: node,
@@ -71,4 +68,9 @@ class ResizeHandleUtil {
       );
     }).toList();
   }
+
+  static bool _isOffered(Node node, SelectionResizeHandle handle) =>
+      node.supportsVerticalResize ||
+      (handle != SelectionResizeHandle.top &&
+          handle != SelectionResizeHandle.bottom);
 }

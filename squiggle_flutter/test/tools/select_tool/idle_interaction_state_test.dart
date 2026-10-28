@@ -84,7 +84,7 @@ void main() {
       harness.doubleClick(click);
 
       final session = harness.context.textEdit.session as CreateTextEditSession;
-      expect(session.worldOrigin, click);
+      expect(session.draft.origin, click);
       expect(session.initialContents, isEmpty);
       expect(session.layout.bounds.topLeft, click);
       expect(session.layout.bounds.width, lessThan(30));

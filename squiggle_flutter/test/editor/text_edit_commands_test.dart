@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 
 const _layout = LabelLayout(
   bounds: Rect.fromLTWH(10, 20, 200, 48),
@@ -139,11 +140,7 @@ void main() {
     test('CreateTextEditSession commit adds and selects the feature', () {
       const origin = Offset(100, 200);
       context.startTextEdit(
-        CreateTextEditSession(
-          worldOrigin: origin,
-          initialContents: '',
-          layoutFor: (_) => _layout,
-        ),
+        CreateTextEditSession(draft: newTextFeatureAt(origin, '')),
       );
       expect(context.document.nodes, hasLength(1));
 
@@ -160,10 +157,7 @@ void main() {
     test('dragged CreateTextEditSession commits fixed-width text', () {
       context.startTextEdit(
         CreateTextEditSession(
-          worldOrigin: const Offset(10, 20),
-          fixedWidth: 90,
-          initialContents: '',
-          layoutFor: (_) => _layout,
+          draft: newTextFeatureAt(const Offset(10, 20), '', fixedWidth: 90),
         ),
       );
 
@@ -176,12 +170,36 @@ void main() {
       expect(created.size.height, greaterThan(40));
     });
 
+    test('a brush cannot override the sizing the gesture chose', () {
+      context.brushes.active.values['sizing'] = 'fixedWidth';
+
+      context.startCreateText(const Offset(5, 5));
+      commitTextEdit(context, contents: 'click made');
+      context.startCreateText(const Offset(5, 50), fixedWidth: 120);
+      commitTextEdit(context, contents: 'drag made');
+
+      final kinds = context.document.nodes
+          .skip(1)
+          .map((node) => (node as Feature).kind as FeatureKindText)
+          .toList();
+      expect(kinds.map((kind) => kind.sizing), [
+        TextSizing.auto,
+        TextSizing.fixedWidth,
+      ]);
+    });
+
+    test('a near-zero dragged width is widened to the minimum', () {
+      context.startCreateText(const Offset(5, 5), fixedWidth: 0.3);
+      commitTextEdit(context, contents: 'x');
+
+      final created = context.document.nodes.last as Feature;
+      expect(created.width, (created.kind as FeatureKindText).fontSize);
+    });
+
     test('outside-click commit creates text without selecting it', () {
       context.startTextEdit(
         CreateTextEditSession(
-          worldOrigin: const Offset(100, 200),
-          initialContents: '',
-          layoutFor: (_) => _layout,
+          draft: newTextFeatureAt(const Offset(100, 200), ''),
         ),
       );
 
@@ -194,9 +212,7 @@ void main() {
     test('empty create commit leaves the document unchanged', () {
       context.startTextEdit(
         CreateTextEditSession(
-          worldOrigin: const Offset(100, 200),
-          initialContents: '',
-          layoutFor: (_) => _layout,
+          draft: newTextFeatureAt(const Offset(100, 200), ''),
         ),
       );
 

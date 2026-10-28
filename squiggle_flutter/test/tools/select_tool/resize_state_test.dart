@@ -5,9 +5,9 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
-import 'package:squiggle_flutter/models/selection_resize_handle.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -139,10 +139,14 @@ void main() {
       harness.pointerUp(up);
 
       const expected = Rect.fromLTWH(50, 150, 50, 50);
+      // Every move restores the group from a snapshot, so its children are
+      // rebuilt; look them up again rather than holding the originals.
+      final resizedNested = document.requireNodeById(nested.id);
+      final resizedFeature = document.requireNodeById(feature.id) as Feature;
       expect(outer.localBounds(), expected);
-      expect(nested.globalBounds(), expected);
-      expect(feature.globalBounds(), expected);
-      expect(feature.size, const Size(50, 50));
+      expect(resizedNested.globalBounds(), expected);
+      expect(resizedFeature.globalBounds(), expected);
+      expect(resizedFeature.size, const Size(50, 50));
     });
 
     test('group drag scales children and restores them through undo/redo', () {
@@ -399,6 +403,60 @@ void main() {
       expect(text.fontSize, initialFontSize);
       expect(feature.width, 150);
       expect(feature.height, greaterThan(bounds.height));
+    });
+
+    test('alt-corner resize keeps the text centred', () {
+      harness.context = _textContext(contents: 'Line one\nLine two');
+      final feature = (harness.context.document.nodes.first as Feature);
+      harness.context.selection.selectNode(feature.id);
+      final bounds = feature.localBounds();
+      final down = harness.cornerHitWorldPoint(bounds);
+      final grabOffset = down - bounds.bottomRight;
+      final target = bounds.center + Offset(bounds.width, bounds.height);
+
+      harness.pointerDown(down, alt: true);
+      harness.pointerMove(target + grabOffset, alt: true);
+      harness.pointerUp(target + grabOffset, alt: true);
+
+      expect(feature.localBounds().center.dx, closeTo(bounds.center.dx, 1e-6));
+      expect(feature.localBounds().center.dy, closeTo(bounds.center.dy, 1e-6));
+      expect((feature.kind as FeatureKindText).fontSize, greaterThan(24));
+    });
+
+    test('resizing a group with text does not depend on the drag path', () {
+      final document = harness.context.document;
+      document.removeAll(document.nodes.map((node) => node.id).toList());
+      final text = newTextFeatureAt(const Offset(10, 10), 'Group me');
+      final group = Group(origin: const Offset(100, 100), children: [text]);
+      document.addNode(group);
+      harness.context.selection.selectNode(group.id);
+      final start = group.localBounds();
+      final down = harness.cornerHitWorldPoint(start);
+      final end = down + const Offset(60, 30);
+
+      harness.pointerDown(down);
+      for (final detour in [const Offset(400, 300), const Offset(-30, 5)]) {
+        harness.pointerMove(down + detour);
+      }
+      harness.pointerMove(end);
+      harness.pointerUp(end);
+      final direct = group.localBounds();
+      final fontAfterDetour =
+          ((document.requireNodeById(text.id) as Feature).kind
+                  as FeatureKindText)
+              .fontSize;
+
+      harness.context.history.undo();
+      harness.pointerDown(down);
+      harness.pointerMove(end);
+      harness.pointerUp(end);
+
+      expect(group.localBounds(), direct);
+      expect(
+        ((document.requireNodeById(text.id) as Feature).kind as FeatureKindText)
+            .fontSize,
+        fontAfterDetour,
+      );
     });
 
     test('text has no top or bottom resize handles', () {

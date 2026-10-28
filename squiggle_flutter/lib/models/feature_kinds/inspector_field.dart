@@ -23,6 +23,10 @@ abstract class InspectorField<T> {
   List<T> values;
   List<Function(T)> callbacks;
 
+  /// Whether a brush may store this field; geometry set by a gesture is not
+  /// style and stays out of brushes.
+  bool get isBrushable => true;
+
   T get activeValue => values.first;
 
   bool get isMixed => values.toSet().length > 1;

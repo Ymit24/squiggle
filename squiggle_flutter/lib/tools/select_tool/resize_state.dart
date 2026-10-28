@@ -1,16 +1,17 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
+import 'package:flutter/painting.dart' show Alignment;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/models/selection_resize_handle.dart';
+import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 class ResizeState extends SelectInteractionState {
   ResizeState({
@@ -25,8 +26,9 @@ class ResizeState extends SelectInteractionState {
   final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.localBounds();
 
-  /// Copy of the node before any pointer move has resized it.
-  late final Node _initialNode = _handle.node.copyWith();
+  /// The node as it was before the drag. Every move restores it first, so a
+  /// resize is always computed from the initial state and cannot compound.
+  late final data.Node _snapshot;
 
   bool get _resizesHorizontally =>
       _handle.handle == SelectionResizeHandle.left ||
@@ -43,6 +45,7 @@ class ResizeState extends SelectInteractionState {
 
   @override
   void onEnter(EditorContext context) {
+    _snapshot = _handle.node.toDataModel();
     parent.beginTransaction(context, 'Resize', [_handle.node]);
   }
 
@@ -63,14 +66,27 @@ class ResizeState extends SelectInteractionState {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    final initial = _initialNode;
     final newBounds = getNewBounds(
       worldPosition - _resizeOffset,
       lockAspectRatio: isShiftPressed,
       symmetric: isAltPressed,
     );
-    _handle.node.resizeFromHandle(newBounds, _handle.handle, initial);
+    _handle.node
+      ..restoreFromDataModel(_snapshot)
+      ..resize(newBounds, drag: _dragFor(isAltPressed));
   }
+
+  /// The dragged edge or corner moves, so the opposite one stays; Alt keeps the
+  /// centre instead.
+  ResizeDrag _dragFor(bool symmetric) => ResizeDrag(
+    fixedPoint: symmetric
+        ? Alignment.center
+        : Alignment(
+            _movesLeft ? 1 : (_movesRight ? -1 : 0),
+            _movesTop ? 1 : (_movesBottom ? -1 : 0),
+          ),
+    isCorner: _handle.handle.isCorner,
+  );
 
   Rect getNewBounds(
     Offset worldPosition, {
@@ -97,13 +113,7 @@ class ResizeState extends SelectInteractionState {
   Rect _symmetricBounds(Offset worldPosition, bool lockAspectRatio) {
     final center = _initialBounds.center;
     if (lockAspectRatio) {
-      final isCorner = switch (_handle.handle) {
-        SelectionResizeHandle.topLeft ||
-        SelectionResizeHandle.topRight ||
-        SelectionResizeHandle.bottomLeft ||
-        SelectionResizeHandle.bottomRight => true,
-        _ => false,
-      };
+      final isCorner = _handle.handle.isCorner;
       return symmetricRectWithAspectRatio(
         center,
         worldPosition,
@@ -113,23 +123,21 @@ class ResizeState extends SelectInteractionState {
       );
     }
 
-    return switch (_handle.handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.topRight ||
-      SelectionResizeHandle.bottomLeft ||
-      SelectionResizeHandle.bottomRight => Rect.fromCenter(
+    if (_handle.handle.isCorner) {
+      return Rect.fromCenter(
         center: center,
         width: (worldPosition.dx - center.dx).abs() * 2,
         height: (worldPosition.dy - center.dy).abs() * 2,
-      ),
+      );
+    }
+    return switch (_handle.handle) {
       SelectionResizeHandle.top ||
       SelectionResizeHandle.bottom => Rect.fromCenter(
         center: center,
         width: _initialBounds.width,
         height: (worldPosition.dy - center.dy).abs() * 2,
       ),
-      SelectionResizeHandle.left ||
-      SelectionResizeHandle.right => Rect.fromCenter(
+      _ => Rect.fromCenter(
         center: center,
         width: (worldPosition.dx - center.dx).abs() * 2,
         height: _initialBounds.height,

@@ -22,7 +22,7 @@ class DrawingInspectorFields extends StatelessWidget {
     spacing: context.squiggleTheme.spacing.panelSectionSpacing,
     children: [
       for (final field in kind.buildInspectorFields())
-        _buildField(context, field),
+        if (field.isBrushable) _buildField(context, field),
     ],
   );
 

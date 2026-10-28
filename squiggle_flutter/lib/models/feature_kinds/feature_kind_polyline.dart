@@ -143,7 +143,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   @override
-  void applyBounds(Feature feature, Rect bounds) {
+  void applyBounds(Feature feature, Rect bounds, {ResizeDrag? drag}) {
     final oldBounds = boundsFor(feature);
     final oldCenterlineBounds = oldBounds.deflate(_boundsPadding);
     final newCenterlineBounds = bounds.deflate(_boundsPadding);
