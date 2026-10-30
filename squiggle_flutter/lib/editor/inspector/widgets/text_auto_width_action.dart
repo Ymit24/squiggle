@@ -20,7 +20,7 @@ class TextAutoWidthAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
     return InspectorFieldShell(
-      label: 'Width: fixed',
+      label: 'Textbox Width',
       child: SizedBox(
         width: double.infinity,
         child: TextButton.icon(
@@ -32,7 +32,7 @@ class TextAutoWidthAction extends StatelessWidget {
           ),
           onPressed: _makeAutoWidth,
           icon: const Icon(Icons.format_size, size: 16),
-          label: const Text('Fit width to text'),
+          label: const Text('Auto fit to text'),
         ),
       ),
     );

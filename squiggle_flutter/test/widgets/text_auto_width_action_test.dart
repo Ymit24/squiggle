@@ -39,7 +39,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Fit width to text'));
+    await tester.tap(find.text('Auto fit to text'));
 
     expect(kind.sizing, TextSizing.auto);
     expect(feature.width, kind.measureContents(fontSize: kind.fontSize).width);
