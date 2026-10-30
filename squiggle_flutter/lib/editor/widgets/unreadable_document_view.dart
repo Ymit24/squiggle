@@ -2,13 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
-/// Shown instead of the editor when a document's stored data cannot be read.
+/// Shown instead of the editor when a document cannot be opened, for example
+/// because its stored data cannot be read.
 ///
 /// The stored document is left untouched, and nothing is autosaved over it.
 class UnreadableDocumentView extends StatelessWidget {
-  const UnreadableDocumentView({super.key, required this.onBackToLibrary});
+  const UnreadableDocumentView({
+    super.key,
+    required this.onBackToLibrary,
+    this.message = unreadableMessage,
+  });
+
+  static const unreadableMessage =
+      'Its saved data could not be read. It has not been changed or '
+      'overwritten.';
+  static const missingMessage = 'It may have been deleted.';
+  static const failedMessage = 'Something went wrong while opening it.';
 
   final VoidCallback onBackToLibrary;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +50,7 @@ class UnreadableDocumentView extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Its saved data could not be read. It has not been changed '
-                  'or overwritten.',
+                  message,
                   textAlign: TextAlign.center,
                   style: theme.typography.inputText.copyWith(
                     color: theme.colors.subtext0,
