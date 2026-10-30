@@ -2,21 +2,10 @@ import 'dart:ui';
 
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-
 import 'package:squiggle_flutter/tools/select_tool/hit_target.dart';
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle_util.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
-
-enum SelectionResizeHandle {
-  topLeft,
-  top,
-  topRight,
-  right,
-  bottomRight,
-  bottom,
-  bottomLeft,
-  left,
-}
+import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 HitTarget getTargetUnderCursor(EditorContext context, Offset worldPosition) {
   if (context.selection.selectedNodeIds.length == 1) {

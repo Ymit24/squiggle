@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -85,10 +84,10 @@ void main() {
       harness.doubleClick(click);
 
       final session = harness.context.textEdit.session as CreateTextEditSession;
-      expect(session.worldOrigin, click);
+      expect(session.draft.origin, click);
       expect(session.initialContents, isEmpty);
       expect(session.layout.bounds.topLeft, click);
-      expect(session.layout.bounds.width, defaultNewTextWidth);
+      expect(session.layout.bounds.width, lessThan(30));
     });
 
     for (final key in [

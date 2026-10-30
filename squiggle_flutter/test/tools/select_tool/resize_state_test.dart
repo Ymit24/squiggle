@@ -5,8 +5,9 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
-import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
+import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle_util.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 import 'select_tool_test_harness.dart';
 
@@ -138,10 +139,14 @@ void main() {
       harness.pointerUp(up);
 
       const expected = Rect.fromLTWH(50, 150, 50, 50);
+      // Every move restores the group from a snapshot, so its children are
+      // rebuilt; look them up again rather than holding the originals.
+      final resizedNested = document.requireNodeById(nested.id);
+      final resizedFeature = document.requireNodeById(feature.id) as Feature;
       expect(outer.localBounds(), expected);
-      expect(nested.globalBounds(), expected);
-      expect(feature.globalBounds(), expected);
-      expect(feature.size, const Size(50, 50));
+      expect(resizedNested.globalBounds(), expected);
+      expect(resizedFeature.globalBounds(), expected);
+      expect(resizedFeature.size, const Size(50, 50));
     });
 
     test('group drag scales children and restores them through undo/redo', () {
@@ -358,63 +363,180 @@ void main() {
       expect(polylineWorldPoints(feature).last, isNot(endBefore));
     });
 
-    test('corner resize scales text to fill the new bounds', () {
-      harness.context = _textContext(
-        contents: 'Line one\nLine two\nLine three',
-        size: const Size(200, 80),
-      );
+    test('corner resize scales the text font with the drag', () {
+      harness.context = _textContext(contents: 'Line one\nLine two');
       final feature = (harness.context.document.nodes.first as Feature);
       harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
       final bounds = feature.localBounds();
       final down = harness.cornerHitWorldPoint(bounds);
       final grabOffset = down - bounds.bottomRight;
+      final target =
+          bounds.topLeft + Offset(bounds.width * 2, bounds.height * 2);
 
       harness.pointerDown(down);
-      harness.pointerMove(const Offset(300, 300) + grabOffset);
-      harness.pointerUp(const Offset(300, 300) + grabOffset);
+      harness.pointerMove(target + grabOffset);
+      harness.pointerUp(target + grabOffset);
 
       final text = feature.kind as FeatureKindText;
-      expect(feature.size, const Size(300, 300));
-      expect(text.fontSize, greaterThan(initialFontSize));
-      expect(
-        text.measureContents(width: 300, fontSize: text.fontSize).height,
-        lessThanOrEqualTo(300),
-      );
+      expect(text.fontSize, closeTo(initialFontSize * 2, 1e-6));
+      expect(text.sizing, TextSizing.auto);
+      expect(feature.origin, bounds.topLeft);
     });
 
-    test('vertical resize scales text to fill the taller box', () {
-      harness.context = _textContext(
-        contents: 'hello world',
-        size: const Size(200, 48),
-      );
+    test('right edge resize wraps the text without scaling it', () {
+      harness.context = _textContext(contents: 'one two three four five six');
       final feature = (harness.context.document.nodes.first as Feature);
       harness.context.selection.selectNode(feature.id);
       final initialFontSize = (feature.kind as FeatureKindText).fontSize;
       final bounds = feature.localBounds();
-      final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.bottom);
-      final grabOffset = down - bounds.bottomRight;
+      final down = harness.edgeHitWorldPoint(bounds, SelectionEdge.right);
+      final grabOffset = down - bounds.centerRight;
+      final target = Offset(bounds.left + 150, bounds.center.dy);
 
       harness.pointerDown(down);
-      harness.pointerMove(const Offset(200, 200) + grabOffset);
-      harness.pointerUp(const Offset(200, 200) + grabOffset);
+      harness.pointerMove(target + grabOffset);
+      harness.pointerUp(target + grabOffset);
 
-      expect(feature.size, const Size(200, 200));
+      final text = feature.kind as FeatureKindText;
+      expect(text.sizing, TextSizing.fixedWidth);
+      expect(text.fontSize, initialFontSize);
+      expect(feature.width, 150);
+      expect(feature.height, greaterThan(bounds.height));
+    });
+
+    test('alt-corner resize keeps the text centred', () {
+      harness.context = _textContext(contents: 'Line one\nLine two');
+      final feature = (harness.context.document.nodes.first as Feature);
+      harness.context.selection.selectNode(feature.id);
+      final bounds = feature.localBounds();
+      final down = harness.cornerHitWorldPoint(bounds);
+      final grabOffset = down - bounds.bottomRight;
+      final target = bounds.center + Offset(bounds.width, bounds.height);
+
+      harness.pointerDown(down, alt: true);
+      harness.pointerMove(target + grabOffset, alt: true);
+      harness.pointerUp(target + grabOffset, alt: true);
+
+      expect(feature.localBounds().center.dx, closeTo(bounds.center.dx, 1e-6));
+      expect(feature.localBounds().center.dy, closeTo(bounds.center.dy, 1e-6));
+      expect((feature.kind as FeatureKindText).fontSize, greaterThan(24));
+    });
+
+    test('resizing a group with text does not depend on the drag path', () {
+      final document = harness.context.document;
+      document.removeAll(document.nodes.map((node) => node.id).toList());
+      final text = newTextFeatureAt(const Offset(10, 10), 'Group me');
+      final group = Group(origin: const Offset(100, 100), children: [text]);
+      document.addNode(group);
+      harness.context.selection.selectNode(group.id);
+      final start = group.localBounds();
+      final down = harness.cornerHitWorldPoint(start);
+      final end = down + const Offset(60, 30);
+
+      harness.pointerDown(down);
+      for (final detour in [const Offset(400, 300), const Offset(-30, 5)]) {
+        harness.pointerMove(down + detour);
+      }
+      harness.pointerMove(end);
+      harness.pointerUp(end);
+      final direct = group.localBounds();
+      final fontAfterDetour =
+          ((document.requireNodeById(text.id) as Feature).kind
+                  as FeatureKindText)
+              .fontSize;
+
+      harness.context.history.undo();
+      harness.pointerDown(down);
+      harness.pointerMove(end);
+      harness.pointerUp(end);
+
+      expect(group.localBounds(), direct);
       expect(
-        (feature.kind as FeatureKindText).fontSize,
-        greaterThan(initialFontSize),
+        ((document.requireNodeById(text.id) as Feature).kind as FeatureKindText)
+            .fontSize,
+        fontAfterDetour,
       );
+    });
+
+    test('a text corner keeps its aspect ratio without shift', () {
+      harness.context = _textContext(contents: 'Line one\nLine two');
+      final feature = (harness.context.document.nodes.first as Feature);
+      harness.context.selection.selectNode(feature.id);
+      final bounds = feature.localBounds();
+      final down = harness.cornerHitWorldPoint(bounds);
+      final grabOffset = down - bounds.bottomRight;
+      // Sideways only: a free corner would leave the height and so reflow.
+      final target = bounds.bottomRight + Offset(bounds.width, 0);
+
+      harness.pointerDown(down);
+      harness.pointerMove(target + grabOffset);
+      harness.pointerUp(target + grabOffset);
+
+      final text = feature.kind as FeatureKindText;
+      expect(text.sizing, TextSizing.auto);
+      expect(text.fontSize, closeTo(48, 1e-6));
+      expect(feature.origin, bounds.topLeft);
+    });
+
+    test('a group corner scales its text even when dragged sideways', () {
+      final (group, text) = _groupWithText(harness);
+      final start = group.localBounds();
+      final down = harness.cornerHitWorldPoint(start);
+
+      harness.pointerDown(down);
+      harness.pointerMove(down + Offset(start.width, 0));
+      harness.pointerUp(down + Offset(start.width, 0));
+
+      final kind = _textKind(harness, text);
+      expect(kind.sizing, TextSizing.auto);
+      expect(kind.fontSize, greaterThan(24));
+    });
+
+    test('a group side reflows its text', () {
+      final (group, text) = _groupWithText(harness);
+      final start = group.localBounds();
+      final down = harness.edgeHitWorldPoint(start, SelectionEdge.right);
+
+      harness.pointerDown(down);
+      harness.pointerMove(down - Offset(start.width / 2, 0));
+      harness.pointerUp(down - Offset(start.width / 2, 0));
+
+      final kind = _textKind(harness, text);
+      expect(kind.sizing, TextSizing.fixedWidth);
+      expect(kind.fontSize, 24);
+    });
+
+    test('text has no top or bottom resize handles', () {
+      harness.context = _textContext(contents: 'hello');
+      final feature = (harness.context.document.nodes.first as Feature);
+      final handles = ResizeHandleUtil.getResizeHandles(
+        feature,
+        harness.camera,
+      ).map((handle) => handle.handle);
+
+      expect(handles, isNot(contains(SelectionResizeHandle.top)));
+      expect(handles, isNot(contains(SelectionResizeHandle.bottom)));
+      expect(handles, contains(SelectionResizeHandle.left));
     });
   });
 }
 
-EditorContext _textContext({required String contents, required Size size}) =>
-    EditorContext(
-      document: Document.fromFeatures([
-        Feature(
-          origin: Offset.zero,
-          size: size,
-          kind: FeatureKindText(contents, strokeColor: const Color(0xFFFFFFFF)),
-        ),
-      ]),
-    );
+EditorContext _textContext({required String contents}) => EditorContext(
+  document: Document.fromFeatures([newTextFeatureAt(Offset.zero, contents)]),
+);
+
+(Group, Feature) _groupWithText(SelectToolTestHarness harness) {
+  final document = harness.context.document;
+  document.removeAll(document.nodes.map((node) => node.id).toList());
+  final text = newTextFeatureAt(Offset.zero, 'one two three four');
+  final group = Group(origin: const Offset(100, 100), children: [text]);
+  document.addNode(group);
+  harness.context.selection.selectNode(group.id);
+  return (group, text);
+}
+
+/// Restoring a group replaces its children, so look the text up again.
+FeatureKindText _textKind(SelectToolTestHarness harness, Feature text) =>
+    (harness.context.document.requireNodeById(text.id) as Feature).kind
+        as FeatureKindText;

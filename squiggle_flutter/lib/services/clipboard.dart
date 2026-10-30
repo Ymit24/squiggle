@@ -131,6 +131,9 @@ Future<List<Node>> _readNodesForPaste({
   return _readImageForPaste(context: context, imageRepository: imageRepository);
 }
 
+/// Widest a pasted plain-text label gets before it wraps, in world units.
+const _maxPastedTextWidth = 600.0;
+
 Future<List<Node>?> _nodesFromClipboardText(
   String? text, {
   required EditorContext context,
@@ -150,12 +153,21 @@ Future<List<Node>?> _nodesFromClipboardText(
     return null;
   }
 
+  final pasted = newTextFeatureAt(
+    Offset.zero,
+    text,
+    configureKind: context.brushes.active.applyTo,
+  );
+  // A pasted paragraph wraps instead of becoming one enormous line.
   return [
-    newTextFeatureAt(
-      Offset.zero,
-      text,
-      configureKind: context.brushes.active.applyTo,
-    ),
+    pasted.width <= _maxPastedTextWidth
+        ? pasted
+        : newTextFeatureAt(
+            Offset.zero,
+            text,
+            fixedWidth: _maxPastedTextWidth,
+            configureKind: context.brushes.active.applyTo,
+          ),
   ];
 }
 

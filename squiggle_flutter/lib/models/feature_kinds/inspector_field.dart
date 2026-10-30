@@ -30,7 +30,7 @@ abstract class InspectorField<T> {
   static Map<String, InspectorField> byKeyForFeatures(List<Feature> features) {
     final inspectorFieldByKey = <String, InspectorField>{};
     for (final field in features.expand(
-      (feature) => feature.kind.buildInspectorFields(),
+      (feature) => feature.kind.buildInspectorFields(feature: feature),
     )) {
       final fieldKey = field.fieldKey;
       if (inspectorFieldByKey.containsKey(fieldKey)) {

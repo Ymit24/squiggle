@@ -23,8 +23,10 @@ part 'feature_kind_text.dart';
 sealed class FeatureKind {
   Map<String, dynamic> toDataModel();
 
+  /// Style fields for the inspector and brushes. With [feature], edits also
+  /// keep that feature's geometry consistent with the new style.
   // TODO: port this to reflection
-  Iterable<InspectorField> buildInspectorFields() {
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [];
   }
 

@@ -79,8 +79,7 @@ class _SwatchPainter extends CustomPainter {
         sample
           ..label = 'Aa'
           ..fontSize = (sample.fontSize * 0.6).clamp(10, 20)
-          ..horizontalAlignment = TextHorizontalAlignment.center
-          ..verticalAlignment = TextVerticalAlignment.center;
+          ..horizontalAlignment = TextHorizontalAlignment.center;
         return Feature(origin: Offset.zero, size: size, kind: sample);
       case FeatureKindImage():
         return null;
