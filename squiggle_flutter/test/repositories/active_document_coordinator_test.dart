@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
+
 import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
+import 'package:squiggle_flutter/database/daos/documents_dao.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -127,7 +132,7 @@ void main() {
     });
 
     test(
-      'flush persists the active document without a pending autosave',
+      'flush persists a document loaded into the context directly',
       () async {
         final id = active.activeId!;
         context.loadDocument(
@@ -248,5 +253,186 @@ void main() {
       expect(active.activeId, firstId);
       expect(documentList.documents.map((doc) => doc.id), [firstId]);
     });
+    test('opening a document does not rewrite it or bump updatedAt', () async {
+      var now = DateTime.utc(2026);
+      final timedDatabase = AppDatabase(
+        NativeDatabase.memory(),
+        clock: () => now = now.add(const Duration(minutes: 1)),
+      );
+      addTearDown(timedDatabase.close);
+      final timedContext = EditorContext(document: Document());
+      addTearDown(timedContext.dispose);
+      final timedList = DocumentListNotifier(
+        documentsDao: timedDatabase.documentsDao,
+      );
+      addTearDown(timedList.dispose);
+      final timed = ActiveDocumentCoordinator(
+        documentsDao: timedDatabase.documentsDao,
+        appStateDao: timedDatabase.appStateDao,
+        documentList: timedList,
+        context: timedContext,
+      );
+      addTearDown(timed.dispose);
+      await timed.initialize();
+      final firstId = timed.activeId!;
+      await timed.createDocument(name: 'Second');
+      Future<List<(String, DateTime)>> timestamps() async => [
+        for (final doc in await timedDatabase.documentsDao.list())
+          (doc.id, doc.updatedAt),
+      ];
+      final before = await timestamps();
+
+      await timed.openDocument(firstId);
+      // Give any autosave the open might have queued a chance to run.
+      await pumpEventQueue();
+
+      expect(await timestamps(), before);
+    });
+
+    test(
+      'an edit during a switch is saved to the document it was made on',
+      () async {
+        // A context of its own, so the setUp coordinator does not see it.
+        final gatedContext = EditorContext(document: Document());
+        addTearDown(gatedContext.dispose);
+        final gated = _GatedDocumentsDao(database);
+        final gatedActive = ActiveDocumentCoordinator(
+          documentsDao: gated,
+          appStateDao: database.appStateDao,
+          documentList: documentList,
+          context: gatedContext,
+        );
+        addTearDown(gatedActive.dispose);
+        await gatedActive.initialize();
+        final firstId = gatedActive.activeId!;
+
+        final broken = await database.documentsDao.create(name: 'Broken');
+        await (database.update(database.documentBodies)
+              ..where((t) => t.documentId.equals(broken.id)))
+            .write(const DocumentBodiesCompanion(body: Value('not json')));
+        await documentList.refresh();
+
+        final originalOnError = FlutterError.onError;
+        FlutterError.onError = (_) {};
+        try {
+          gated.gate = Completer<void>();
+          final opening = gatedActive.openDocument(broken.id);
+          await gated.loadStarted.future;
+          gatedContext.history.run('Add feature', (transaction) {
+            transaction.add(
+              Feature(
+                origin: const Offset(0, 0),
+                size: const Size(10, 10),
+                kind: FeatureKindRectangle(),
+              ),
+            );
+          });
+          gated.gate!.complete();
+          await opening;
+          await gatedActive.flush();
+          await Future<void>.delayed(Duration.zero);
+        } finally {
+          FlutterError.onError = originalOnError;
+        }
+
+        expect(gatedActive.loadError, isNotNull);
+        final row = await (database.select(
+          database.documentBodies,
+        )..where((t) => t.documentId.equals(broken.id))).getSingle();
+        expect(row.body, 'not json');
+        expect((await stored(firstId)).nodes, hasLength(1));
+      },
+    );
+
+    test(
+      'a failed save makes flush throw until the document is discarded',
+      () async {
+        final originalOnError = FlutterError.onError;
+        final reported = <FlutterErrorDetails>[];
+        FlutterError.onError = reported.add;
+        try {
+          // No image row with this hash exists, so the image_refs FK fails.
+          context.history.run('Add image', (transaction) {
+            transaction.add(
+              Feature(
+                origin: const Offset(0, 0),
+                size: const Size(10, 10),
+                kind: FeatureKindImage('missing-hash'),
+              ),
+            );
+          });
+          await expectLater(
+            active.flush(),
+            throwsA(isA<DocumentSaveException>()),
+          );
+          expect(reported, isNotEmpty);
+
+          active.discardActiveDocument();
+          await active.flush();
+          final created = await active.createDocument(name: 'Fresh');
+          expect(active.activeId, created.id);
+          await active.flush();
+        } finally {
+          FlutterError.onError = originalOnError;
+        }
+      },
+    );
+
+    test('opening an unknown id reports it as missing', () async {
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (_) {};
+      try {
+        await active.openDocument('no-such-id');
+      } finally {
+        FlutterError.onError = originalOnError;
+      }
+      expect(active.activeId, 'no-such-id');
+      expect(active.loadError, isA<DocumentNotFoundException>());
+    });
+
+    test('reopening a document that failed to load retries it', () async {
+      final doc = await database.documentsDao.create(name: 'Flaky');
+      await (database.update(database.documentBodies)
+            ..where((t) => t.documentId.equals(doc.id)))
+          .write(const DocumentBodiesCompanion(body: Value('not json')));
+      await documentList.refresh();
+
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (_) {};
+      try {
+        await active.openDocument(doc.id);
+      } finally {
+        FlutterError.onError = originalOnError;
+      }
+      expect(active.loadError, isNotNull);
+
+      await (database.update(
+        database.documentBodies,
+      )..where((t) => t.documentId.equals(doc.id))).write(
+        DocumentBodiesCompanion(
+          body: Value(data.Document(name: 'Flaky').encode()),
+        ),
+      );
+      await active.openDocument(doc.id);
+      expect(active.loadError, isNull);
+    });
   });
+}
+
+/// Holds [load] open on [gate] so a test can act while a switch is loading.
+class _GatedDocumentsDao extends DocumentsDao {
+  _GatedDocumentsDao(super.attachedDatabase);
+
+  Completer<void>? gate;
+  final loadStarted = Completer<void>();
+
+  @override
+  Future<data.Document?> load(String id) async {
+    final pending = gate;
+    if (pending != null) {
+      if (!loadStarted.isCompleted) loadStarted.complete();
+      await pending.future;
+    }
+    return super.load(id);
+  }
 }

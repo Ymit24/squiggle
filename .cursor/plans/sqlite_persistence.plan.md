@@ -173,9 +173,17 @@ class ImagesDao extends DatabaseAccessor<AppDatabase> {
 - Startup GC (`ImagesDao.deleteUnreferenced`) runs in `main` before any document is loaded.
 - `DocumentListNotifier.nextUntitledName()` replaced `DocumentStorage._nextUntitledName`.
 
+## Fixes from the review of the whole port (#162)
+
+- `activeId`, `loadError` and the `EditorContext` document now change together in one synchronous step, after the new document has loaded and the outgoing document's pending writes have finished. A generation counter drops an activation that a newer one superseded. Before this, an edit made while a switch was loading saved the old canvas under the new id, and could overwrite an unreadable document.
+- `flush` only writes when there are unsaved edits (or to retry a failed write), and the notifications fired by `EditorContext.loadDocument` do not autosave. Opening or leaving a canvas no longer bumps its `updatedAt`.
+- A failed write is kept as `DocumentSaveException` and `flush` throws it. Leaving the editor then asks before discarding the changes (`SaveFailedDialog`, `discardActiveDocument`).
+- `openDocument` takes any id: an unknown one becomes a `DocumentNotFoundException` load error, and the editor shows the error view (with a Back button) for any open failure. Reopening a canvas that failed to load retries it.
+- `dispose` stops the save loop.
+
 ## Deferred / open
 
-- **Failed-load policy.** Today a decode failure loads an empty `Document()` and the next autosave overwrites the original. Wants an error surface and no autosave over an unreadable doc. Undecided; keep `DocumentsDao.load` return type extensible.
+- From the review, not done in the port: dispatch `load` on `formatVersion` (typed load result); one place that owns the DB-lifetime objects and shuts them down in order (flush, dispose, close), which is also where the window-close flush belongs; move rename and delete out of the coordinator; a body-free `preview(id)` query once thumbnails exist.
 - Incremental autosave and history dirty tracking (option B, normalized `nodes` table).
 - Real preview thumbnails.
 - How the decode cache is provided to painters (the ~60-site parameter threading).
