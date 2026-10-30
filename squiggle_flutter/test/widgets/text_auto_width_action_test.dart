@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/inspector/widgets/alignment_swatch.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/text_auto_width_action.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
@@ -40,7 +39,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byType(AlignmentSwatch));
+    await tester.tap(find.text('Fit width to text'));
 
     expect(kind.sizing, TextSizing.auto);
     expect(feature.width, kind.measureContents(fontSize: kind.fontSize).width);

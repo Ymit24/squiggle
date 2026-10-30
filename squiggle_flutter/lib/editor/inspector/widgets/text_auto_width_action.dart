@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/editor/inspector/widgets/alignment_swatch.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/theme/theme.dart';
 
 /// Turns fixed-width text back into auto-width text. Fixed width only comes
 /// from dragging, so the inspector offers just the way back.
@@ -17,18 +17,26 @@ class TextAutoWidthAction extends StatelessWidget {
   final List<Feature> features;
 
   @override
-  Widget build(BuildContext context) => InspectorFieldShell(
-    label: 'Width',
-    child: Tooltip(
-      message: 'Auto width',
-      child: AlignmentSwatch(
-        icon: Icons.format_size,
-        isActive: false,
-        enabled: true,
-        onPressed: _makeAutoWidth,
+  Widget build(BuildContext context) {
+    final theme = context.squiggleTheme;
+    return InspectorFieldShell(
+      label: 'Width: fixed',
+      child: SizedBox(
+        width: double.infinity,
+        child: TextButton.icon(
+          style: theme.menuItemStyle().copyWith(
+            minimumSize: const WidgetStatePropertyAll(Size(0, 32)),
+            side: WidgetStatePropertyAll(
+              BorderSide(color: theme.colors.surface1),
+            ),
+          ),
+          onPressed: _makeAutoWidth,
+          icon: const Icon(Icons.format_size, size: 16),
+          label: const Text('Fit width to text'),
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   /// Whether [features] are all fixed-width text, the only case it applies to.
   static bool appliesTo(List<Feature> features) =>
