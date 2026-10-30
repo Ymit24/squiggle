@@ -4,7 +4,8 @@ import 'package:flutter/painting.dart' show Alignment;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/resize_drag.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 
 void main() {
   group('FeatureKindText serde', () {
@@ -144,15 +145,6 @@ void main() {
   });
 
   group('resizing', () {
-    const bottomRightCorner = ResizeDrag(
-      fixedPoint: Alignment.topLeft,
-      isCorner: true,
-    );
-    const topLeftCorner = ResizeDrag(
-      fixedPoint: Alignment.bottomRight,
-      isCorner: true,
-    );
-
     Feature textFeature({TextSizing sizing = TextSizing.auto}) {
       final kind = FeatureKindText(
         'one two three four five six',
@@ -180,25 +172,22 @@ void main() {
       );
     }
 
-    test('corner drag scales the font about the fixed corner', () {
+    test('a uniform resize scales the font about the corner that stays', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
-      feature.resize(scaledBounds(start, 2), drag: bottomRightCorner);
+      feature.resize(scaledBounds(start, 2));
 
       expect((feature.kind as FeatureKindText).fontSize, closeTo(48, 1e-9));
       expect(feature.origin, start.topLeft);
       expect(feature.width, closeTo(start.width * 2, 3));
     });
 
-    test('top-left corner drag keeps the bottom-right corner fixed', () {
+    test('keeps the bottom-right corner when that is the one that stays', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
-      feature.resize(
-        scaledBounds(start, 0.5, pin: Alignment.bottomRight),
-        drag: topLeftCorner,
-      );
+      feature.resize(scaledBounds(start, 0.5, pin: Alignment.bottomRight));
 
       expect((feature.kind as FeatureKindText).fontSize, closeTo(12, 1e-9));
       final end = feature.localBounds();
@@ -206,7 +195,7 @@ void main() {
       expect(end.bottom, closeTo(start.bottom, 1e-9));
     });
 
-    test('dragging a corner past the fixed corner grows the other way', () {
+    test('a resize flipped past the start grows the other way', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
@@ -217,7 +206,6 @@ void main() {
           start.left,
           start.top,
         ),
-        drag: bottomRightCorner,
       );
 
       final end = feature.localBounds();
@@ -225,35 +213,33 @@ void main() {
       expect(end.bottom, closeTo(start.top, 1e-9));
     });
 
-    test('a symmetric corner drag keeps the centre fixed', () {
+    test('a resize about the centre keeps the centre', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
-      feature.resize(
-        scaledBounds(start, 2, pin: Alignment.center),
-        drag: const ResizeDrag(fixedPoint: Alignment.center, isCorner: true),
-      );
+      feature.resize(scaledBounds(start, 2, pin: Alignment.center));
 
       expect(feature.localBounds().center.dx, closeTo(start.center.dx, 1e-9));
       expect(feature.localBounds().center.dy, closeTo(start.center.dy, 1e-9));
     });
 
-    test('font size changes smoothly as the corner moves in any direction', () {
+    test('font size changes smoothly as a locked corner moves', () {
       final start = textFeature().localBounds();
       final snapshot = textFeature().toDataModel();
       final feature = textFeature();
       double? previous;
 
-      // Sweep the pointer from a horizontal-heavy to a vertical-heavy drag.
+      // Sweep the pointer from a horizontal-only to a vertical-heavy drag,
+      // locked to the start's aspect ratio as the select tool does for text.
       for (var step = 0; step <= 100; step++) {
         final t = step / 100;
         feature.restoreFromDataModel(snapshot);
         feature.resize(
-          Rect.fromPoints(
+          rectFromAnchorWithAspectRatio(
             start.topLeft,
             Offset(start.right + 40 * (1 - t), start.bottom + 40 * t),
+            start.width / start.height,
           ),
-          drag: bottomRightCorner,
         );
 
         final fontSize = (feature.kind as FeatureKindText).fontSize;
@@ -264,16 +250,12 @@ void main() {
       }
     });
 
-    test('side drag sets the wrap width and keeps the font size', () {
+    test('a width-only resize sets the wrap width and keeps the font', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
       feature.resize(
         Rect.fromLTRB(start.left, start.top, start.left + 120, start.bottom),
-        drag: const ResizeDrag(
-          fixedPoint: Alignment.centerLeft,
-          isCorner: false,
-        ),
       );
 
       final kind = feature.kind as FeatureKindText;
@@ -288,54 +270,54 @@ void main() {
       expect(feature.height, greaterThan(start.height));
     });
 
-    test('left side drag keeps the right edge fixed', () {
+    test('a width-only resize keeps the edge that stays', () {
       final feature = textFeature(sizing: TextSizing.fixedWidth);
       final start = feature.localBounds();
 
       feature.resize(
         Rect.fromLTRB(start.right - 100, start.top, start.right, start.bottom),
-        drag: const ResizeDrag(
-          fixedPoint: Alignment.centerRight,
-          isCorner: false,
-        ),
       );
 
       expect(feature.localBounds().right, start.right);
       expect(feature.width, 100);
     });
 
-    test('side drag never goes narrower than one em', () {
+    test('a width-only resize never goes narrower than one em', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
       feature.resize(
         Rect.fromLTRB(start.left, start.top, start.left + 1, start.bottom),
-        drag: const ResizeDrag(
-          fixedPoint: Alignment.centerLeft,
-          isCorner: false,
-        ),
       );
 
       expect(feature.width, 24);
     });
 
-    test('text does not offer top and bottom handles', () {
-      expect(textFeature().supportsVerticalResize, isFalse);
+    test('a resize sharing no edge with the start centres the text', () {
+      final feature = textFeature();
+      final start = feature.localBounds();
+      final target = Rect.fromLTWH(0, 0, start.width / 2, start.height / 2);
+
+      feature.resize(target);
+
+      expect((feature.kind as FeatureKindText).fontSize, closeTo(12, 1e-9));
+      expect(feature.localBounds().center.dx, closeTo(target.center.dx, 1e-9));
+      expect(feature.localBounds().center.dy, closeTo(target.center.dy, 1e-9));
     });
 
-    test('a plain resize scales the font and pins the top-left', () {
+    test('resizing to the same box changes nothing', () {
       final feature = textFeature();
       final start = feature.localBounds();
 
-      feature.resize(Rect.fromLTWH(0, 0, start.width / 2, start.height / 2));
+      feature.resize(start);
 
-      expect((feature.kind as FeatureKindText).fontSize, closeTo(12, 1e-9));
-      expect(feature.origin, Offset.zero);
+      expect((feature.kind as FeatureKindText).sizing, TextSizing.auto);
+      expect(feature.localBounds(), start);
     });
   });
 
-  group('refit', () {
-    test('switching to auto drops the wrap width', () {
+  group('keeping the box fitted', () {
+    test('makeAutoWidth drops the wrap width', () {
       final kind = FeatureKindText(
         'hello',
         sizing: TextSizing.fixedWidth,
@@ -347,10 +329,23 @@ void main() {
         kind: kind,
       );
 
-      kind.sizing = TextSizing.auto;
-      kind.refit(feature);
+      kind.makeAutoWidth(feature);
 
+      expect(kind.sizing, TextSizing.auto);
       expect(feature.width, 5 * 24);
+    });
+
+    test('changing the font size in the inspector refits the box', () {
+      final kind = FeatureKindText('hello', fontSize: 24);
+      final feature = Feature(
+        origin: Offset.zero,
+        size: kind.measureContents(fontSize: 24),
+        kind: kind,
+      );
+
+      InspectorField.byKeyForFeatures([feature])['fontSize']!.apply(48.0);
+
+      expect(feature.size, kind.measureContents(fontSize: 48));
     });
   });
 }

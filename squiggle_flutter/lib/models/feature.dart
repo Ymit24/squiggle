@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
-import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 export 'feature_kinds/feature_kind.dart';
@@ -55,9 +54,6 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
-  bool get supportsVerticalResize => kind.supportsVerticalResize;
-
-  @override
   data.Feature toDataModel() {
     return data.Feature(
       id: id.value,
@@ -84,8 +80,7 @@ class Feature extends Node {
   Rect localBounds() => kind.boundsFor(this);
 
   @override
-  void resize(Rect bounds, {ResizeDrag? drag}) =>
-      kind.applyBounds(this, bounds, drag: drag);
+  void resize(Rect bounds) => kind.applyBounds(this, bounds);
 
   void setBounds(Rect bounds) {
     origin = bounds.topLeft;

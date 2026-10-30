@@ -6,7 +6,6 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
-import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/stroke_painter.dart';
@@ -22,12 +21,12 @@ part 'feature_kind_rectangle.dart';
 part 'feature_kind_text.dart';
 
 sealed class FeatureKind {
-  bool get supportsVerticalResize => true;
-
   Map<String, dynamic> toDataModel();
 
+  /// Style fields for the inspector and brushes. With [feature], edits also
+  /// keep that feature's geometry consistent with the new style.
   // TODO: port this to reflection
-  Iterable<InspectorField> buildInspectorFields() {
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [];
   }
 
@@ -46,11 +45,7 @@ sealed class FeatureKind {
   bool intersectsRect(Feature feature, Rect rect) =>
       boundsFor(feature).overlaps(rect);
 
-  void applyBounds(Feature feature, Rect bounds, {ResizeDrag? drag}) =>
-      feature.setBounds(bounds);
-
-  /// Re-derives size-dependent geometry after style fields changed.
-  void refit(Feature feature) {}
+  void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }

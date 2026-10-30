@@ -44,9 +44,6 @@ final class FeatureKindText extends FeatureKind
   double get minWrapWidth => fontSize;
 
   @override
-  bool get supportsVerticalResize => false;
-
-  @override
   Map<String, dynamic> toDataModel() {
     return {
       'type': 'text',
@@ -111,37 +108,42 @@ final class FeatureKindText extends FeatureKind
   @override
   void setLabel(Feature feature, String value) {
     label = value;
-    feature.setBounds(fittedBounds(feature));
+    _refit(feature);
   }
 
-  @override
-  void refit(Feature feature) => feature.setBounds(fittedBounds(feature));
+  /// Drops a fixed width so the box hugs its contents again.
+  void makeAutoWidth(Feature feature) {
+    sizing = TextSizing.auto;
+    _refit(feature);
+  }
 
-  /// Corner drags and programmatic resizes scale the font with the box. Side
-  /// drags only change the wrap width, which makes the text fixed-width. Height
-  /// always follows the contents, so top and bottom handles are not offered.
+  /// Height always follows the contents, so a resize that only changes the
+  /// width reflows the text at that width, making it fixed-width. Any other
+  /// resize scales the font with the box.
   @override
-  void applyBounds(Feature feature, Rect bounds, {ResizeDrag? drag}) {
+  void applyBounds(Feature feature, Rect bounds) {
     final current = feature.localBounds();
-    final Size size;
-    if (drag != null && !drag.isCorner) {
-      sizing = TextSizing.fixedWidth;
-      size = measureContents(
-        fontSize: fontSize,
-        width: math.max(bounds.width, minWrapWidth),
-      );
-    } else {
-      final baseFontSize = fontSize;
-      fontSize = (baseFontSize * _projectedScale(bounds.size, current.size))
-          .clamp(text_painter.kMinTextFontSize, text_painter.kMaxTextFontSize);
-      size = measureContents(
-        fontSize: fontSize,
-        width: sizing == TextSizing.fixedWidth
-            ? current.width * fontSize / baseFontSize
-            : null,
-      );
-    }
-    feature.setBounds(_placed(size, current, bounds, drag));
+    final size = _resizedSize(bounds, current);
+    feature.setBounds(
+      Rect.fromLTWH(
+        _alignedStart(
+          bounds.left,
+          bounds.right,
+          current.left,
+          current.right,
+          size.width,
+        ),
+        _alignedStart(
+          bounds.top,
+          bounds.bottom,
+          current.top,
+          current.bottom,
+          size.height,
+        ),
+        size.width,
+        size.height,
+      ),
+    );
   }
 
   @override
@@ -159,7 +161,7 @@ final class FeatureKindText extends FeatureKind
       _layoutIn(fittedBounds(feature, contents: contents));
 
   @override
-  Iterable<InspectorField> buildInspectorFields() {
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [
       InspectorColorField(
         fieldKey: 'strokeColor',
@@ -175,14 +177,7 @@ final class FeatureKindText extends FeatureKind
         value: horizontalAlignment,
         onTextAlignChanged: (value) {
           horizontalAlignment = value;
-        },
-      ),
-      InspectorTextSizingField(
-        fieldKey: 'sizing',
-        label: 'Sizing',
-        value: sizing,
-        onSizingChanged: (value) {
-          sizing = value;
+          _refit(feature);
         },
       ),
       InspectorFontSizeField(
@@ -191,36 +186,36 @@ final class FeatureKindText extends FeatureKind
         value: fontSize,
         onFontSizeChanged: (value) {
           fontSize = value;
+          _refit(feature);
         },
       ),
     ];
   }
 
-  /// Where a box of [size] goes so that [drag]'s fixed point of [from] stays
-  /// put; without a drag it takes the top-left of [to].
-  ///
-  /// Dragging past the fixed point makes the box grow to its other side, like
-  /// a shape's bounds do, so the text keeps following the cursor.
-  static Rect _placed(Size size, Rect from, Rect to, ResizeDrag? drag) {
-    if (drag == null) return to.topLeft & size;
-    final fixed = drag.fixedPoint;
-    final anchor = fixed.withinRect(from);
-    return Rect.fromLTWH(
-      anchor.dx - size.width * _growth(fixed.x, anchor.dx, to.center.dx),
-      drag.isCorner
-          ? anchor.dy - size.height * _growth(fixed.y, anchor.dy, to.center.dy)
-          : from.top,
-      size.width,
-      size.height,
-    );
+  /// Start of a box of [extent] placed within [toStart]..[toEnd] on one axis.
+  /// It keeps to whichever edge of the resized range still touches an edge of
+  /// the original [fromStart]..[fromEnd], i.e. the side that stayed put, so
+  /// the text follows the cursor; with neither, as when resizing from the
+  /// centre, it is centred.
+  static double _alignedStart(
+    double toStart,
+    double toEnd,
+    double fromStart,
+    double fromEnd,
+    double extent,
+  ) {
+    bool touches(double edge) =>
+        _isClose(edge, fromStart) || _isClose(edge, fromEnd);
+    if (touches(toStart)) return toStart;
+    if (touches(toEnd)) return toEnd - extent;
+    return (toStart + toEnd - extent) / 2;
   }
 
-  /// Fraction of the box that lies before the fixed point on one axis.
-  static double _growth(double fixed, double anchor, double toCenter) {
-    if (fixed < 0 && toCenter < anchor) return 1;
-    if (fixed > 0 && toCenter > anchor) return 0;
-    return (fixed + 1) / 2;
-  }
+  static bool _isWidthOnly(Rect bounds, Rect current) =>
+      _isClose(bounds.height, current.height) &&
+      !_isClose(bounds.width, current.width);
+
+  static bool _isClose(double a, double b) => (a - b).abs() < 1e-6;
 
   /// Scale of [base] that [target] corresponds to, taken by projecting the
   /// target size onto the base's diagonal. Unlike picking the larger of the
@@ -230,6 +225,29 @@ final class FeatureKindText extends FeatureKind
     if (diagonalSquared == 0) return 1;
     return (target.width * base.width + target.height * base.height) /
         diagonalSquared;
+  }
+
+  Size _resizedSize(Rect bounds, Rect current) {
+    if (_isWidthOnly(bounds, current)) {
+      sizing = TextSizing.fixedWidth;
+      return measureContents(
+        fontSize: fontSize,
+        width: math.max(bounds.width, minWrapWidth),
+      );
+    }
+    final baseFontSize = fontSize;
+    fontSize = (baseFontSize * _projectedScale(bounds.size, current.size))
+        .clamp(text_painter.kMinTextFontSize, text_painter.kMaxTextFontSize);
+    return measureContents(
+      fontSize: fontSize,
+      width: sizing == TextSizing.fixedWidth
+          ? current.width * fontSize / baseFontSize
+          : null,
+    );
+  }
+
+  void _refit(Feature? feature) {
+    if (feature != null) feature.setBounds(fittedBounds(feature));
   }
 
   LabelLayout _layoutIn(Rect bounds) => LabelLayout(

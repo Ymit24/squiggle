@@ -22,7 +22,7 @@ class BrushProfile {
 
   void applyTo(FeatureKind kind) {
     for (final field in kind.buildInspectorFields()) {
-      if (field.isBrushable && values.containsKey(field.fieldKey)) {
+      if (values.containsKey(field.fieldKey)) {
         field.applySerialized(values[field.fieldKey]);
       }
     }

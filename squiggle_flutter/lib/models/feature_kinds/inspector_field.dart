@@ -23,10 +23,6 @@ abstract class InspectorField<T> {
   List<T> values;
   List<Function(T)> callbacks;
 
-  /// Whether a brush may store this field; geometry set by a gesture is not
-  /// style and stays out of brushes.
-  bool get isBrushable => true;
-
   T get activeValue => values.first;
 
   bool get isMixed => values.toSet().length > 1;
@@ -34,7 +30,7 @@ abstract class InspectorField<T> {
   static Map<String, InspectorField> byKeyForFeatures(List<Feature> features) {
     final inspectorFieldByKey = <String, InspectorField>{};
     for (final field in features.expand(
-      (feature) => feature.kind.buildInspectorFields(),
+      (feature) => feature.kind.buildInspectorFields(feature: feature),
     )) {
       final fieldKey = field.fieldKey;
       if (inspectorFieldByKey.containsKey(fieldKey)) {

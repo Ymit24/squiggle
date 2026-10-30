@@ -6,7 +6,6 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
-import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 part 'node_container.dart';
@@ -30,9 +29,6 @@ abstract class Node {
   NodeContainer? get parent => _parent;
 
   Document? get document => parent?.document;
-
-  /// Whether top and bottom resize handles do anything for this node.
-  bool get supportsVerticalResize => true;
 
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
 
@@ -66,9 +62,9 @@ abstract class Node {
 
   bool hitTest(Offset worldPoint);
 
-  /// Resizes this node, which is in its state from before the drag, to
-  /// [bounds]. [drag] is null for programmatic resizes such as scaling a group.
-  void resize(Rect bounds, {ResizeDrag? drag});
+  /// Resizes this node to [bounds]. Nodes whose size follows their contents
+  /// may end up near [bounds] rather than exactly on it.
+  void resize(Rect bounds);
 
   Offset center() => localBounds().center;
 }

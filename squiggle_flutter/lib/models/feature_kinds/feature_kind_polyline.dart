@@ -143,7 +143,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   @override
-  void applyBounds(Feature feature, Rect bounds, {ResizeDrag? drag}) {
+  void applyBounds(Feature feature, Rect bounds) {
     final oldBounds = boundsFor(feature);
     final oldCenterlineBounds = oldBounds.deflate(_boundsPadding);
     final newCenterlineBounds = bounds.deflate(_boundsPadding);
@@ -191,7 +191,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   @override
-  Iterable<InspectorField> buildInspectorFields() {
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [
       InspectorColorField(
         fieldKey: 'strokeColor',

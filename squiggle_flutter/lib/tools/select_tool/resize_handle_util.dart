@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_policy.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 class ResizeHandleUtil {
@@ -70,7 +71,7 @@ class ResizeHandleUtil {
   }
 
   static bool _isOffered(Node node, SelectionResizeHandle handle) =>
-      node.supportsVerticalResize ||
+      ResizePolicy.of(node).verticalSides ||
       (handle != SelectionResizeHandle.top &&
           handle != SelectionResizeHandle.bottom);
 }

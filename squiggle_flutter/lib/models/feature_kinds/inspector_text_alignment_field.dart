@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_field_shell.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/text_horizontal_alignment_selector.dart';
-import 'package:squiggle_flutter/editor/inspector/widgets/text_sizing_selector.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/text_vertical_alignment_selector.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
@@ -59,35 +58,6 @@ class InspectorHorizontalTextAlignmentField
       activeAlignment: activeValue,
       isMixed: isMixed,
       onAlignmentSelected: onUpdate,
-    ),
-  );
-}
-
-class InspectorTextSizingField extends InspectorField<TextSizing> {
-  InspectorTextSizingField({
-    required super.fieldKey,
-    required super.label,
-    required TextSizing value,
-    required ValueChanged<TextSizing> onSizingChanged,
-  }) : super(values: [value], callbacks: [onSizingChanged]);
-  @override
-  bool get isBrushable => false;
-  @override
-  Object? encodeValue(TextSizing value) => value.name;
-
-  @override
-  TextSizing decodeValue(Object? raw) =>
-      decodeStyleEnum(raw, TextSizing.values);
-  @override
-  InspectorFieldShell build(
-    BuildContext context,
-    void Function(TextSizing) onUpdate,
-  ) => InspectorFieldShell(
-    label: label,
-    child: TextSizingSelector(
-      activeSizing: activeValue,
-      isMixed: isMixed,
-      onSizingSelected: onUpdate,
     ),
   );
 }

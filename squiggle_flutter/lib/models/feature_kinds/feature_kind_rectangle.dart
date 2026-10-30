@@ -126,7 +126,7 @@ final class FeatureKindRectangle extends FeatureKind
   );
 
   @override
-  Iterable<InspectorField> buildInspectorFields() {
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [
       InspectorColorField(
         fieldKey: 'strokeColor',

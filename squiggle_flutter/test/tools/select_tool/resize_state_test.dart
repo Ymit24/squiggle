@@ -459,6 +459,54 @@ void main() {
       );
     });
 
+    test('a text corner keeps its aspect ratio without shift', () {
+      harness.context = _textContext(contents: 'Line one\nLine two');
+      final feature = (harness.context.document.nodes.first as Feature);
+      harness.context.selection.selectNode(feature.id);
+      final bounds = feature.localBounds();
+      final down = harness.cornerHitWorldPoint(bounds);
+      final grabOffset = down - bounds.bottomRight;
+      // Sideways only: a free corner would leave the height and so reflow.
+      final target = bounds.bottomRight + Offset(bounds.width, 0);
+
+      harness.pointerDown(down);
+      harness.pointerMove(target + grabOffset);
+      harness.pointerUp(target + grabOffset);
+
+      final text = feature.kind as FeatureKindText;
+      expect(text.sizing, TextSizing.auto);
+      expect(text.fontSize, closeTo(48, 1e-6));
+      expect(feature.origin, bounds.topLeft);
+    });
+
+    test('a group corner scales its text even when dragged sideways', () {
+      final (group, text) = _groupWithText(harness);
+      final start = group.localBounds();
+      final down = harness.cornerHitWorldPoint(start);
+
+      harness.pointerDown(down);
+      harness.pointerMove(down + Offset(start.width, 0));
+      harness.pointerUp(down + Offset(start.width, 0));
+
+      final kind = _textKind(harness, text);
+      expect(kind.sizing, TextSizing.auto);
+      expect(kind.fontSize, greaterThan(24));
+    });
+
+    test('a group side reflows its text', () {
+      final (group, text) = _groupWithText(harness);
+      final start = group.localBounds();
+      final down = harness.edgeHitWorldPoint(start, SelectionEdge.right);
+
+      harness.pointerDown(down);
+      harness.pointerMove(down - Offset(start.width / 2, 0));
+      harness.pointerUp(down - Offset(start.width / 2, 0));
+
+      final kind = _textKind(harness, text);
+      expect(kind.sizing, TextSizing.fixedWidth);
+      expect(kind.fontSize, 24);
+    });
+
     test('text has no top or bottom resize handles', () {
       harness.context = _textContext(contents: 'hello');
       final feature = (harness.context.document.nodes.first as Feature);
@@ -477,3 +525,18 @@ void main() {
 EditorContext _textContext({required String contents}) => EditorContext(
   document: Document.fromFeatures([newTextFeatureAt(Offset.zero, contents)]),
 );
+
+(Group, Feature) _groupWithText(SelectToolTestHarness harness) {
+  final document = harness.context.document;
+  document.removeAll(document.nodes.map((node) => node.id).toList());
+  final text = newTextFeatureAt(Offset.zero, 'one two three four');
+  final group = Group(origin: const Offset(100, 100), children: [text]);
+  document.addNode(group);
+  harness.context.selection.selectNode(group.id);
+  return (group, text);
+}
+
+/// Restoring a group replaces its children, so look the text up again.
+FeatureKindText _textKind(SelectToolTestHarness harness, Feature text) =>
+    (harness.context.document.requireNodeById(text.id) as Feature).kind
+        as FeatureKindText;

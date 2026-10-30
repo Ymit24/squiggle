@@ -1,16 +1,15 @@
 import 'dart:ui';
 
 import 'package:data_models/data_models.dart' as data;
-import 'package:flutter/painting.dart' show Alignment;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
-import 'package:squiggle_flutter/models/resize_drag.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_policy.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 class ResizeState extends SelectInteractionState {
@@ -25,18 +24,11 @@ class ResizeState extends SelectInteractionState {
   final ResizeHandle _handle;
   final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.localBounds();
+  late final ResizePolicy _policy = ResizePolicy.of(_handle.node);
 
   /// The node as it was before the drag. Every move restores it first, so a
   /// resize is always computed from the initial state and cannot compound.
   late final data.Node _snapshot;
-
-  bool get _resizesHorizontally =>
-      _handle.handle == SelectionResizeHandle.left ||
-      _handle.handle == SelectionResizeHandle.right;
-
-  bool get _resizesVertically =>
-      _handle.handle == SelectionResizeHandle.top ||
-      _handle.handle == SelectionResizeHandle.bottom;
 
   bool get _movesLeft => _handle.handle.movesLeft;
   bool get _movesRight => _handle.handle.movesRight;
@@ -68,12 +60,14 @@ class ResizeState extends SelectInteractionState {
   }) {
     final newBounds = getNewBounds(
       worldPosition - _resizeOffset,
-      lockAspectRatio: isShiftPressed,
+      lockAspectRatio:
+          isShiftPressed ||
+          (_policy.lockCornerAspect && _handle.handle.isCorner),
       symmetric: isAltPressed,
     );
     _handle.node
       ..restoreFromDataModel(_snapshot)
-      ..resize(newBounds, drag: _dragFor(isAltPressed));
+      ..resize(newBounds);
   }
 
   Rect getNewBounds(
@@ -98,37 +92,15 @@ class ResizeState extends SelectInteractionState {
     parent.transition(IdleInteractionState(parent: parent), context);
   }
 
-  /// The dragged edge or corner moves, so the opposite one stays; Alt keeps the
-  /// centre instead.
-  ResizeDrag _dragFor(bool symmetric) => ResizeDrag(
-    fixedPoint: symmetric
-        ? Alignment.center
-        : Alignment(
-            _fixedSide(movesNegative: _movesLeft, movesPositive: _movesRight),
-            _fixedSide(movesNegative: _movesTop, movesPositive: _movesBottom),
-          ),
-    isCorner: _handle.handle.isCorner,
-  );
-
-  /// -1 or 1 for the side that stays put on an axis, 0 if neither does.
-  static double _fixedSide({
-    required bool movesNegative,
-    required bool movesPositive,
-  }) {
-    if (movesNegative) return 1;
-    return movesPositive ? -1 : 0;
-  }
-
   Rect _symmetricBounds(Offset worldPosition, bool lockAspectRatio) {
     final center = _initialBounds.center;
     if (lockAspectRatio) {
-      final isCorner = _handle.handle.isCorner;
       return symmetricRectWithAspectRatio(
         center,
         worldPosition,
         _initialBounds.width / _initialBounds.height,
-        resizeHorizontal: isCorner || _resizesHorizontally,
-        resizeVertical: isCorner || _resizesVertically,
+        resizeHorizontal: _movesLeft || _movesRight,
+        resizeVertical: _movesTop || _movesBottom,
       );
     }
 
