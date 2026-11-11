@@ -132,6 +132,47 @@ void main() {
       });
     }
 
+    void clickAt(Offset world) {
+      pointerDown(world);
+      pointerUp(world);
+    }
+
+    test('clicking the first point closes the shape with brush fill', () {
+      context.brushes.setField('fillColor', 0xFF00FF00);
+      activateLineTool();
+      clickAt(Offset.zero);
+      clickAt(const Offset(100, 0));
+      clickAt(const Offset(100, 100));
+
+      pointerHover(const Offset(3, -3));
+      expect(context.document.nodes, isEmpty);
+
+      clickAt(const Offset(3, -3));
+      final feature = context.document.nodes.single as Feature;
+      final kind = feature.kind as FeatureKindPolyline;
+      expect(kind.isClosed, isTrue);
+      expect(kind.fillColor, const Color(0xFF00FF00));
+      expect(worldPointsFor(feature), [
+        Offset.zero,
+        const Offset(100, 0),
+        const Offset(100, 100),
+      ]);
+      expect(context.tool.activeTool, isA<SelectTool>());
+    });
+
+    test('clicking the first point of a two-point line adds a point', () {
+      activateLineTool();
+      clickAt(Offset.zero);
+      clickAt(const Offset(100, 0));
+      clickAt(const Offset(3, -3));
+      expect(context.document.nodes, isEmpty);
+
+      finishWithKey(LogicalKeyboardKey.enter);
+      final feature = context.document.nodes.single as Feature;
+      expect((feature.kind as FeatureKindPolyline).isClosed, isFalse);
+      expect(worldPointsFor(feature), hasLength(3));
+    });
+
     test(
       'click without drag from idle enters placing without creating feature',
       () {

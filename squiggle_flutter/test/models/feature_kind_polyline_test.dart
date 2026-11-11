@@ -41,6 +41,9 @@ void main() {
         'strokeWidth': kind.strokeWidth,
         'startEndCap': LineEndCap.rounded.name,
         'endEndCap': LineEndCap.rounded.name,
+        'isClosed': false,
+        'fillColor': kind.fillColor.toARGB32(),
+        'fillType': 'solid',
       });
     });
 
@@ -75,6 +78,103 @@ void main() {
       expect(decoded.startEndCap, LineEndCap.rounded);
       expect(decoded.endEndCap, LineEndCap.rounded);
     });
+  });
+
+  group('FeatureKindPolyline closed shapes', () {
+    const triangle = [Offset.zero, Offset(100, 0), Offset(100, 100)];
+
+    Feature closedTriangle({Color fillColor = const Color(0xFF00FF00)}) {
+      final feature = polylineFeature(localPoints: triangle);
+      final kind = feature.kind as FeatureKindPolyline
+        ..fillColor = fillColor
+        ..endEndCap = LineEndCap.arrow;
+      kind.setClosed(feature, true);
+      return feature;
+    }
+
+    test('round trip preserves closing and fill', () {
+      final kind = FeatureKindPolyline(
+        triangle,
+        isClosed: true,
+        fillColor: const Color(0x8800FF00),
+        fillType: FillType.crosshatch,
+      );
+      final decoded = FeatureKindPolyline.fromDataModel(kind.toDataModel());
+      expect(decoded.isClosed, isTrue);
+      expect(decoded.fillColor, const Color(0x8800FF00));
+      expect(decoded.fillType, FillType.crosshatch);
+      expect(decoded.clone().isClosed, isTrue);
+    });
+
+    test('older documents decode as open lines', () {
+      final data = FeatureKindPolyline(triangle).toDataModel()
+        ..remove('isClosed')
+        ..remove('fillColor')
+        ..remove('fillType');
+      final decoded = FeatureKindPolyline.fromDataModel(data);
+      expect(decoded.isClosed, isFalse);
+      expect(decoded.fillType, FillType.solid);
+    });
+
+    test('hit tests the closing edge and filled interior', () {
+      final open = polylineFeature(localPoints: triangle);
+      final closed = closedTriangle();
+      const onClosingEdge = Offset(50, 50);
+      const inside = Offset(80, 30);
+      expect(open.hitTest(onClosingEdge), isFalse);
+      expect(closed.hitTest(onClosingEdge), isTrue);
+      expect(closed.hitTest(inside), isTrue);
+      expect(
+        closedTriangle(fillColor: const Color(0x00000000)).hitTest(inside),
+        isFalse,
+      );
+      expect(closed.hitTest(const Offset(20, 80)), isFalse);
+    });
+
+    test('marquee inside a closed shape selects it', () {
+      final rect = Rect.fromCenter(
+        center: const Offset(80, 30),
+        width: 4,
+        height: 4,
+      );
+      expect(
+        polylineFeature(localPoints: triangle).intersectsRect(rect),
+        false,
+      );
+      expect(closedTriangle().intersectsRect(rect), isTrue);
+    });
+
+    test('closing drops arrow padding from the bounds', () {
+      final feature = closedTriangle();
+      final kind = feature.kind as FeatureKindPolyline;
+      final halfStroke = kind.strokeWidth / 2;
+      expect(
+        feature.localBounds(),
+        const Rect.fromLTRB(0, 0, 100, 100).inflate(halfStroke),
+      );
+      expect(feature.size, feature.localBounds().size);
+    });
+
+    test(
+      'inspector offers fill only when closed and end caps only when open',
+      () {
+        Set<String> keys(Feature feature) => {
+          for (final field in feature.kind.buildInspectorFields(
+            feature: feature,
+          ))
+            field.fieldKey,
+        };
+        final open = polylineFeature(localPoints: triangle);
+        expect(keys(open), containsAll(['startEndCap', 'endEndCap']));
+        expect(keys(open), isNot(contains('fillColor')));
+        final closed = closedTriangle();
+        expect(keys(closed), containsAll(['fillColor', 'fillType']));
+        expect(keys(closed), isNot(contains('endEndCap')));
+        expect({
+          for (final field in open.kind.buildInspectorFields()) field.fieldKey,
+        }, containsAll(['fillColor', 'fillType', 'startEndCap', 'endEndCap']));
+      },
+    );
   });
 
   group('FeatureKindPolyline geometry', () {
