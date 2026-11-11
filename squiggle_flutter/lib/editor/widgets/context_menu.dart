@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/grouping_commands.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 import 'package:squiggle_flutter/editor/layout_commands.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -79,6 +80,42 @@ class ContextMenu extends StatelessWidget {
     ),
     const SquiggleMenuDivider(),
   ];
+
+  /// Kind-specific commands shared by the whole selection.
+  List<Widget> _buildFeatureActionItems(BuildContext context) {
+    final selectedIds = editorContext.selection.selectedNodeIds;
+    final features = selectedIds
+        .map(editorContext.document.nodeById)
+        .whereType<Feature>()
+        .toList();
+    if (features.length != selectedIds.length) return const [];
+    final groups = FeatureAction.sharedBy(features);
+    if (groups.isEmpty) return const [];
+
+    return [
+      for (final group in groups)
+        SquiggleMenuItem(
+          label: group.first.label,
+          icon: group.first.icon,
+          onPressed: () => _runFeatureActions(context, features, group),
+        ),
+      const SquiggleMenuDivider(),
+    ];
+  }
+
+  void _runFeatureActions(
+    BuildContext context,
+    List<Feature> features,
+    List<FeatureAction> group,
+  ) {
+    editorContext.history.run(group.first.label, (transaction) {
+      transaction.watch(features);
+      for (final action in group) {
+        action.run();
+      }
+    });
+    Navigator.of(context).pop();
+  }
 
   List<Widget> _buildGroupingItems(BuildContext context) => [
     SquiggleMenuItem(
@@ -223,7 +260,7 @@ class ContextMenu extends StatelessWidget {
         onPressed: () => _paste(context),
       ),
       const SquiggleMenuDivider(),
-
+      ..._buildFeatureActionItems(context),
       ..._buildGroupingItems(context),
       const SquiggleMenuDivider(),
       SquiggleMenuItem(

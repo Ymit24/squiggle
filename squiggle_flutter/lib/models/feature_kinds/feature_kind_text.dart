@@ -111,6 +111,18 @@ final class FeatureKindText extends FeatureKind
     _refit(feature);
   }
 
+  /// Fixed width only comes from dragging, so this offers just the way back.
+  @override
+  Iterable<FeatureAction> buildActions(Feature feature) => [
+    if (sizing == TextSizing.fixedWidth)
+      FeatureAction(
+        key: 'autoFitText',
+        label: 'Auto Fit to Text',
+        icon: LucideIcons.unfoldHorizontal,
+        run: () => makeAutoWidth(feature),
+      ),
+  ];
+
   /// Drops a fixed width so the box hugs its contents again.
   void makeAutoWidth(Feature feature) {
     sizing = TextSizing.auto;
