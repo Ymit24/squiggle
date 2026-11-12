@@ -107,7 +107,9 @@ final class DocumentTransaction implements Transaction {
     _watchOrder();
     watch(nodes);
     _notifyReferrers(
-      removed: nodes.expand(_subtreeIds).toSet(),
+      removed: {
+        for (final node in nodes.expand((node) => node.subtree)) node.id,
+      },
       skip: nodes.map((node) => node.id).toSet(),
     );
     container.removeAll(nodes.map((node) => node.id));
@@ -254,15 +256,6 @@ void _restoreInPlace(NodeContainer container, Map<NodeId, data.Node?> states) {
   for (final entry in states.entries) {
     if (entry.value != null) {
       container.childById(entry.key)!.restoreFromDataModel(entry.value!);
-    }
-  }
-}
-
-Iterable<NodeId> _subtreeIds(Node node) sync* {
-  yield node.id;
-  if (node is NodeContainer) {
-    for (final child in (node as NodeContainer).children) {
-      yield* _subtreeIds(child);
     }
   }
 }

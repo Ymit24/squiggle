@@ -77,11 +77,8 @@ final class FeatureKindCircle extends FeatureKind
   };
 
   @override
-  Offset outlinePointToward(Rect bounds, Offset globalPoint) =>
-      ellipseOutlinePointToward(bounds, globalPoint);
-
-  @override
-  Path outlinePath(Rect bounds) => Path()..addOval(bounds);
+  Offset outlinePointToward(Feature feature, Offset globalPoint) =>
+      ellipseOutlinePointToward(feature.globalBounds(), globalPoint);
 
   @override
   FeatureKindCircle clone() => FeatureKindCircle(

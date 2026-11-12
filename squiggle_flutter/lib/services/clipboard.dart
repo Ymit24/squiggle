@@ -6,7 +6,6 @@ import 'package:data_models/data_models.dart' as data;
 import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
@@ -231,15 +230,10 @@ Future<void> _importImageAttachments(
   }
 }
 
-Iterable<FeatureKindImage> _imagesIn(Iterable<Node> nodes) sync* {
-  for (final node in nodes) {
-    if (node is Group) {
-      yield* _imagesIn(node.children);
-    } else if (node case Feature(kind: FeatureKindImage image)) {
-      yield image;
-    }
-  }
-}
+Iterable<FeatureKindImage> _imagesIn(Iterable<Node> nodes) => [
+  for (final node in nodes.expand((node) => node.subtree))
+    if (node case Feature(kind: FeatureKindImage image)) image,
+];
 
 Future<bool> _writeClipboardPlainText(String text) async {
   final clipboard = SystemClipboard.instance;

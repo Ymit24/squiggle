@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
+
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
@@ -44,6 +46,38 @@ bool isWithin(Node node, Set<NodeId> ids) {
   return false;
 }
 
+/// Lines whose ends are being resolved. Resolving reads target bounds, and a
+/// group's bounds include its lines, so lines bound across groups can lead
+/// back to a line already being resolved: that is a cycle.
+final Set<Feature> _resolving = {};
+
+/// [line]'s [points] (in its parent space) with the ends held by [start] and
+/// [end] moved onto their targets. Missing targets and binding cycles leave
+/// the stored points in place.
+List<Offset> resolveBindings(
+  Feature line,
+  List<Offset> points, {
+  NodeBinding? start,
+  NodeBinding? end,
+}) {
+  final document = line.document;
+  if (points.length < 2 || document == null || (start ?? end) == null) {
+    return points;
+  }
+  if (!_resolving.add(line)) return points;
+  try {
+    final shift = line.parent!.globalOrigin;
+    final resolved = resolveBoundEnds(
+      [for (final point in points) point + shift],
+      start: start?.target(document),
+      end: end?.target(document),
+    );
+    return [for (final point in resolved) point - shift];
+  } finally {
+    _resolving.remove(line);
+  }
+}
+
 /// Moves the ends of [points] (global space) onto [start]'s and [end]'s
 /// outlines. Ends of a two-point line bound at both ends aim at the other
 /// target's center, so neither end depends on the other's resolved position.
@@ -67,10 +101,11 @@ List<Offset> resolveBoundEnds(List<Offset> points, {Node? start, Node? end}) {
 /// copied nodes follow the copies, and other bindings are dropped with their
 /// ends left where they were drawn.
 void rebindCopies(List<Node> sources, List<Node> copies) {
-  final pairs = <(Node, Node)>[];
-  for (var i = 0; i < sources.length; i++) {
-    _collectPairs(sources[i], copies[i], pairs);
-  }
+  // Copies mirror their sources' structure, so their subtrees line up.
+  final pairs = IterableZip([
+    sources.expand((node) => node.subtree),
+    copies.expand((node) => node.subtree),
+  ]).map((pair) => (pair[0], pair[1])).toList();
   final ids = {for (final (source, copy) in pairs) source.id: copy.id};
   for (final pair in pairs) {
     if (pair case (
@@ -79,15 +114,5 @@ void rebindCopies(List<Node> sources, List<Node> copies) {
     )) {
       kind.rebindCopy(copy, source, ids);
     }
-  }
-}
-
-void _collectPairs(Node source, Node copy, List<(Node, Node)> pairs) {
-  pairs.add((source, copy));
-  if (source is! NodeContainer || copy is! NodeContainer) return;
-  final sourceChildren = (source as NodeContainer).children;
-  final copyChildren = (copy as NodeContainer).children;
-  for (var i = 0; i < sourceChildren.length; i++) {
-    _collectPairs(sourceChildren[i], copyChildren[i], pairs);
   }
 }

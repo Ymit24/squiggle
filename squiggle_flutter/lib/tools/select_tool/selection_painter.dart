@@ -66,11 +66,11 @@ abstract final class SelectionPainter {
     }
   }
 
-  /// Outlines the node a dragged line end will bind to, just clear of its
-  /// own stroke.
+  /// Boxes the node a dragged line end will bind to, just clear of its own
+  /// stroke.
   static void paintBindTarget(Canvas canvas, Camera camera, Node target) {
-    canvas.drawPath(
-      target.outlinePath(inflate: camera.screenLengthToWorldLength(10)),
+    canvas.drawRect(
+      target.globalBounds().inflate(camera.screenLengthToWorldLength(10)),
       Paint()
         ..color = SquiggleColors.accent
         ..style = PaintingStyle.stroke

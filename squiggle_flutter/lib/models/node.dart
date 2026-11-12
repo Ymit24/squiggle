@@ -33,6 +33,16 @@ abstract class Node {
 
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
 
+  /// This node followed by all of its descendants, depth first.
+  Iterable<Node> get subtree sync* {
+    yield this;
+    if (this case final NodeContainer container) {
+      for (final child in container.children) {
+        yield* child.subtree;
+      }
+    }
+  }
+
   /// Other nodes this node refers to by id.
   Iterable<NodeId> get references => const [];
 
@@ -76,10 +86,6 @@ abstract class Node {
   /// outline, in global space.
   Offset outlinePointToward(Offset globalPoint) =>
       rectOutlinePointToward(globalBounds(), globalPoint);
-
-  /// This node's outline in global space, grown outward by [inflate].
-  Path outlinePath({double inflate = 0}) =>
-      Path()..addRect(globalBounds().inflate(inflate));
 
   /// Called, as part of the same edit, just before the nodes in [ids] that
   /// this node refers to are removed.

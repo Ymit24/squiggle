@@ -49,13 +49,10 @@ sealed class FeatureKind {
 
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
-  /// Where a ray from the center of [bounds] (the feature's global bounds)
-  /// toward [globalPoint] crosses this shape's outline.
-  Offset outlinePointToward(Rect bounds, Offset globalPoint) =>
-      rectOutlinePointToward(bounds, globalPoint);
-
-  /// This shape's outline within [bounds], the feature's global bounds.
-  Path outlinePath(Rect bounds) => Path()..addRect(bounds);
+  /// Where a ray from [feature]'s center toward [globalPoint] crosses this
+  /// shape's outline, in global space.
+  Offset outlinePointToward(Feature feature, Offset globalPoint) =>
+      rectOutlinePointToward(feature.globalBounds(), globalPoint);
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }

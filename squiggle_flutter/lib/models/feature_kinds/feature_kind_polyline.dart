@@ -46,9 +46,6 @@ final class FeatureKindPolyline extends FeatureKind
   NodeBinding? startBinding;
   NodeBinding? endBinding;
 
-  /// Features mid-resolution; re-entry means a binding cycle.
-  static final Set<Feature> _resolving = {};
-
   double get _hitRadius => strokeWidth / 2;
 
   double get _selectionTolerance => _hitRadius + kPolylineHitSlop;
@@ -96,26 +93,12 @@ final class FeatureKindPolyline extends FeatureKind
   );
 
   /// Points in the feature's parent space, with bound ends on their targets.
-  /// Missing targets and binding cycles leave the stored point in place.
-  List<Offset> resolvedPoints(Feature feature) {
-    final points = worldPoints(feature.origin, localPoints);
-    final document = feature.document;
-    if (points.length < 2 || document == null || bindings.isEmpty) {
-      return points;
-    }
-    if (!_resolving.add(feature)) return points;
-    try {
-      final shift = feature.parent!.globalOrigin;
-      final resolved = resolveBoundEnds(
-        [for (final point in points) point + shift],
-        start: startBinding?.target(document),
-        end: endBinding?.target(document),
-      );
-      return [for (final point in resolved) point - shift];
-    } finally {
-      _resolving.remove(feature);
-    }
-  }
+  List<Offset> resolvedPoints(Feature feature) => resolveBindings(
+    feature,
+    worldPoints(feature.origin, localPoints),
+    start: startBinding,
+    end: endBinding,
+  );
 
   @override
   void bakeBindings(Feature feature) {

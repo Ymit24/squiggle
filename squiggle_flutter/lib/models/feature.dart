@@ -98,11 +98,7 @@ class Feature extends Node {
 
   @override
   Offset outlinePointToward(Offset globalPoint) =>
-      kind.outlinePointToward(globalBounds(), globalPoint);
-
-  @override
-  Path outlinePath({double inflate = 0}) =>
-      kind.outlinePath(globalBounds().inflate(inflate));
+      kind.outlinePointToward(this, globalPoint);
 
   /// Bound ends keep their bindings, so undoing the removal reattaches them,
   /// but stay where they are drawn while the target is gone.
