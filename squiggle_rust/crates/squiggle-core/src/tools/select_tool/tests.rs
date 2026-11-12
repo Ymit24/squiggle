@@ -39,7 +39,6 @@ enum Edge {
     Top,
     Right,
     Bottom,
-    Left,
 }
 
 struct Harness {
@@ -163,7 +162,6 @@ impl Harness {
             Edge::Top => p(c.x, screen.top - half),
             Edge::Right => p(screen.right - half, c.y),
             Edge::Bottom => p(c.x, screen.bottom - half),
-            Edge::Left => p(screen.left - half, c.y),
         };
         self.camera.screen_to_world(point)
     }
