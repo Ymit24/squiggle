@@ -53,9 +53,27 @@ fn lock_glyph(locked: bool, color: rune::Color) -> El {
     canvas(body.stroke(shackle, 1.6, color).view_box(ICON, ICON)).size(ICON, ICON)
 }
 
+const SELECT_SVG: &str = include_str!("../../assets/icons/arrow_selector_tool.svg");
+const RECT_SVG: &str = include_str!("../../assets/icons/crop_square.svg");
+const CIRCLE_SVG: &str = include_str!("../../assets/icons/circle.svg");
+const LINE_SVG: &str = include_str!("../../assets/icons/line.svg");
+
+/// The Flutter app's own SVG for tools that have one (the text tool is the letter "A").
+fn tool_icon(s: &State, id: ToolId, active: bool) -> El {
+    let svg = match id {
+        ToolId::Select => SELECT_SVG,
+        ToolId::Rectangle => RECT_SVG,
+        ToolId::Circle => CIRCLE_SVG,
+        ToolId::Line => LINE_SVG,
+        ToolId::Text => return glyph(id, ink(active)),
+    };
+    let hex = if active { "#e4e4e4" } else { "#a0a0a0" };
+    rune::el().size(ICON, ICON).pixels(s.images_store.icon(svg, hex, ICON).pixels())
+}
+
 fn tool_button(s: &State, id: ToolId, key: &str) -> El {
     let active = s.ctx.tool.active().is_some_and(|t| t.id() == id);
-    kit::toolbar_button(key, active, true, glyph(id, ink(active)), move |s: &mut State| {
+    kit::toolbar_button(key, active, true, tool_icon(s, id, active), move |s: &mut State| {
         s.ctx.set_tool(super::command::tool_for(id));
     })
 }

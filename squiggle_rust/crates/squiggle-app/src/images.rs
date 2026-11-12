@@ -22,6 +22,13 @@ impl ImageStore {
         Self::new(Arc::new(|| {}))
     }
 
+    /// One of the bundled toolbar icons (the Flutter app's SVGs) tinted with `hex` (`#rrggbb`),
+    /// rasterised for `size` points at 2x so it stays crisp on high-DPI screens.
+    pub fn icon(&self, svg: &'static str, hex: &str, size: f32) -> Image {
+        let tinted = svg.replace("<path ", &format!("<path fill=\"{hex}\" "));
+        self.cache.svg(tinted.into_bytes(), size, 2.0)
+    }
+
     /// The image for `id`, loading it from `repo` on first request; `None` if missing or corrupt.
     pub fn get(&self, repo: &ImageRepository, id: &str) -> Option<Image> {
         self.loaded
