@@ -111,12 +111,11 @@ impl EditorContext {
         text_edit.begin(document, session);
     }
 
-    /// Opens the inline editor for new text; the document is untouched until it commits non-empty
-    /// contents. A `fixed_width` makes it a wrapping box with `world_origin` as its top-left.
-    pub fn start_create_text(&mut self, world_origin: Point, fixed_width: Option<f64>) {
+    /// A text feature at `origin` with the active brush applied.
+    pub fn new_text_feature(&self, origin: Point, contents: &str, fixed_width: Option<f64>) -> Feature {
         use crate::brush_apply::BrushApply;
         use crate::text_feature_placement::new_text_feature_at;
-        let brush = self.document.session.active_brush().clone();
+        let brush = self.document.session.active_brush();
         let configure = |kind: &mut crate::feature_kinds::TextKind| {
             let mut fk = FeatureKind::Text(kind.clone());
             brush.apply_to(&mut fk);
@@ -124,7 +123,13 @@ impl EditorContext {
                 *kind = k;
             }
         };
-        let draft: Feature = new_text_feature_at(world_origin, "", fixed_width, Some(&configure));
+        new_text_feature_at(origin, contents, fixed_width, Some(&configure))
+    }
+
+    /// Opens the inline editor for new text; the document is untouched until it commits non-empty
+    /// contents. A `fixed_width` makes it a wrapping box with `world_origin` as its top-left.
+    pub fn start_create_text(&mut self, world_origin: Point, fixed_width: Option<f64>) {
+        let draft = self.new_text_feature(world_origin, "", fixed_width);
         let layout = Rect::from_origin_size(draft.origin, draft.size);
         self.start_text_edit(TextEditSession::create(draft, layout));
     }

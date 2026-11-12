@@ -1,6 +1,11 @@
 //! Editor page: viewport, toolbar, shortcuts, context menu, inline text editing.
 //! Owner: editor-chrome. `view` is called by `main.rs` when `Page::Editor` is active.
 
+pub mod command;
+pub mod context_menu;
+pub mod shortcuts;
+pub mod toolbar;
+
 use crate::state::State;
 use rune::{Cx, El, el};
 use squiggle_core::geom::Point;
@@ -20,5 +25,25 @@ pub struct EditorUi {
 }
 
 pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
-    el().w_full().h_full().child(crate::viewport::view(s))
+    el()
+        .w_full()
+        .h_full()
+        .child(crate::viewport::view(s))
+        .child(toolbar::view(s))
+        .child(crate::inspector::panel(s))
+        .child(context_menu::view(s))
+}
+
+/// Window-level key handler: tool/edit shortcuts (installed via `AppSpec::on_key`).
+pub fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
+    if s.page != crate::state::Page::Editor {
+        return false;
+    }
+    match shortcuts::command_for(e) {
+        Some(cmd) => {
+            command::run(s, tx, cmd);
+            true
+        }
+        None => false,
+    }
 }
