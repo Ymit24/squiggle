@@ -38,6 +38,7 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
         .child(text_overlay::view(s))
         .child(toolbar::view(s))
         .child(crate::inspector::panel(s))
+        .child(back_to_content(s))
         .child(context_menu::view(s))
 }
 
@@ -53,4 +54,13 @@ pub fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
         }
         None => false,
     }
+}
+
+fn back_to_content(s: &State) -> El {
+    if !s.ctx.content_is_off_screen() {
+        return el();
+    }
+    rune::row().absolute(0.0, 0.0).w_full().h_full().justify_center().items_end().padding(24.0).child(
+        crate::kit::button("Back to content", |s: &mut State| s.ctx.jump_back_to_content()).key("back-to-content"),
+    )
 }

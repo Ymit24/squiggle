@@ -183,3 +183,45 @@ impl crate::repositories::DocumentHost for EditorContext {
         EditorContext::load_document(self, document);
     }
 }
+
+impl EditorContext {
+    /// True when the document has content but none of it is in the viewport.
+    pub fn content_is_off_screen(&self) -> bool {
+        if self.document.nodes().is_empty() || self.viewport_size == Size::ZERO {
+            return false;
+        }
+        let view = self.camera.visible_world_rect(self.viewport_size);
+        self.document.nodes_in_bounds(&view).is_empty()
+    }
+
+    /// Centres the viewport on the root node nearest the camera (`jumpBackToContent`).
+    pub fn jump_back_to_content(&mut self) {
+        if self.viewport_size == Size::ZERO {
+            return;
+        }
+        let origin = self.camera.location;
+        let nearest = self.document.nodes().iter().min_by(|a, b| {
+            let d = |n: &crate::node::Node| (n.origin() - origin).length();
+            d(a).total_cmp(&d(b))
+        });
+        let Some(center) = nearest.map(crate::node::Node::center) else { return };
+        let half = Point::new(self.viewport_size.width / 2.0, self.viewport_size.height / 2.0);
+        self.camera.location = center;
+        self.camera.pan_by_screen_delta(half);
+    }
+}
+
+#[cfg(test)]
+mod back_to_content_tests {
+    use super::*;
+    use crate::editor::test_util::rect_at;
+
+    #[test]
+    fn jumps_to_nearest_content_when_off_screen() {
+        let mut ctx = EditorContext::new(Document::from_nodes([rect_at(5000.0, 5000.0)]));
+        ctx.viewport_size = Size::new(800.0, 600.0);
+        assert!(ctx.content_is_off_screen());
+        ctx.jump_back_to_content();
+        assert!(!ctx.content_is_off_screen());
+    }
+}
