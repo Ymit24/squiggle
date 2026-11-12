@@ -4,7 +4,7 @@ use crate::geom::{Point, Rect};
 use crate::paint::Painter;
 use serde_json::Value;
 
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CircleKind {
     /// Placeholder: raw persisted content until the real fields are ported.
     pub raw: Value,
@@ -37,4 +37,10 @@ impl CircleKind {
     }
 
     pub fn paint(&self, _feature: &Feature, _painter: &mut Painter) {}
+}
+
+impl Default for CircleKind {
+    fn default() -> Self {
+        Self { raw: serde_json::json!({ "type": "circle" }) }
+    }
 }
