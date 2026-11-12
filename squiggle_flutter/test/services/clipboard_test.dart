@@ -33,7 +33,7 @@ void main() {
   });
 
   test(
-    'nested groups transfer a shared PNG once with fresh node IDs',
+    'nested groups transfer a shared PNG once and keep payload IDs',
     () async {
       final png = await _testPng();
       final imported = (await source.importPngBytes(png))!;
@@ -67,12 +67,13 @@ void main() {
       final firstKind = firstImage.kind as FeatureKindImage;
       final secondKind = secondImage.kind as FeatureKindImage;
 
+      // Pasting inserts copies with fresh ids; decoding keeps the payload's.
       expect([
         decodedGroup.id,
         decodedNested.id,
         firstImage.id,
         secondImage.id,
-      ], everyElement(noId));
+      ], [10, 11, 12, 13].map(NodeId.newId));
       expect(decodedGroup.origin, group.origin);
       expect(decodedNested.origin, nested.origin);
       expect(firstImage.origin, image.origin);
@@ -97,7 +98,7 @@ void main() {
     final decoded = (await decodeNodesFromClipboard(payload, target))!;
     expect(
       decoded.single.toDataModel().toJson(),
-      feature.copyWith(id: noId).toDataModel().toJson(),
+      feature.toDataModel().toJson(),
     );
     expect(await targetDirectory.list().isEmpty, isTrue);
   });

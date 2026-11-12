@@ -54,6 +54,12 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
+  Iterable<NodeId> get dependencies => switch (kind) {
+    BindingCapable kind => kind.bindings.map((binding) => binding.targetId),
+    _ => const [],
+  };
+
+  @override
   data.Feature toDataModel() {
     return data.Feature(
       id: id.value,
@@ -89,6 +95,19 @@ class Feature extends Node {
 
   @override
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
+
+  @override
+  Offset outlinePointToward(Offset globalPoint) =>
+      kind.outlinePointToward(globalBounds(), globalPoint);
+
+  @override
+  Path outlinePath({double inflate = 0}) =>
+      kind.outlinePath(globalBounds().inflate(inflate));
+
+  @override
+  void syncDependencies() {
+    if (kind case BindingCapable kind) kind.bakeBindings(this);
+  }
 
   @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);

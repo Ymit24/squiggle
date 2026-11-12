@@ -106,6 +106,10 @@ final class DocumentTransaction implements Transaction {
     if (nodes.isEmpty) return;
     _watchOrder();
     watch(nodes);
+    _syncDependents(
+      nodes.expand(_subtreeIds).toSet(),
+      skip: nodes.map((node) => node.id).toSet(),
+    );
     container.removeAll(nodes.map((node) => node.id));
   }
 
@@ -119,6 +123,12 @@ final class DocumentTransaction implements Transaction {
   @override
   Commit? commit() {
     _ensureOpen();
+    _syncDependents({
+      for (final MapEntry(:key, :value) in _before.entries)
+        if (container.childById(key) case final node?
+            when node.toDataModel() != value)
+          ..._subtreeIds(node),
+    });
     final before = <NodeId, data.Node?>{};
     final after = <NodeId, data.Node?>{};
     for (final entry in _before.entries) {
@@ -151,6 +161,19 @@ final class DocumentTransaction implements Transaction {
     _ensureOpen();
     _apply(container, states: _before, order: _orderBefore);
     _isOpen = false;
+  }
+
+  /// Refreshes the stored geometry of siblings that follow any node in [ids],
+  /// so undo snapshots stay accurate if those nodes later disappear.
+  void _syncDependents(Set<NodeId> ids, {Set<NodeId> skip = const {}}) {
+    if (ids.isEmpty) return;
+    for (final child in container.children) {
+      if (skip.contains(child.id) || !child.dependencies.any(ids.contains)) {
+        continue;
+      }
+      watch([child]);
+      child.syncDependencies();
+    }
   }
 
   void _watchOrder() {
@@ -235,6 +258,15 @@ void _restoreInPlace(NodeContainer container, Map<NodeId, data.Node?> states) {
   for (final entry in states.entries) {
     if (entry.value != null) {
       container.childById(entry.key)!.restoreFromDataModel(entry.value!);
+    }
+  }
+}
+
+Iterable<NodeId> _subtreeIds(Node node) sync* {
+  yield node.id;
+  if (node is NodeContainer) {
+    for (final child in (node as NodeContainer).children) {
+      yield* _subtreeIds(child);
     }
   }
 }

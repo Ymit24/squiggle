@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -31,6 +32,9 @@ abstract class Node {
   Document? get document => parent?.document;
 
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
+
+  /// Other nodes whose geometry this node's geometry follows.
+  Iterable<NodeId> get dependencies => const [];
 
   /// Returns the union of [nodes] bounds in local world space.
   static Rect localBoundsOfNodes(List<Node> nodes) {
@@ -67,4 +71,17 @@ abstract class Node {
   void resize(Rect bounds);
 
   Offset center() => localBounds().center;
+
+  /// Where a ray from this node's center toward [globalPoint] crosses its
+  /// outline, in global space.
+  Offset outlinePointToward(Offset globalPoint) =>
+      rectOutlinePointToward(globalBounds(), globalPoint);
+
+  /// This node's outline in global space, grown outward by [inflate].
+  Path outlinePath({double inflate = 0}) =>
+      Path()..addRect(globalBounds().inflate(inflate));
+
+  /// Stores geometry derived from [dependencies] in this node's own state, so
+  /// snapshots stay accurate if a dependency later disappears.
+  void syncDependencies() {}
 }

@@ -1,4 +1,4 @@
-import 'dart:math' show atan2, cos, max, min, pi, sin;
+import 'dart:math' show atan2, cos, max, min, pi, sin, sqrt;
 import 'dart:ui';
 
 /// Extra world-space tolerance when hit-testing polyline segments.
@@ -311,4 +311,31 @@ Rect _symmetricCornerBounds(Offset center, Offset dragged, double aspectRatio) {
     width: height * aspectRatio,
     height: height,
   );
+}
+
+/// Where a ray from [bounds]' center toward [point] leaves the rectangle.
+Offset rectOutlinePointToward(Rect bounds, Offset point) {
+  final center = bounds.center;
+  final delta = point - center;
+  if (delta == Offset.zero) return center;
+  final scaleX = delta.dx == 0
+      ? double.infinity
+      : bounds.width / 2 / delta.dx.abs();
+  final scaleY = delta.dy == 0
+      ? double.infinity
+      : bounds.height / 2 / delta.dy.abs();
+  return center + delta * min(scaleX, scaleY);
+}
+
+/// Where a ray from [bounds]' center toward [point] leaves the inscribed
+/// ellipse.
+Offset ellipseOutlinePointToward(Rect bounds, Offset point) {
+  final center = bounds.center;
+  final delta = point - center;
+  final radiusX = bounds.width / 2;
+  final radiusY = bounds.height / 2;
+  if (delta == Offset.zero || radiusX == 0 || radiusY == 0) return center;
+  final nx = delta.dx / radiusX;
+  final ny = delta.dy / radiusY;
+  return center + delta / sqrt(nx * nx + ny * ny);
 }

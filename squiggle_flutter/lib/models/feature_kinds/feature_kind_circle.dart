@@ -77,6 +77,13 @@ final class FeatureKindCircle extends FeatureKind
   };
 
   @override
+  Offset outlinePointToward(Rect bounds, Offset globalPoint) =>
+      ellipseOutlinePointToward(bounds, globalPoint);
+
+  @override
+  Path outlinePath(Rect bounds) => Path()..addOval(bounds);
+
+  @override
   FeatureKindCircle clone() => FeatureKindCircle(
     strokeColor: strokeColor,
     fillColor: fillColor,

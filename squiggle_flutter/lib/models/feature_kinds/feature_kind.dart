@@ -6,6 +6,8 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/stroke_painter.dart';
@@ -47,7 +49,30 @@ sealed class FeatureKind {
 
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
 
+  /// Where a ray from the center of [bounds] (the feature's global bounds)
+  /// toward [globalPoint] crosses this shape's outline.
+  Offset outlinePointToward(Rect bounds, Offset globalPoint) =>
+      rectOutlinePointToward(bounds, globalPoint);
+
+  /// This shape's outline within [bounds], the feature's global bounds.
+  Path outlinePath(Rect bounds) => Path()..addRect(bounds);
+
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
+}
+
+/// Kinds whose ends can attach to other nodes and follow them.
+mixin BindingCapable {
+  Iterable<NodeBinding> get bindings;
+
+  /// Stores the resolved bound positions as the feature's own geometry.
+  void bakeBindings(Feature feature);
+
+  /// Bakes, then drops the bindings whose target [keep] rejects.
+  void unbind(Feature feature, {required bool Function(NodeId) keep});
+
+  /// Gives [copy], a fresh copy of [source], [source]'s resolved geometry and
+  /// bindings retargeted through [ids].
+  void rebindCopy(Feature copy, Feature source, Map<NodeId, NodeId> ids);
 }
 
 mixin StrokeColorCapable {

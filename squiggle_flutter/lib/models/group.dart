@@ -19,6 +19,10 @@ class Group extends Node with NodeContainer {
   );
 
   @override
+  Iterable<NodeId> get dependencies =>
+      children.expand((child) => child.dependencies);
+
+  @override
   Rect localBounds() => Node.localBoundsOfNodes(children).shift(origin);
 
   @override
@@ -49,6 +53,13 @@ class Group extends Node with NodeContainer {
       insert(child);
     }
     origin = Offset(raw.originX, raw.originY);
+  }
+
+  @override
+  void syncDependencies() {
+    for (final child in children) {
+      child.syncDependencies();
+    }
   }
 
   @override

@@ -4,9 +4,11 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/history/edit.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 
 /// Copies nodes into the supplied edit, applying [offset] in parent coordinates.
+/// Bindings between copied nodes follow the copies; others are dropped.
 List<Node> duplicateNodes({
   required List<Node> nodes,
   required Transaction transaction,
@@ -19,6 +21,7 @@ List<Node> duplicateNodes({
   for (final clone in clones) {
     transaction.add(clone);
   }
+  rebindCopies(nodes, clones);
   selection.setSelection(clones.map((node) => node.id));
   return clones;
 }

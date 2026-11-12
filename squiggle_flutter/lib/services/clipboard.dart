@@ -6,10 +6,11 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/models/node_id.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/node_layout.dart';
 import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
 const _clipboardFormatPrefix = 'squiggle-nodes:';
@@ -65,18 +66,23 @@ Future<void> pasteFromClipboard({
   centerNodesAt(nodes, center);
   context.cancelInteraction();
   context.history.run('Paste', (transaction) {
-    for (final node in nodes) {
-      transaction.add(node);
-    }
+    duplicateNodes(
+      nodes: nodes,
+      transaction: transaction,
+      selection: context.selection,
+    );
   });
-  context.selection.setSelection(nodes.map((node) => node.id));
 }
 
 /// The payload includes each referenced PNG once, independent of local storage.
+/// Bound ends are stored where they currently resolve, and only bindings
+/// between copied nodes survive.
 Future<String> encodeNodesForClipboard(
-  List<Node> nodes,
+  List<Node> sources,
   ImageRepository imageRepository,
 ) async {
+  final nodes = [for (final node in sources) node.copyWith()];
+  rebindCopies(sources, nodes);
   final images = <String, String>{};
   final imageIds = _imagesIn(nodes).map((image) => image.imageId).toSet();
 
@@ -94,7 +100,9 @@ Future<String> encodeNodesForClipboard(
   });
 }
 
-/// Returns detached nodes with fresh identities, or null for an invalid payload.
+/// Returns detached nodes carrying the payload's ids, or null for an invalid
+/// payload. Callers insert copies (see [duplicateNodes]) so bindings between
+/// pasted nodes can be retargeted to the copies' fresh ids.
 Future<List<Node>?> decodeNodesFromClipboard(
   String payload,
   ImageRepository imageRepository,
@@ -109,9 +117,7 @@ Future<List<Node>?> decodeNodesFromClipboard(
     ];
     final images = Map<String, dynamic>.from(json['images'] as Map);
     await _importImageAttachments(nodes, images, imageRepository);
-
-    // Group.copyWith also resets the IDs of its descendants.
-    return [for (final node in nodes) node.copyWith(id: noId)];
+    return nodes;
   } on Object {
     return null;
   }
