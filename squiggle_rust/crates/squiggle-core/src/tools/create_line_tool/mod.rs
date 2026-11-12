@@ -16,7 +16,7 @@ use crate::feature_kind::FeatureKind;
 use crate::feature_kinds::PolylineKind;
 use crate::geom::{Point, Size};
 use crate::paint::Painter;
-use crate::tools::tool::{EditorCursor, Key, KeyInput, Modifiers, Tool};
+use crate::tools::tool::{EditorCursor, Key, KeyInput, Modifiers, Tool, ToolId};
 use placing::Placing;
 
 /// Flutter's `kTouchSlop`, in screen pixels.
@@ -129,6 +129,10 @@ impl CreateLineTool {
 }
 
 impl Tool for CreateLineTool {
+    fn id(&self) -> ToolId {
+        ToolId::Line
+    }
+
     fn create_drawing_kind(&self) -> Option<FeatureKind> {
         Some(FeatureKind::Polyline(PolylineKind::new(Vec::new())))
     }

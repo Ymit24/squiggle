@@ -8,7 +8,7 @@ use crate::feature_kind::FeatureKind;
 use crate::feature_kinds::{CircleKind, RectangleKind};
 use crate::geom::{Point, Rect};
 use crate::paint::Painter;
-use crate::tools::tool::{EditorCursor, Modifiers, Tool};
+use crate::tools::tool::{EditorCursor, Modifiers, Tool, ToolId};
 
 enum State {
     Idle,
@@ -60,6 +60,10 @@ fn bounds_from_drag(start: Point, end: Point, mods: Modifiers) -> Rect {
 }
 
 impl Tool for CreateFeatureTool {
+    fn id(&self) -> ToolId {
+        if matches!(self.kind, FeatureKind::Circle(_)) { ToolId::Circle } else { ToolId::Rectangle }
+    }
+
     fn create_drawing_kind(&self) -> Option<FeatureKind> {
         Some(self.kind.clone())
     }

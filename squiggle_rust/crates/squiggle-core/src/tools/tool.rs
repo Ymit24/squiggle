@@ -54,6 +54,16 @@ pub struct KeyInput {
     pub mods: Modifiers,
 }
 
+/// Identifies a tool for toolbar highlighting and shortcuts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolId {
+    Select,
+    Rectangle,
+    Circle,
+    Line,
+    Text,
+}
+
 /// Active editor tool: pointer handling and ephemeral overlay painting. Handlers return `true`
 /// when they consumed the event. Tools read and mutate the document via [`EditorContext`];
 /// gesture mutations commit to the undo history only when the gesture completes.
@@ -61,6 +71,8 @@ pub struct KeyInput {
 /// While a handler runs the tool has been taken out of `ctx.tool`, so `ctx.set_tool(..)` from
 /// inside a handler is queued and applied after the handler returns (see `ToolModel`).
 pub trait Tool {
+    fn id(&self) -> ToolId;
+
     fn on_pointer_down(&mut self, _ctx: &mut EditorContext, _world: Point, _camera: &Camera, _mods: Modifiers) -> bool {
         false
     }

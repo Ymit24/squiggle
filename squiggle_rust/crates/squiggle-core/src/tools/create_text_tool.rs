@@ -7,7 +7,7 @@ use crate::feature_kind::FeatureKind;
 use crate::feature_kinds::TextKind;
 use crate::geom::{Point, Rect};
 use crate::paint::{Cap, Painter};
-use crate::tools::tool::{EditorCursor, Modifiers, Tool};
+use crate::tools::tool::{EditorCursor, Modifiers, Tool, ToolId};
 
 /// Screen pixels the pointer must travel sideways before a press counts as a drag; the dragged
 /// width is what matters, not the height.
@@ -31,6 +31,10 @@ impl CreateTextTool {
 }
 
 impl Tool for CreateTextTool {
+    fn id(&self) -> ToolId {
+        ToolId::Text
+    }
+
     fn create_drawing_kind(&self) -> Option<FeatureKind> {
         Some(FeatureKind::Text(TextKind::new("")))
     }
