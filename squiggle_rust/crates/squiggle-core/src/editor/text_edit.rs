@@ -154,18 +154,12 @@ mod tests {
     use crate::feature_kind::FeatureKind;
     use crate::geom::{Point, Size};
 
-    /// Stands in for a label-capable kind: stores the text in the (stub) kind's raw JSON.
     fn set_label(feature: &mut Feature, text: &str) {
-        if let FeatureKind::Rectangle(k) = &mut feature.kind {
-            k.raw["label"] = text.into();
-        }
+        feature.set_label(text);
     }
 
     fn label(doc: &Document, id: NodeId) -> Option<String> {
-        match &doc.feature(id)?.kind {
-            FeatureKind::Rectangle(k) => k.raw.get("label").and_then(|v| v.as_str()).map(str::to_owned),
-            _ => None,
-        }
+        doc.feature(id)?.kind.label().map(str::to_owned)
     }
 
     struct Fixture {
@@ -200,7 +194,7 @@ mod tests {
         assert!(!f.doc.feature(f.id).unwrap().hide_label);
         assert_eq!(label(&f.doc, f.id).as_deref(), Some("updated text"));
         f.history.undo(&mut f.doc).unwrap();
-        assert_eq!(label(&f.doc, f.id), None);
+        assert_eq!(label(&f.doc, f.id).as_deref(), Some(""));
         assert!(!f.doc.feature(f.id).unwrap().hide_label);
         f.history.redo(&mut f.doc).unwrap();
         assert_eq!(label(&f.doc, f.id).as_deref(), Some("updated text"));

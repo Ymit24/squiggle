@@ -44,7 +44,6 @@ pub mod text_sizing;
 // --- history & commands modules ---
 pub mod editor;
 pub mod node_layout;
-pub mod services;
 
 // --- persistence modules ---
 pub mod repositories;

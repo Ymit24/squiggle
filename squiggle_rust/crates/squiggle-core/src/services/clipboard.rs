@@ -223,7 +223,7 @@ mod tests {
     }
 
     fn image_feature(id: u32, image_id: &str) -> Feature {
-        let kind = ImageKind::from_json(&json!({"type": "image", "imageId": image_id, "strokeWidth": 3.0})).unwrap();
+        let kind = ImageKind::from_json(&json!({"type": "image", "imageId": image_id, "strokeColor": 4278190080u32, "strokeWidth": 3.0})).unwrap();
         let mut f = Feature::new(Point::new(5.0, 7.0), Size::new(8.0, 6.0), FeatureKind::Image(kind));
         f.id = NodeId(id);
         f
