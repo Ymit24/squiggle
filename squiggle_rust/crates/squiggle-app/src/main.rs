@@ -1,13 +1,22 @@
-use rune::tok;
-use rune::{AppSpec, Cx, El, col, text};
+mod editor;
+mod inspector;
+mod kit;
+mod library;
+mod render;
+mod state;
+mod theme;
+mod viewport;
 
-struct State;
+use rune::{AppSpec, Cx, El, col};
+use state::{Page, State};
 
-fn view(_: &State, _: &mut Cx<State>) -> El {
-    let t = tok::theme(true);
-    col().w_full().h_full().center().fill(t.bg).child(text("Squiggle").color(t.text))
+fn view(s: &State, cx: &mut Cx<State>) -> El {
+    match s.page {
+        Page::Library => library::view(s, cx),
+        Page::Editor => col().w_full().h_full().fill(theme::base()).child(editor::view(s, cx)),
+    }
 }
 
 fn main() {
-    rune::run(AppSpec::new("Squiggle", (800.0, 600.0), || State, view));
+    rune::run(AppSpec::new("Squiggle", (1100.0, 760.0), || State::new(State::default_dir()), view));
 }

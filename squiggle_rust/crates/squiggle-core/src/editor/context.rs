@@ -143,3 +143,13 @@ impl EditorContext {
         self.selection.set_selection(alive);
     }
 }
+
+impl crate::repositories::DocumentHost for EditorContext {
+    fn document(&self) -> &Document {
+        &self.document
+    }
+
+    fn load_document(&mut self, document: Document) {
+        EditorContext::load_document(self, document);
+    }
+}
