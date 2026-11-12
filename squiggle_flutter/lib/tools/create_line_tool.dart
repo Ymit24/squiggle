@@ -11,6 +11,7 @@ import 'package:squiggle_flutter/tools/create_line_tool/idle_state.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
+import 'package:squiggle_flutter/tools/line_end_snapper.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
@@ -18,6 +19,10 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     parent: this,
   );
   Feature? _previewFeature;
+
+  /// Snaps the line's ends onto shapes and highlights them while drawing.
+  final LineEndSnapper ends = LineEndSnapper();
+
   @override
   FeatureKind createDrawingKind() => FeatureKindPolyline([]);
 
@@ -47,6 +52,7 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     ImageRepository imageRepository,
   ) {
     _previewFeature?.paint(canvas, imageRepository);
+    ends.paint(canvas, camera);
   }
 
   void transition(
@@ -167,8 +173,10 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
   }
 
   void commit(EditorContext context, List<Offset> worldPoints) {
-    final feature = _previewFeature ?? _buildFeature(context, worldPoints);
-    _setFeaturePoints(feature, worldPoints);
+    final points = ends.snap(context, worldPoints);
+    final feature = _previewFeature ?? _buildFeature(context, points);
+    _setFeaturePoints(feature, points);
+    ends.bind(feature.kind as FeatureKindPolyline);
     context.history.run('Create feature', (transaction) {
       transaction.add(feature);
     });
@@ -176,8 +184,9 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
   }
 
   void updatePreview(EditorContext context, List<Offset> worldPoints) {
-    final feature = _previewFeature ??= _buildFeature(context, worldPoints);
-    _setFeaturePoints(feature, worldPoints);
+    final points = ends.snap(context, worldPoints);
+    final feature = _previewFeature ??= _buildFeature(context, points);
+    _setFeaturePoints(feature, points);
   }
 
   void _setFeaturePoints(Feature feature, List<Offset> worldPoints) {
@@ -191,6 +200,7 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
   void _reset() {
     _activeInteractionState = IdleState(parent: this);
     _previewFeature = null;
+    ends.clear();
   }
 
   Feature _buildFeature(EditorContext context, List<Offset> worldPoints) {

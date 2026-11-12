@@ -1,9 +1,12 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
+import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
@@ -20,12 +23,34 @@ class TranslateState extends SelectInteractionState {
     this._hasDuplicated = false,
   }) : _initialOrigins =
            initialOrigins ??
-           {for (final node in selectedNodes) node.id: node.origin};
+           {for (final node in selectedNodes) node.id: node.origin},
+       _snapshots = {
+         for (final node in selectedNodes) node.id: node.toDataModel(),
+       };
 
   final Offset _start;
   final List<Node> selectedNodes;
   final Map<NodeId, Offset> _initialOrigins;
+
+  /// The selection before [onEnter] detached any line ends.
+  final Map<NodeId, data.Node> _snapshots;
   final bool _hasDuplicated;
+
+  /// Moving a line detaches the ends whose targets stay behind.
+  @override
+  void onEnter(EditorContext context) {
+    final moving = selectedNodes.map((node) => node.id).toSet();
+    bool movesAlong(NodeId targetId) =>
+        switch (context.document.nodeById(targetId)) {
+          final target? => isWithin(target, moving),
+          null => false,
+        };
+    for (final node in selectedNodes) {
+      if (node case Feature(kind: BindingCapable kind)) {
+        kind.unbind(node, keep: movesAlong);
+      }
+    }
+  }
 
   @override
   EditorCursor resolveCursor(
@@ -55,7 +80,7 @@ class TranslateState extends SelectInteractionState {
         parent: parent,
         start: _start,
         selectedNodes: selectedNodes,
-        originsAtDragStart: _initialOrigins,
+        snapshotsAtDragStart: _snapshots,
         selectionAlreadyMoved: true,
       );
       parent.transition(state, context);

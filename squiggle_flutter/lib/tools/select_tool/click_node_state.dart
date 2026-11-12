@@ -73,8 +73,8 @@ class ClickNodeState extends SelectInteractionState {
               parent: parent,
               start: _start,
               selectedNodes: selectedNodes,
-              originsAtDragStart: {
-                for (final node in selectedNodes) node.id: node.origin,
+              snapshotsAtDragStart: {
+                for (final node in selectedNodes) node.id: node.toDataModel(),
               },
               selectionAlreadyMoved: false,
             )

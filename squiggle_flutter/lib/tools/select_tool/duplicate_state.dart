@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -15,13 +16,16 @@ class DuplicateState extends SelectInteractionState {
     required super.parent,
     required this._start,
     required this._selectedNodes,
-    required this._originsAtDragStart,
+    required this._snapshotsAtDragStart,
     required this._selectionAlreadyMoved,
   });
 
   final Offset _start;
   final List<Node> _selectedNodes;
-  final Map<NodeId, Offset> _originsAtDragStart;
+
+  /// The originals as they were before the drag; restoring them also undoes
+  /// anything the move changed, such as detached line ends.
+  final Map<NodeId, data.Node> _snapshotsAtDragStart;
   final bool _selectionAlreadyMoved;
 
   @override
@@ -44,7 +48,7 @@ class DuplicateState extends SelectInteractionState {
     );
 
     for (final node in _selectedNodes) {
-      node.origin = _originsAtDragStart[node.id]!;
+      node.restoreFromDataModel(_snapshotsAtDragStart[node.id]!);
     }
 
     final state = TranslateState(

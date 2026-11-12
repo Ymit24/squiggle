@@ -22,4 +22,15 @@ class IdleState extends InteractionState<CreateLineTool> {
       context,
     );
   }
+
+  @override
+  void onPointerHover(
+    EditorContext context,
+    Offset worldPosition,
+    Camera camera, {
+    required bool isShiftPressed,
+    required bool isAltPressed,
+  }) {
+    parent.ends.hover(context, worldPosition);
+  }
 }

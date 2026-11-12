@@ -53,6 +53,10 @@ class EditorContext extends ChangeNotifier {
   /// Viewport size in screen pixels, written by the viewport widget.
   Size viewportSize = Size.zero;
 
+  /// Whether Ctrl or Cmd is held for the current pointer event, written by the
+  /// viewport widget. Tools treat it as "place freely, don't snap".
+  bool isCommandPressed = false;
+
   // TODO: Consider a better way to coordinate camera motion.
   VoidCallback? _cancelViewportMotion;
 

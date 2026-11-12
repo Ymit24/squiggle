@@ -162,10 +162,17 @@ class _EditorInteractionsState extends State<EditorInteractions>
     );
   }
 
+  void _syncCommandModifier() {
+    final keyboard = HardwareKeyboard.instance;
+    widget.context.isCommandPressed =
+        keyboard.isControlPressed || keyboard.isMetaPressed;
+  }
+
   void _onPointerHover(PointerHoverEvent event) {
     _pointerInCanvas = _canvasLocal(event);
     final world = _screenToWorld(event);
     if (world == null) return;
+    _syncCommandModifier();
     widget.context.tool.onPointerHover(
       widget.context,
       world,
@@ -251,6 +258,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _isPrimaryDragging = true;
     _pointerInCanvas = _canvasLocal(event);
 
+    _syncCommandModifier();
     widget.context.tool.onPointerDown(
       widget.context,
       world,
@@ -276,6 +284,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     final world = _screenToWorld(event);
     if (world == null) return;
 
+    _syncCommandModifier();
     widget.context.tool.onPointerMove(
       widget.context,
       world,
@@ -291,6 +300,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     final world = _screenToWorld(event);
     if (world == null) return;
 
+    _syncCommandModifier();
     widget.context.tool.onPointerUp(
       widget.context,
       world,
