@@ -47,5 +47,7 @@ pub mod node_layout;
 pub mod services;
 
 // --- persistence modules ---
+pub mod repositories;
+pub mod services;
 
 // --- tools modules ---
