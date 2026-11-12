@@ -26,6 +26,7 @@ pub use node::Node;
 
 // --- kinds & painting modules ---
 pub mod brush_apply;
+pub mod brush_wheel_geometry;
 pub mod document_colors;
 pub mod feature_geometry;
 pub mod fill_type;

@@ -39,6 +39,7 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
         .child(toolbar::view(s))
         .child(crate::inspector::panel(s))
         .child(context_menu::view(s))
+        .child(crate::inspector::overlays(s))
 }
 
 /// Window-level key handler: tool/edit shortcuts (installed via `AppSpec::on_key`).
