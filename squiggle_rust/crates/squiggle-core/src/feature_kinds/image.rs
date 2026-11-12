@@ -1,22 +1,55 @@
-//! STUB: ImageKind. To be fully ported from the Dart `feature_kind_image.dart`.
+//! Image kind (`feature_kind_image.dart`): a raster referenced by id, with an optional outline.
+//!
+//! Painting always emits the image command; the renderer decides what to show while the bytes
+//! are not loaded (the Dart app drew a `surface1` placeholder and requested the image).
+
+use crate::color::Color;
+use crate::document_colors::TRANSPARENT_STROKE_COLOR;
 use crate::feature::Feature;
 use crate::geom::{Point, Rect};
-use crate::paint::Painter;
-use serde_json::Value;
+use crate::inspector::{FieldControl, FieldValue, InspectorField};
+use crate::paint::{Cap, Painter};
+use crate::painting::{Contour, paint_stroke};
+use crate::stroke_type::StrokeType;
+use crate::stroke_width::DEFAULT_STROKE_WIDTH;
+use crate::style_values::{decode_string, decode_style_color, decode_style_number, num};
+use serde_json::{Value, json};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ImageKind {
-    /// Placeholder: raw persisted content until the real fields are ported.
-    pub raw: Value,
+    pub image_id: String,
+    pub stroke_color: Color,
+    pub stroke_width: f64,
 }
 
 impl ImageKind {
+    pub fn new(image_id: impl Into<String>) -> Self {
+        Self {
+            image_id: image_id.into(),
+            stroke_color: TRANSPARENT_STROKE_COLOR,
+            stroke_width: DEFAULT_STROKE_WIDTH,
+        }
+    }
+
+    pub fn has_visible_stroke(&self) -> bool {
+        self.stroke_color.a() > 0
+    }
+
     pub fn from_json(content: &Value) -> Result<Self, String> {
-        Ok(Self { raw: content.clone() })
+        Ok(Self {
+            image_id: decode_string(content.get("imageId"), "imageId")?,
+            stroke_color: decode_style_color(content.get("strokeColor"))?,
+            stroke_width: decode_style_number(content.get("strokeWidth"))?,
+        })
     }
 
     pub fn to_json(&self) -> Value {
-        self.raw.clone()
+        json!({
+            "type": "image",
+            "imageId": self.image_id,
+            "strokeColor": self.stroke_color.0,
+            "strokeWidth": num(self.stroke_width),
+        })
     }
 
     pub fn bounds_for(&self, feature: &Feature) -> Rect {
@@ -36,11 +69,36 @@ impl ImageKind {
         feature.set_bounds(bounds);
     }
 
-    pub fn paint(&self, _feature: &Feature, _painter: &mut Painter) {}
-}
+    pub fn paint(&self, feature: &Feature, painter: &mut Painter) {
+        let bounds = self.bounds_for(feature);
+        painter.image(&self.image_id, bounds);
+        if self.has_visible_stroke() {
+            let outline = [Contour::rect(bounds)];
+            paint_stroke(painter, &outline, self.stroke_width, self.stroke_color, Cap::Butt, StrokeType::Solid);
+        }
+    }
 
-impl Default for ImageKind {
-    fn default() -> Self {
-        Self { raw: serde_json::json!({ "type": "image" }) }
+    pub fn fields(&self) -> Vec<InspectorField> {
+        vec![
+            InspectorField::new("strokeColor", "Stroke Color", FieldControl::Color, FieldValue::Color(self.stroke_color)),
+            InspectorField::new(
+                "strokeWidth",
+                "Stroke Width",
+                FieldControl::StrokeWidth,
+                FieldValue::Number(self.stroke_width),
+            ),
+        ]
+    }
+
+    pub fn set_field(&mut self, key: &str, value: &FieldValue) -> bool {
+        match (key, *value) {
+            ("strokeColor", FieldValue::Color(v)) => self.stroke_color = v,
+            ("strokeWidth", FieldValue::Number(v)) => self.stroke_width = v,
+            _ => return false,
+        }
+        true
     }
 }
+
+#[cfg(test)]
+mod tests;
