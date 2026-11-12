@@ -36,6 +36,11 @@ class FontSizeSelector extends StatelessWidget {
         for (final preset in presets)
           StyleColorSwatch(
             color: theme.colors.base,
+            tooltip: switch (preset) {
+              FontSizePreset.small => 'Small',
+              FontSizePreset.medium => 'Medium',
+              FontSizePreset.large => 'Large',
+            },
             isActive: !isMixed && activePreset == preset,
             enabled: enabled,
             onPressed: () => onPresetSelected(preset),

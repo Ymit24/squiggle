@@ -32,6 +32,11 @@ class TextHorizontalAlignmentSelector extends StatelessWidget {
               TextHorizontalAlignment.center => Icons.format_align_center,
               TextHorizontalAlignment.right => Icons.format_align_right,
             },
+            tooltip: switch (alignment) {
+              TextHorizontalAlignment.left => 'Align left',
+              TextHorizontalAlignment.center => 'Align center',
+              TextHorizontalAlignment.right => 'Align right',
+            },
             isActive: !isMixed && activeAlignment == alignment,
             enabled: enabled,
             onPressed: () => onAlignmentSelected(alignment),

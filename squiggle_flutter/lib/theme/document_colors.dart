@@ -12,25 +12,75 @@ const transparentStrokeColor = Color(0x00000000);
 const defaultNewTextFillColor = defaultFeatureStrokeColor;
 
 class StylePreset {
-  const StylePreset({required this.strokeColor, required this.fillColor});
+  const StylePreset({
+    required this.name,
+    required this.strokeColor,
+    required this.fillColor,
+  });
 
+  /// Shown in the colour swatch tooltip.
+  final String name;
   final Color strokeColor;
   final Color fillColor;
 }
 
 /// Muted studio palette — strokes are deeper, fills are soft tints within each hue.
 const stylePresets = <StylePreset>[
-  StylePreset(strokeColor: Color(0x00000000), fillColor: Color(0x00000000)),
-  StylePreset(strokeColor: Color(0xFFC4597A), fillColor: Color(0xFFE8B8C8)),
-  StylePreset(strokeColor: Color(0xFF4A72B8), fillColor: Color(0xFFB0C8E8)),
-  StylePreset(strokeColor: Color(0xFF3D8C62), fillColor: Color(0xFFA8D8BC)),
-  StylePreset(strokeColor: Color(0xFFB8883A), fillColor: Color(0xFFE8D4A0)),
-  StylePreset(strokeColor: Color(0xFF7A62A8), fillColor: Color(0xFFC8B8E0)),
-  StylePreset(strokeColor: Color(0xFFBC7248), fillColor: Color(0xFFE8C8A8)),
-  StylePreset(strokeColor: Color(0xFF3898A0), fillColor: Color(0xFFA0D8E0)),
-  StylePreset(strokeColor: Color(0xFF6A7490), fillColor: Color(0xFFB8C0D4)),
-  StylePreset(strokeColor: Color(0xFFDCE0EC), fillColor: Color(0xFFEAECF4)),
-  StylePreset(strokeColor: Color(0xFF2E3244), fillColor: Color(0xFF5C6278)),
+  StylePreset(
+    name: 'None',
+    strokeColor: Color(0x00000000),
+    fillColor: Color(0x00000000),
+  ),
+  StylePreset(
+    name: 'Rose',
+    strokeColor: Color(0xFFC4597A),
+    fillColor: Color(0xFFE8B8C8),
+  ),
+  StylePreset(
+    name: 'Blue',
+    strokeColor: Color(0xFF4A72B8),
+    fillColor: Color(0xFFB0C8E8),
+  ),
+  StylePreset(
+    name: 'Green',
+    strokeColor: Color(0xFF3D8C62),
+    fillColor: Color(0xFFA8D8BC),
+  ),
+  StylePreset(
+    name: 'Ochre',
+    strokeColor: Color(0xFFB8883A),
+    fillColor: Color(0xFFE8D4A0),
+  ),
+  StylePreset(
+    name: 'Violet',
+    strokeColor: Color(0xFF7A62A8),
+    fillColor: Color(0xFFC8B8E0),
+  ),
+  StylePreset(
+    name: 'Orange',
+    strokeColor: Color(0xFFBC7248),
+    fillColor: Color(0xFFE8C8A8),
+  ),
+  StylePreset(
+    name: 'Teal',
+    strokeColor: Color(0xFF3898A0),
+    fillColor: Color(0xFFA0D8E0),
+  ),
+  StylePreset(
+    name: 'Slate',
+    strokeColor: Color(0xFF6A7490),
+    fillColor: Color(0xFFB8C0D4),
+  ),
+  StylePreset(
+    name: 'Mist',
+    strokeColor: Color(0xFFDCE0EC),
+    fillColor: Color(0xFFEAECF4),
+  ),
+  StylePreset(
+    name: 'Charcoal',
+    strokeColor: Color(0xFF2E3244),
+    fillColor: Color(0xFF5C6278),
+  ),
 ];
 
 int? strokePresetIndexForColor(Color color) {

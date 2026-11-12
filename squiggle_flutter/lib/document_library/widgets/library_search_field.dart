@@ -42,6 +42,7 @@ class LibrarySearchField extends StatelessWidget {
         suffixIcon: query.isNotEmpty
             ? IconButton(
                 onPressed: onClear,
+                tooltip: 'Clear search',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(
                   width: 42,

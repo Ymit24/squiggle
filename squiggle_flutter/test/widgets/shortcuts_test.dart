@@ -251,7 +251,10 @@ void main() {
       await tester.pump();
       expect(editor.tool.isLocked, locked);
       expect(editor.tool.activeTool, same(tool));
-      expect(find.byType(Tooltip), findsNothing);
+      expect(
+        find.byTooltip(locked ? 'Unlock tool  Q' : 'Lock tool  Q'),
+        findsOneWidget,
+      );
       final button = tester.widget<Button>(
         find.byWidgetPredicate(
           (widget) => widget is Button && widget.hotkey == 'Q',

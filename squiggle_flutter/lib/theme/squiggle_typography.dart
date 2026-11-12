@@ -23,6 +23,11 @@ class SquiggleTypography {
     height: 1,
   );
 
+  TextStyle get tooltip =>
+      TextStyle(color: colors.text, fontSize: 12, height: 1.3);
+
+  TextStyle get tooltipShortcut => tooltip.copyWith(color: colors.subtext0);
+
   TextStyle get inputText => TextStyle(color: colors.text, fontSize: 14);
 
   TextStyle get actionButtonLabel => const TextStyle(fontSize: 13.5);

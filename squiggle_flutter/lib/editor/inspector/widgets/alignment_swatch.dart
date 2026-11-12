@@ -6,12 +6,14 @@ class AlignmentSwatch extends StatelessWidget {
   const AlignmentSwatch({
     super.key,
     required this.icon,
+    required this.tooltip,
     required this.isActive,
     required this.onPressed,
     required this.enabled,
   });
 
   final IconData icon;
+  final String tooltip;
   final bool isActive;
   final VoidCallback onPressed;
   final bool enabled;
@@ -22,6 +24,7 @@ class AlignmentSwatch extends StatelessWidget {
 
     return StyleColorSwatch(
       color: colors.base,
+      tooltip: tooltip,
       isActive: isActive,
       enabled: enabled,
       onPressed: onPressed,
