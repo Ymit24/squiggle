@@ -14,6 +14,7 @@ mod sort;
 mod time;
 mod dialogs;
 
+#[allow(unused_imports)]
 pub use actions::{
     close_overlay, create_and_open, delete_document, open_delete_dialog, open_document, open_library, open_new_dialog,
     open_rename_dialog, rename_document,
@@ -98,7 +99,12 @@ impl LibraryUi {
     }
 }
 
-fn shortcuts(s: &mut State, ev: &rune::KeyEvent) -> bool {
+/// Window-level key handler (install via `AppSpec::on_key`): Cmd/Ctrl+N creates a canvas and
+/// Cmd/Ctrl+/ focuses the search field. Only acts on the library page with no overlay open.
+pub fn on_key(s: &mut State, ev: &rune::KeyEvent, _tx: &mut rune::Tx) -> bool {
+    if s.page != crate::state::Page::Library {
+        return false;
+    }
     let chord = |spec: &str| Chord::parse(spec).is_ok_and(|c| c.matches(ev));
     if s.library_ui.overlay != Overlay::None {
         return false;
@@ -208,7 +214,6 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
                 s.library_ui.window = (r[2], r[3]);
             }
         })
-        .on_key(|s: &mut State, ev: &rune::KeyEvent, _tx: &mut rune::Tx| shortcuts(s, ev))
         .child(header::view(ui))
         .child(body(s, &docs));
     for layer in overlays(s) {

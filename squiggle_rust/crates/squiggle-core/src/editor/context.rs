@@ -65,6 +65,12 @@ impl EditorContext {
             .then(|| self.camera.screen_to_world(Point::new(self.viewport_size.width / 2.0, self.viewport_size.height / 2.0)))
     }
 
+    /// Dart's `_onBrushChanged`: call after any brush change so an unfinished drawing follows the
+    /// active brush.
+    pub fn refresh_brush_preview(&mut self) {
+        ToolModel::with_active(self, |tool, ctx| tool.refresh_brush_preview(ctx));
+    }
+
     pub fn cancel_interaction(&mut self) {
         ToolModel::cancel_interaction(self);
     }
@@ -105,12 +111,11 @@ impl EditorContext {
         text_edit.begin(document, session);
     }
 
-    /// Opens the inline editor for new text; the document is untouched until it commits non-empty
-    /// contents. A `fixed_width` makes it a wrapping box with `world_origin` as its top-left.
-    pub fn start_create_text(&mut self, world_origin: Point, fixed_width: Option<f64>) {
+    /// A text feature at `origin` with the active brush applied.
+    pub fn new_text_feature(&self, origin: Point, contents: &str, fixed_width: Option<f64>) -> Feature {
         use crate::brush_apply::BrushApply;
         use crate::text_feature_placement::new_text_feature_at;
-        let brush = self.document.session.active_brush().clone();
+        let brush = self.document.session.active_brush();
         let configure = |kind: &mut crate::feature_kinds::TextKind| {
             let mut fk = FeatureKind::Text(kind.clone());
             brush.apply_to(&mut fk);
@@ -118,9 +123,34 @@ impl EditorContext {
                 *kind = k;
             }
         };
-        let draft: Feature = new_text_feature_at(world_origin, "", fixed_width, Some(&configure));
+        new_text_feature_at(origin, contents, fixed_width, Some(&configure))
+    }
+
+    /// Opens the inline editor for new text; the document is untouched until it commits non-empty
+    /// contents. A `fixed_width` makes it a wrapping box with `world_origin` as its top-left.
+    pub fn start_create_text(&mut self, world_origin: Point, fixed_width: Option<f64>) {
+        let draft = self.new_text_feature(world_origin, "", fixed_width);
         let layout = Rect::from_origin_size(draft.origin, draft.size);
         self.start_text_edit(TextEditSession::create(draft, layout));
+    }
+
+    /// Applies `contents` (default: the field's draft) as one undoable step and closes the text
+    /// edit; does nothing when none is open. Set `select_created` to false when the commit comes
+    /// from a click that picks the selection itself.
+    pub fn commit_text_edit(&mut self, contents: Option<&str>, select_created: bool) {
+        let select = select_created && !self.tool.is_locked();
+        let Self { document, history, selection, text_edit, .. } = self;
+        let _ = crate::editor::text_edit::commit_text_edit(
+            document,
+            history,
+            selection,
+            text_edit,
+            contents,
+            select,
+            |feature, text| {
+                feature.set_label(text);
+            },
+        );
     }
 
     pub fn end_text_edit(&mut self) {
