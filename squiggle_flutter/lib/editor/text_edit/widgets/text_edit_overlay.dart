@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/editor/text_edit_commands.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
+import 'package:squiggle_flutter/models/feature_kinds/label_capable.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
 
 class _CommitTextIntent extends Intent {
