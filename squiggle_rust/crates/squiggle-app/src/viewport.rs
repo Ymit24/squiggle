@@ -115,9 +115,21 @@ pub fn view(s: &State) -> El {
         })
         .on_wheel(|s: &mut State, e: WheelEvent, _tx: &mut Tx| {
             let anchor = Point::new(e.x as f64, e.y as f64);
+            s.editor_ui.fling = None;
             if e.precise {
-                // Trackpad scroll pans.
-                s.ctx.camera.pan_by_screen_delta(Point::new(e.dx as f64, e.dy as f64));
+                // Trackpad scroll pans; lifting the fingers while moving flings.
+                let delta = Point::new(e.dx as f64, e.dy as f64);
+                let now = s.editor_ui.now;
+                if e.phase == rune::GesturePhase::Ended {
+                    let fast = s.editor_ui.scroll_velocity.take().filter(|(t, _)| now - t < 0.1);
+                    s.editor_ui.fling = fast
+                        .and_then(|(_, v)| squiggle_core::fling::Fling::start(v))
+                        .map(|f| (f, now));
+                } else if let Some((t, _)) = s.editor_ui.scroll_velocity.or(Some((now - 1.0 / 60.0, Point::ZERO))) {
+                    let dt = (now - t).max(1.0 / 240.0);
+                    s.editor_ui.scroll_velocity = Some((now, delta / dt));
+                }
+                s.ctx.camera.pan_by_screen_delta(delta);
             } else {
                 // Mouse wheel zooms about the pointer.
                 s.ctx.camera.zoom_toward(anchor, (-(e.dy as f64) * 0.002).exp());

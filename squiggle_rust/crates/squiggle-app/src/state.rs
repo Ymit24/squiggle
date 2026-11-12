@@ -30,6 +30,7 @@ pub struct State {
 impl State {
     /// App state rooted at `app_dir` (use [`default_app_dir`] in the real app, a temp dir in tests).
     pub fn new(app_dir: std::path::PathBuf) -> Self {
+        crate::measure::install();
         let mut ctx = EditorContext::new(Document::default());
         let mut library = DocumentLibraryRepository::new(DocumentStorage::new(&app_dir));
         library.initialize(&mut ctx);

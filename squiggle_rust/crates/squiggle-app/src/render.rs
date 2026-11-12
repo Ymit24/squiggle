@@ -62,12 +62,17 @@ pub fn text_elements(list: &[DrawCmd], camera: &Camera) -> Vec<El> {
 
 /// Image commands of `list` as elements positioned in screen space.
 pub fn image_elements(list: &[DrawCmd], camera: &Camera, store: &ImageStore, repo: &ImageRepository) -> Vec<El> {
+    image_elements_with(list, camera, |id| store.get(repo, id))
+}
+
+/// [`image_elements`] with a custom image lookup.
+pub fn image_elements_with(list: &[DrawCmd], camera: &Camera, lookup: impl Fn(&str) -> Option<rune::Image>) -> Vec<El> {
     list.iter()
         .filter_map(|cmd| {
             let DrawCmd::Image { image_id, rect } = cmd else { return None };
             let r = camera.world_to_screen_bounds(*rect);
             let holder = el().absolute(r.left as f32, r.top as f32).size(r.width() as f32, r.height() as f32);
-            Some(match store.get(repo, image_id) {
+            Some(match lookup(image_id) {
                 Some(image) => holder.pixels(image.pixels()),
                 None => holder.fill(crate::theme::surface1()),
             })

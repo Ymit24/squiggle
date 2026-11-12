@@ -133,12 +133,14 @@ fn card_grid(s: &State, docs: &[DocumentInfo], searching: bool) -> El {
     }
     for info in docs {
         let menu_open = matches!(&ui.overlay, Overlay::CardMenu(id) | Overlay::Context { id, .. } if *id == info.id);
+        let preview = ui.preview(&s.library, info);
         cells.push(card::document_card(card::CardProps {
             info: info.clone(),
             is_current: current == Some(info.id.as_str()),
             can_delete,
             size,
-            preview: ui.preview(&s.library, info),
+            images: preview_images(s, &preview),
+            preview,
             now,
             elevated: menu_open || ui.hovered.as_deref() == Some(info.id.as_str()),
         }));
@@ -224,3 +226,16 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
 
 #[cfg(test)]
 mod tests;
+
+/// Decoded images used by a preview's drawing (loaded on demand, shared with the editor cache).
+fn preview_images(s: &State, preview: &preview::Preview) -> std::collections::HashMap<String, rune::Image> {
+    preview
+        .list
+        .iter()
+        .filter_map(|cmd| match cmd {
+            squiggle_core::paint::DrawCmd::Image { image_id, .. } => Some(image_id),
+            _ => None,
+        })
+        .filter_map(|id| s.images_store.get(&s.images, id).map(|img| (id.clone(), img)))
+        .collect()
+}

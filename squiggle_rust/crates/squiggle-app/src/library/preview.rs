@@ -64,7 +64,7 @@ fn empty_glyph() -> El {
 }
 
 /// The preview element, exactly `size` points: background, dots, then the fitted drawing.
-pub fn view(key: &str, preview: &Preview, size: (f32, f32)) -> El {
+pub fn view(key: &str, preview: &Preview, size: (f32, f32), images: &std::collections::HashMap<String, rune::Image>) -> El {
     let mut v = el().key(key.to_owned()).size(size.0, size.1).radius(CORNER).clip_rounded(CORNER).fill(theme::surface0());
     v = v.child(canvas(dots(size)).key(format!("{key}-dots")).absolute(0.0, 0.0).size(size.0, size.1));
     let Some(bounds) = preview.bounds else {
@@ -72,5 +72,6 @@ pub fn view(key: &str, preview: &Preview, size: (f32, f32)) -> El {
     };
     let camera = preview_camera(bounds, Size::new(size.0 as f64, size.1 as f64));
     v = v.child(canvas(render::shape(&preview.list, &camera)).key(format!("{key}-art")).absolute(0.0, 0.0).size(size.0, size.1));
+    v = render::image_elements_with(&preview.list, &camera, |id| images.get(id).cloned()).into_iter().fold(v, |v, i| v.child(i));
     render::text_elements(&preview.list, &camera).into_iter().fold(v, |v, t| v.child(t))
 }

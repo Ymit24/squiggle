@@ -4,6 +4,7 @@ mod images;
 mod inspector;
 mod kit;
 mod library;
+mod measure;
 mod menu;
 mod render;
 mod state;
@@ -29,6 +30,7 @@ fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
 fn main() {
     let spec = AppSpec {
         on_key: Some(on_key),
+        poll: Some(editor::poll),
         setup: Some(|s, waker| s.images_store = images::ImageStore::new(waker)),
         ..AppSpec::new("Squiggle", (1100.0, 760.0), || State { page: Page::Library, ..State::new(State::default_dir()) }, view)
     };

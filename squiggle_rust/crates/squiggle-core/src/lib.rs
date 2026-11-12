@@ -4,6 +4,7 @@ pub mod camera;
 pub mod color;
 pub mod document;
 pub mod feature;
+pub mod fling;
 pub mod feature_kind;
 pub mod feature_kinds;
 pub mod geom;

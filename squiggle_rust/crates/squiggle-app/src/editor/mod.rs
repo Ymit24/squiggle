@@ -23,6 +23,12 @@ pub struct EditorUi {
     pub pan_origin: Option<Point>,
     /// Open context menu: (viewport position, world position).
     pub context_menu: Option<(Point, Point)>,
+    /// Inertial pan in progress, with the time it started.
+    pub fling: Option<(squiggle_core::fling::Fling, f64)>,
+    /// Last trackpad-scroll sample (time, velocity px/s), used to start a fling on release.
+    pub scroll_velocity: Option<(f64, Point)>,
+    /// Seconds since start, from the app's per-frame poll.
+    pub now: f64,
     /// The inline text field's content and the core session it was made for.
     pub text: rune::TextEdit,
     /// Whether the freshly opened field has been focused yet.
@@ -88,4 +94,14 @@ fn back_to_content(s: &State) -> El {
     rune::row().absolute(0.0, 0.0).w_full().h_full().justify_center().items_end().padding(24.0).child(
         crate::kit::button("Back to content", |s: &mut State| s.ctx.jump_back_to_content()).key("back-to-content"),
     )
+}
+
+/// Per-frame hook (`AppSpec::poll`): advances an inertial pan. Returns whether state changed.
+pub fn poll(s: &mut State, time: f64, _tx: &mut rune::Tx) -> bool {
+    s.editor_ui.now = time;
+    let Some((mut fling, started)) = s.editor_ui.fling else { return false };
+    let t = time - started;
+    s.ctx.camera.pan_by_screen_delta(fling.delta_at(t));
+    s.editor_ui.fling = (!fling.is_done(t)).then_some((fling, started));
+    true
 }

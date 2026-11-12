@@ -21,6 +21,8 @@ pub struct CardProps {
     pub can_delete: bool,
     pub size: (f32, f32),
     pub preview: Rc<Preview>,
+    /// Decoded images the preview's drawing refers to.
+    pub images: std::collections::HashMap<String, rune::Image>,
     pub now: SystemTime,
     /// Pointer over the card, keyboard focus on it, or its menu open.
     pub elevated: bool,
@@ -73,7 +75,7 @@ pub fn document_card(p: CardProps) -> El {
     let (open_id, rename_id, ctx_id, hover_id) = (id.clone(), id.clone(), id.clone(), id.clone());
     let (pw, ph) = layout::preview_size(p.size);
 
-    let mut art = preview::view(&format!("card-preview-{id}"), &p.preview, (pw, ph));
+    let mut art = preview::view(&format!("card-preview-{id}"), &p.preview, (pw, ph), &p.images);
     if p.elevated {
         art = art.child(
             el().absolute(0.0, 0.0).size(pw, ph).radius(10.0).gradient(Color::TRANSPARENT, Color::BLACK.alpha(0.42)).inert(),
