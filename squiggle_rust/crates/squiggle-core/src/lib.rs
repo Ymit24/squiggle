@@ -27,6 +27,9 @@ pub use node::Node;
 // --- kinds & painting modules ---
 
 // --- history & commands modules ---
+pub mod editor;
+pub mod node_layout;
+pub mod services;
 
 // --- persistence modules ---
 
