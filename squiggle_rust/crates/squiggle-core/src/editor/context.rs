@@ -65,6 +65,12 @@ impl EditorContext {
             .then(|| self.camera.screen_to_world(Point::new(self.viewport_size.width / 2.0, self.viewport_size.height / 2.0)))
     }
 
+    /// Dart's `_onBrushChanged`: call after any brush change so an unfinished drawing follows the
+    /// active brush.
+    pub fn refresh_brush_preview(&mut self) {
+        ToolModel::with_active(self, |tool, ctx| tool.refresh_brush_preview(ctx));
+    }
+
     pub fn cancel_interaction(&mut self) {
         ToolModel::cancel_interaction(self);
     }
@@ -141,5 +147,15 @@ impl EditorContext {
         let alive: Vec<NodeId> =
             self.selection.selected_node_ids().iter().copied().filter(|id| self.document.node(*id).is_some()).collect();
         self.selection.set_selection(alive);
+    }
+}
+
+impl crate::repositories::DocumentHost for EditorContext {
+    fn document(&self) -> &Document {
+        &self.document
+    }
+
+    fn load_document(&mut self, document: Document) {
+        EditorContext::load_document(self, document);
     }
 }
