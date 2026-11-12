@@ -65,6 +65,12 @@ impl EditorContext {
             .then(|| self.camera.screen_to_world(Point::new(self.viewport_size.width / 2.0, self.viewport_size.height / 2.0)))
     }
 
+    /// Dart's `_onBrushChanged`: call after any brush change so an unfinished drawing follows the
+    /// active brush.
+    pub fn refresh_brush_preview(&mut self) {
+        ToolModel::with_active(self, |tool, ctx| tool.refresh_brush_preview(ctx));
+    }
+
     pub fn cancel_interaction(&mut self) {
         ToolModel::cancel_interaction(self);
     }
