@@ -140,7 +140,7 @@ pub fn new_document_card(size: (f32, f32)) -> El {
         .radius(16.0)
         .fill(theme::base())
         .border(1.0, theme::surface1())
-        .hover(theme::surface0())
+        .hover(theme::surface0()).motion(rune::tok::motion::SNAPPY)
         .focusable(true)
         .center()
         .gap(0.0)

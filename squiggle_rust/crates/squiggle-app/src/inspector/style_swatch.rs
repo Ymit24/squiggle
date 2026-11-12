@@ -71,7 +71,7 @@ impl Swatch {
         if let Some(overlay) = overlay {
             swatch = swatch.child(overlay);
         }
-        if self.enabled { swatch.hover(Color::WHITE.alpha(0.08)).on_press(on_press) } else { swatch }
+        if self.enabled { swatch.hover(Color::WHITE.alpha(0.08)).motion(rune::tok::motion::SNAPPY).on_press(on_press) } else { swatch }
     }
 }
 

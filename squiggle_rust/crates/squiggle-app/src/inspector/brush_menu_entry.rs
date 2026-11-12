@@ -26,7 +26,7 @@ pub fn brush_menu_entry(brush: &BrushProfile, selected: bool, shortcut_number: O
         .gap(BRUSH_PREVIEW_GAP)
         .radius(metrics::BUTTON_RADIUS)
         .fill(if selected { theme::surface0() } else { rune::Color::TRANSPARENT })
-        .hover(theme::surface1())
+        .hover(theme::surface1()).motion(rune::tok::motion::SNAPPY)
         .child(title)
         .child(brush_preview(&brush.values))
 }

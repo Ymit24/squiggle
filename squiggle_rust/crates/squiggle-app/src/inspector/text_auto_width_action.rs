@@ -31,7 +31,7 @@ pub fn text_auto_width_action() -> El {
         .justify_center()
         .radius(metrics::BUTTON_RADIUS)
         .border(1.0, theme::surface1())
-        .hover(theme::surface1())
+        .hover(theme::surface1()).motion(rune::tok::motion::SNAPPY)
         .focusable(true)
         .on_press(make_auto_width)
         .child(text("Auto fit to text").font(BODY).color(theme::text()));

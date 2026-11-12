@@ -58,7 +58,7 @@ pub fn button<S: 'static>(label: &str, on_press: impl Fn(&mut S) + 'static) -> E
         .justify_center()
         .radius(metrics::BUTTON_RADIUS)
         .fill(theme::surface0())
-        .hover(theme::surface1())
+        .hover(theme::surface1()).motion(rune::tok::motion::SNAPPY)
         .press_scale(0.97)
         .focusable(true)
         .on_press(on_press)
@@ -76,7 +76,7 @@ pub fn toolbar_button<S: 'static>(key: &str, active: bool, enabled: bool, conten
         .fill(if active { theme::surface1() } else { rune::Color::TRANSPARENT })
         .opacity(if enabled { 1.0 } else { 0.35 })
         .child(content);
-    if enabled { b.hover(theme::surface0()).press_scale(0.94).on_press(on_press) } else { b }
+    if enabled { b.hover(theme::surface0()).motion(rune::tok::motion::SNAPPY).press_scale(0.94).on_press(on_press) } else { b }
 }
 
 /// A menu row with an optional shortcut hint on the right.
@@ -92,7 +92,7 @@ pub fn menu_item<S: 'static>(key: &str, label: &str, shortcut: Option<&str>, ena
         .opacity(if enabled { 1.0 } else { 0.4 })
         .child(text(label).font(BODY).color(theme::text()))
         .child(text(shortcut.unwrap_or("")).font(LABEL).color(theme::subtext()));
-    if enabled { item.hover(theme::surface1()).on_press(on_press) } else { item }
+    if enabled { item.hover(theme::surface1()).motion(rune::tok::motion::SNAPPY).on_press(on_press) } else { item }
 }
 
 pub fn menu_panel() -> El {
@@ -176,7 +176,7 @@ impl StyledButton {
         if !self.compact {
             b = b.child(text(self.label).font(font).color(fg));
         }
-        if disabled { b } else { b.hover(hover).on_press(on_press) }
+        if disabled { b } else { b.hover(hover).motion(rune::tok::motion::SNAPPY).on_press(on_press) }
     }
 }
 
@@ -208,7 +208,7 @@ pub fn toolbar_button_tx<S: 'static>(
         .fill(if active { theme::surface1() } else { rune::Color::TRANSPARENT })
         .opacity(if enabled { 1.0 } else { 0.35 })
         .child(content);
-    if enabled { b.hover(theme::surface0()).press_scale(0.94).on_press_tx(on_press) } else { b }
+    if enabled { b.hover(theme::surface0()).motion(rune::tok::motion::SNAPPY).press_scale(0.94).on_press_tx(on_press) } else { b }
 }
 
 /// [`menu_item`] whose handler also gets the `Tx`.
@@ -230,5 +230,5 @@ pub fn menu_item_tx<S: 'static>(
         .opacity(if enabled { 1.0 } else { 0.4 })
         .child(text(label).font(BODY).color(theme::text()))
         .child(text(shortcut.unwrap_or("")).font(LABEL).color(theme::subtext()));
-    if enabled { item.hover(theme::surface1()).on_press_tx(on_press) } else { item }
+    if enabled { item.hover(theme::surface1()).motion(rune::tok::motion::SNAPPY).on_press_tx(on_press) } else { item }
 }

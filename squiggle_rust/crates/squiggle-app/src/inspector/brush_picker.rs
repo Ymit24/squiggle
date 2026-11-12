@@ -19,7 +19,7 @@ fn trigger(key: &str, grow: bool, content: El, on_press: fn(&mut State)) -> El {
         .radius(metrics::BUTTON_RADIUS)
         .border(1.0, theme::surface1())
         .fill(theme::surface0())
-        .hover(theme::surface1())
+        .hover(theme::surface1()).motion(rune::tok::motion::SNAPPY)
         .focusable(true)
         .on_press(on_press)
         .child(content);

@@ -30,7 +30,7 @@ pub fn dialog_button(key: &str, label: &str, variant: ButtonVariant, enabled: bo
         .fill(fill)
         .opacity(if enabled { 1.0 } else { 0.4 })
         .child(text(label).font(BODY).color(ink));
-    if enabled { button.hover(Color::WHITE.alpha(0.1)).focusable(true).on_press(on_press) } else { button }
+    if enabled { button.hover(Color::WHITE.alpha(0.1)).motion(rune::tok::motion::SNAPPY).focusable(true).on_press(on_press) } else { button }
 }
 
 /// A full-window scrim with a centred panel. Escape or a click outside calls `dismiss`.
