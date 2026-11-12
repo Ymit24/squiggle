@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/editor/editor.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
-import 'package:squiggle_flutter/repositories/document_library_repository.dart';
+import 'package:squiggle_flutter/editor/widgets/save_failed_dialog.dart';
+import 'package:squiggle_flutter/editor/widgets/unreadable_document_view.dart';
+import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
+import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 
 @RoutePage(name: "EditorRoute")
 class EditorPage extends StatefulWidget {
@@ -23,8 +26,8 @@ class _EditorPageState extends State<EditorPage> {
   void initState() {
     super.initState();
 
-    final library = context.read<DocumentLibraryRepository>();
-    _loadCallback = library.openDocument(widget.id);
+    final activeDocument = context.read<ActiveDocumentCoordinator>();
+    _loadCallback = activeDocument.openDocument(widget.id);
   }
 
   @override
@@ -34,9 +37,25 @@ class _EditorPageState extends State<EditorPage> {
       body: FutureBuilder(
         future: _loadCallback,
         builder: (context, asyncSnapshot) {
-          if (asyncSnapshot.hasError ||
-              asyncSnapshot.connectionState != ConnectionState.done) {
+          if (asyncSnapshot.connectionState != ConnectionState.done) {
             return SizedBox.shrink();
+          }
+
+          if (asyncSnapshot.hasError) {
+            return UnreadableDocumentView(
+              onBackToLibrary: () => _returnToLibrary(context),
+              message: UnreadableDocumentView.failedMessage,
+            );
+          }
+
+          final loadError = context.read<ActiveDocumentCoordinator>().loadError;
+          if (loadError != null) {
+            return UnreadableDocumentView(
+              onBackToLibrary: () => _returnToLibrary(context),
+              message: loadError is DocumentNotFoundException
+                  ? UnreadableDocumentView.missingMessage
+                  : UnreadableDocumentView.unreadableMessage,
+            );
           }
 
           return Editor(
@@ -49,9 +68,20 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Future<void> _returnToLibrary(BuildContext context) async {
-    final library = context.read<DocumentLibraryRepository>();
-    await library.saveCurrentDocument();
-    await library.refreshDocuments();
+    final activeDocument = context.read<ActiveDocumentCoordinator>();
+    final documentList = context.read<DocumentListNotifier>();
+    try {
+      await activeDocument.flush();
+    } on DocumentSaveException {
+      if (!context.mounted) return;
+      final leave = await showDialog<bool>(
+        context: context,
+        builder: (context) => const SaveFailedDialog(),
+      );
+      if (leave != true) return;
+      activeDocument.discardActiveDocument();
+    }
+    await documentList.refresh();
 
     if (!context.mounted) return;
     await context.router.replace(DocumentLibraryRoute());
