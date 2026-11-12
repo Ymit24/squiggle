@@ -27,9 +27,38 @@ fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
     editor::on_key(s, e, tx) || library::on_key(s, e, tx)
 }
 
+/// `--scene editor`: the editor with a few shapes, one selected (for headless snapshots).
+fn editor_scene(s: &mut State) {
+    use squiggle_core::feature::Feature;
+    use squiggle_core::feature_kind::FeatureKind;
+    use squiggle_core::feature_kinds::{CircleKind, PolylineKind, RectangleKind};
+    use squiggle_core::geom::{Point, Size};
+    s.page = Page::Editor;
+    s.ctx.viewport_size = Size::new(1100.0, 760.0);
+    s.ctx.camera.location = Point::new(-60.0, -120.0);
+    let mut rect = RectangleKind::default();
+    rect.style.stroke_color = squiggle_core::Color(0xFF8AB4F8);
+    let mut rect = Feature::new(Point::new(120.0, 220.0), Size::new(280.0, 160.0), FeatureKind::Rectangle(rect));
+    rect.set_label("Rectangle");
+    let circle = Feature::new(Point::new(520.0, 200.0), Size::new(200.0, 200.0), FeatureKind::Circle(CircleKind::default()));
+    let line = Feature::new(
+        Point::new(200.0, 480.0),
+        Size::new(500.0, 120.0),
+        FeatureKind::Polyline(PolylineKind::new(vec![Point::new(0.0, 100.0), Point::new(150.0, 0.0), Point::new(300.0, 90.0), Point::new(480.0, 10.0)])),
+    );
+    let text = s.ctx.new_text_feature(Point::new(420.0, 120.0), "Hello Squiggle", None);
+    let mut first = None;
+    for f in [rect, circle, line, text] {
+        let id = s.ctx.document.insert(None, f.into(), None).unwrap();
+        first.get_or_insert(id);
+    }
+    s.ctx.selection.set_selection(first);
+}
+
 fn main() {
     let spec = AppSpec {
         on_key: Some(on_key),
+        scenes: &[("editor", editor_scene)],
         poll: Some(editor::poll),
         setup: Some(|s, waker| s.images_store = images::ImageStore::new(waker)),
         ..AppSpec::new("Squiggle", (1100.0, 760.0), || State { page: Page::Library, ..State::new(State::default_dir()) }, view)

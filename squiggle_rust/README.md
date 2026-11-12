@@ -20,3 +20,11 @@ cargo run -p squiggle
 
 UI tests run Rune's headless `Runtime`, so they need no GPU. Running the app needs a GPU/Vulkan driver.
 See `PORTING.md` for architecture and how the Dart concepts map onto Rust.
+
+## Headless snapshots (no display or GPU)
+
+`cargo run --release -p squiggle -- --snap out.png [--scene editor]` renders one frame to a PNG. On a
+machine without a GPU, point the Vulkan loader at Mesa's software driver (lavapipe), e.g. from the
+`libvulkan1` and `mesa-vulkan-drivers` packages: set `VK_ICD_FILENAMES` to `lvp_icd.json` and
+`LD_LIBRARY_PATH` to the directory holding `libvulkan.so.1`, `libvulkan_lvp.so`, `libxcb-shm.so.0` and
+`libwayland-client.so.0`. Reference snapshots: `docs/library.png`, `docs/editor.png`.
