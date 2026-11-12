@@ -78,6 +78,10 @@ pub fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
     if e.key == rune::Key::Escape && close_menus(s) {
         return true;
     }
+    if s.ctx.text_edit.session().is_none() && forward_to_tool(s, e) {
+        s.autosave_if_changed();
+        return true;
+    }
     match shortcuts::command_for(e) {
         Some(cmd) => {
             command::run(s, tx, cmd);
@@ -104,4 +108,26 @@ pub fn poll(s: &mut State, time: f64, _tx: &mut rune::Tx) -> bool {
     s.ctx.camera.pan_by_screen_delta(fling.delta_at(t));
     s.editor_ui.fling = (!fling.is_done(t)).then_some((fling, started));
     true
+}
+
+/// Gives the active tool first refusal on a key (Enter/Escape finish or cancel a gesture,
+/// the select tool handles delete, group and arrows).
+fn forward_to_tool(s: &mut State, e: &rune::KeyEvent) -> bool {
+    use squiggle_core::tools::tool::{Key, KeyInput};
+    let key = match &e.key {
+        rune::Key::Escape => Key::Escape,
+        rune::Key::Enter => Key::Enter,
+        rune::Key::Backspace => Key::Backspace,
+        rune::Key::Delete => Key::Delete,
+        rune::Key::Tab => Key::Tab,
+        rune::Key::Left => Key::Left,
+        rune::Key::Right => Key::Right,
+        rune::Key::Up => Key::Up,
+        rune::Key::Down => Key::Down,
+        rune::Key::Command(c) => Key::Char(*c),
+        rune::Key::Text(t) if t.chars().count() == 1 => Key::Char(t.chars().next().unwrap()),
+        _ => return false,
+    };
+    let mods = squiggle_core::tools::tool::Modifiers { shift: e.mods.shift, alt: e.mods.alt, command: e.mods.cmd || e.mods.ctrl };
+    squiggle_core::editor::tool_model::ToolModel::on_key(&mut s.ctx, KeyInput { key, mods })
 }

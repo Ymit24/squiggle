@@ -174,4 +174,21 @@ mod tests {
         rt.frame(0.0);
         assert!(!host::is_open(&rt.state));
     }
+
+    #[test]
+    fn enter_finishes_a_polyline_through_the_active_tool() {
+        let mut rt = app("line");
+        let key = |k: rune::Key| rune::KeyEvent { key: k, mods: rune::Mods::default() };
+        rt.key(key(rune::Key::Text("l".into())));
+        rt.frame(0.0);
+        for (x, y) in [(300.0, 300.0), (400.0, 340.0)] {
+            rt.pointer_move(x, y);
+            rt.pointer_down(x, y);
+            rt.pointer_up(x, y);
+            rt.frame(0.0);
+        }
+        rt.key(key(rune::Key::Enter));
+        rt.frame(0.0);
+        assert_eq!(rt.state.ctx.document.nodes().len(), 1, "Enter commits the polyline");
+    }
 }
