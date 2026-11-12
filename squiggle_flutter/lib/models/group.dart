@@ -19,8 +19,8 @@ class Group extends Node with NodeContainer {
   );
 
   @override
-  Iterable<NodeId> get dependencies =>
-      children.expand((child) => child.dependencies);
+  Iterable<NodeId> get references =>
+      children.expand((child) => child.references);
 
   @override
   Rect localBounds() => Node.localBoundsOfNodes(children).shift(origin);
@@ -56,9 +56,9 @@ class Group extends Node with NodeContainer {
   }
 
   @override
-  void syncDependencies() {
+  void referencesRemoved(Set<NodeId> ids) {
     for (final child in children) {
-      child.syncDependencies();
+      child.referencesRemoved(ids);
     }
   }
 

@@ -54,7 +54,7 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
-  Iterable<NodeId> get dependencies => switch (kind) {
+  Iterable<NodeId> get references => switch (kind) {
     BindingCapable kind => kind.bindings.map((binding) => binding.targetId),
     _ => const [],
   };
@@ -104,8 +104,10 @@ class Feature extends Node {
   Path outlinePath({double inflate = 0}) =>
       kind.outlinePath(globalBounds().inflate(inflate));
 
+  /// Bound ends keep their bindings, so undoing the removal reattaches them,
+  /// but stay where they are drawn while the target is gone.
   @override
-  void syncDependencies() {
+  void referencesRemoved(Set<NodeId> ids) {
     if (kind case BindingCapable kind) kind.bakeBindings(this);
   }
 

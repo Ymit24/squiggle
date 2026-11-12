@@ -33,8 +33,8 @@ abstract class Node {
 
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
 
-  /// Other nodes whose geometry this node's geometry follows.
-  Iterable<NodeId> get dependencies => const [];
+  /// Other nodes this node refers to by id.
+  Iterable<NodeId> get references => const [];
 
   /// Returns the union of [nodes] bounds in local world space.
   static Rect localBoundsOfNodes(List<Node> nodes) {
@@ -81,7 +81,7 @@ abstract class Node {
   Path outlinePath({double inflate = 0}) =>
       Path()..addRect(globalBounds().inflate(inflate));
 
-  /// Stores geometry derived from [dependencies] in this node's own state, so
-  /// snapshots stay accurate if a dependency later disappears.
-  void syncDependencies() {}
+  /// Called, as part of the same edit, just before the nodes in [ids] that
+  /// this node refers to are removed.
+  void referencesRemoved(Set<NodeId> ids) {}
 }

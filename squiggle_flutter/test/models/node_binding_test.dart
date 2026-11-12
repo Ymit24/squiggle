@@ -142,12 +142,13 @@ void main() {
     late History history;
     setUp(() => history = History(document: document));
 
-    test('moving a target refreshes the stored points of bound lines', () {
+    test('moving a target only changes the target', () {
       final line = addLine();
       history.run('Move', (transaction) {
         transaction.update(right, (node) => node.origin = const Offset(500, 0));
       });
-      expect(_stored(line).last, const Offset(500, 50));
+      expect(_stored(line).last, const Offset(350, 50));
+      expect(_resolved(line).last, const Offset(500, 50));
 
       history.undo();
       expect(_resolved(line).last, const Offset(300, 50));
@@ -164,6 +165,24 @@ void main() {
       document.featureById(right.id)!.origin = const Offset(600, 0);
       final restoredLine = document.featureById(line.id)!;
       expect(_resolved(restoredLine).last, const Offset(600, 50));
+    });
+  });
+
+  group('removal', () {
+    late History history;
+    setUp(() => history = History(document: document));
+
+    test('deleting a group pins lines bound to its children', () {
+      final inner = _box(Offset.zero);
+      final group = document.insert(
+        Group(origin: const Offset(0, 300), children: [inner]),
+      );
+      final line = document.insert(
+        _line(const Offset(50, 50), const Offset(50, 0), end: inner),
+      );
+      group.origin = const Offset(0, 500);
+      history.run('Delete', (transaction) => transaction.removeAll([group.id]));
+      expect(_resolved(line).last, const Offset(50, 500));
     });
   });
 

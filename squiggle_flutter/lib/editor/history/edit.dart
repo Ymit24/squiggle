@@ -106,8 +106,8 @@ final class DocumentTransaction implements Transaction {
     if (nodes.isEmpty) return;
     _watchOrder();
     watch(nodes);
-    _syncDependents(
-      nodes.expand(_subtreeIds).toSet(),
+    _notifyReferrers(
+      removed: nodes.expand(_subtreeIds).toSet(),
       skip: nodes.map((node) => node.id).toSet(),
     );
     container.removeAll(nodes.map((node) => node.id));
@@ -123,12 +123,6 @@ final class DocumentTransaction implements Transaction {
   @override
   Commit? commit() {
     _ensureOpen();
-    _syncDependents({
-      for (final MapEntry(:key, :value) in _before.entries)
-        if (container.childById(key) case final node?
-            when node.toDataModel() != value)
-          ..._subtreeIds(node),
-    });
     final before = <NodeId, data.Node?>{};
     final after = <NodeId, data.Node?>{};
     for (final entry in _before.entries) {
@@ -163,16 +157,18 @@ final class DocumentTransaction implements Transaction {
     _isOpen = false;
   }
 
-  /// Refreshes the stored geometry of siblings that follow any node in [ids],
-  /// so undo snapshots stay accurate if those nodes later disappear.
-  void _syncDependents(Set<NodeId> ids, {Set<NodeId> skip = const {}}) {
-    if (ids.isEmpty) return;
+  /// Lets remaining children that refer to [removed] nodes react before they
+  /// go, capturing that reaction in this edit.
+  void _notifyReferrers({
+    required Set<NodeId> removed,
+    required Set<NodeId> skip,
+  }) {
     for (final child in container.children) {
-      if (skip.contains(child.id) || !child.dependencies.any(ids.contains)) {
+      if (skip.contains(child.id) || !child.references.any(removed.contains)) {
         continue;
       }
       watch([child]);
-      child.syncDependencies();
+      child.referencesRemoved(removed);
     }
   }
 
