@@ -1,6 +1,6 @@
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit_model.dart';
-import 'package:squiggle_flutter/models/feature_kinds/feature_kind.dart';
+import 'package:squiggle_flutter/models/feature_kinds/label_capable.dart';
 
 /// Applies [contents] (default: the field's current draft) as one undoable
 /// step and closes the text edit; does nothing when no edit is open, which

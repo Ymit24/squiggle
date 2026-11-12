@@ -50,25 +50,6 @@ sealed class FeatureKind {
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }
 
-mixin StrokeColorCapable {
-  Color get strokeColor;
-  set strokeColor(Color value);
-
-  bool get hasVisibleStroke => strokeColor.a > 0;
-}
-
-mixin FillColorCapable {
-  Color get fillColor;
-  set fillColor(Color value);
-
-  bool get hasVisibleFill => fillColor.a > 0;
-}
-
-mixin FillTypeCapable {
-  FillType get fillType;
-  set fillType(FillType value);
-}
-
 FillType _fillTypeFromDataModel(Map<String, dynamic> content) =>
     decodeStyleEnum(
       content['fillType'],
@@ -76,32 +57,12 @@ FillType _fillTypeFromDataModel(Map<String, dynamic> content) =>
       fallback: FillType.solid,
     );
 
-mixin StrokeWidthCapable {
-  double get strokeWidth;
-  set strokeWidth(double value);
-}
-
-mixin StrokeTypeCapable {
-  StrokeType get strokeType;
-  set strokeType(StrokeType value);
-}
-
 StrokeType _strokeTypeFromDataModel(Map<String, dynamic> content) =>
     decodeStyleEnum(
       content['strokeType'],
       StrokeType.values,
       fallback: StrokeType.solid,
     );
-
-mixin LabelCapable {
-  String get label;
-  set label(String value);
-
-  void setLabel(Feature feature, String value) => label = value;
-
-  /// Where and how the label is typeset; drives painting and inline editing.
-  LabelLayout labelLayout(Feature feature);
-}
 
 const double _labelFontSize = 24;
 const double _labelPadding = 8;
