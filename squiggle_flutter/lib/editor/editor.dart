@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/editor/inspector/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
 import 'package:squiggle_flutter/editor/widgets/document_viewport.dart';
+import 'package:squiggle_flutter/feedback/widgets/report_button.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
@@ -50,27 +51,7 @@ class Editor extends StatelessWidget {
                     editorContext: editorContext,
                     imageRepository: imageRepository,
                   ),
-                  Positioned(
-                    top: context.squiggleTheme.spacing.overlayTop,
-                    bottom: context.squiggleTheme.spacing.overlayTop,
-                    left: context.squiggleTheme.spacing.overlaySide,
-                    child: Column(
-                      spacing: 8,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SquiggleButton(
-                          onPressed: onBackToLibrary,
-                          icon: Icons.grid_view_rounded,
-                          label: 'Canvas library',
-                          variant: SquiggleButtonVariant.secondary,
-                          compact: true,
-                        ),
-                        Flexible(
-                          child: InspectorPanel(editorContext: editorContext),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _sidePanel(context),
                   const EditorToolbar(),
                   Positioned(
                     left: 0,
@@ -85,6 +66,36 @@ class Editor extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// Library and report buttons above the inspector.
+  Widget _sidePanel(BuildContext context) {
+    return Positioned(
+      top: context.squiggleTheme.spacing.overlayTop,
+      bottom: context.squiggleTheme.spacing.overlayTop,
+      left: context.squiggleTheme.spacing.overlaySide,
+      child: Column(
+        spacing: 8,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 8,
+            children: [
+              SquiggleButton(
+                onPressed: onBackToLibrary,
+                icon: Icons.grid_view_rounded,
+                label: 'Canvas library',
+                variant: SquiggleButtonVariant.secondary,
+                compact: true,
+              ),
+              const ReportButton(),
+            ],
+          ),
+          Flexible(child: InspectorPanel(editorContext: editorContext)),
+        ],
       ),
     );
   }
