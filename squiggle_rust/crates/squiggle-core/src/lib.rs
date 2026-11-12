@@ -11,6 +11,7 @@ pub mod group;
 pub mod ids;
 pub mod node;
 pub mod paint;
+pub mod preview_fit;
 pub mod session;
 pub mod text_measure;
 

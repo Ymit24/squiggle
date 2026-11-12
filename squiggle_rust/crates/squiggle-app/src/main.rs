@@ -1,9 +1,12 @@
+mod dialog;
 mod editor;
 mod inspector;
 mod kit;
 mod library;
+mod menu;
 mod render;
 mod state;
+mod text_field;
 mod theme;
 mod viewport;
 
