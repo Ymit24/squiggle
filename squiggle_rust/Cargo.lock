@@ -2938,6 +2938,7 @@ name = "squiggle"
 version = "0.2.33"
 dependencies = [
  "rune",
+ "serde_json",
  "squiggle-core",
 ]
 
