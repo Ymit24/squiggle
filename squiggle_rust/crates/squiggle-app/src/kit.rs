@@ -59,6 +59,7 @@ pub fn button<S: 'static>(label: &str, on_press: impl Fn(&mut S) + 'static) -> E
         .radius(metrics::BUTTON_RADIUS)
         .fill(theme::surface0())
         .hover(theme::surface1())
+        .press_scale(0.97)
         .focusable(true)
         .on_press(on_press)
         .child(text(label).font(BODY).color(theme::text()))
@@ -75,7 +76,7 @@ pub fn toolbar_button<S: 'static>(key: &str, active: bool, enabled: bool, conten
         .fill(if active { theme::surface1() } else { rune::Color::TRANSPARENT })
         .opacity(if enabled { 1.0 } else { 0.35 })
         .child(content);
-    if enabled { b.hover(theme::surface0()).on_press(on_press) } else { b }
+    if enabled { b.hover(theme::surface0()).press_scale(0.94).on_press(on_press) } else { b }
 }
 
 /// A menu row with an optional shortcut hint on the right.
@@ -207,7 +208,7 @@ pub fn toolbar_button_tx<S: 'static>(
         .fill(if active { theme::surface1() } else { rune::Color::TRANSPARENT })
         .opacity(if enabled { 1.0 } else { 0.35 })
         .child(content);
-    if enabled { b.hover(theme::surface0()).on_press_tx(on_press) } else { b }
+    if enabled { b.hover(theme::surface0()).press_scale(0.94).on_press_tx(on_press) } else { b }
 }
 
 /// [`menu_item`] whose handler also gets the `Tx`.
