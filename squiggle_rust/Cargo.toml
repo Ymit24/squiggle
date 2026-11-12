@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["crates/squiggle-core", "crates/squiggle-app"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+version = "0.2.33"
+
+[workspace.dependencies]
+rune = { git = "https://github.com/anomalyco/rune", rev = "4b9d4f9964a35909be798fa92a1b1a531009a31d" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Rune patches these two crates; a dependency's [patch] does not apply to the workspace that
+# depends on it, so the app repeats them (taken from the same rune revision).
+[patch.crates-io]
+wgpu-hal = { git = "https://github.com/anomalyco/rune", rev = "4b9d4f9964a35909be798fa92a1b1a531009a31d" }
+winit = { git = "https://github.com/anomalyco/rune", rev = "4b9d4f9964a35909be798fa92a1b1a531009a31d" }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 1
