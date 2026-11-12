@@ -124,4 +124,23 @@ mod tests {
         let feature = rt.state.ctx.document.nodes()[0].as_feature().unwrap();
         assert_eq!(feature.kind.label(), Some("hi"));
     }
+
+    #[test]
+    fn holding_b_opens_the_brush_wheel_for_drawing_tools() {
+        use crate::inspector::brush_wheel::host;
+        let mut rt = app("wheel");
+        let key = |k: &str| rune::KeyEvent { key: rune::Key::Text(k.into()), mods: rune::Mods::default() };
+        rt.key(key("b"));
+        rt.frame(0.0);
+        assert!(!host::is_open(&rt.state), "no wheel with the select tool");
+        rt.key(key("r"));
+        rt.pointer_move(500.0, 400.0);
+        rt.frame(0.0);
+        rt.key(key("b"));
+        rt.frame(0.0);
+        assert!(host::is_open(&rt.state));
+        rt.key_up(key("b"));
+        rt.frame(0.0);
+        assert!(!host::is_open(&rt.state));
+    }
 }

@@ -97,6 +97,7 @@ pub fn view(s: &State) -> El {
         .on_layout(|s: &mut State, r| s.ctx.viewport_size = Size::new(r[2] as f64, r[3] as f64))
         .on_pointer_move_local(|s: &mut State, p: PointerEvent, _tx: &mut Tx| {
             s.editor_ui.pointer = Point::new(p.x as f64, p.y as f64);
+            crate::inspector::brush_wheel::host::track_pointer(s, Some(s.editor_ui.pointer));
             let (w, cam, mods) = (world(s, p.x, p.y), s.ctx.camera, modifiers(s));
             ToolModel::on_pointer_hover(&mut s.ctx, w, &cam, mods);
         })

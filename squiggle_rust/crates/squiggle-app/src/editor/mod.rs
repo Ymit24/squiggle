@@ -34,6 +34,13 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
     el()
         .w_full()
         .h_full()
+        .on_key_up(|s: &mut State, e: &rune::KeyEvent, _tx| {
+            let released_b = e.key == rune::Key::Text("b".into());
+            if released_b && crate::inspector::brush_wheel::host::is_open(s) {
+                crate::inspector::brush_wheel::host::close(s, true);
+            }
+            released_b
+        })
         .child(crate::viewport::view(s))
         .child(text_overlay::view(s))
         .child(toolbar::view(s))
@@ -47,6 +54,23 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
 pub fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
     if s.page != crate::state::Page::Editor {
         return false;
+    }
+    use crate::inspector::{brush_wheel::host, close_menus};
+    if host::is_open(s) {
+        // The wheel is modal while B is held.
+        if e.key == rune::Key::Escape {
+            host::close(s, false);
+        }
+        return true;
+    }
+    if e.key == rune::Key::Text("b".into()) && !e.mods.cmd && !e.mods.ctrl {
+        let held = e.mods.shift || e.mods.alt;
+        if host::open(s, held) {
+            return true;
+        }
+    }
+    if e.key == rune::Key::Escape && close_menus(s) {
+        return true;
     }
     match shortcuts::command_for(e) {
         Some(cmd) => {
