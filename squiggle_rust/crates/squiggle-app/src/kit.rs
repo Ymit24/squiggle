@@ -98,6 +98,98 @@ pub fn menu_panel() -> El {
     floating_panel().w(metrics::MENU_WIDTH).padding(metrics::MENU_PADDING)
 }
 
+/// Port of `SquiggleButtonVariant` (`squiggle_button_style.dart`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ButtonVariant {
+    /// Light filled button with a bold label.
+    Primary,
+    /// Dark bordered button.
+    Secondary,
+    /// Filled danger-coloured button for destructive actions.
+    Danger,
+    /// Borderless button for quiet actions such as Cancel.
+    Ghost,
+}
+
+/// Standard Squiggle button (`SquiggleButton`). `glyph` is an optional leading text glyph;
+/// `compact` shows only the glyph in a square. A disabled button has no press handler.
+pub struct StyledButton {
+    pub key: String,
+    pub label: String,
+    pub glyph: Option<&'static str>,
+    pub variant: ButtonVariant,
+    pub compact: bool,
+    pub enabled: bool,
+}
+
+impl StyledButton {
+    pub fn new(key: impl Into<String>, label: impl Into<String>, variant: ButtonVariant) -> Self {
+        StyledButton { key: key.into(), label: label.into(), glyph: None, variant, compact: false, enabled: true }
+    }
+    pub fn glyph(mut self, glyph: &'static str) -> Self {
+        self.glyph = Some(glyph);
+        self
+    }
+    pub fn compact(mut self, compact: bool) -> Self {
+        self.compact = compact && self.glyph.is_some();
+        self
+    }
+    pub fn enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
+        self
+    }
+
+    pub fn build<S: 'static>(self, on_press: impl Fn(&mut S) + 'static) -> El {
+        let (fill, hover, fg, weight, border) = match self.variant {
+            ButtonVariant::Primary => (theme::text(), theme::base().alpha(0.12), theme::base(), 700.0, None),
+            ButtonVariant::Secondary => (theme::surface0(), theme::text().alpha(0.06), theme::text(), 600.0, Some(theme::surface1())),
+            ButtonVariant::Danger => (theme::on_danger(), theme::base().alpha(0.12), rune::Color::WHITE, 700.0, None),
+            ButtonVariant::Ghost => (rune::Color::TRANSPARENT, theme::surface0(), theme::subtext(), 600.0, None),
+        };
+        let disabled = !self.enabled;
+        let (fill, fg) = match (disabled, self.variant) {
+            (false, _) => (fill, fg),
+            (true, ButtonVariant::Ghost) => (rune::Color::TRANSPARENT, theme::subtext().alpha(0.5)),
+            (true, _) => (theme::surface0(), theme::subtext().alpha(0.5)),
+        };
+        let font = TextStyle::new(13.5, weight);
+        let mut b = row()
+            .key(self.key)
+            .role("button")
+            .label(self.label.clone())
+            .h(metrics::BUTTON_HEIGHT)
+            .items_center()
+            .justify_center()
+            .gap(7.0)
+            .radius(metrics::BUTTON_RADIUS)
+            .fill(fill)
+            .disabled(disabled)
+            .focusable(!disabled);
+        b = if self.compact { b.w(metrics::BUTTON_HEIGHT) } else { b.px(metrics::BUTTON_PAD) };
+        if let Some(c) = border {
+            b = b.border(1.0, c);
+        }
+        if let Some(g) = self.glyph {
+            b = b.child(text(g).font(TextStyle::new(16.0, 600.0)).color(fg));
+        }
+        if !self.compact {
+            b = b.child(text(self.label).font(font).color(fg));
+        }
+        if disabled { b } else { b.hover(hover).on_press(on_press) }
+    }
+}
+
+/// Small translucent label chip (`SquigglePill`), e.g. the "Current" badge.
+pub fn pill(label: &str) -> El {
+    row()
+        .px(9.0)
+        .py(5.0)
+        .radius(999.0)
+        .fill(rune::Color::BLACK.alpha(0.55))
+        .border(1.0, theme::accent().alpha(0.5))
+        .child(text(label).font(TextStyle::new(10.5, 700.0)).color(theme::text()))
+}
+
 /// [`toolbar_button`] whose handler also gets the `Tx` (for clipboard and dialogs).
 pub fn toolbar_button_tx<S: 'static>(
     key: &str,

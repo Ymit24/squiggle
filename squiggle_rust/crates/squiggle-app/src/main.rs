@@ -1,10 +1,13 @@
+mod dialog;
 mod editor;
 mod images;
 mod inspector;
 mod kit;
 mod library;
+mod menu;
 mod render;
 mod state;
+mod text_field;
 mod theme;
 mod viewport;
 
@@ -18,8 +21,17 @@ fn view(s: &State, cx: &mut Cx<State>) -> El {
     }
 }
 
+/// Window-level keys: each page handles its own shortcuts.
+fn on_key(s: &mut State, e: &rune::KeyEvent, tx: &mut rune::Tx) -> bool {
+    editor::on_key(s, e, tx) || library::on_key(s, e, tx)
+}
+
 fn main() {
-    let spec = AppSpec { on_key: Some(editor::on_key), setup: Some(|s, waker| s.images_store = images::ImageStore::new(waker)), ..AppSpec::new("Squiggle", (1100.0, 760.0), || State::new(State::default_dir()), view) };
+    let spec = AppSpec {
+        on_key: Some(on_key),
+        setup: Some(|s, waker| s.images_store = images::ImageStore::new(waker)),
+        ..AppSpec::new("Squiggle", (1100.0, 760.0), || State { page: Page::Library, ..State::new(State::default_dir()) }, view)
+    };
     rune::App::new(spec)
         .on_modifiers(|s, mods, tx| {
             s.editor_ui.mods = squiggle_core::tools::tool::Modifiers { shift: mods.shift, alt: mods.alt, command: mods.cmd };
@@ -41,7 +53,7 @@ mod tests {
 
     fn app(name: &str) -> Runtime<State> {
         let mut rt = Runtime::new(State::new(temp_dir(name)), view, (1100.0, 760.0), Env::new(true, 1.0));
-        rt.on_key = Some(editor::on_key);
+        rt.on_key = Some(on_key);
         rt.frame(0.0);
         rt
     }

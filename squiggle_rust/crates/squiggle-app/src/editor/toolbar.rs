@@ -67,10 +67,15 @@ fn command_button(key: &str, cmd: Command, enabled: bool, content: El) -> El {
 pub fn view(s: &State) -> El {
     let locked = s.ctx.tool.is_locked();
     let enabled = |c| is_enabled(s, c);
+    let library = kit::toolbar_button("library", false, true, text("☰").font(kit::BODY).color(ink(false)), |s: &mut State| {
+        crate::library::open_library(s);
+    });
     let bar = row()
         .items_center()
         .gap(metrics::TOOLBAR_GAP)
         .padding(metrics::TOOLBAR_PADDING)
+        .child(library)
+        .child(kit::divider_vertical())
         .child(kit::toolbar_button("lock", locked, true, lock_glyph(locked, ink(locked)), |s: &mut State| s.ctx.tool.toggle_lock()))
         .child(kit::divider_vertical())
         .child(tool_button(s, ToolId::Select, "tool-select"))

@@ -32,6 +32,9 @@ pub fn text() -> Color {
 pub fn accent() -> Color {
     rune_color(c::ACCENT)
 }
+pub fn on_danger() -> Color {
+    rune_color(c::ON_DANGER)
+}
 pub fn danger() -> Color {
     rune_color(c::DANGER)
 }
