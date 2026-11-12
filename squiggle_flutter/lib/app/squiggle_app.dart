@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/feedback/feedback_service.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -39,15 +40,20 @@ class SquiggleApp extends StatelessWidget {
           dispose: (database) => database.close(),
           child: RepositoryProvider(
             create: (context) => database.documentsDao,
-            child: ChangeNotifierProvider(
-              create: (context) => documentList,
+            child: RepositoryProvider(
+              create: (context) =>
+                  FeedbackService(appStateDao: database.appStateDao),
+              dispose: (service) => service.close(),
               child: ChangeNotifierProvider(
-                create: (context) => activeDocument,
-                child: MaterialApp.router(
-                  title: 'Squiggle',
-                  theme: SquiggleThemeData.dark(),
-                  debugShowCheckedModeBanner: false,
-                  routerConfig: appRouter.config(),
+                create: (context) => documentList,
+                child: ChangeNotifierProvider(
+                  create: (context) => activeDocument,
+                  child: MaterialApp.router(
+                    title: 'Squiggle',
+                    theme: SquiggleThemeData.dark(),
+                    debugShowCheckedModeBanner: false,
+                    routerConfig: appRouter.config(),
+                  ),
                 ),
               ),
             ),

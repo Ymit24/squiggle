@@ -51,6 +51,10 @@ class SquiggleTextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.compact = false,
+    this.obscureText = false,
+    this.maxLength,
+    this.minLines,
+    this.maxLines = 1,
   });
 
   final TextEditingController controller;
@@ -67,6 +71,12 @@ class SquiggleTextField extends StatelessWidget {
 
   /// Uses the library header's smaller text, padding, and focus ring.
   final bool compact;
+  final bool obscureText;
+
+  /// Caps input and shows a character counter.
+  final int? maxLength;
+  final int? minLines;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +95,10 @@ class SquiggleTextField extends StatelessWidget {
       onTapOutside: onTapOutside == null ? null : (_) => onTapOutside!(),
       onChanged: onChanged,
       onSubmitted: onSubmitted,
+      obscureText: obscureText,
+      maxLength: maxLength,
+      minLines: minLines,
+      maxLines: maxLines,
       style: theme.typography.inputText.copyWith(fontSize: fieldStyle.fontSize),
       decoration: InputDecoration(
         hintText: hintText,

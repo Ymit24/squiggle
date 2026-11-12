@@ -1,0 +1,18 @@
+# systemd *user* unit. Install with:
+#   install -Dm644 deploy/squiggle-feedback-api.service ~/.config/systemd/user/squiggle-feedback-api.service
+#   systemctl --user daemon-reload && systemctl --user enable --now squiggle-feedback-api
+[Unit]
+Description=Squiggle feedback API (in-app reports -> GitHub issues)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/squiggle-feedback-api/env
+ExecStart=%h/.local/bin/squiggle-feedback-api
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+MemoryMax=128M
+
+[Install]
+WantedBy=default.target

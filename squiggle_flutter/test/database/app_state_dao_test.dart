@@ -17,5 +17,15 @@ void main() {
 
       expect(await database.appStateDao.activeDocumentId(), 'second');
     });
+
+    test('feedback connection is null until both parts are set', () async {
+      final dao = database.appStateDao;
+      expect(await dao.feedbackConnection(), isNull);
+
+      await dao.setFeedbackConnection(url: 'https://a', token: 't1');
+      await dao.setFeedbackConnection(url: 'https://b', token: 't2');
+
+      expect(await dao.feedbackConnection(), (url: 'https://b', token: 't2'));
+    });
   });
 }

@@ -52,6 +52,7 @@ dependencies:
   drift: ^2.35.2
   path: ^1.9.1
   sqlite3: ^3.5.2
+  http: ^1.6.0
 dev_dependencies:
   irondash_message_channel: ^0.7.0
   super_native_extensions: ^0.9.1
