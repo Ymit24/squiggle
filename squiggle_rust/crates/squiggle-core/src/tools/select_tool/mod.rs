@@ -31,7 +31,7 @@ use crate::editor::context::EditorContext;
 use crate::geom::Point;
 use crate::ids::NodeId;
 use crate::paint::Painter;
-use crate::tools::tool::{EditorCursor, Key, KeyInput, Modifiers, Tool};
+use crate::tools::tool::{EditorCursor, Key, KeyInput, Modifiers, Tool, ToolId};
 use idle_interaction_state::IdleInteractionState;
 use interaction_state::{Cx, InteractionState, Ptr, Transition, Txn};
 use std::time::Duration;
@@ -109,6 +109,10 @@ impl SelectTool {
 }
 
 impl Tool for SelectTool {
+    fn id(&self) -> ToolId {
+        ToolId::Select
+    }
+
     fn on_pointer_down(&mut self, ctx: &mut EditorContext, world: Point, _camera: &Camera, mods: Modifiers) -> bool {
         self.pointer(ctx, PointerPhase::Down, world, mods);
         true
