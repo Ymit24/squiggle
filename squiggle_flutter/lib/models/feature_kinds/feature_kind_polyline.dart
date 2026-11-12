@@ -191,7 +191,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   @override
-  Iterable<InspectorField> buildInspectorFields() {
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [
       InspectorColorField(
         fieldKey: 'strokeColor',

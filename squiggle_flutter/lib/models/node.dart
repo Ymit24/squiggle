@@ -62,6 +62,8 @@ abstract class Node {
 
   bool hitTest(Offset worldPoint);
 
+  /// Resizes this node to [bounds]. Nodes whose size follows their contents
+  /// may end up near [bounds] rather than exactly on it.
   void resize(Rect bounds);
 
   Offset center() => localBounds().center;

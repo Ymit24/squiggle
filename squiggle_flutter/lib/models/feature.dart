@@ -12,6 +12,7 @@ export 'line_end_cap.dart';
 export 'stroke_type.dart';
 export 'stroke_width_preset.dart';
 export 'text_alignment.dart';
+export 'text_sizing.dart';
 
 /// A drawable shape or label in world space.
 class Feature extends Node {

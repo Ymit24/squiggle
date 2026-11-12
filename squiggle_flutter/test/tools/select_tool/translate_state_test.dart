@@ -46,9 +46,8 @@ void main() {
     test('notifies the editor context when moving nodes', () async {
       harness.pointerDown(const Offset(50, 50));
       final changes = <void>[];
-      final subscription = notifierChangesStream(
-        harness.context,
-      ).listen((_) => changes.add(null));
+      final subscription = notifierChangesStream(harness.context)
+          .listen((_) => changes.add(null));
 
       harness.pointerMove(const Offset(60, 60));
       await Future<void>.delayed(Duration.zero);

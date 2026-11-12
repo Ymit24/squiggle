@@ -1,14 +1,16 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
-
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/resize_handle.dart';
+import 'package:squiggle_flutter/tools/select_tool/resize_policy.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_resize_handle.dart';
 
 class ResizeState extends SelectInteractionState {
   ResizeState({
@@ -22,45 +24,20 @@ class ResizeState extends SelectInteractionState {
   final ResizeHandle _handle;
   final Offset _resizeOffset;
   late final Rect _initialBounds = _handle.node.localBounds();
+  late final ResizePolicy _policy = ResizePolicy.of(_handle.node);
 
-  bool get _resizesHorizontally =>
-      _handle.handle == SelectionResizeHandle.left ||
-      _handle.handle == SelectionResizeHandle.right;
+  /// The node as it was before the drag. Every move restores it first, so a
+  /// resize is always computed from the initial state and cannot compound.
+  late final data.Node _snapshot;
 
-  bool get _resizesVertically =>
-      _handle.handle == SelectionResizeHandle.top ||
-      _handle.handle == SelectionResizeHandle.bottom;
-
-  bool get _movesLeft => switch (_handle.handle) {
-    SelectionResizeHandle.topLeft ||
-    SelectionResizeHandle.left ||
-    SelectionResizeHandle.bottomLeft => true,
-    _ => false,
-  };
-
-  bool get _movesRight => switch (_handle.handle) {
-    SelectionResizeHandle.topRight ||
-    SelectionResizeHandle.right ||
-    SelectionResizeHandle.bottomRight => true,
-    _ => false,
-  };
-
-  bool get _movesTop => switch (_handle.handle) {
-    SelectionResizeHandle.topLeft ||
-    SelectionResizeHandle.top ||
-    SelectionResizeHandle.topRight => true,
-    _ => false,
-  };
-
-  bool get _movesBottom => switch (_handle.handle) {
-    SelectionResizeHandle.bottomLeft ||
-    SelectionResizeHandle.bottom ||
-    SelectionResizeHandle.bottomRight => true,
-    _ => false,
-  };
+  bool get _movesLeft => _handle.handle.movesLeft;
+  bool get _movesRight => _handle.handle.movesRight;
+  bool get _movesTop => _handle.handle.movesTop;
+  bool get _movesBottom => _handle.handle.movesBottom;
 
   @override
   void onEnter(EditorContext context) {
+    _snapshot = _handle.node.toDataModel();
     parent.beginTransaction(context, 'Resize', [_handle.node]);
   }
 
@@ -83,10 +60,14 @@ class ResizeState extends SelectInteractionState {
   }) {
     final newBounds = getNewBounds(
       worldPosition - _resizeOffset,
-      lockAspectRatio: isShiftPressed,
+      lockAspectRatio:
+          isShiftPressed ||
+          (_policy.lockCornerAspect && _handle.handle.isCorner),
       symmetric: isAltPressed,
     );
-    _handle.node.resize(newBounds);
+    _handle.node
+      ..restoreFromDataModel(_snapshot)
+      ..resize(newBounds);
   }
 
   Rect getNewBounds(
@@ -114,39 +95,30 @@ class ResizeState extends SelectInteractionState {
   Rect _symmetricBounds(Offset worldPosition, bool lockAspectRatio) {
     final center = _initialBounds.center;
     if (lockAspectRatio) {
-      final isCorner = switch (_handle.handle) {
-        SelectionResizeHandle.topLeft ||
-        SelectionResizeHandle.topRight ||
-        SelectionResizeHandle.bottomLeft ||
-        SelectionResizeHandle.bottomRight => true,
-        _ => false,
-      };
       return symmetricRectWithAspectRatio(
         center,
         worldPosition,
         _initialBounds.width / _initialBounds.height,
-        resizeHorizontal: isCorner || _resizesHorizontally,
-        resizeVertical: isCorner || _resizesVertically,
+        resizeHorizontal: _movesLeft || _movesRight,
+        resizeVertical: _movesTop || _movesBottom,
       );
     }
 
-    return switch (_handle.handle) {
-      SelectionResizeHandle.topLeft ||
-      SelectionResizeHandle.topRight ||
-      SelectionResizeHandle.bottomLeft ||
-      SelectionResizeHandle.bottomRight => Rect.fromCenter(
+    if (_handle.handle.isCorner) {
+      return Rect.fromCenter(
         center: center,
         width: (worldPosition.dx - center.dx).abs() * 2,
         height: (worldPosition.dy - center.dy).abs() * 2,
-      ),
+      );
+    }
+    return switch (_handle.handle) {
       SelectionResizeHandle.top ||
       SelectionResizeHandle.bottom => Rect.fromCenter(
         center: center,
         width: _initialBounds.width,
         height: (worldPosition.dy - center.dy).abs() * 2,
       ),
-      SelectionResizeHandle.left ||
-      SelectionResizeHandle.right => Rect.fromCenter(
+      _ => Rect.fromCenter(
         center: center,
         width: (worldPosition.dx - center.dx).abs() * 2,
         height: _initialBounds.height,

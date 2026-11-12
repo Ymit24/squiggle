@@ -64,7 +64,7 @@ final class FeatureKindImage extends FeatureKind
   }
 
   @override
-  Iterable<InspectorField> buildInspectorFields() => [
+  Iterable<InspectorField> buildInspectorFields({Feature? feature}) => [
     InspectorColorField(
       fieldKey: 'strokeColor',
       label: 'Stroke Color',

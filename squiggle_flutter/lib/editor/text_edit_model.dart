@@ -37,14 +37,20 @@ final class EditTextEditSession extends TextEditSession {
   NodeId get featureId => feature.id;
 }
 
+/// Text being typed into a feature that is not in the document yet.
+///
+/// [draft] is styled and placed once when the edit starts; committing sets its
+/// label and inserts it, so what the editor showed is what gets created.
 final class CreateTextEditSession extends TextEditSession {
-  const CreateTextEditSession({
-    required this.worldOrigin,
-    required super.initialContents,
-    required super.layout,
-  });
+  CreateTextEditSession({required this.draft})
+    : super(
+        initialContents: '',
+        layout: (draft.kind as FeatureKindText).labelLayout(draft),
+      );
 
-  final Offset worldOrigin;
+  final Feature draft;
+
+  FeatureKindText get kind => draft.kind as FeatureKindText;
 }
 
 /// Observable state of the active text edit session, if any.

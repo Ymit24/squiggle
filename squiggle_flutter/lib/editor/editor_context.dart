@@ -145,17 +145,19 @@ class EditorContext extends ChangeNotifier {
   void startTextEdit(TextEditSession session) => _textEdit.begin(session);
 
   /// Opens the inline editor for new text; the document is untouched until it
-  /// commits non-empty contents.
-  void startCreateText(Offset worldOrigin) => startTextEdit(
-    CreateTextEditSession(
-      worldOrigin: worldOrigin,
-      initialContents: '',
-      layout: newTextLayoutAt(
-        worldOrigin,
-        configureKind: brushes.active.applyTo,
-      ),
-    ),
-  );
+  /// commits non-empty contents. A [fixedWidth] makes it a wrapping box with
+  /// [worldOrigin] as its top-left instead of an auto-sized label.
+  void startCreateText(Offset worldOrigin, {double? fixedWidth}) =>
+      startTextEdit(
+        CreateTextEditSession(
+          draft: newTextFeatureAt(
+            worldOrigin,
+            '',
+            fixedWidth: fixedWidth,
+            configureKind: brushes.active.applyTo,
+          ),
+        ),
+      );
 
   void endTextEdit() => _textEdit.end();
 

@@ -5,7 +5,6 @@ import 'package:squiggle_flutter/editor/text_edit_model.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/text_feature_placement.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
@@ -50,12 +49,82 @@ void main() {
 
         final openState = context.textEdit.session as CreateTextEditSession;
 
-        expect(openState.worldOrigin, click);
+        expect(openState.draft.origin, click);
         expect(openState.initialContents, '');
         expect(openState.layout.bounds.topLeft, click);
-        expect(openState.layout.bounds.width, defaultNewTextWidth);
+        expect(openState.layout.bounds.width, lessThan(30));
       },
     );
+
+    test('a mostly vertical drag creates auto-width text', () {
+      context.setTool(CreateTextTool());
+      const start = Offset(50, 75);
+
+      context.tool.onPointerDown(
+        context,
+        start,
+        camera,
+        isShiftPressed: false,
+        isAltPressed: false,
+      );
+      context.tool.onPointerMove(
+        context,
+        start + const Offset(0.3, 80),
+        camera,
+        isShiftPressed: false,
+        isAltPressed: false,
+      );
+      context.tool.onPointerUp(
+        context,
+        start + const Offset(0.3, 80),
+        camera,
+        isShiftPressed: false,
+        isAltPressed: false,
+      );
+
+      final session = context.textEdit.session as CreateTextEditSession;
+      expect((session.draft.kind as FeatureKindText).sizing, TextSizing.auto);
+    });
+
+    test('dragging sideways creates fixed-width text at the dragged width', () {
+      context.setTool(CreateTextTool());
+      const start = Offset(50, 75);
+      const end = Offset(250, 90);
+
+      for (final point in [start, end]) {
+        context.tool.onPointerMove(
+          context,
+          point,
+          camera,
+          isShiftPressed: false,
+          isAltPressed: false,
+        );
+        if (point == start) {
+          context.tool.onPointerDown(
+            context,
+            point,
+            camera,
+            isShiftPressed: false,
+            isAltPressed: false,
+          );
+        }
+      }
+      context.tool.onPointerUp(
+        context,
+        end,
+        camera,
+        isShiftPressed: false,
+        isAltPressed: false,
+      );
+
+      final session = context.textEdit.session as CreateTextEditSession;
+      expect(
+        (session.draft.kind as FeatureKindText).sizing,
+        TextSizing.fixedWidth,
+      );
+      expect(session.draft.origin, start);
+      expect(session.draft.width, 200);
+    });
 
     test(
       'locked text tool stays ready after submit and empty submit',
@@ -74,7 +143,7 @@ void main() {
             isAltPressed: false,
           );
           final open = context.textEdit.session as CreateTextEditSession;
-          expect(open.worldOrigin, click);
+          expect(open.draft.origin, click);
           expect(context.tool.activeTool, same(textTool));
 
           commitTextEdit(context, contents: submit ? 'hello' : '');

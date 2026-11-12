@@ -48,9 +48,8 @@ void main() {
 
     test('notifies the tool while marquee selecting', () async {
       final repaints = <void>[];
-      final subscription = notifierChangesStream(
-        harness.context.tool,
-      ).listen((_) => repaints.add(null));
+      final subscription = notifierChangesStream(harness.context.tool)
+          .listen((_) => repaints.add(null));
 
       harness.pointerDown(const Offset(500, 500));
       harness.pointerMove(const Offset(600, 600));

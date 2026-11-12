@@ -24,34 +24,30 @@ void main() {
     });
   });
 
-  group('fontSizeFillingBounds', () {
-    test('finds a font size that fits the requested bounds', () {
-      final fontSize = fontSizeFillingBounds(
-        'one two three four five',
-        width: 120,
-        height: 60,
+  group('measureTextIntrinsic', () {
+    test('does not wrap and fits the longest line', () {
+      final single = measureTextIntrinsic('one two three four', fontSize: 24);
+      final longer = measureTextIntrinsic(
+        'one two three four\nshort',
+        fontSize: 24,
       );
 
-      expect(fontSize, isNotNull);
+      expect(longer.width, single.width);
+      expect(longer.height, greaterThan(single.height));
       expect(
         measureText(
-          'one two three four five',
-          width: 120,
-          fontSize: fontSize!,
+          'one two three four',
+          width: single.width,
+          fontSize: 24,
         ).height,
-        lessThanOrEqualTo(60),
+        single.height,
       );
     });
 
-    test('returns null when the minimum font size cannot fit', () {
-      expect(fontSizeFillingBounds('text', width: 100, height: 0), isNull);
-    });
+    test('width is a whole number of units', () {
+      final size = measureTextIntrinsic('squiggle', fontSize: 23.7);
 
-    test('does not exceed the maximum font size', () {
-      expect(
-        fontSizeFillingBounds('', width: 100, height: 2000),
-        kMaxTextFontSize,
-      );
+      expect(size.width, size.width.ceilToDouble());
     });
   });
 

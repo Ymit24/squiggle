@@ -169,6 +169,7 @@ data.Feature _rawFeature(String type) {
   } else if (type == 'text') {
     content.addAll({
       'contents': 'text',
+      'sizing': 'auto',
       'fontSize': 16.0,
       'horizontalAlignment': 'left',
       'verticalAlignment': 'top',

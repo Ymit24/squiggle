@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/inspector/widgets/brush_picker.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/drawing_inspector_fields.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_fields.dart';
 import 'package:squiggle_flutter/editor/inspector/widgets/inspector_layout_actions.dart';
+import 'package:squiggle_flutter/editor/inspector/widgets/text_auto_width_action.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
@@ -59,6 +60,11 @@ class InspectorPanel extends StatelessWidget {
                       ),
                     if (selectedFeatures.isNotEmpty)
                       InspectorFields(
+                        editorContext: editorContext,
+                        features: selectedFeatures,
+                      ),
+                    if (TextAutoWidthAction.appliesTo(selectedFeatures))
+                      TextAutoWidthAction(
                         editorContext: editorContext,
                         features: selectedFeatures,
                       ),

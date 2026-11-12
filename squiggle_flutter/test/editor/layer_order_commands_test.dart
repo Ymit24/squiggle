@@ -70,9 +70,9 @@ void main() {
     final context = makeContext();
     final children = context.document.nodes.toList();
     context.document.removeAll(children.map((node) => node.id));
-    final group =
-        context.document.addNode(Group(origin: Offset.zero, children: children))
-            as Group;
+    final group = context.document.addNode(
+      Group(origin: Offset.zero, children: children),
+    ) as Group;
     context.selection.setSelection([children.first.id]);
     reorderSelectedNodes(context, LayerOrder.front);
     expect(group.children.last.id, children.first.id);
