@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_tooltip.dart';
 
 class Button extends StatefulWidget {
   const Button({
@@ -10,6 +11,9 @@ class Button extends StatefulWidget {
     this.icon,
     this.label,
     this.hotkey,
+    required this.tooltip,
+    this.shortcuts = const [],
+    this.isToggle = false,
     required this.isActive,
     required this.onPressed,
   }) : assert(iconAsset != null || icon != null || label != null);
@@ -17,7 +21,19 @@ class Button extends StatefulWidget {
   final String? iconAsset;
   final IconData? icon;
   final String? label;
+
+  /// Short key shown in the button's corner.
   final String? hotkey;
+
+  /// Name of the control, shown on hover and used as its accessible label.
+  final String tooltip;
+
+  /// Keyboard shortcuts listed in the tooltip, in command-style notation.
+  final List<String> shortcuts;
+
+  /// Whether [isActive] is an on/off state (exposed as toggled) rather than
+  /// the current tool (exposed as selected).
+  final bool isToggle;
   final bool isActive;
   final VoidCallback? onPressed;
 
@@ -31,6 +47,21 @@ class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
+    return Semantics(
+      button: true,
+      enabled: widget.onPressed != null,
+      label: widget.tooltip,
+      toggled: widget.isToggle ? widget.isActive : null,
+      selected: widget.isToggle ? null : widget.isActive,
+      child: SquiggleTooltip(
+        label: widget.tooltip,
+        shortcuts: widget.shortcuts,
+        child: _buildButton(theme),
+      ),
+    );
+  }
+
+  Widget _buildButton(SquiggleTheme theme) {
     final spacing = theme.spacing;
     final isEnabled = widget.onPressed != null;
     return MouseRegion(
@@ -51,12 +82,17 @@ class _ButtonState extends State<Button> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Center(child: _buttonContent(theme)),
+                Center(child: ExcludeSemantics(child: _buttonContent(theme))),
                 if (widget.hotkey != null)
                   Positioned(
                     right: 3,
                     bottom: 2,
-                    child: Text(widget.hotkey!, style: theme.typography.hotkey),
+                    child: ExcludeSemantics(
+                      child: Text(
+                        widget.hotkey!,
+                        style: theme.typography.hotkey,
+                      ),
+                    ),
                   ),
               ],
             ),

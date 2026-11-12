@@ -17,6 +17,12 @@ class SquiggleDecorations {
     borderRadius: BorderRadius.circular(radii.floatingPanel),
   );
 
+  BoxDecoration tooltip() => BoxDecoration(
+    color: colors.mantle,
+    border: Border.all(color: colors.surface1),
+    borderRadius: BorderRadius.circular(radii.button),
+  );
+
   BoxDecoration toolbarButton({
     required bool isActive,
     required bool isHovering,
