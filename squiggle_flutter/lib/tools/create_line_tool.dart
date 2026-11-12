@@ -12,6 +12,7 @@ import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
 import 'package:squiggle_flutter/tools/line_end_snapper.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
@@ -76,15 +77,14 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
+    ends.placeFreely = modifiers.command;
     _activeInteractionState.onPointerDown(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     return true;
   }
@@ -94,15 +94,14 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
+    ends.placeFreely = modifiers.command;
     _activeInteractionState.onPointerMove(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     return true;
   }
@@ -112,15 +111,14 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
+    ends.placeFreely = modifiers.command;
     _activeInteractionState.onPointerUp(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     return true;
   }
@@ -140,15 +138,14 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
+    ends.placeFreely = modifiers.command;
     _activeInteractionState.onPointerHover(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     return true;
   }

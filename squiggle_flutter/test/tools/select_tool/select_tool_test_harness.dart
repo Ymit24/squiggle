@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 enum SelectionEdge { top, right, bottom, left }
@@ -44,33 +45,45 @@ class SelectToolTestHarness {
     ]),
   );
 
-  void pointerDown(Offset world, {bool shift = false, bool alt = false}) {
+  void pointerDown(
+    Offset world, {
+    bool shift = false,
+    bool alt = false,
+    bool command = false,
+  }) {
     context.tool.onPointerDown(
       context,
       world,
       camera,
-      isShiftPressed: shift,
-      isAltPressed: alt,
+      modifiers: PointerModifiers(shift: shift, alt: alt, command: command),
     );
   }
 
-  void pointerMove(Offset world, {bool shift = false, bool alt = false}) {
+  void pointerMove(
+    Offset world, {
+    bool shift = false,
+    bool alt = false,
+    bool command = false,
+  }) {
     context.tool.onPointerMove(
       context,
       world,
       camera,
-      isShiftPressed: shift,
-      isAltPressed: alt,
+      modifiers: PointerModifiers(shift: shift, alt: alt, command: command),
     );
   }
 
-  void pointerUp(Offset world, {bool shift = false, bool alt = false}) {
+  void pointerUp(
+    Offset world, {
+    bool shift = false,
+    bool alt = false,
+    bool command = false,
+  }) {
     context.tool.onPointerUp(
       context,
       world,
       camera,
-      isShiftPressed: shift,
-      isAltPressed: alt,
+      modifiers: PointerModifiers(shift: shift, alt: alt, command: command),
     );
   }
 

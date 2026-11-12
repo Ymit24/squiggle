@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/click_canvas_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/click_node_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/drag_polyline_handle_state.dart';
@@ -39,8 +40,7 @@ class IdleInteractionState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final target = getTargetUnderCursor(context, worldPosition);
     switch (target) {
@@ -70,7 +70,7 @@ class IdleInteractionState extends SelectInteractionState {
             start: worldPosition,
             chase: chaseNode,
             selectedNodes: selectedNodes.toList(),
-            isShiftPressed: isShiftPressed,
+            isShiftPressed: modifiers.shift,
           ),
           context,
         );

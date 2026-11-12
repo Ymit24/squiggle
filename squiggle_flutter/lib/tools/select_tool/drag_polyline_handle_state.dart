@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/bind_target.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/polyline_handle.dart';
@@ -42,16 +43,15 @@ class DragPolylineHandleState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final kind = _handle.feature.kind as FeatureKindPolyline;
     final target = _targetPosition(
       kind,
       worldPosition,
-      isShiftPressed: isShiftPressed,
+      isShiftPressed: modifiers.shift,
     );
-    _bindDraggedEnd(context, kind, target);
+    _bindDraggedEnd(context, kind, target, placeFreely: modifiers.command);
     kind.setPoint(_handle.feature, _handle.pointIndex, target);
   }
 
@@ -72,8 +72,7 @@ class DragPolylineHandleState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
   }
@@ -100,8 +99,9 @@ class DragPolylineHandleState extends SelectInteractionState {
   void _bindDraggedEnd(
     EditorContext context,
     FeatureKindPolyline kind,
-    Offset worldPosition,
-  ) {
+    Offset worldPosition, {
+    required bool placeFreely,
+  }) {
     final index = _handle.pointIndex;
     final isStart = index == 0;
     if (kind.localPoints.length < 2 ||
@@ -109,12 +109,14 @@ class DragPolylineHandleState extends SelectInteractionState {
       return;
     }
     final otherEnd = isStart ? kind.endBinding : kind.startBinding;
-    _bindTarget = bindTargetAt(
-      context,
-      worldPosition,
-      line: _handle.feature,
-      exclude: otherEnd?.targetId,
-    );
+    _bindTarget = placeFreely
+        ? null
+        : bindTargetAt(
+            context,
+            worldPosition,
+            line: _handle.feature,
+            exclude: otherEnd?.targetId,
+          );
     final binding = switch (_bindTarget) {
       final target? => NodeBinding(target.id),
       null => null,

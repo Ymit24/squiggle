@@ -29,12 +29,12 @@ void main() {
 
   EditorContext context() => harness.context;
 
-  Feature drawLine(Offset from, Offset to) {
+  Feature drawLine(Offset from, Offset to, {bool command = false}) {
     context().setTool(CreateLineTool());
     harness
-      ..pointerDown(from)
-      ..pointerMove(to)
-      ..pointerUp(to);
+      ..pointerDown(from, command: command)
+      ..pointerMove(to, command: command)
+      ..pointerUp(to, command: command);
     return context().document.nodes.last as Feature;
   }
 
@@ -51,8 +51,11 @@ void main() {
     });
 
     test('Ctrl or Cmd places ends freely', () {
-      context().isCommandPressed = true;
-      final line = drawLine(const Offset(50, 50), const Offset(350, 50));
+      final line = drawLine(
+        const Offset(50, 50),
+        const Offset(350, 50),
+        command: true,
+      );
       expect(kindOf(line).bindings, isEmpty);
       expect(resolved(line).last, const Offset(350, 50));
     });
@@ -129,6 +132,15 @@ void main() {
         ..pointerUp(const Offset(330, 30));
       expect(kindOf(line).endBinding?.targetId, right.id);
       expect(resolved(line).last, const Offset(300, 50));
+    });
+
+    test('Ctrl or Cmd drops a dragged end without binding', () {
+      harness
+        ..pointerDown(const Offset(300, 50))
+        ..pointerMove(const Offset(330, 30), command: true)
+        ..pointerUp(const Offset(330, 30), command: true);
+      expect(kindOf(line).endBinding, isNull);
+      expect(resolved(line).last, const Offset(330, 30));
     });
 
     test('dragging an end onto the other end\'s shape does not bind', () {

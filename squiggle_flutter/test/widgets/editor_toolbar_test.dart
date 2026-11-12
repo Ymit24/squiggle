@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
@@ -131,29 +132,25 @@ void main() {
       editor,
       Offset.zero,
       editor.camera,
-      isShiftPressed: false,
-      isAltPressed: false,
+      modifiers: PointerModifiers.none,
     );
     editor.tool.onPointerMove(
       editor,
       Offset.zero,
       editor.camera,
-      isShiftPressed: false,
-      isAltPressed: false,
+      modifiers: PointerModifiers.none,
     );
     editor.tool.onPointerMove(
       editor,
       const Offset(100, 100),
       editor.camera,
-      isShiftPressed: false,
-      isAltPressed: false,
+      modifiers: PointerModifiers.none,
     );
     editor.tool.onPointerUp(
       editor,
       const Offset(100, 100),
       editor.camera,
-      isShiftPressed: false,
-      isAltPressed: false,
+      modifiers: PointerModifiers.none,
     );
     await tester.pump();
 

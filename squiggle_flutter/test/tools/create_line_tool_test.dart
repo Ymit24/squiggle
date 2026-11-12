@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
@@ -30,8 +31,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: shift,
-        isAltPressed: false,
+        modifiers: PointerModifiers(shift: shift),
       );
     }
 
@@ -40,8 +40,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: shift,
-        isAltPressed: false,
+        modifiers: PointerModifiers(shift: shift),
       );
     }
 
@@ -50,8 +49,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: shift,
-        isAltPressed: false,
+        modifiers: PointerModifiers(shift: shift),
       );
     }
 
@@ -60,8 +58,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: shift,
-        isAltPressed: false,
+        modifiers: PointerModifiers(shift: shift),
       );
     }
 

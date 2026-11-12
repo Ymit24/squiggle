@@ -14,14 +14,22 @@ class LineEndSnapper {
   Node? _start;
   Node? _end;
 
+  /// Whether ends skip snapping, from the latest pointer event's modifiers.
+  /// Kept so a line finished from the keyboard still honours it.
+  bool placeFreely = false;
+
   /// Shows where a line started at [worldPoint] would attach.
   void hover(EditorContext context, Offset worldPoint) {
-    _start = bindTargetAt(context, worldPoint);
+    _start = placeFreely ? null : bindTargetAt(context, worldPoint);
     _end = null;
   }
 
   /// [points] with the ends moved onto the nodes beneath them.
   List<Offset> snap(EditorContext context, List<Offset> points) {
+    if (placeFreely) {
+      clear();
+      return points;
+    }
     _start = bindTargetAt(context, points.first);
     _end = points.length < 2
         ? null

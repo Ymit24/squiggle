@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/duplicate_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
@@ -59,16 +60,15 @@ class ClickNodeState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     if (selectedNodes.isNotEmpty) {
       parent.beginTransaction(
         context,
-        isAltPressed ? 'Duplicate selection' : 'Move selection',
+        modifiers.alt ? 'Duplicate selection' : 'Move selection',
         selectedNodes,
       );
-      final state = isAltPressed
+      final state = modifiers.alt
           ? DuplicateState(
               parent: parent,
               start: _start,
@@ -84,13 +84,7 @@ class ClickNodeState extends SelectInteractionState {
               start: _start,
             );
       parent.transition(state, context);
-      state.onPointerMove(
-        context,
-        worldPosition,
-        camera,
-        isShiftPressed: isShiftPressed,
-        isAltPressed: isAltPressed,
-      );
+      state.onPointerMove(context, worldPosition, camera, modifiers: modifiers);
     }
   }
 
@@ -99,10 +93,9 @@ class ClickNodeState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
-    if (isShiftPressed) {
+    if (modifiers.shift) {
       if (_wasSelected) {
         context.selection.deselectNode(_chase.id);
       }

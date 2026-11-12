@@ -11,14 +11,13 @@ const kBindSnapDistance = 8.0;
 
 /// The top-level node a line end at [worldPoint] binds to, if any. A top-most
 /// hit that [line] may not bind to, or that is [exclude], blocks binding
-/// rather than reaching nodes beneath it. Holding Ctrl or Cmd disables binding.
+/// rather than reaching nodes beneath it.
 Node? bindTargetAt(
   EditorContext context,
   Offset worldPoint, {
   Feature? line,
   NodeId? exclude,
 }) {
-  if (context.isCommandPressed) return null;
   final slop = context.camera.screenLengthToWorldLength(kBindSnapDistance);
   for (final node in context.document.nodes.reversed) {
     if (identical(node, line) || !_snapsAt(node, worldPoint, slop)) continue;

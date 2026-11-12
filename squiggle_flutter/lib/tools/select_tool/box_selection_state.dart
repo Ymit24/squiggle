@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
@@ -33,8 +34,7 @@ class BoxSelectionState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _current = worldPosition;
 
@@ -44,7 +44,7 @@ class BoxSelectionState extends SelectInteractionState {
         .map((node) => node.id)
         .toList();
 
-    if (isShiftPressed) {
+    if (modifiers.shift) {
       for (final id in selectedNodeIds) {
         context.selection.selectNode(id);
       }
@@ -58,8 +58,7 @@ class BoxSelectionState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
   }

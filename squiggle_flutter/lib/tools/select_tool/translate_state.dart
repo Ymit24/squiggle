@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
 
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/duplicate_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
@@ -66,16 +67,15 @@ class TranslateState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final totalMotion = constrainedMoveDelta(
       _start,
       worldPosition,
-      constrainToAxis: isShiftPressed,
+      constrainToAxis: modifiers.shift,
     );
 
-    if (isAltPressed && !_hasDuplicated) {
+    if (modifiers.alt && !_hasDuplicated) {
       final state = DuplicateState(
         parent: parent,
         start: _start,
@@ -84,13 +84,7 @@ class TranslateState extends SelectInteractionState {
         selectionAlreadyMoved: true,
       );
       parent.transition(state, context);
-      state.onPointerMove(
-        context,
-        worldPosition,
-        camera,
-        isShiftPressed: isShiftPressed,
-        isAltPressed: isAltPressed,
-      );
+      state.onPointerMove(context, worldPosition, camera, modifiers: modifiers);
       return;
     }
 
@@ -104,8 +98,7 @@ class TranslateState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
   }

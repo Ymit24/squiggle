@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
@@ -40,8 +41,7 @@ void main() {
           context,
           click,
           camera,
-          isShiftPressed: false,
-          isAltPressed: false,
+          modifiers: PointerModifiers.none,
         );
 
         expect(context.document.nodes, isEmpty);
@@ -64,22 +64,19 @@ void main() {
         context,
         start,
         camera,
-        isShiftPressed: false,
-        isAltPressed: false,
+        modifiers: PointerModifiers.none,
       );
       context.tool.onPointerMove(
         context,
         start + const Offset(0.3, 80),
         camera,
-        isShiftPressed: false,
-        isAltPressed: false,
+        modifiers: PointerModifiers.none,
       );
       context.tool.onPointerUp(
         context,
         start + const Offset(0.3, 80),
         camera,
-        isShiftPressed: false,
-        isAltPressed: false,
+        modifiers: PointerModifiers.none,
       );
 
       final session = context.textEdit.session as CreateTextEditSession;
@@ -96,16 +93,14 @@ void main() {
           context,
           point,
           camera,
-          isShiftPressed: false,
-          isAltPressed: false,
+          modifiers: PointerModifiers.none,
         );
         if (point == start) {
           context.tool.onPointerDown(
             context,
             point,
             camera,
-            isShiftPressed: false,
-            isAltPressed: false,
+            modifiers: PointerModifiers.none,
           );
         }
       }
@@ -113,8 +108,7 @@ void main() {
         context,
         end,
         camera,
-        isShiftPressed: false,
-        isAltPressed: false,
+        modifiers: PointerModifiers.none,
       );
 
       final session = context.textEdit.session as CreateTextEditSession;
@@ -139,8 +133,7 @@ void main() {
             context,
             click,
             camera,
-            isShiftPressed: false,
-            isAltPressed: false,
+            modifiers: PointerModifiers.none,
           );
           final open = context.textEdit.session as CreateTextEditSession;
           expect(open.draft.origin, click);
@@ -162,8 +155,7 @@ void main() {
         context,
         const Offset(50, 75),
         camera,
-        isShiftPressed: false,
-        isAltPressed: false,
+        modifiers: PointerModifiers.none,
       );
 
       expect(context.document.nodes, isEmpty);

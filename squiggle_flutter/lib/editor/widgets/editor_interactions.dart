@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_record.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 class EditorInteractions extends StatefulWidget {
@@ -63,9 +64,14 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   Camera get _camera => widget.context.camera;
 
-  bool get _isShiftPressed => HardwareKeyboard.instance.isShiftPressed;
-
-  bool get _isAltPressed => HardwareKeyboard.instance.isAltPressed;
+  PointerModifiers get _modifiers {
+    final keyboard = HardwareKeyboard.instance;
+    return PointerModifiers(
+      shift: keyboard.isShiftPressed,
+      alt: keyboard.isAltPressed,
+      command: keyboard.isControlPressed || keyboard.isMetaPressed,
+    );
+  }
 
   @override
   void initState() {
@@ -162,23 +168,15 @@ class _EditorInteractionsState extends State<EditorInteractions>
     );
   }
 
-  void _syncCommandModifier() {
-    final keyboard = HardwareKeyboard.instance;
-    widget.context.isCommandPressed =
-        keyboard.isControlPressed || keyboard.isMetaPressed;
-  }
-
   void _onPointerHover(PointerHoverEvent event) {
     _pointerInCanvas = _canvasLocal(event);
     final world = _screenToWorld(event);
     if (world == null) return;
-    _syncCommandModifier();
     widget.context.tool.onPointerHover(
       widget.context,
       world,
       _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
+      modifiers: _modifiers,
     );
   }
 
@@ -258,13 +256,11 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _isPrimaryDragging = true;
     _pointerInCanvas = _canvasLocal(event);
 
-    _syncCommandModifier();
     widget.context.tool.onPointerDown(
       widget.context,
       world,
       _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
+      modifiers: _modifiers,
     );
   }
 
@@ -284,13 +280,11 @@ class _EditorInteractionsState extends State<EditorInteractions>
     final world = _screenToWorld(event);
     if (world == null) return;
 
-    _syncCommandModifier();
     widget.context.tool.onPointerMove(
       widget.context,
       world,
       _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
+      modifiers: _modifiers,
     );
   }
 
@@ -300,13 +294,11 @@ class _EditorInteractionsState extends State<EditorInteractions>
     final world = _screenToWorld(event);
     if (world == null) return;
 
-    _syncCommandModifier();
     widget.context.tool.onPointerUp(
       widget.context,
       world,
       _camera,
-      isShiftPressed: _isShiftPressed,
-      isAltPressed: _isAltPressed,
+      modifiers: _modifiers,
     );
   }
 
