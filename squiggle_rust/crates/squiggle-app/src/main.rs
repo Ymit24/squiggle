@@ -18,5 +18,10 @@ fn view(s: &State, cx: &mut Cx<State>) -> El {
 }
 
 fn main() {
-    rune::run(AppSpec::new("Squiggle", (1100.0, 760.0), || State::new(State::default_dir()), view));
+    rune::App::new(AppSpec::new("Squiggle", (1100.0, 760.0), || State::new(State::default_dir()), view))
+        .on_modifiers(|s, mods, tx| {
+            s.editor_ui.mods = squiggle_core::tools::tool::Modifiers { shift: mods.shift, alt: mods.alt, command: mods.cmd };
+            tx.live_only();
+        })
+        .run();
 }
