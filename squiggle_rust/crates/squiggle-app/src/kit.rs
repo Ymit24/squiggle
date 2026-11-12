@@ -97,3 +97,45 @@ pub fn menu_item<S: 'static>(key: &str, label: &str, shortcut: Option<&str>, ena
 pub fn menu_panel() -> El {
     floating_panel().w(metrics::MENU_WIDTH).padding(metrics::MENU_PADDING)
 }
+
+/// [`toolbar_button`] whose handler also gets the `Tx` (for clipboard and dialogs).
+pub fn toolbar_button_tx<S: 'static>(
+    key: &str,
+    active: bool,
+    enabled: bool,
+    content: El,
+    on_press: impl Fn(&mut S, &mut rune::Tx) + 'static,
+) -> El {
+    let b = row()
+        .key(key.to_owned())
+        .size(metrics::TOOLBAR_BUTTON, metrics::TOOLBAR_BUTTON)
+        .items_center()
+        .justify_center()
+        .radius(metrics::BUTTON_RADIUS)
+        .fill(if active { theme::surface1() } else { rune::Color::TRANSPARENT })
+        .opacity(if enabled { 1.0 } else { 0.35 })
+        .child(content);
+    if enabled { b.hover(theme::surface0()).on_press_tx(on_press) } else { b }
+}
+
+/// [`menu_item`] whose handler also gets the `Tx`.
+pub fn menu_item_tx<S: 'static>(
+    key: &str,
+    label: &str,
+    shortcut: Option<&str>,
+    enabled: bool,
+    on_press: impl Fn(&mut S, &mut rune::Tx) + 'static,
+) -> El {
+    let item = row()
+        .key(key.to_owned())
+        .w_full()
+        .h(metrics::MENU_ITEM_HEIGHT)
+        .padding(7.0)
+        .items_center()
+        .justify_between()
+        .radius(4.0)
+        .opacity(if enabled { 1.0 } else { 0.4 })
+        .child(text(label).font(BODY).color(theme::text()))
+        .child(text(shortcut.unwrap_or("")).font(LABEL).color(theme::subtext()));
+    if enabled { item.hover(theme::surface1()).on_press_tx(on_press) } else { item }
+}
