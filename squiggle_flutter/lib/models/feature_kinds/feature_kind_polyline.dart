@@ -1,7 +1,12 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable, StrokeTypeCapable {
+    with
+        StrokeColorCapable,
+        StrokeWidthCapable,
+        StrokeTypeCapable,
+        FillColorCapable,
+        FillTypeCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
@@ -9,6 +14,9 @@ final class FeatureKindPolyline extends FeatureKind
     this.strokeType = StrokeType.solid,
     this.startEndCap = LineEndCap.rounded,
     this.endEndCap = LineEndCap.rounded,
+    this.isClosed = false,
+    this.fillColor = defaultFeatureFillColor,
+    this.fillType = FillType.solid,
   }) : localPoints = List.of(localPoints);
 
   factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
@@ -22,6 +30,11 @@ final class FeatureKindPolyline extends FeatureKind
         strokeType: _strokeTypeFromDataModel(content),
         startEndCap: _endCapFromDataModel(content, 'startEndCap'),
         endEndCap: _endCapFromDataModel(content, 'endEndCap'),
+        isClosed: content['isClosed'] as bool? ?? false,
+        fillColor: content.containsKey('fillColor')
+            ? _colorFromDataModel(content, 'fillColor')
+            : defaultFeatureFillColor,
+        fillType: _fillTypeFromDataModel(content),
       );
 
   List<Offset> localPoints;
@@ -36,14 +49,29 @@ final class FeatureKindPolyline extends FeatureKind
   LineEndCap startEndCap;
   LineEndCap endEndCap;
 
+  /// Joins the last point back to the first and fills the enclosed area.
+  /// The closing edge is implied, so [localPoints] never repeats the start.
+  bool isClosed;
+
+  @override
+  Color fillColor;
+
+  @override
+  FillType fillType;
+
+  /// Closing needs at least a triangle to enclose any area.
+  bool get canClose => localPoints.length >= 3;
+
+  bool get _hasArrows =>
+      !isClosed &&
+      (startEndCap == LineEndCap.arrow || endEndCap == LineEndCap.arrow);
+
   double get _hitRadius => strokeWidth / 2;
 
   double get _selectionTolerance => _hitRadius + kPolylineHitSlop;
 
   double get _boundsPadding {
-    if (startEndCap != LineEndCap.arrow && endEndCap != LineEndCap.arrow) {
-      return _hitRadius;
-    }
+    if (!_hasArrows) return _hitRadius;
     return math.max(
       _hitRadius,
       math.max(5.0, strokeWidth * 1.5) + _hitRadius / 2,
@@ -63,6 +91,9 @@ final class FeatureKindPolyline extends FeatureKind
     'strokeType': strokeType.name,
     'startEndCap': startEndCap.name,
     'endEndCap': endEndCap.name,
+    'isClosed': isClosed,
+    'fillColor': fillColor.toARGB32(),
+    'fillType': fillType.name,
   };
 
   @override
@@ -73,6 +104,9 @@ final class FeatureKindPolyline extends FeatureKind
     strokeType: strokeType,
     startEndCap: startEndCap,
     endEndCap: endEndCap,
+    isClosed: isClosed,
+    fillColor: fillColor,
+    fillType: fillType,
   );
 
   void setGeometry(
@@ -82,6 +116,12 @@ final class FeatureKindPolyline extends FeatureKind
   }) {
     feature.origin = origin;
     this.localPoints = List.of(localPoints);
+    feature.size = feature.localBounds().size;
+  }
+
+  void setClosed(Feature feature, bool value) {
+    isClosed = value;
+    // Arrow caps pad the bounds only while the line is open.
     feature.size = feature.localBounds().size;
   }
 
@@ -115,13 +155,15 @@ final class FeatureKindPolyline extends FeatureKind
       return false;
     }
 
-    final threshold = _selectionTolerance;
     final points = worldPoints(feature.origin, localPoints);
-    for (var i = 0; i < points.length - 1; i++) {
-      if (distanceToSegment(worldPoint, points[i], points[i + 1]) <=
-          threshold) {
-        return true;
-      }
+    final onStroke = _segments(points).any(
+      (segment) =>
+          distanceToSegment(worldPoint, segment.$1, segment.$2) <=
+          _selectionTolerance,
+    );
+    if (onStroke) return true;
+    if (isClosed && hasVisibleFill) {
+      return _pathFor(feature).contains(worldPoint);
     }
     return _arrowPaths(points).any((path) => path.contains(worldPoint));
   }
@@ -134,12 +176,11 @@ final class FeatureKindPolyline extends FeatureKind
 
     final padded = rect.inflate(_selectionTolerance);
     final points = worldPoints(feature.origin, localPoints);
-    for (var i = 0; i < points.length - 1; i++) {
-      if (segmentIntersectsRect(points[i], points[i + 1], padded)) {
-        return true;
-      }
-    }
-    return false;
+    final crossesEdge = _segments(
+      points,
+    ).any((segment) => segmentIntersectsRect(segment.$1, segment.$2, padded));
+    // A rect drawn entirely inside a closed shape crosses no edge.
+    return crossesEdge || isClosed && _pathFor(feature).contains(rect.center);
   }
 
   @override
@@ -173,6 +214,9 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     final path = _pathFor(feature);
+    if (isClosed) {
+      paintFill(canvas, path, Paint()..color = fillColor, fillType);
+    }
 
     if (hasVisibleStroke) {
       paintStroke(
@@ -186,12 +230,16 @@ final class FeatureKindPolyline extends FeatureKind
           ..strokeCap = StrokeCap.round,
         strokeType,
       );
-      _paintArrowHeads(canvas, feature);
+      if (_hasArrows) _paintArrowHeads(canvas, feature);
     }
   }
 
+  /// Without a [feature] these fields describe brushes for any line, so both
+  /// the open-only end caps and the closed-only fill are offered.
   @override
   Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
+    final showsFill = feature == null || isClosed;
+    final showsEndCaps = feature == null || !isClosed;
     return [
       InspectorColorField(
         fieldKey: 'strokeColor',
@@ -215,24 +263,40 @@ final class FeatureKindPolyline extends FeatureKind
           strokeWidth = width;
         },
       ),
-      InspectorEndCapField(
-        fieldKey: 'startEndCap',
-        label: 'Start End Cap',
-        isStart: true,
-        value: startEndCap,
-        onEndCapChanged: (endCap) {
-          startEndCap = endCap;
-        },
-      ),
-      InspectorEndCapField(
-        fieldKey: 'endEndCap',
-        label: 'End End Cap',
-        isStart: false,
-        value: endEndCap,
-        onEndCapChanged: (endCap) {
-          endEndCap = endCap;
-        },
-      ),
+      if (showsFill) ...[
+        InspectorColorField(
+          fieldKey: 'fillColor',
+          label: 'Fill Color',
+          value: fillColor,
+          onColorChanged: (color) => fillColor = color,
+        ),
+        InspectorFillTypeField(
+          fieldKey: 'fillType',
+          label: 'Fill Type',
+          value: fillType,
+          onTypeChanged: (type) => fillType = type,
+        ),
+      ],
+      if (showsEndCaps) ...[
+        InspectorEndCapField(
+          fieldKey: 'startEndCap',
+          label: 'Start End Cap',
+          isStart: true,
+          value: startEndCap,
+          onEndCapChanged: (endCap) {
+            startEndCap = endCap;
+          },
+        ),
+        InspectorEndCapField(
+          fieldKey: 'endEndCap',
+          label: 'End End Cap',
+          isStart: false,
+          value: endEndCap,
+          onEndCapChanged: (endCap) {
+            endEndCap = endCap;
+          },
+        ),
+      ],
     ];
   }
 
@@ -245,6 +309,13 @@ final class FeatureKindPolyline extends FeatureKind
     fallback: LineEndCap.rounded,
   );
 
+  Iterable<(Offset, Offset)> _segments(List<Offset> points) sync* {
+    for (var i = 0; i < points.length - 1; i++) {
+      yield (points[i], points[i + 1]);
+    }
+    if (isClosed && points.length > 2) yield (points.last, points.first);
+  }
+
   Path _pathFor(Feature feature) {
     final path = Path();
     if (localPoints.isEmpty) {
@@ -252,6 +323,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     final points = worldPoints(feature.origin, localPoints);
+    if (isClosed) return path..addPolygon(points, true);
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
       if (direction != null) {
@@ -274,6 +346,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   Iterable<Path> _arrowPaths(List<Offset> points) sync* {
+    if (isClosed) return;
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
       if (direction != null) yield _arrowPath(points.first, direction);
