@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:squiggle_flutter/database/daos/documents_dao.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview.dart';
 import 'package:squiggle_flutter/document_library/widgets/document_preview_placeholder.dart';
 import 'package:squiggle_flutter/document_library/widgets/empty_document_preview_glyph.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/models/node.dart';
-import 'package:squiggle_flutter/repositories/document_storage.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 class DocumentPreviewLoader extends StatefulWidget {
@@ -63,15 +64,20 @@ class _DocumentPreviewLoaderState extends State<DocumentPreviewLoader> {
   }
 
   Future<List<Node>> _load(String documentId) {
-    final storage = context.read<DocumentStorage>();
-    return _loadPreviewNodes(storage, documentId);
+    final documents = context.read<DocumentsDao>();
+    return _loadPreviewNodes(documents, documentId);
   }
 }
 
+/// The nodes to draw as a preview; empty if the document cannot be read.
 Future<List<Node>> _loadPreviewNodes(
-  DocumentStorage storage,
+  DocumentsDao documents,
   String documentId,
 ) async {
-  final decoded = await storage.loadDocument(documentId);
-  return decoded?.document.nodes ?? const [];
+  try {
+    final stored = await documents.load(documentId);
+    return stored == null ? const [] : Document.fromDataModel(stored).nodes;
+  } on Object {
+    return const [];
+  }
 }
