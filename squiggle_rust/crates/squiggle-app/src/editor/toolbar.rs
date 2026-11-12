@@ -56,6 +56,8 @@ fn lock_glyph(locked: bool, color: rune::Color) -> El {
 const SELECT_SVG: &str = include_str!("../../assets/icons/arrow_selector_tool.svg");
 const RECT_SVG: &str = include_str!("../../assets/icons/crop_square.svg");
 const CIRCLE_SVG: &str = include_str!("../../assets/icons/circle.svg");
+const UNDO_SVG: &str = include_str!("../../assets/icons/undo.svg");
+const REDO_SVG: &str = include_str!("../../assets/icons/redo.svg");
 const LINE_SVG: &str = include_str!("../../assets/icons/line.svg");
 
 /// The Flutter app's own SVG for tools that have one (the text tool is the letter "A").
@@ -76,6 +78,12 @@ fn tool_button(s: &State, id: ToolId, key: &str) -> El {
     kit::toolbar_button(key, active, true, tool_icon(s, id, active), move |s: &mut State| {
         s.ctx.set_tool(super::command::tool_for(id));
     })
+}
+
+fn history_icon(s: &State, undo: bool, enabled: bool) -> El {
+    let hex = if enabled { "#a0a0a0" } else { "#5a5a5a" };
+    let svg = if undo { UNDO_SVG } else { REDO_SVG };
+    rune::el().size(ICON, ICON).pixels(s.images_store.icon(svg, hex, ICON).pixels())
 }
 
 fn command_button(key: &str, cmd: Command, enabled: bool, content: El) -> El {
@@ -103,8 +111,8 @@ pub fn view(s: &State) -> El {
         .child(tool_button(s, ToolId::Line, "tool-line"))
         .child(tool_button(s, ToolId::Text, "tool-text"))
         .child(kit::divider_vertical())
-        .child(command_button("undo", Command::Undo, enabled(Command::Undo), undo_glyph(ink(enabled(Command::Undo)), false)))
-        .child(command_button("redo", Command::Redo, enabled(Command::Redo), undo_glyph(ink(enabled(Command::Redo)), true)));
+        .child(command_button("undo", Command::Undo, enabled(Command::Undo), history_icon(s, true, enabled(Command::Undo))))
+        .child(command_button("redo", Command::Redo, enabled(Command::Redo), history_icon(s, false, enabled(Command::Redo))));
     row()
         .key("toolbar-row")
         .absolute(0.0, metrics::OVERLAY_TOP)
