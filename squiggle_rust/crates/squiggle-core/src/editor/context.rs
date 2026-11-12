@@ -134,6 +134,25 @@ impl EditorContext {
         self.start_text_edit(TextEditSession::create(draft, layout));
     }
 
+    /// Applies `contents` (default: the field's draft) as one undoable step and closes the text
+    /// edit; does nothing when none is open. Set `select_created` to false when the commit comes
+    /// from a click that picks the selection itself.
+    pub fn commit_text_edit(&mut self, contents: Option<&str>, select_created: bool) {
+        let select = select_created && !self.tool.is_locked();
+        let Self { document, history, selection, text_edit, .. } = self;
+        let _ = crate::editor::text_edit::commit_text_edit(
+            document,
+            history,
+            selection,
+            text_edit,
+            contents,
+            select,
+            |feature, text| {
+                feature.set_label(text);
+            },
+        );
+    }
+
     pub fn end_text_edit(&mut self) {
         let Self { text_edit, document, .. } = self;
         text_edit.end(document);

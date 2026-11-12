@@ -50,8 +50,39 @@ impl State {
         default_app_dir()
     }
 
+    /// Keeps the inline text field in step with the core's text-edit session: a new session gets
+    /// a fresh field (existing text pre-selected), a closed one drops it.
+    pub fn sync_text_edit(&mut self) -> bool {
+        let session = self.ctx.text_edit.session().cloned();
+        if session == self.editor_ui.text_session {
+            return false;
+        }
+        let started = session.is_some();
+        if let Some(session) = &session {
+            let mut edit = rune::TextEdit::new(session.initial_contents.clone());
+            if session.feature_id().is_some() {
+                edit.set_selection(0, edit.text.len());
+            } else {
+                edit.set_caret(0);
+            }
+            self.editor_ui.text = edit;
+            self.editor_ui.text_focus_done = false;
+        }
+        self.editor_ui.text_session = session;
+        started
+    }
+
+    /// [`autosave_if_changed`](Self::autosave_if_changed) plus focusing a freshly opened text field.
+    pub fn after_edit(&mut self, tx: &mut rune::Tx) {
+        if self.sync_text_edit() {
+            tx.focus("text-edit", false);
+        }
+        self.autosave_if_changed();
+    }
+
     /// Persist the open document if the editor changed since the last save.
     pub fn autosave_if_changed(&mut self) {
+        self.sync_text_edit();
         let rev = self.ctx.revision();
         if rev != self.saved_revision {
             self.saved_revision = rev;

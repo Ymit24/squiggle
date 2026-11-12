@@ -33,9 +33,13 @@ fn modifiers(s: &State) -> Modifiers {
     s.editor_ui.mods
 }
 
-fn primary_drag(s: &mut State, d: &Drag) {
+fn primary_drag(s: &mut State, d: &Drag, tx: &mut Tx) {
     let (w, cam, mods) = (world(s, d.x, d.y), s.ctx.camera, modifiers(s));
     s.editor_ui.pointer = Point::new(d.x as f64, d.y as f64);
+    if d.phase == Phase::Down && s.ctx.text_edit.session().is_some() {
+        // A press anywhere but the field commits the edit before the tools see it.
+        s.ctx.commit_text_edit(None, false);
+    }
     match d.phase {
         Phase::Down => ToolModel::on_pointer_down(&mut s.ctx, w, &cam, mods),
         Phase::Up if d.cancelled() => {
@@ -45,7 +49,7 @@ fn primary_drag(s: &mut State, d: &Drag) {
         Phase::Up => ToolModel::on_pointer_up(&mut s.ctx, w, &cam, mods),
         _ => ToolModel::on_pointer_move(&mut s.ctx, w, &cam, mods),
     };
-    s.autosave_if_changed();
+    s.after_edit(tx);
 }
 
 fn pan_drag(s: &mut State, d: &Drag, open_menu_on_click: bool) {
@@ -81,7 +85,7 @@ pub fn view(s: &State) -> El {
     let list = painter.commands;
     let hover = world(s, s.editor_ui.pointer.x as f32, s.editor_ui.pointer.y as f32);
     let cursor = mouse_cursor(ToolModel::resolve_cursor(ctx, hover, &ctx.camera));
-    let mut v = el().key("viewport").w_full().grow(1.0).fill(theme::base()).clip_soft(0.0).cursor(cursor);
+    let mut v = el().key("viewport").focusable(true).w_full().grow(1.0).fill(theme::base()).clip_soft(0.0).cursor(cursor);
     v = v.child(canvas(render::shape(&list, &ctx.camera)).key("scene").w_full().h_full().absolute(0.0, 0.0));
     for t in render::text_elements(&list, &ctx.camera) {
         v = v.child(t);
@@ -95,15 +99,15 @@ pub fn view(s: &State) -> El {
         })
         .on_drag(|s: &mut State, d: &mut Drag, tx: &mut Tx| {
             match tx.button() {
-                PointerButton::Primary => primary_drag(s, d),
+                PointerButton::Primary => primary_drag(s, d, tx),
                 PointerButton::Secondary => pan_drag(s, d, true),
                 _ => pan_drag(s, d, false),
             }
         })
-        .on_double_press(|s: &mut State| {
+        .on_double_press_tx(|s: &mut State, tx: &mut Tx| {
             let (p, cam) = (s.editor_ui.pointer, s.ctx.camera);
             ToolModel::on_double_click(&mut s.ctx, cam.screen_to_world(p), &cam);
-            s.autosave_if_changed();
+            s.after_edit(tx);
         })
         .on_wheel(|s: &mut State, e: WheelEvent, _tx: &mut Tx| {
             let anchor = Point::new(e.x as f64, e.y as f64);

@@ -86,4 +86,29 @@ mod tests {
         rt.frame(0.0);
         assert_eq!(rt.state.ctx.document.nodes().len(), 0);
     }
+
+    #[test]
+    fn text_tool_creates_text_through_the_inline_editor() {
+        let mut rt = app("text");
+        rt.key(rune::KeyEvent { key: rune::Key::Text("t".into()), mods: rune::Mods::default() });
+        rt.frame(0.0);
+        let (x, y) = (400.0, 300.0);
+        rt.pointer_move(x, y);
+        rt.pointer_down(x, y);
+        rt.pointer_up(x, y);
+        rt.frame(0.0);
+        rt.frame(0.0);
+        assert!(rt.state.ctx.text_edit.session().is_some(), "clicking with the text tool opens the editor");
+        for ch in ["h", "i"] {
+            rt.key(rune::KeyEvent { key: rune::Key::Text(ch.into()), mods: rune::Mods::default() });
+            rt.frame(0.0);
+        }
+        assert_eq!(rt.state.ctx.text_edit.draft, "hi");
+        rt.key(rune::KeyEvent { key: rune::Key::Escape, mods: rune::Mods::default() });
+        rt.frame(0.0);
+        assert!(rt.state.ctx.text_edit.session().is_none());
+        assert_eq!(rt.state.ctx.document.nodes().len(), 1);
+        let feature = rt.state.ctx.document.nodes()[0].as_feature().unwrap();
+        assert_eq!(feature.kind.label(), Some("hi"));
+    }
 }

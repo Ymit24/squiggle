@@ -4,6 +4,7 @@
 pub mod command;
 pub mod context_menu;
 pub mod shortcuts;
+pub mod text_overlay;
 pub mod toolbar;
 
 use crate::state::State;
@@ -22,6 +23,11 @@ pub struct EditorUi {
     pub pan_origin: Option<Point>,
     /// Open context menu: (viewport position, world position).
     pub context_menu: Option<(Point, Point)>,
+    /// The inline text field's content and the core session it was made for.
+    pub text: rune::TextEdit,
+    /// Whether the freshly opened field has been focused yet.
+    pub text_focus_done: bool,
+    pub text_session: Option<squiggle_core::editor::text_edit::TextEditSession>,
 }
 
 pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
@@ -29,6 +35,7 @@ pub fn view(s: &State, _cx: &mut Cx<State>) -> El {
         .w_full()
         .h_full()
         .child(crate::viewport::view(s))
+        .child(text_overlay::view(s))
         .child(toolbar::view(s))
         .child(crate::inspector::panel(s))
         .child(context_menu::view(s))

@@ -128,7 +128,7 @@ pub fn run(s: &mut State, tx: &mut Tx, cmd: Command) {
             let _ = ungroup_selected_nodes(&mut ctx.document, &mut ctx.history, &mut ctx.selection);
         }
     }
-    s.autosave_if_changed();
+    s.after_edit(tx);
 }
 
 fn activate_brush(s: &mut State, index: usize) {
