@@ -29,5 +29,7 @@ pub use node::Node;
 // --- history & commands modules ---
 
 // --- persistence modules ---
+pub mod repositories;
+pub mod services;
 
 // --- tools modules ---
