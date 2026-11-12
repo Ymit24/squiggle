@@ -26,24 +26,22 @@ class FillTypeSelector extends StatelessWidget {
       spacing: theme.spacing.swatchGap,
       children: [
         for (final type in FillType.values)
-          Tooltip(
-            message: switch (type) {
+          StyleColorSwatch(
+            color: theme.colors.base,
+            tooltip: switch (type) {
               FillType.solid => 'Solid',
               FillType.lines => 'Lines',
               FillType.crosshatch => 'Crosshatch',
             },
-            child: StyleColorSwatch(
-              color: theme.colors.base,
-              isActive: !isMixed && activeType == type,
-              enabled: enabled,
-              onPressed: () => onTypeSelected(type),
-              overlay: CustomPaint(
-                painter: _FillTypePreviewPainter(
-                  type: type,
-                  color: !isMixed && activeType == type
-                      ? theme.colors.text
-                      : theme.colors.subtext0,
-                ),
+            isActive: !isMixed && activeType == type,
+            enabled: enabled,
+            onPressed: () => onTypeSelected(type),
+            overlay: CustomPaint(
+              painter: _FillTypePreviewPainter(
+                type: type,
+                color: !isMixed && activeType == type
+                    ? theme.colors.text
+                    : theme.colors.subtext0,
               ),
             ),
           ),

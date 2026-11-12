@@ -1,26 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_tooltip.dart';
 
 class StyleColorSwatch extends StatefulWidget {
   const StyleColorSwatch({
     super.key,
     required this.color,
+    required this.tooltip,
+    this.tooltipDetail,
     required this.isActive,
     required this.onPressed,
     this.enabled = true,
+    this.selectable = true,
     this.overlay,
   });
 
   const StyleColorSwatch.none({
     super.key,
+    this.tooltip = 'None',
     required this.isActive,
     required this.onPressed,
     this.enabled = true,
   }) : color = null,
+       tooltipDetail = null,
+       selectable = true,
        overlay = null;
 
   final Color? color;
+
+  /// Name of the option, shown on hover and used as its accessible label.
+  final String tooltip;
+
+  /// Subdued extra detail in the tooltip, such as a hex value.
+  final String? tooltipDetail;
+
+  /// Whether this swatch picks an option (exposed as selected) rather than
+  /// running a one-off action.
+  final bool selectable;
   final bool isActive;
   final VoidCallback onPressed;
   final bool enabled;
@@ -41,10 +58,23 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
+    return Semantics(
+      button: true,
+      enabled: widget.enabled,
+      selected: widget.selectable ? widget.isActive : null,
+      label: widget.tooltip,
+      child: SquiggleTooltip(
+        label: widget.tooltip,
+        detail: widget.tooltipDetail,
+        child: _buildSwatch(theme),
+      ),
+    );
+  }
+
+  Widget _buildSwatch(SquiggleTheme theme) {
     final spacing = theme.spacing;
     final colors = theme.colors;
     final opacity = widget.enabled ? 1.0 : 0.35;
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
@@ -68,7 +98,9 @@ class _StyleColorSwatchState extends State<StyleColorSwatch> {
                   width: spacing.swatchBorderWidth,
                 ),
               ),
-              child: widget.overlay ?? _noneSwatchOverlay(colors),
+              child: ExcludeSemantics(
+                child: widget.overlay ?? _noneSwatchOverlay(colors),
+              ),
             ),
           ),
         ),

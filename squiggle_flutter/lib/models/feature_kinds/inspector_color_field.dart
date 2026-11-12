@@ -25,6 +25,7 @@ class InspectorColorField extends InspectorField<Color> {
     label: label,
     child: ColorRow(
       presets: stylePresets.map((item) => item.strokeColor).toList(),
+      names: stylePresets.map((item) => item.name).toList(),
       activePresetIndex: null,
       noneEnabled: true,
       onPresetSelected: (index) => onUpdate(stylePresets[index].strokeColor),

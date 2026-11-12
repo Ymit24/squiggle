@@ -36,6 +36,11 @@ class StrokeWidthSelector extends StatelessWidget {
         for (final preset in presets)
           StyleColorSwatch(
             color: theme.colors.base,
+            tooltip: switch (preset) {
+              StrokeWidthPreset.thin => 'Thin',
+              StrokeWidthPreset.medium => 'Medium',
+              StrokeWidthPreset.thick => 'Thick',
+            },
             isActive: !isMixed && activePreset == preset,
             enabled: enabled,
             onPressed: () => onPresetSelected(preset),

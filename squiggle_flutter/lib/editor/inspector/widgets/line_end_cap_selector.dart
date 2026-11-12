@@ -27,6 +27,10 @@ class LineEndCapSelector extends StatelessWidget {
         for (final endCap in LineEndCap.values)
           StyleColorSwatch(
             color: theme.colors.base,
+            tooltip: switch (endCap) {
+              LineEndCap.rounded => isStart ? 'Round start' : 'Round end',
+              LineEndCap.arrow => isStart ? 'Arrow start' : 'Arrow end',
+            },
             isActive: !isMixed && activeEndCap == endCap,
             onPressed: () => onEndCapSelected(endCap),
             overlay: Icon(
