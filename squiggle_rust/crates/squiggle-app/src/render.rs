@@ -3,7 +3,9 @@
 
 use crate::theme::rune_color;
 use rune::tok::TextStyle;
-use rune::{Align, El, LineCap, Shape, col, text};
+use crate::images::ImageStore;
+use rune::{Align, El, LineCap, Shape, col, el, text};
+use squiggle_core::repositories::ImageRepository;
 use squiggle_core::camera::Camera;
 use squiggle_core::geom::Point;
 use squiggle_core::paint::{Cap, DrawCmd, HAlign, VAlign};
@@ -54,6 +56,21 @@ pub fn text_elements(list: &[DrawCmd], camera: &Camera) -> Vec<El> {
                 .child(label))
             }
             _ => None,
+        })
+        .collect()
+}
+
+/// Image commands of `list` as elements positioned in screen space.
+pub fn image_elements(list: &[DrawCmd], camera: &Camera, store: &ImageStore, repo: &ImageRepository) -> Vec<El> {
+    list.iter()
+        .filter_map(|cmd| {
+            let DrawCmd::Image { image_id, rect } = cmd else { return None };
+            let r = camera.world_to_screen_bounds(*rect);
+            let holder = el().absolute(r.left as f32, r.top as f32).size(r.width() as f32, r.height() as f32);
+            Some(match store.get(repo, image_id) {
+                Some(image) => holder.pixels(image.pixels()),
+                None => holder.fill(crate::theme::surface1()),
+            })
         })
         .collect()
 }

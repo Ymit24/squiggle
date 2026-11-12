@@ -1,4 +1,5 @@
 mod editor;
+mod images;
 mod inspector;
 mod kit;
 mod library;
@@ -18,7 +19,7 @@ fn view(s: &State, cx: &mut Cx<State>) -> El {
 }
 
 fn main() {
-    let spec = AppSpec { on_key: Some(editor::on_key), ..AppSpec::new("Squiggle", (1100.0, 760.0), || State::new(State::default_dir()), view) };
+    let spec = AppSpec { on_key: Some(editor::on_key), setup: Some(|s, waker| s.images_store = images::ImageStore::new(waker)), ..AppSpec::new("Squiggle", (1100.0, 760.0), || State::new(State::default_dir()), view) };
     rune::App::new(spec)
         .on_modifiers(|s, mods, tx| {
             s.editor_ui.mods = squiggle_core::tools::tool::Modifiers { shift: mods.shift, alt: mods.alt, command: mods.cmd };

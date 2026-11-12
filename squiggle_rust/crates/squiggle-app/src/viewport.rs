@@ -87,6 +87,9 @@ pub fn view(s: &State) -> El {
     let cursor = mouse_cursor(ToolModel::resolve_cursor(ctx, hover, &ctx.camera));
     let mut v = el().key("viewport").focusable(true).w_full().grow(1.0).fill(theme::base()).clip_soft(0.0).cursor(cursor);
     v = v.child(canvas(render::shape(&list, &ctx.camera)).key("scene").w_full().h_full().absolute(0.0, 0.0));
+    for i in render::image_elements(&list, &ctx.camera, &s.images_store, &s.images) {
+        v = v.child(i);
+    }
     for t in render::text_elements(&list, &ctx.camera) {
         v = v.child(t);
     }
