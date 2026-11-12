@@ -50,3 +50,4 @@ pub mod repositories;
 pub mod services;
 
 // --- tools modules ---
+pub mod tools;

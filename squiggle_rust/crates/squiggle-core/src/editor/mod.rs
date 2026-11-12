@@ -1,3 +1,5 @@
+pub mod context;
+pub mod tool_model;
 pub mod brush_controller;
 pub mod grouping_commands;
 pub mod history;
