@@ -49,8 +49,16 @@ class LibraryTopBar extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: searchField),
         ] else ...[
-          const Spacer(),
-          SizedBox(width: 250, child: searchField),
+          // Right-aligned, narrowing before the bar would overflow.
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 250),
+                child: searchField,
+              ),
+            ),
+          ),
         ],
         const SizedBox(width: 10),
         LibrarySortButton(
