@@ -66,6 +66,10 @@ final class FeatureKindPolyline extends FeatureKind
   Iterable<NodeBinding> get bindings => [?startBinding, ?endBinding];
 
   @override
+  Iterable<NodeId> get references =>
+      bindings.map((binding) => binding.targetId);
+
+  @override
   Map<String, dynamic> toDataModel() => {
     'type': 'polyline',
     'localPoints': [
@@ -99,6 +103,12 @@ final class FeatureKindPolyline extends FeatureKind
     start: startBinding,
     end: endBinding,
   );
+
+  /// Bound ends keep their bindings, so undoing the removal reattaches them,
+  /// but stay where they are drawn while the target is gone.
+  @override
+  void referencesRemoved(Feature feature, Set<NodeId> ids) =>
+      bakeBindings(feature);
 
   @override
   void bakeBindings(Feature feature) {

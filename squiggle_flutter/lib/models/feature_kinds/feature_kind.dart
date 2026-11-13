@@ -23,6 +23,9 @@ part 'feature_kind_rectangle.dart';
 part 'feature_kind_text.dart';
 
 sealed class FeatureKind {
+  /// Other nodes this shape refers to by id.
+  Iterable<NodeId> get references => const [];
+
   Map<String, dynamic> toDataModel();
 
   /// Style fields for the inspector and brushes. With [feature], edits also
@@ -53,6 +56,9 @@ sealed class FeatureKind {
   /// shape's outline, in global space.
   Offset outlinePointToward(Feature feature, Offset globalPoint) =>
       rectOutlinePointToward(feature.globalBounds(), globalPoint);
+
+  /// Called just before nodes in [ids] that this shape refers to are removed.
+  void referencesRemoved(Feature feature, Set<NodeId> ids) {}
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }

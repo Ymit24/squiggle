@@ -54,10 +54,7 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
-  Iterable<NodeId> get references => switch (kind) {
-    BindingCapable kind => kind.bindings.map((binding) => binding.targetId),
-    _ => const [],
-  };
+  Iterable<NodeId> get references => kind.references;
 
   @override
   data.Feature toDataModel() {
@@ -100,12 +97,8 @@ class Feature extends Node {
   Offset outlinePointToward(Offset globalPoint) =>
       kind.outlinePointToward(this, globalPoint);
 
-  /// Bound ends keep their bindings, so undoing the removal reattaches them,
-  /// but stay where they are drawn while the target is gone.
   @override
-  void referencesRemoved(Set<NodeId> ids) {
-    if (kind case BindingCapable kind) kind.bakeBindings(this);
-  }
+  void referencesRemoved(Set<NodeId> ids) => kind.referencesRemoved(this, ids);
 
   @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);
