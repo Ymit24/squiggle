@@ -15,6 +15,8 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
+import '../support/test_preferences.dart';
+
 void main() {
   setUpAll(() {
     Provider.debugCheckInvalidValueType = null;
@@ -36,7 +38,9 @@ void main() {
             Provider<ImageRepository>(create: (_) => ImageRepository()),
           ],
           child: Scaffold(
-            body: Editor(editorContext: editor, onBackToLibrary: () {}),
+            body: withPreferences(
+              Editor(editorContext: editor, onBackToLibrary: () {}),
+            ),
           ),
         ),
       ),
