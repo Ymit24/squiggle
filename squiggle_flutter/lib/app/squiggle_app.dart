@@ -11,6 +11,7 @@ import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/theme/theme_mode_preference.dart';
 
 class SquiggleApp extends StatelessWidget {
   const SquiggleApp({
@@ -53,13 +54,17 @@ class SquiggleApp extends StatelessWidget {
                   child: Provider(
                     create: (context) =>
                         PreferencesPanel(navigatorKey: appRouter.navigatorKey),
-                    child: MaterialApp.router(
-                      title: 'Squiggle',
-                      theme: SquiggleThemeData.dark(),
-                      debugShowCheckedModeBanner: false,
-                      routerConfig: appRouter.config(),
-                      builder: (context, child) =>
-                          PreferencesShortcuts(child: child!),
+                    child: Builder(
+                      builder: (context) => MaterialApp.router(
+                        title: 'Squiggle',
+                        theme: SquiggleThemeData.light(),
+                        darkTheme: SquiggleThemeData.dark(),
+                        themeMode: context.watchPreference(themeModePreference),
+                        debugShowCheckedModeBanner: false,
+                        routerConfig: appRouter.config(),
+                        builder: (context, child) =>
+                            PreferencesShortcuts(child: child!),
+                      ),
                     ),
                   ),
                 ),

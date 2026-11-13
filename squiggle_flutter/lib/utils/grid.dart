@@ -3,8 +3,6 @@ import 'package:flutter/widgets.dart';
 const _gridUnit = 128.0;
 const _minMajorScreenSize = 64.0;
 const _maxMajorScreenSize = 160.0;
-const _minorGridColor = Color(0xFF252525);
-const _majorGridColor = Color(0xFF363636);
 
 /// Paints a Unity-style adaptive world-space grid.
 void paintAdaptiveGrid(
@@ -12,6 +10,8 @@ void paintAdaptiveGrid(
   required Size size,
   required Offset location,
   required double zoom,
+  required Color minorColor,
+  required Color majorColor,
 }) {
   if (zoom <= 0) return;
 
@@ -38,10 +38,10 @@ void paintAdaptiveGrid(
   );
 
   final minorPaint = Paint()
-    ..color = _minorGridColor
+    ..color = minorColor
     ..style = PaintingStyle.fill;
   final majorPaint = Paint()
-    ..color = _majorGridColor
+    ..color = majorColor
     ..style = PaintingStyle.fill;
 
   final minorLineWidth = zoom * 0.6;

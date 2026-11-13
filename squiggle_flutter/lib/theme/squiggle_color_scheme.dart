@@ -12,7 +12,9 @@ const squiggleSelectionFillColor = Color(0x1AA8B3C2);
 const squiggleDangerColor = Color.fromARGB(255, 242, 139, 139);
 const squiggleOnDangerColor = Color.fromARGB(255, 217, 95, 95);
 
-/// Semantic UI color tokens for Squiggle's dark graphite theme.
+/// Semantic UI color tokens. [dark] is the graphite theme; [light] mirrors it
+/// with the same roles: `mantle` for floating panels, `surface0`/`surface1`
+/// for raised fills and borders, `text`/`subtext0` for content.
 @immutable
 class SquiggleColorScheme {
   const SquiggleColorScheme({
@@ -49,6 +51,19 @@ class SquiggleColorScheme {
     accent: squiggleAccentColor,
     selectionFill: squiggleSelectionFillColor,
     danger: squiggleDangerColor,
+    onDanger: squiggleOnDangerColor,
+  );
+
+  static const light = SquiggleColorScheme(
+    base: Color(0xFFF7F7F7),
+    mantle: Color(0xFFFFFFFF),
+    surface0: Color(0xFFECECEC),
+    surface1: Color(0xFFD6D6D6),
+    subtext0: Color(0xFF6B6B6B),
+    text: Color(0xFF1E1E1E),
+    accent: Color(0xFF5E6B7D),
+    selectionFill: Color(0x1A5E6B7D),
+    danger: Color(0xFFC24141),
     onDanger: squiggleOnDangerColor,
   );
 

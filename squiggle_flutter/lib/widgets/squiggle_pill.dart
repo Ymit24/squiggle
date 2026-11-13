@@ -13,7 +13,7 @@ class SquigglePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
+        color: theme.colors.mantle.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: theme.colors.accent.withValues(alpha: 0.5)),
         boxShadow: null,

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/utils/grid.dart';
 
 /// Paints a [Document]'s nodes on an infinite world-space grid.
@@ -13,16 +14,21 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     super.key,
     required this.context,
     required this.imageRepository,
+    required this.colors,
   });
 
   final EditorContext context;
   final ImageRepository imageRepository;
+
+  /// Canvas background (`base`) and grid lines (`surface0`, `surface1`).
+  final SquiggleColorScheme colors;
 
   @override
   RenderDocumentCanvas createRenderObject(BuildContext context) {
     return RenderDocumentCanvas(
       context: this.context,
       imageRepository: imageRepository,
+      colors: colors,
     );
   }
 
@@ -34,6 +40,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     renderObject
       ..context = this.context
       ..imageRepository = imageRepository
+      ..colors = colors
       ..markNeedsPaint();
   }
 }
@@ -42,6 +49,7 @@ class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
     required this._context,
     required this._imageRepository,
+    required this._colors,
   });
 
   EditorContext _context;
@@ -50,7 +58,7 @@ class RenderDocumentCanvas extends RenderBox {
 
   StreamSubscription<void>? _imageRepaintSubscription;
 
-  static const Color _canvasColor = Color(0xFF171717);
+  SquiggleColorScheme _colors;
   EditorContext get context => _context;
   set context(EditorContext value) {
     if (identical(_context, value)) return;
@@ -66,6 +74,13 @@ class RenderDocumentCanvas extends RenderBox {
     _unsubscribeFromImageRepaints();
     _imageRepository = value;
     _subscribeToImageRepaints();
+    markNeedsPaint();
+  }
+
+  SquiggleColorScheme get colors => _colors;
+  set colors(SquiggleColorScheme value) {
+    if (identical(_colors, value)) return;
+    _colors = value;
     markNeedsPaint();
   }
 
@@ -110,6 +125,8 @@ class RenderDocumentCanvas extends RenderBox {
       size: size,
       location: _context.camera.location,
       zoom: _context.camera.zoom,
+      minorColor: _colors.surface0,
+      majorColor: _colors.surface1,
     );
     _paintNodes(canvas, document);
     _context.tool.activeTool.paint(canvas, camera, _context, _imageRepository);
@@ -147,7 +164,7 @@ class RenderDocumentCanvas extends RenderBox {
   }
 
   void _drawBackground(Canvas canvas) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = _canvasColor);
+    canvas.drawRect(Offset.zero & size, Paint()..color = _colors.base);
   }
 
   void _paintNodes(Canvas canvas, Document document) {
