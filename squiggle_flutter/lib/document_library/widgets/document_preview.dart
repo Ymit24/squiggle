@@ -3,32 +3,29 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class DocumentPreview extends StatelessWidget {
   const DocumentPreview({
     super.key,
     required this.nodes,
     required this.imageRepository,
-    this.backgroundColor = SquiggleColors.surface0,
-    this.dotColor = SquiggleColors.surface1,
   });
 
   final List<Node> nodes;
   final ImageRepository imageRepository;
-  final Color backgroundColor;
-  final Color dotColor;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.squiggleTheme.colors;
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: CustomPaint(
         painter: _DocumentPreviewPainter(
           nodes: nodes,
           imageRepository: imageRepository,
-          backgroundColor: backgroundColor,
-          dotColor: dotColor,
+          backgroundColor: colors.surface0,
+          dotColor: colors.surface1,
         ),
         child: const SizedBox.expand(),
       ),

@@ -23,16 +23,8 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
   final SquiggleTypography typography;
   final SquiggleDecorations decorations;
 
-  static final dark = SquiggleTheme(
-    colors: SquiggleColorScheme.dark,
-    spacing: SquiggleSpacing.standard,
-    radii: SquiggleRadii.standard,
-    typography: const SquiggleTypography(colors: SquiggleColorScheme.dark),
-    decorations: const SquiggleDecorations(
-      colors: SquiggleColorScheme.dark,
-      radii: SquiggleRadii.standard,
-    ),
-  );
+  static final dark = _standard(SquiggleColorScheme.dark);
+  static final light = _standard(SquiggleColorScheme.light);
 
   @override
   SquiggleTheme copyWith({
@@ -68,17 +60,34 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
       decorations: decorations.lerp(other.decorations, t),
     );
   }
+
+  static SquiggleTheme _standard(SquiggleColorScheme colors) => SquiggleTheme(
+    colors: colors,
+    spacing: SquiggleSpacing.standard,
+    radii: SquiggleRadii.standard,
+    typography: SquiggleTypography(colors: colors),
+    decorations: SquiggleDecorations(
+      colors: colors,
+      radii: SquiggleRadii.standard,
+    ),
+  );
 }
 
 /// Builds a [ThemeData] wired to [SquiggleTheme].
 abstract final class SquiggleThemeData {
-  static ThemeData dark() {
-    final squiggle = SquiggleTheme.dark;
+  static ThemeData dark() => _build(SquiggleTheme.dark, Brightness.dark);
+
+  static ThemeData light() => _build(SquiggleTheme.light, Brightness.light);
+
+  static ThemeData _build(SquiggleTheme squiggle, Brightness brightness) {
+    final baseScheme = brightness == Brightness.dark
+        ? const ColorScheme.dark()
+        : const ColorScheme.light();
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: brightness,
       scaffoldBackgroundColor: squiggle.colors.base,
-      colorScheme: ColorScheme.dark(
+      colorScheme: baseScheme.copyWith(
         surface: squiggle.colors.base,
         onSurface: squiggle.colors.text,
         primary: squiggle.colors.accent,
