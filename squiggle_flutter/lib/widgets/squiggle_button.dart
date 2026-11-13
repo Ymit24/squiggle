@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_button_style.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_tooltip.dart';
 
 export 'package:squiggle_flutter/theme/squiggle_button_style.dart'
     show SquiggleButtonVariant;
@@ -24,6 +25,7 @@ class SquiggleButton extends StatelessWidget {
     this.icon,
     this.variant = SquiggleButtonVariant.primary,
     this.compact = false,
+    this.shortcuts = const [],
   }) : assert(!compact || icon != null, 'compact requires an icon');
 
   /// Null disables the button.
@@ -35,6 +37,9 @@ class SquiggleButton extends StatelessWidget {
   /// Narrow-screen mode: a fixed square showing only the icon, with the
   /// label moved into a hover tooltip.
   final bool compact;
+
+  /// Shortcuts listed in the compact tooltip, in command-style notation.
+  final List<String> shortcuts;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,9 @@ class SquiggleButton extends StatelessWidget {
               ],
             ),
     );
-    if (compact) return Tooltip(message: label, child: button);
+    if (compact) {
+      return SquiggleTooltip(label: label, shortcuts: shortcuts, child: button);
+    }
     return button;
   }
 }

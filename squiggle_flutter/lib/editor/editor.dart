@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/editor/inspector/inspector_panel.dart';
 import 'package:squiggle_flutter/editor/toolbar/toolbar.dart';
 import 'package:squiggle_flutter/editor/widgets/back_to_content.dart';
 import 'package:squiggle_flutter/editor/widgets/document_viewport.dart';
+import 'package:squiggle_flutter/preferences/widgets/preferences_button.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
@@ -72,6 +73,7 @@ class Editor extends StatelessWidget {
                     ),
                   ),
                   const EditorToolbar(),
+                  _topRight(context, const PreferencesButton()),
                   Positioned(
                     left: 0,
                     right: 0,
@@ -88,4 +90,10 @@ class Editor extends StatelessWidget {
       ),
     );
   }
+
+  Widget _topRight(BuildContext context, Widget child) => Positioned(
+    top: context.squiggleTheme.spacing.overlayTop,
+    right: context.squiggleTheme.spacing.overlaySide,
+    child: child,
+  );
 }

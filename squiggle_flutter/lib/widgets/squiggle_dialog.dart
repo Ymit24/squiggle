@@ -7,15 +7,23 @@ class SquiggleDialog extends StatelessWidget {
     required this.title,
     this.icon,
     this.iconColor,
+    this.titleTrailing,
     required this.content,
-    required this.actions,
+    this.actions,
+    this.contentWidth = 360,
   });
 
   final String title;
   final IconData? icon;
   final Color? iconColor;
+
+  /// Shown at the end of the title row, such as a close button.
+  final Widget? titleTrailing;
   final Widget content;
-  final List<Widget> actions;
+
+  /// Buttons along the bottom; null leaves the dialog without an action bar.
+  final List<Widget>? actions;
+  final double contentWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +63,10 @@ class SquiggleDialog extends StatelessWidget {
               ),
             ),
           ),
+          ?titleTrailing,
         ],
       ),
-      content: SizedBox(width: 360, child: content),
+      content: SizedBox(width: contentWidth, child: content),
       actions: actions,
     );
   }

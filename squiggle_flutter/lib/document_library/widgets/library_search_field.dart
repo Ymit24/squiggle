@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/squiggle_keycap.dart';
 import 'package:squiggle_flutter/widgets/squiggle_text_field.dart';
 
 class LibrarySearchField extends StatelessWidget {
@@ -59,22 +60,7 @@ class LibrarySearchField extends StatelessWidget {
                 child: Align(
                   widthFactor: 1,
                   heightFactor: 1,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: theme.colors.surface1,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      child: Text(
-                        '⌘/',
-                        style: theme.typography.hotkey.copyWith(fontSize: 10),
-                      ),
-                    ),
-                  ),
+                  child: const SquiggleKeycap(label: '⌘/'),
                 ),
               ),
       ),

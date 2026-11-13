@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
+import 'package:squiggle_flutter/preferences/preferences.dart';
+import 'package:squiggle_flutter/preferences/preferences_panel.dart';
+import 'package:squiggle_flutter/preferences/widgets/preferences_shortcuts.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -18,6 +21,7 @@ class SquiggleApp extends StatelessWidget {
     required this.database,
     required this.documentList,
     required this.activeDocument,
+    required this.preferences,
   });
 
   final AppRouter appRouter;
@@ -26,6 +30,7 @@ class SquiggleApp extends StatelessWidget {
   final AppDatabase database;
   final DocumentListNotifier documentList;
   final ActiveDocumentCoordinator activeDocument;
+  final Preferences preferences;
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +48,20 @@ class SquiggleApp extends StatelessWidget {
               create: (context) => documentList,
               child: ChangeNotifierProvider(
                 create: (context) => activeDocument,
-                child: MaterialApp.router(
-                  title: 'Squiggle',
-                  theme: SquiggleThemeData.dark(),
-                  debugShowCheckedModeBanner: false,
-                  routerConfig: appRouter.config(),
+                child: ChangeNotifierProvider.value(
+                  value: preferences,
+                  child: Provider(
+                    create: (context) =>
+                        PreferencesPanel(navigatorKey: appRouter.navigatorKey),
+                    child: MaterialApp.router(
+                      title: 'Squiggle',
+                      theme: SquiggleThemeData.dark(),
+                      debugShowCheckedModeBanner: false,
+                      routerConfig: appRouter.config(),
+                      builder: (context, child) =>
+                          PreferencesShortcuts(child: child!),
+                    ),
+                  ),
                 ),
               ),
             ),
