@@ -4,11 +4,17 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
+import 'package:squiggle_flutter/editor/history/history.dart';
+import 'package:squiggle_flutter/editor/selection_model.dart';
+import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/group.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/clipboard.dart';
+import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 
 import '../support/test_database.dart';
 
@@ -32,7 +38,7 @@ void main() {
     await targetDatabase.close();
   });
 
-  test('nested groups transfer a shared PNG once with fresh node IDs and the same hash id', () async {
+  test('nested groups transfer a shared PNG once keeping payload node IDs and the same hash id', () async {
     final png = await _testPng();
     final imported = (await source.importPngBytes(png))!;
     final image = Feature(
@@ -65,12 +71,13 @@ void main() {
     final firstKind = firstImage.kind as FeatureKindImage;
     final secondKind = secondImage.kind as FeatureKindImage;
 
+    // Pasting inserts copies with fresh ids; decoding keeps the payload's.
     expect([
       decodedGroup.id,
       decodedNested.id,
       firstImage.id,
       secondImage.id,
-    ], everyElement(noId));
+    ], [10, 11, 12, 13].map(NodeId.newId));
     expect(decodedGroup.origin, group.origin);
     expect(decodedNested.origin, nested.origin);
     expect(firstImage.origin, image.origin);
@@ -97,7 +104,7 @@ void main() {
     final decoded = (await decodeNodesFromClipboard(payload, target))!;
     expect(
       decoded.single.toDataModel().toJson(),
-      feature.copyWith(id: noId).toDataModel().toJson(),
+      feature.toDataModel().toJson(),
     );
     expect(await targetDatabase.select(targetDatabase.images).get(), isEmpty);
   });
@@ -136,6 +143,84 @@ void main() {
     await expectLater(
       encodeNodesForClipboard([image], source),
       throwsStateError,
+    );
+  });
+
+  group('bindings', () {
+    late Document document;
+    late Feature circle;
+    late Feature rect;
+    late Feature line;
+
+    setUp(() {
+      document = Document();
+      circle = document.insert(
+        Feature(
+          origin: Offset.zero,
+          size: const Size(100, 100),
+          kind: FeatureKindCircle(),
+        ),
+      );
+      rect = document.insert(
+        Feature(
+          origin: const Offset(300, 0),
+          size: const Size(100, 100),
+          kind: FeatureKindRectangle(),
+        ),
+      );
+      line = document.insert(
+        Feature(
+          origin: const Offset(50, 50),
+          size: Size.zero,
+          kind: FeatureKindPolyline(
+            const [Offset.zero, Offset(300, 0)],
+            startBinding: NodeBinding(circle.id),
+            endBinding: NodeBinding(rect.id),
+          ),
+        ),
+      );
+    });
+
+    /// Copies [nodes], then pastes them into [document] the way paste does.
+    Future<List<Node>> roundTrip(List<Node> nodes) async {
+      final payload = await encodeNodesForClipboard(nodes, source);
+      final decoded = (await decodeNodesFromClipboard(payload, target))!;
+      late List<Node> pasted;
+      History(document: document).run('Paste', (transaction) {
+        pasted = duplicateNodes(
+          nodes: decoded,
+          transaction: transaction,
+          selection: SelectionModel(),
+        );
+      });
+      return pasted;
+    }
+
+    FeatureKindPolyline kindOf(Node node) =>
+        (node as Feature).kind as FeatureKindPolyline;
+
+    test('a pasted line binds to the pasted shapes', () async {
+      final [newCircle, newRect, newLine] = await roundTrip([
+        circle,
+        rect,
+        line,
+      ]);
+      expect(kindOf(newLine).startBinding?.targetId, newCircle.id);
+      expect(kindOf(newLine).endBinding?.targetId, newRect.id);
+      expect(newCircle.id, isNot(circle.id));
+    });
+
+    test(
+      'a line pasted alone keeps its shape and drops its bindings',
+      () async {
+        final [newLine] = await roundTrip([line]);
+        final kind = kindOf(newLine);
+        expect(kind.bindings, isEmpty);
+        expect(kind.resolvedPoints(newLine as Feature), [
+          const Offset(100, 50),
+          const Offset(300, 50),
+        ]);
+      },
     );
   });
 }

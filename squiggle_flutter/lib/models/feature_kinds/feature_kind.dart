@@ -6,6 +6,8 @@ import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
 import 'package:squiggle_flutter/models/label_layout.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
+import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/models/style_value_serialization.dart';
 import 'package:squiggle_flutter/painting/fill_painter.dart';
 import 'package:squiggle_flutter/painting/stroke_painter.dart';
@@ -21,6 +23,9 @@ part 'feature_kind_rectangle.dart';
 part 'feature_kind_text.dart';
 
 sealed class FeatureKind {
+  /// Other nodes this shape refers to by id.
+  Iterable<NodeId> get references => const [];
+
   Map<String, dynamic> toDataModel();
 
   /// Style fields for the inspector and brushes. With [feature], edits also
@@ -46,6 +51,14 @@ sealed class FeatureKind {
       boundsFor(feature).overlaps(rect);
 
   void applyBounds(Feature feature, Rect bounds) => feature.setBounds(bounds);
+
+  /// Where a ray from [feature]'s center toward [globalPoint] crosses this
+  /// shape's outline, in global space.
+  Offset outlinePointToward(Feature feature, Offset globalPoint) =>
+      rectOutlinePointToward(feature.globalBounds(), globalPoint);
+
+  /// Called just before nodes in [ids] that this shape refers to are removed.
+  void referencesRemoved(Feature feature, Set<NodeId> ids) {}
 
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository);
 }

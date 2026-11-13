@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
@@ -74,15 +75,13 @@ class SelectTool extends Tool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeInteractionState.onPointerDown(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
 
     // TODO: Update how change detection works to not be bool response based.
@@ -94,15 +93,13 @@ class SelectTool extends Tool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeInteractionState.onPointerMove(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     // TODO: Update how change detection works to not be bool response based.
     return true;
@@ -113,15 +110,13 @@ class SelectTool extends Tool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeInteractionState.onPointerUp(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     if (_hasTransaction) {
       context.history.commit();

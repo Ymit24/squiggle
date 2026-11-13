@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
@@ -25,8 +26,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: false,
-        isAltPressed: false,
+        modifiers: PointerModifiers.none,
       );
     }
 
@@ -35,8 +35,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: shift,
-        isAltPressed: alt,
+        modifiers: PointerModifiers(shift: shift, alt: alt),
       );
     }
 
@@ -45,8 +44,7 @@ void main() {
         context,
         world,
         camera,
-        isShiftPressed: shift,
-        isAltPressed: alt,
+        modifiers: PointerModifiers(shift: shift, alt: alt),
       );
     }
 

@@ -1,7 +1,11 @@
 part of 'feature_kind.dart';
 
 final class FeatureKindPolyline extends FeatureKind
-    with StrokeColorCapable, StrokeWidthCapable, StrokeTypeCapable {
+    with
+        StrokeColorCapable,
+        StrokeWidthCapable,
+        StrokeTypeCapable,
+        BindingCapable {
   FeatureKindPolyline(
     List<Offset> localPoints, {
     this.strokeColor = defaultFeatureStrokeColor,
@@ -9,6 +13,8 @@ final class FeatureKindPolyline extends FeatureKind
     this.strokeType = StrokeType.solid,
     this.startEndCap = LineEndCap.rounded,
     this.endEndCap = LineEndCap.rounded,
+    this.startBinding,
+    this.endBinding,
   }) : localPoints = List.of(localPoints);
 
   factory FeatureKindPolyline.fromDataModel(Map<String, dynamic> content) =>
@@ -22,6 +28,8 @@ final class FeatureKindPolyline extends FeatureKind
         strokeType: _strokeTypeFromDataModel(content),
         startEndCap: _endCapFromDataModel(content, 'startEndCap'),
         endEndCap: _endCapFromDataModel(content, 'endEndCap'),
+        startBinding: _bindingFromDataModel(content['startBinding']),
+        endBinding: _bindingFromDataModel(content['endBinding']),
       );
 
   List<Offset> localPoints;
@@ -35,6 +43,8 @@ final class FeatureKindPolyline extends FeatureKind
   StrokeType strokeType;
   LineEndCap startEndCap;
   LineEndCap endEndCap;
+  NodeBinding? startBinding;
+  NodeBinding? endBinding;
 
   double get _hitRadius => strokeWidth / 2;
 
@@ -53,6 +63,13 @@ final class FeatureKindPolyline extends FeatureKind
   double get _arrowLength => math.max(12.0, strokeWidth * 3);
 
   @override
+  Iterable<NodeBinding> get bindings => [?startBinding, ?endBinding];
+
+  @override
+  Iterable<NodeId> get references =>
+      bindings.map((binding) => binding.targetId);
+
+  @override
   Map<String, dynamic> toDataModel() => {
     'type': 'polyline',
     'localPoints': [
@@ -63,6 +80,8 @@ final class FeatureKindPolyline extends FeatureKind
     'strokeType': strokeType.name,
     'startEndCap': startEndCap.name,
     'endEndCap': endEndCap.name,
+    if (startBinding case final binding?) 'startBinding': binding.toDataModel(),
+    if (endBinding case final binding?) 'endBinding': binding.toDataModel(),
   };
 
   @override
@@ -73,7 +92,51 @@ final class FeatureKindPolyline extends FeatureKind
     strokeType: strokeType,
     startEndCap: startEndCap,
     endEndCap: endEndCap,
+    startBinding: startBinding,
+    endBinding: endBinding,
   );
+
+  /// Points in the feature's parent space, with bound ends on their targets.
+  List<Offset> resolvedPoints(Feature feature) => resolveBindings(
+    feature,
+    worldPoints(feature.origin, localPoints),
+    start: startBinding,
+    end: endBinding,
+  );
+
+  /// Bound ends keep their bindings, so undoing the removal reattaches them,
+  /// but stay where they are drawn while the target is gone.
+  @override
+  void referencesRemoved(Feature feature, Set<NodeId> ids) =>
+      bakeBindings(feature);
+
+  @override
+  void bakeBindings(Feature feature) {
+    if (bindings.isEmpty) return;
+    _setResolvedPoints(feature, resolvedPoints(feature));
+  }
+
+  @override
+  void unbind(Feature feature, {required bool Function(NodeId) keep}) {
+    bakeBindings(feature);
+    if (startBinding case final binding? when !keep(binding.targetId)) {
+      startBinding = null;
+    }
+    if (endBinding case final binding? when !keep(binding.targetId)) {
+      endBinding = null;
+    }
+  }
+
+  @override
+  void rebindCopy(Feature copy, Feature source, Map<NodeId, NodeId> ids) {
+    final sourceKind = source.kind as FeatureKindPolyline;
+    final shift = copy.origin - source.origin;
+    _setResolvedPoints(copy, [
+      for (final point in sourceKind.resolvedPoints(source)) point + shift,
+    ]);
+    startBinding = startBinding?.remapped(ids);
+    endBinding = endBinding?.remapped(ids);
+  }
 
   void setGeometry(
     Feature feature, {
@@ -86,7 +149,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     if (pointIndex < 0 || pointIndex >= points.length) return;
 
     points[pointIndex] = worldPosition;
@@ -104,7 +167,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     return envelopeOfPoints(
-      worldPoints(feature.origin, localPoints),
+      resolvedPoints(feature),
       strokePadding: _boundsPadding,
     );
   }
@@ -116,7 +179,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     final threshold = _selectionTolerance;
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     for (var i = 0; i < points.length - 1; i++) {
       if (distanceToSegment(worldPoint, points[i], points[i + 1]) <=
           threshold) {
@@ -133,7 +196,7 @@ final class FeatureKindPolyline extends FeatureKind
     }
 
     final padded = rect.inflate(_selectionTolerance);
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     for (var i = 0; i < points.length - 1; i++) {
       if (segmentIntersectsRect(points[i], points[i + 1], padded)) {
         return true;
@@ -147,8 +210,7 @@ final class FeatureKindPolyline extends FeatureKind
     final oldBounds = boundsFor(feature);
     final oldCenterlineBounds = oldBounds.deflate(_boundsPadding);
     final newCenterlineBounds = bounds.deflate(_boundsPadding);
-    final scaledLocalPoints = localPoints.map((local) {
-      final world = feature.origin + local;
+    final scaledLocalPoints = resolvedPoints(feature).map((world) {
       final nx = oldCenterlineBounds.width == 0
           ? 0.0
           : (world.dx - oldCenterlineBounds.left) / oldCenterlineBounds.width;
@@ -236,6 +298,18 @@ final class FeatureKindPolyline extends FeatureKind
     ];
   }
 
+  void _setResolvedPoints(Feature feature, List<Offset> points) {
+    setGeometry(
+      feature,
+      origin: feature.origin,
+      localPoints: [for (final point in points) point - feature.origin],
+    );
+  }
+
+  static NodeBinding? _bindingFromDataModel(Object? raw) => raw == null
+      ? null
+      : NodeBinding.fromDataModel(Map<String, dynamic>.from(raw as Map));
+
   static LineEndCap _endCapFromDataModel(
     Map<String, dynamic> content,
     String key,
@@ -251,7 +325,7 @@ final class FeatureKindPolyline extends FeatureKind
       return path;
     }
 
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     if (startEndCap == LineEndCap.arrow) {
       final direction = _endpointDirection(points, fromStart: true);
       if (direction != null) {
@@ -323,7 +397,7 @@ final class FeatureKindPolyline extends FeatureKind
   }
 
   void _paintArrowHeads(Canvas canvas, Feature feature) {
-    final points = worldPoints(feature.origin, localPoints);
+    final points = resolvedPoints(feature);
     for (final arrow in _arrowPaths(points)) {
       canvas.drawPath(arrow, Paint()..color = strokeColor);
     }

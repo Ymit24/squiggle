@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
@@ -38,15 +39,13 @@ class ToolModel extends ChangeNotifier {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeTool.onPointerDown(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     notifyListeners();
   }
@@ -64,15 +63,13 @@ class ToolModel extends ChangeNotifier {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeTool.onPointerMove(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     notifyListeners();
   }
@@ -81,15 +78,13 @@ class ToolModel extends ChangeNotifier {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeTool.onPointerUp(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     notifyListeners();
   }
@@ -98,15 +93,13 @@ class ToolModel extends ChangeNotifier {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _activeTool.onPointerHover(
       context,
       worldPosition,
       camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
+      modifiers: modifiers,
     );
     notifyListeners();
   }
