@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
+import 'package:squiggle_flutter/tools/select_tool/selection_painter.dart';
 
 import 'select_tool/select_tool_test_harness.dart';
 
@@ -77,10 +79,32 @@ void main() {
   group('editing bound lines', () {
     late Feature line;
 
+    List<int> handleFills() {
+      final canvas = _HandleCanvas();
+      SelectionPainter.paintSelectedPolylineHandles(
+        canvas,
+        harness.camera,
+        context(),
+      );
+      return canvas.fills;
+    }
+
     setUp(() {
       line = drawLine(const Offset(50, 50), const Offset(350, 50));
       harness.click(const Offset(200, 50));
       expect(context().selection.selectedNodeIds, [line.id]);
+    });
+
+    test('handles show an end as attached only while its target exists', () {
+      final accent = SquiggleColors.accent.toARGB32();
+      expect(handleFills(), [accent, accent]);
+
+      context().history.run(
+        'Delete',
+        (transaction) => transaction.removeAll([right.id]),
+      );
+      expect(kindOf(line).endBinding, isNotNull);
+      expect(handleFills(), [accent, SquiggleColors.base.toARGB32()]);
     });
 
     test('moving the line alone detaches it where it was', () {
@@ -161,4 +185,17 @@ void main() {
       expect(resolved(line).last, const Offset(700, 700));
     });
   });
+}
+
+/// Records the fill colour (as ARGB) of each vertex handle painted.
+class _HandleCanvas implements Canvas {
+  final fills = <int>[];
+
+  @override
+  void drawCircle(Offset center, double radius, Paint paint) {
+    if (paint.style == PaintingStyle.fill) fills.add(paint.color.toARGB32());
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
 }

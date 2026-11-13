@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/utils/painting.dart';
 
@@ -58,10 +59,13 @@ abstract final class SelectionPainter {
 
     final kind = node.kind as FeatureKindPolyline;
     final points = kind.resolvedPoints(node);
+    // A binding whose target is gone is kept for undo but attaches nothing.
+    bool isAttached(NodeBinding? binding) =>
+        binding?.target(context.document) != null;
     for (final (index, point) in points.indexed) {
       final isBound =
-          (index == 0 && kind.startBinding != null) ||
-          (index == points.length - 1 && kind.endBinding != null);
+          (index == 0 && isAttached(kind.startBinding)) ||
+          (index == points.length - 1 && isAttached(kind.endBinding));
       paintVertexHandle(canvas, camera, point, isBound: isBound);
     }
   }
