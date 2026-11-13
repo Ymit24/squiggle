@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
 import 'package:squiggle_flutter/app/squiggle_app.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
@@ -9,6 +11,8 @@ import 'package:squiggle_flutter/editor/editor_page.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/preferences/preferences.dart';
+import 'package:squiggle_flutter/preferences/widgets/preferences_dialog.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -47,6 +51,7 @@ void main() {
           database: database,
           documentList: list,
           activeDocument: active,
+          preferences: Preferences(dao: database.appStateDao),
         ),
       );
       await tester.pumpAndSettle();
@@ -113,6 +118,7 @@ void main() {
         database: database,
         documentList: list,
         activeDocument: active,
+        preferences: Preferences(dao: database.appStateDao),
       ),
     );
     await tester.pumpAndSettle();
@@ -166,6 +172,81 @@ void main() {
       allOf(isNotEmpty, everyElement(contains('FOREIGN KEY'))),
     );
 
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await database.close();
+    });
+    context.dispose();
+  });
+
+  testWidgets('Ctrl+, toggles preferences in the library and the editor', (
+    tester,
+  ) async {
+    PackageInfo.setMockInitialValues(
+      appName: 'Squiggle',
+      packageName: 'squiggle_flutter',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    late AppDatabase database;
+    late ActiveDocumentCoordinator active;
+    late DocumentListNotifier list;
+    final context = EditorContext(document: Document());
+    await tester.runAsync(() async {
+      database = createTestDatabase();
+      await database.documentsDao.create(name: 'Sketch');
+      list = DocumentListNotifier(documentsDao: database.documentsDao);
+      active = ActiveDocumentCoordinator(
+        documentsDao: database.documentsDao,
+        appStateDao: database.appStateDao,
+        documentList: list,
+        context: context,
+      );
+      await active.initialize();
+    });
+    await tester.pumpWidget(
+      SquiggleApp(
+        appRouter: AppRouter(),
+        imageRepository: ImageRepository(images: database.imagesDao),
+        context: context,
+        database: database,
+        documentList: list,
+        activeDocument: active,
+        preferences: Preferences(dao: database.appStateDao),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Future<void> pressCtrlComma() async {
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.comma);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+    }
+
+    await pressCtrlComma();
+    expect(find.byType(PreferencesDialog), findsOneWidget);
+    await pressCtrlComma();
+    expect(find.byType(PreferencesDialog), findsNothing);
+
+    await _openFromLibrary(tester, 'Sketch');
+    await pressCtrlComma();
+    expect(find.byType(PreferencesDialog), findsOneWidget);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PreferencesDialog), findsNothing);
+
+    await tester.tap(find.byTooltip('Preferences  Ctrl+,'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PreferencesDialog), findsOneWidget);
+    await pressCtrlComma();
+    expect(find.byType(PreferencesDialog), findsNothing);
+
+    await tester.runAsync(active.flush);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(() async {
       await database.close();

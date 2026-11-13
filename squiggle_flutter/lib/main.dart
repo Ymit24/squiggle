@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/app/squiggle_app.dart';
 import 'package:squiggle_flutter/database/open_database.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/preferences/preferences.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -28,6 +29,7 @@ void main() async {
   await windowManager.setMinimumSize(const Size(640, 480));
 
   final database = await openAppDatabase();
+  final preferences = await Preferences.load(database.appStateDao);
   final imageRepository = ImageRepository(images: database.imagesDao);
 
   // Safe now: nothing has loaded a document yet, so no undo history can bring
@@ -56,6 +58,7 @@ void main() async {
       database: database,
       documentList: documentList,
       activeDocument: activeDocument,
+      preferences: preferences,
     ),
   );
 }

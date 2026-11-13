@@ -17,5 +17,20 @@ void main() {
 
       expect(await database.appStateDao.activeDocumentId(), 'second');
     });
+
+    test('preferences round-trip apart from other app state', () async {
+      await database.appStateDao.setActiveDocumentId('doc');
+      expect(await database.appStateDao.preferences(), isEmpty);
+
+      await database.appStateDao.setPreference('canvas.grid', 'false');
+      await database.appStateDao.setPreference('canvas.grid', 'true');
+      await database.appStateDao.setPreference('theme', 'light');
+
+      expect(await database.appStateDao.preferences(), {
+        'canvas.grid': 'true',
+        'theme': 'light',
+      });
+      expect(await database.appStateDao.activeDocumentId(), 'doc');
+    });
   });
 }

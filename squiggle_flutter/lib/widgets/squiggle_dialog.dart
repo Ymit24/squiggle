@@ -7,6 +7,7 @@ class SquiggleDialog extends StatelessWidget {
     required this.title,
     this.icon,
     this.iconColor,
+    this.titleTrailing,
     required this.content,
     required this.actions,
   });
@@ -14,6 +15,9 @@ class SquiggleDialog extends StatelessWidget {
   final String title;
   final IconData? icon;
   final Color? iconColor;
+
+  /// Shown at the end of the title row, such as a shortcut hint.
+  final Widget? titleTrailing;
   final Widget content;
   final List<Widget> actions;
 
@@ -55,6 +59,7 @@ class SquiggleDialog extends StatelessWidget {
               ),
             ),
           ),
+          ?titleTrailing,
         ],
       ),
       content: SizedBox(width: 360, child: content),

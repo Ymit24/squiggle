@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_layout.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_search_field.dart';
 import 'package:squiggle_flutter/document_library/widgets/library_sort_button.dart';
+import 'package:squiggle_flutter/preferences/widgets/preferences_button.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 
@@ -43,42 +44,7 @@ class LibraryTopBar extends StatelessWidget {
     );
     return Row(
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: theme.colors.surface0,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: theme.colors.surface1),
-          ),
-          child: Icon(
-            Icons.gesture_rounded,
-            size: 19,
-            color: theme.colors.text,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Squiggle',
-              style: theme.typography.inputText.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 14.5,
-                letterSpacing: 0.1,
-              ),
-            ),
-            Text(
-              'Canvas library',
-              style: theme.typography.hotkey.copyWith(
-                fontSize: 11,
-                letterSpacing: 0.6,
-              ),
-            ),
-          ],
-        ),
+        ..._brand(theme),
         if (compact) ...[
           const SizedBox(width: 12),
           Expanded(child: searchField),
@@ -93,6 +59,8 @@ class LibraryTopBar extends StatelessWidget {
           compact: compact,
         ),
         const SizedBox(width: 10),
+        const PreferencesButton(),
+        const SizedBox(width: 10),
         SquiggleButton(
           onPressed: onCreateNamed,
           icon: Icons.add_rounded,
@@ -102,4 +70,39 @@ class LibraryTopBar extends StatelessWidget {
       ],
     );
   }
+
+  List<Widget> _brand(SquiggleTheme theme) => [
+    Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: theme.colors.surface0,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: theme.colors.surface1),
+      ),
+      child: Icon(Icons.gesture_rounded, size: 19, color: theme.colors.text),
+    ),
+    const SizedBox(width: 12),
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Squiggle',
+          style: theme.typography.inputText.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 14.5,
+            letterSpacing: 0.1,
+          ),
+        ),
+        Text(
+          'Canvas library',
+          style: theme.typography.hotkey.copyWith(
+            fontSize: 11,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ],
+    ),
+  ];
 }
