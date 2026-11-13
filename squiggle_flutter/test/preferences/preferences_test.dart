@@ -1,10 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
-import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/preferences/preferences.dart';
 
 import '../support/test_database.dart';
+import '../support/test_preferences.dart';
 
 enum _Size { small, large }
 
@@ -12,20 +11,17 @@ const _flag = BoolPreference('test.flag', true);
 const _size = EnumPreference('test.size', _Size.small, _Size.values);
 
 void main() {
-  late AppDatabase database;
-
-  setUp(() => database = createTestDatabase());
-  tearDown(() => database.close());
-
   test('unset preferences read their defaults', () {
-    final preferences = Preferences(dao: database.appStateDao);
+    final preferences = testPreferences();
 
     expect(preferences.get(_flag), isTrue);
     expect(preferences.get(_size), _Size.small);
   });
 
   test('set notifies once per change and persists across loads', () async {
-    final preferences = Preferences(dao: database.appStateDao);
+    final database = createTestDatabase();
+    addTearDown(database.close);
+    final preferences = await Preferences.load(database.appStateDao);
     var notifications = 0;
     preferences.addListener(() => notifications++);
 
@@ -40,32 +36,33 @@ void main() {
   });
 
   test('unreadable stored values fall back to the default', () {
-    final preferences = Preferences(
-      dao: database.appStateDao,
-      values: {'test.flag': 'maybe', 'test.size': 'medium'},
-    );
+    final preferences = testPreferences({
+      'test.flag': 'maybe',
+      'test.size': 'medium',
+    });
 
     expect(preferences.get(_flag), isTrue);
     expect(preferences.get(_size), _Size.small);
   });
 
-  testWidgets('watchPreference rebuilds on change and defaults without a '
-      'store', (tester) async {
-    final preferences = Preferences(dao: database.appStateDao);
-    Widget label() => Builder(
-      builder: (context) => Text(
-        context.watchPreference(_size).name,
-        textDirection: TextDirection.ltr,
+  testWidgets('watchPreference rebuilds when its value changes', (
+    tester,
+  ) async {
+    final preferences = testPreferences();
+    await tester.pumpWidget(
+      withPreferences(
+        Builder(
+          builder: (context) => Text(
+            context.watchPreference(_size).name,
+            textDirection: TextDirection.ltr,
+          ),
+        ),
+        preferences,
       ),
     );
-
-    await tester.pumpWidget(label());
     expect(find.text('small'), findsOneWidget);
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider.value(value: preferences, child: label()),
-    );
-    await tester.runAsync(() => preferences.set(_size, _Size.large));
+    await preferences.set(_size, _Size.large);
     await tester.pump();
     expect(find.text('large'), findsOneWidget);
   });

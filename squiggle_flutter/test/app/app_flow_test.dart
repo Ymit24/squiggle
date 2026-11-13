@@ -11,13 +11,13 @@ import 'package:squiggle_flutter/editor/editor_page.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/document_info.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/preferences/preferences.dart';
 import 'package:squiggle_flutter/preferences/widgets/preferences_dialog.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
 import '../support/test_database.dart';
+import '../support/test_preferences.dart';
 
 void main() {
   testWidgets(
@@ -51,7 +51,7 @@ void main() {
           database: database,
           documentList: list,
           activeDocument: active,
-          preferences: Preferences(dao: database.appStateDao),
+          preferences: testPreferences(),
         ),
       );
       await tester.pumpAndSettle();
@@ -118,7 +118,7 @@ void main() {
         database: database,
         documentList: list,
         activeDocument: active,
-        preferences: Preferences(dao: database.appStateDao),
+        preferences: testPreferences(),
       ),
     );
     await tester.pumpAndSettle();
@@ -216,7 +216,7 @@ void main() {
         database: database,
         documentList: list,
         activeDocument: active,
-        preferences: Preferences(dao: database.appStateDao),
+        preferences: testPreferences(),
       ),
     );
     await tester.pumpAndSettle();

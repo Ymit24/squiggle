@@ -9,6 +9,8 @@ import 'package:squiggle_flutter/preferences/widgets/preferences_dialog.dart';
 import 'package:squiggle_flutter/preferences/widgets/preferences_shortcuts.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
+import '../support/test_preferences.dart';
+
 void main() {
   setUp(
     () => PackageInfo.setMockInitialValues(
@@ -24,13 +26,15 @@ void main() {
     final navigatorKey = GlobalKey<NavigatorState>();
     final panel = PreferencesPanel(navigatorKey: navigatorKey);
     await tester.pumpWidget(
-      Provider.value(
-        value: panel,
-        child: MaterialApp(
-          navigatorKey: navigatorKey,
-          theme: SquiggleThemeData.dark(),
-          builder: (context, child) => PreferencesShortcuts(child: child!),
-          home: const Scaffold(body: Center(child: PreferencesButton())),
+      withPreferences(
+        Provider.value(
+          value: panel,
+          child: MaterialApp(
+            navigatorKey: navigatorKey,
+            theme: SquiggleThemeData.dark(),
+            builder: (context, child) => PreferencesShortcuts(child: child!),
+            home: const Scaffold(body: Center(child: PreferencesButton())),
+          ),
         ),
       ),
     );

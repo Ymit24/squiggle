@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/preferences/preferences_panel.dart';
 
 /// Toggles the preferences dialog with ⌘, or Ctrl+, from anywhere in [child].
+///
+/// Wraps the router rather than joining a page's shortcuts (the library's or
+/// the editor's `ToolShortcuts`): it must work on every page, and while the
+/// dialog itself has focus so the same keys close it.
 class PreferencesShortcuts extends StatelessWidget {
   const PreferencesShortcuts({super.key, required this.child});
 
