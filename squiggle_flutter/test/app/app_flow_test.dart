@@ -236,7 +236,7 @@ void main() {
     await _openFromLibrary(tester, 'Sketch');
     await pressCtrlComma();
     expect(find.byType(PreferencesDialog), findsOneWidget);
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.byTooltip('Close  Esc · Ctrl+,'));
     await tester.pumpAndSettle();
     expect(find.byType(PreferencesDialog), findsNothing);
 

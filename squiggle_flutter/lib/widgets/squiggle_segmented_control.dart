@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-/// A row of mutually exclusive choices sharing the width equally.
+/// A compact row of mutually exclusive choices, sized to its labels.
 ///
-/// Segments use the toolbar button states: `surface1` when selected and
-/// `surface0` on hover, inside a floating-panel style track.
+/// The track is recessed in `base`, so it reads as one control on a raised
+/// `surface0` card; the selected segment is raised in `surface1`.
 class SquiggleSegmentedControl<T> extends StatelessWidget {
   const SquiggleSegmentedControl({
     super.key,
@@ -20,20 +20,17 @@ class SquiggleSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.squiggleTheme;
-    final inset = theme.spacing.toolbarPadding;
+    const inset = 3.0;
     return Container(
-      padding: EdgeInsets.all(inset),
+      padding: const EdgeInsets.all(inset),
       decoration: BoxDecoration(
-        color: theme.colors.mantle,
-        border: Border.all(color: theme.colors.surface1),
+        color: theme.colors.base,
         borderRadius: BorderRadius.circular(theme.radii.button + inset),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         spacing: theme.spacing.toolbarGap,
-        children: [
-          for (final segment in segments)
-            Expanded(child: _segment(theme, segment)),
-        ],
+        children: [for (final segment in segments) _segment(theme, segment)],
       ),
     );
   }
@@ -49,11 +46,10 @@ class SquiggleSegmentedControl<T> extends StatelessWidget {
           style: _style(theme, isSelected),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            spacing: theme.spacing.buttonIconGap,
+            spacing: 6,
             children: [
-              if (segment.icon != null)
-                Icon(segment.icon, size: theme.spacing.buttonIconSize - 2),
-              Flexible(child: Text(segment.label, overflow: TextOverflow.fade)),
+              if (segment.icon != null) Icon(segment.icon, size: 14),
+              Text(segment.label),
             ],
           ),
         ),
@@ -65,11 +61,12 @@ class SquiggleSegmentedControl<T> extends StatelessWidget {
     final colors = theme.colors;
     return TextButton.styleFrom(
       foregroundColor: isSelected ? colors.text : colors.subtext0,
-      textStyle: theme.typography.actionButtonLabel.copyWith(
-        fontWeight: FontWeight.w600,
+      textStyle: theme.typography.menuItemLabel.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
       ),
-      minimumSize: Size(0, theme.spacing.toolbarButtonSize),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      minimumSize: Size(0, theme.spacing.menuItemHeight),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.standard,
       shape: RoundedRectangleBorder(
@@ -82,7 +79,7 @@ class SquiggleSegmentedControl<T> extends StatelessWidget {
         if (isSelected) return colors.surface1;
         if (states.contains(WidgetState.hovered) ||
             states.contains(WidgetState.focused)) {
-          return colors.surface0;
+          return colors.surface1.withValues(alpha: 0.4);
         }
         return Colors.transparent;
       }),

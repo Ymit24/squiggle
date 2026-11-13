@@ -47,7 +47,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the gear button opens the dialog and Done closes it', (
+  testWidgets('the gear button opens the dialog and Close closes it', (
     tester,
   ) async {
     final panel = await pumpApp(tester);
@@ -55,10 +55,10 @@ void main() {
     await tester.tap(find.byTooltip('Preferences  Ctrl+,'));
     await tester.pumpAndSettle();
     expect(find.byType(PreferencesDialog), findsOneWidget);
-    expect(find.text('Version 1.2.3+45'), findsOneWidget);
+    expect(find.text('1.2.3+45'), findsOneWidget);
     expect(panel.isOpen, isTrue);
 
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.byTooltip('Close  Esc · Ctrl+,'));
     await tester.pumpAndSettle();
     expect(find.byType(PreferencesDialog), findsNothing);
     expect(panel.isOpen, isFalse);
