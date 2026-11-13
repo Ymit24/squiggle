@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 
+/// Adapts command-style shortcut notation (⌘, ⌃, ⌥, ⇧) to [platform]:
+/// symbols on Apple platforms, `Ctrl+`-style words elsewhere.
+String formatShortcut(String label, TargetPlatform platform) {
+  final macStyle =
+      platform == TargetPlatform.macOS || platform == TargetPlatform.iOS;
+  if (macStyle) return label;
+  return label
+      .replaceAll('⌘', 'Ctrl+')
+      .replaceAll('⌃', 'Ctrl+')
+      .replaceAll('⌥', 'Alt+')
+      .replaceAll('⇧', 'Shift+');
+}
+
 /// A subdued shortcut label. Command-style notation is adapted per platform.
 class SquiggleShortcutHint extends StatelessWidget {
   const SquiggleShortcutHint({
@@ -14,16 +27,7 @@ class SquiggleShortcutHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    final macStyle =
-        platform == TargetPlatform.macOS || platform == TargetPlatform.iOS;
-    final formatted = macStyle
-        ? label
-        : label
-              .replaceAll('⌘', 'Ctrl+')
-              .replaceAll('⌃', 'Ctrl+')
-              .replaceAll('⌥', 'Alt+')
-              .replaceAll('⇧', 'Shift+');
+    final formatted = formatShortcut(label, Theme.of(context).platform);
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerRight,

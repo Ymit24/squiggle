@@ -26,24 +26,22 @@ class StrokeTypeSelector extends StatelessWidget {
       spacing: theme.spacing.swatchGap,
       children: [
         for (final type in StrokeType.values)
-          Tooltip(
-            message: switch (type) {
+          StyleColorSwatch(
+            color: theme.colors.base,
+            tooltip: switch (type) {
               StrokeType.solid => 'Solid',
               StrokeType.dashed => 'Dashed',
               StrokeType.dotted => 'Dotted',
             },
-            child: StyleColorSwatch(
-              color: theme.colors.base,
-              isActive: !isMixed && activeType == type,
-              enabled: enabled,
-              onPressed: () => onTypeSelected(type),
-              overlay: CustomPaint(
-                painter: _StrokeTypePreviewPainter(
-                  type: type,
-                  color: !isMixed && activeType == type
-                      ? theme.colors.text
-                      : theme.colors.subtext0,
-                ),
+            isActive: !isMixed && activeType == type,
+            enabled: enabled,
+            onPressed: () => onTypeSelected(type),
+            overlay: CustomPaint(
+              painter: _StrokeTypePreviewPainter(
+                type: type,
+                color: !isMixed && activeType == type
+                    ? theme.colors.text
+                    : theme.colors.subtext0,
               ),
             ),
           ),

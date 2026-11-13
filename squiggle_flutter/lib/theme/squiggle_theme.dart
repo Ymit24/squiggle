@@ -85,6 +85,15 @@ abstract final class SquiggleThemeData {
         onPrimary: squiggle.colors.base,
         outline: squiggle.colors.surface1,
       ),
+      tooltipTheme: TooltipThemeData(
+        decoration: squiggle.decorations.tooltip(),
+        textStyle: squiggle.typography.tooltip,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        verticalOffset: 24,
+        preferBelow: true,
+        waitDuration: const Duration(milliseconds: 500),
+        exitDuration: const Duration(milliseconds: 100),
+      ),
       extensions: [squiggle],
     );
   }

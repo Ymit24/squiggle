@@ -18,14 +18,13 @@ class LayoutSwatch extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.squiggleTheme.colors;
 
-    return Tooltip(
-      message: tooltip,
-      child: StyleColorSwatch(
-        color: colors.base,
-        isActive: false,
-        onPressed: onPressed,
-        overlay: Icon(icon, size: 14, color: colors.subtext0),
-      ),
+    return StyleColorSwatch(
+      color: colors.base,
+      tooltip: tooltip,
+      isActive: false,
+      selectable: false,
+      onPressed: onPressed,
+      overlay: Icon(icon, size: 14, color: colors.subtext0),
     );
   }
 }

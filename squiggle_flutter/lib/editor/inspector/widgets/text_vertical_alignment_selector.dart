@@ -32,6 +32,11 @@ class TextVerticalAlignmentSelector extends StatelessWidget {
               TextVerticalAlignment.center => Icons.vertical_align_center,
               TextVerticalAlignment.bottom => Icons.vertical_align_bottom,
             },
+            tooltip: switch (alignment) {
+              TextVerticalAlignment.top => 'Align top',
+              TextVerticalAlignment.center => 'Align middle',
+              TextVerticalAlignment.bottom => 'Align bottom',
+            },
             isActive: !isMixed && activeAlignment == alignment,
             enabled: enabled,
             onPressed: () => onAlignmentSelected(alignment),

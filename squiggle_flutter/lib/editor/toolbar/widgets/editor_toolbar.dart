@@ -46,6 +46,11 @@ class EditorToolbar extends StatelessWidget {
                             ? LucideIcons.lock
                             : LucideIcons.lockOpen,
                         hotkey: 'Q',
+                        tooltip: editor.tool.isLocked
+                            ? 'Unlock tool'
+                            : 'Lock tool',
+                        shortcuts: const ['Q'],
+                        isToggle: true,
                         isActive: editor.tool.isLocked,
                         onPressed: editor.tool.toggleLock,
                       ),
@@ -55,6 +60,8 @@ class EditorToolbar extends StatelessWidget {
                       Button(
                         iconAsset: 'assets/icons/arrow_selector_tool.svg',
                         hotkey: '1',
+                        tooltip: 'Select',
+                        shortcuts: const ['V', '1'],
                         isActive: activeTool is SelectTool,
                         onPressed: () => editor.setTool(SelectTool()),
                       ),
@@ -64,6 +71,8 @@ class EditorToolbar extends StatelessWidget {
                       Button(
                         iconAsset: 'assets/icons/crop_square.svg',
                         hotkey: '2',
+                        tooltip: 'Rectangle',
+                        shortcuts: const ['R', '2'],
                         isActive:
                             activeTool is CreateFeatureTool &&
                             activeTool.kind is FeatureKindRectangle,
@@ -74,6 +83,8 @@ class EditorToolbar extends StatelessWidget {
                       Button(
                         iconAsset: 'assets/icons/circle.svg',
                         hotkey: '3',
+                        tooltip: 'Ellipse',
+                        shortcuts: const ['C', '3'],
                         isActive:
                             activeTool is CreateFeatureTool &&
                             activeTool.kind is FeatureKindCircle,
@@ -84,6 +95,8 @@ class EditorToolbar extends StatelessWidget {
                       Button(
                         iconAsset: 'assets/icons/line.svg',
                         hotkey: '4',
+                        tooltip: 'Line',
+                        shortcuts: const ['L', '4'],
                         isActive: activeTool is CreateLineTool,
                         onPressed: () => editor.setTool(CreateLineTool()),
                       ),
@@ -91,6 +104,8 @@ class EditorToolbar extends StatelessWidget {
                       Button(
                         label: 'A',
                         hotkey: '5',
+                        tooltip: 'Text',
+                        shortcuts: const ['T', '5'],
                         isActive: activeTool is CreateTextTool,
                         onPressed: () => editor.setTool(CreateTextTool()),
                       ),
@@ -99,12 +114,16 @@ class EditorToolbar extends StatelessWidget {
                       const Gap(),
                       Button(
                         icon: Icons.undo,
+                        tooltip: 'Undo',
+                        shortcuts: const ['⌘Z'],
                         isActive: false,
                         onPressed: editor.history.canUndo ? editor.undo : null,
                       ),
                       const Gap(),
                       Button(
                         icon: Icons.redo,
+                        tooltip: 'Redo',
+                        shortcuts: const ['⇧⌘Z'],
                         isActive: false,
                         onPressed: editor.history.canRedo ? editor.redo : null,
                       ),

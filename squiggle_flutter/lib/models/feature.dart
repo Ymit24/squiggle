@@ -5,7 +5,14 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
+export 'feature_kinds/binding_capable.dart';
 export 'feature_kinds/feature_kind.dart';
+export 'feature_kinds/fill_color_capable.dart';
+export 'feature_kinds/fill_type_capable.dart';
+export 'feature_kinds/label_capable.dart';
+export 'feature_kinds/stroke_color_capable.dart';
+export 'feature_kinds/stroke_type_capable.dart';
+export 'feature_kinds/stroke_width_capable.dart';
 export 'fill_type.dart';
 export 'font_size_preset.dart';
 export 'line_end_cap.dart';
