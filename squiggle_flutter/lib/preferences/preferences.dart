@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/database/daos/app_state_dao.dart';
 import 'package:squiggle_flutter/preferences/preference.dart';
 
@@ -6,8 +7,7 @@ export 'package:squiggle_flutter/preferences/preference.dart';
 
 /// App-wide preference values, read synchronously and saved on change.
 ///
-/// Widgets should depend on a single value so they rebuild only when it
-/// changes: `context.select((Preferences p) => p.get(somePreference))`.
+/// Widgets read values with [PreferencesContext.watchPreference].
 class Preferences extends ChangeNotifier {
   Preferences({required this._dao, Map<String, String> values = const {}})
     : _values = Map.of(values);
@@ -32,4 +32,14 @@ class Preferences extends ChangeNotifier {
     notifyListeners();
     await _dao.setPreference(preference.key, raw);
   }
+}
+
+extension PreferencesContext on BuildContext {
+  /// [preference]'s value, rebuilding only when that value changes.
+  ///
+  /// Reads the default where no [Preferences] is provided, so feature widgets
+  /// still work outside the app shell, such as in isolated widget tests.
+  T watchPreference<T>(Preference<T> preference) => select<Preferences?, T>(
+    (preferences) => preferences?.get(preference) ?? preference.defaultValue,
+  );
 }
