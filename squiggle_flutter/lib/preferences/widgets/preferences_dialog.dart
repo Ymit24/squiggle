@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/preferences/widgets/about_section.dart';
+import 'package:squiggle_flutter/preferences/widgets/canvas_section.dart';
 import 'package:squiggle_flutter/widgets/squiggle_button.dart';
 import 'package:squiggle_flutter/widgets/squiggle_dialog.dart';
 
@@ -15,7 +16,7 @@ const preferencesShortcut = '⌘,';
 class PreferencesDialog extends StatelessWidget {
   const PreferencesDialog({super.key});
 
-  static const _sections = <Widget>[AboutSection()];
+  static const _sections = <Widget>[CanvasSection(), AboutSection()];
 
   @override
   Widget build(BuildContext context) {

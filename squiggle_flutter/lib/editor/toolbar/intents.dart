@@ -21,6 +21,10 @@ class ToggleToolLockIntent extends Intent {
   const ToggleToolLockIntent();
 }
 
+class ToggleGridIntent extends Intent {
+  const ToggleGridIntent();
+}
+
 class ActivateCreateRectToolIntent extends Intent {
   const ActivateCreateRectToolIntent();
 }

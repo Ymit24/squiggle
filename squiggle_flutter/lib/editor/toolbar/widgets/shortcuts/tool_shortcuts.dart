@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:squiggle_flutter/editor/canvas_preferences.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/layer_order_commands.dart';
 import 'package:squiggle_flutter/editor/toolbar/intents.dart';
 import 'package:squiggle_flutter/editor/toolbar/widgets/shortcuts/shortcuts_scope.dart';
+import 'package:squiggle_flutter/preferences/preferences.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/services/clipboard.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
@@ -53,6 +55,8 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
       DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyQ): ToggleToolLockIntent(),
+  SingleActivator(LogicalKeyboardKey.quote, meta: true): ToggleGridIntent(),
+  SingleActivator(LogicalKeyboardKey.quote, control: true): ToggleGridIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyL): ActivateCreateLineToolIntent(),
@@ -161,6 +165,9 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 }
                 return null;
               },
+            ),
+            ToggleGridIntent: CallbackAction<ToggleGridIntent>(
+              onInvoke: (_) => toggleShowGrid(context.read<Preferences>()),
             ),
             ReorderSelectedNodesIntent:
                 CallbackAction<ReorderSelectedNodesIntent>(

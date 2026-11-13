@@ -1,10 +1,12 @@
 import 'package:flutter/widgets.dart';
+import 'package:squiggle_flutter/editor/canvas_preferences.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/editor/text_edit/widgets/text_edit_overlay.dart';
 import 'package:squiggle_flutter/editor/widgets/document_canvas.dart';
 import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/editor/widgets/viewport_tool_cursor.dart';
+import 'package:squiggle_flutter/preferences/preferences.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 
@@ -29,6 +31,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
 
   @override
   Widget build(BuildContext context) {
+    final showGrid = context.watchPreference(showGridPreference);
     return ListenableBuilder(
       listenable: widget.editorContext.textEdit,
       builder: (context, _) {
@@ -56,6 +59,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
                         key: _canvasKey,
                         context: widget.editorContext,
                         imageRepository: widget.imageRepository,
+                        showGrid: showGrid,
                       ),
                     ),
                   ),
