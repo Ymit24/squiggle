@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:window_manager/window_manager.dart';
 
+Future<void> disableBrowserContextMenu() async {}
+
 Future<void> initializeDesktopWindow(String title) async {
   await windowManager.ensureInitialized();
   await windowManager.setTitle(title);

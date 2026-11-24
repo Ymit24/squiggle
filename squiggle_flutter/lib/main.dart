@@ -19,6 +19,7 @@ String get _buildMode {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await disableBrowserContextMenu();
 
   final packageInfo = await PackageInfo.fromPlatform();
   final appTitle =

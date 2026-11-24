@@ -11,7 +11,8 @@ used by the other `*.ymit.dev` apps.
 - `/home/dev/.t3/projects/squiggle-web/docker-compose.yml` runs nginx with that
   directory mounted read-only.
 - `/home/dev/.t3/projects/squiggle-web/nginx.conf` serves Flutter routes and
-  sets the required `application/wasm` content type for `sqlite3.wasm`.
+  sets the required `application/wasm` content type for `sqlite3.wasm`. It also
+  prevents stale Flutter entry scripts from staying cached across deployments.
 - `/home/dev/edge/Caddyfile` routes `squiggle.ymit.dev` to the `squiggle-web`
   container. Caddy manages HTTPS with the other sites.
 
@@ -25,14 +26,20 @@ First check out or update the source revision you want to publish. From the
 `squiggle_flutter` directory, build and sync the output:
 
 ```sh
-mise exec flutter@3.50.1 -- flutter build web --release
+mise exec flutter@3.50.1 -- flutter build web --release --web-content-hash
 rsync -a --delete build/web/ /home/dev/.t3/projects/squiggle-web/site/
 docker compose -f /home/dev/.t3/projects/squiggle-web/docker-compose.yml up -d
 ```
 
 The site directory is mounted into nginx, so syncing files publishes the new
 build without rebuilding the image. Re-running `docker compose up -d` ensures
-the service is running. No Caddy reload is needed for app updates.
+the service is running. No Caddy reload is needed for app updates. If nginx
+configuration changes, validate and reload it with:
+
+```sh
+docker exec squiggle-web nginx -t
+docker exec squiggle-web nginx -s reload
+```
 
 Check the deployment and WASM content type with:
 
