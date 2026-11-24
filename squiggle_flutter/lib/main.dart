@@ -6,10 +6,10 @@ import 'package:squiggle_flutter/app/squiggle_app.dart';
 import 'package:squiggle_flutter/database/open_database.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
+import 'package:squiggle_flutter/platform/platform_window.dart';
 import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:window_manager/window_manager.dart';
 
 String get _buildMode {
   if (kDebugMode) return 'DEBUG';
@@ -19,13 +19,11 @@ String get _buildMode {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
 
   final packageInfo = await PackageInfo.fromPlatform();
   final appTitle =
       'Squiggle - v${packageInfo.version}+${packageInfo.buildNumber} $_buildMode';
-  await windowManager.setTitle(appTitle);
-  await windowManager.setMinimumSize(const Size(640, 480));
+  await initializeDesktopWindow(appTitle);
 
   final database = await openAppDatabase();
   final imageRepository = ImageRepository(images: database.imagesDao);
