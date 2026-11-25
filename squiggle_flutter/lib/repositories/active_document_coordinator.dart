@@ -147,13 +147,17 @@ class ActiveDocumentCoordinator extends ChangeNotifier {
   }
 
   Future<void> deleteDocument(String id) async {
-    if (documentList.documents.length <= 1) return;
-
     await documentsDao.remove(id);
     await documentList.refresh();
 
     if (_activeId == id) {
-      await _activate(documentList.documents.first.id);
+      final documents = documentList.documents;
+      if (documents.isEmpty) {
+        discardActiveDocument();
+        notifyListeners();
+      } else {
+        await _activate(documents.first.id);
+      }
     }
   }
 

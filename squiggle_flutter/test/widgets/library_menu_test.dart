@@ -64,7 +64,6 @@ void main() {
               children: [
                 Text(open ? 'Menu open' : 'Menu closed'),
                 DocumentCardMenuButton(
-                  canDelete: true,
                   onRename: () {},
                   onDelete: () => deletes++,
                   onOpenChanged: (value) => setState(() => open = value),
