@@ -124,6 +124,71 @@ void main() {
     },
   );
 
+  testWidgets('select all shortcut selects every root node', (tester) async {
+    final context = EditorContext(
+      document: Document.fromFeatures([
+        for (var i = 0; i < 3; i++)
+          Feature(
+            origin: Offset(i * 10.0, 0),
+            size: const Size(10, 10),
+            kind: FeatureKindRectangle(),
+          ),
+      ]),
+    );
+    addTearDown(context.dispose);
+    final allIds = context.document.nodes.map((node) => node.id).toList();
+
+    Future<void> pumpShortcuts({bool textEditOpen = false}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MultiRepositoryProvider(
+              providers: [
+                RepositoryProvider<EditorContext>.value(value: context),
+                RepositoryProvider<ImageRepository>.value(
+                  value: ImageRepository(),
+                ),
+              ],
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider(create: (_) => EditorBloc(context: context)),
+                ],
+                child: ToolShortcuts(
+                  textEditOpen: textEditOpen,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> pressSelectAll(
+      LogicalKeyboardKey modifier,
+      String platform,
+    ) async {
+      await tester.sendKeyDownEvent(modifier, platform: platform);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA, platform: platform);
+      await tester.sendKeyUpEvent(modifier, platform: platform);
+      await tester.pump();
+    }
+
+    await pumpShortcuts();
+    await pressSelectAll(LogicalKeyboardKey.meta, 'macos');
+    expect(context.selection.selectedNodeIds, allIds);
+
+    context.selection.clearSelection();
+    await pressSelectAll(LogicalKeyboardKey.control, 'linux');
+    expect(context.selection.selectedNodeIds, allIds);
+
+    await pumpShortcuts(textEditOpen: true);
+    context.selection.clearSelection();
+    await pressSelectAll(LogicalKeyboardKey.meta, 'macos');
+    expect(context.selection.selectedNodeIds, isEmpty);
+  });
+
   testWidgets('ToolShortcuts activates tools on V, R, C, L, T and 1-5 keys', (
     tester,
   ) async {

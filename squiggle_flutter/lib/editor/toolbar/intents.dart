@@ -45,6 +45,10 @@ class ClearSelectionIntent extends Intent {
   const ClearSelectionIntent();
 }
 
+class SelectAllIntent extends Intent {
+  const SelectAllIntent();
+}
+
 class PasteImageIntent extends Intent {
   const PasteImageIntent();
 }
