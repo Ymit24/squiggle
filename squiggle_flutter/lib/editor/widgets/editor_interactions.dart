@@ -196,8 +196,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
   }
 
   void _onFlingPan(Offset delta) {
-    _camera.panByScreenDelta(delta);
-    widget.context.notifyViewportChanged();
+    widget.context.panByScreenDelta(delta);
   }
 
   void _checkForDoubleClick(PointerUpEvent event) {
@@ -320,8 +319,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
     if (!_isSecondaryDragging && distance < _secondaryDragThreshold) return;
     _isSecondaryDragging = true;
 
-    _camera.panByScreenDelta(event.delta);
-    widget.context.notifyViewportChanged();
+    widget.context.panByScreenDelta(event.delta);
   }
 
   void _onRightPointerUp(BuildContext context, PointerUpEvent event) {

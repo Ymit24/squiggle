@@ -3,21 +3,51 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Holds the active editor tool and notifies observers when it repaints.
 class ToolModel extends ChangeNotifier {
-  ToolModel({Tool? initialTool}) : _activeTool = initialTool ?? SelectTool();
+  ToolModel({Tool? initialTool})
+    : _activeTool = initialTool ?? SelectTool(),
+      _spacePanTool = PanTool();
 
   Tool _activeTool;
+  final PanTool _spacePanTool;
   bool _isLocked = false;
 
+  /// Whether space is currently held, making the cursor and next press pan.
+  bool _isSpacePanning = false;
+
+  /// Whether the current pointer gesture started while space was held. It
+  /// stays set until pointer up so releasing space mid-drag keeps panning.
+  bool _isSpacePanGesture = false;
+
   Tool get activeTool => _activeTool;
+
   bool get isLocked => _isLocked;
+
+  bool get isSpacePanning => _isSpacePanning;
+
+  Tool get _pointerTool => _isSpacePanGesture ? _spacePanTool : _activeTool;
+
+  bool get _showsPanCursor => _isSpacePanning || _isSpacePanGesture;
 
   void toggleLock() {
     _isLocked = !_isLocked;
+    notifyListeners();
+  }
+
+  void beginSpacePan() {
+    if (_isSpacePanning) return;
+    _isSpacePanning = true;
+    notifyListeners();
+  }
+
+  void endSpacePan() {
+    if (!_isSpacePanning) return;
+    _isSpacePanning = false;
     notifyListeners();
   }
 
@@ -41,7 +71,8 @@ class ToolModel extends ChangeNotifier {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _activeTool.onPointerDown(
+    _isSpacePanGesture = _isSpacePanning;
+    _pointerTool.onPointerDown(
       context,
       worldPosition,
       camera,
@@ -56,7 +87,7 @@ class ToolModel extends ChangeNotifier {
     Offset worldPosition,
     Camera camera,
   ) {
-    _activeTool.onDoubleClick(context, worldPosition, camera);
+    _pointerTool.onDoubleClick(context, worldPosition, camera);
     notifyListeners();
   }
 
@@ -67,7 +98,7 @@ class ToolModel extends ChangeNotifier {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _activeTool.onPointerMove(
+    _pointerTool.onPointerMove(
       context,
       worldPosition,
       camera,
@@ -84,13 +115,14 @@ class ToolModel extends ChangeNotifier {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _activeTool.onPointerUp(
+    _pointerTool.onPointerUp(
       context,
       worldPosition,
       camera,
       isShiftPressed: isShiftPressed,
       isAltPressed: isAltPressed,
     );
+    _isSpacePanGesture = false;
     notifyListeners();
   }
 
@@ -101,7 +133,7 @@ class ToolModel extends ChangeNotifier {
     required bool isShiftPressed,
     required bool isAltPressed,
   }) {
-    _activeTool.onPointerHover(
+    _pointerTool.onPointerHover(
       context,
       worldPosition,
       camera,
@@ -119,11 +151,18 @@ class ToolModel extends ChangeNotifier {
     return handled;
   }
 
+  void cancelInteraction(EditorContext context) {
+    _pointerTool.cancelInteraction(context);
+    _isSpacePanGesture = false;
+  }
+
   EditorCursor resolveCursor(
     EditorContext context,
     Offset worldPosition,
     Camera camera,
   ) {
-    return _activeTool.resolveCursor(context, worldPosition, camera);
+    return _showsPanCursor
+        ? _spacePanTool.resolveCursor(context, worldPosition, camera)
+        : _activeTool.resolveCursor(context, worldPosition, camera);
   }
 }

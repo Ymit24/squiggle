@@ -12,6 +12,7 @@ import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _brushKeys = [
@@ -52,6 +53,7 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyD, control: true):
       DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyH): ActivatePanToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyQ): ToggleToolLockIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
@@ -111,6 +113,9 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
   @override
   void didUpdateWidget(ToolShortcuts oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.textEditOpen) {
+      context.read<EditorContext>().tool.endSpacePan();
+    }
     if (oldWidget.textEditOpen && !widget.textEditOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -190,6 +195,12 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
               onInvoke: (_) {
                 context.read<EditorContext>().setTool(SelectTool());
+                return null;
+              },
+            ),
+            ActivatePanToolIntent: CallbackAction<ActivatePanToolIntent>(
+              onInvoke: (_) {
+                context.read<EditorContext>().setTool(PanTool());
                 return null;
               },
             ),
@@ -285,19 +296,32 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
           child: Focus(
             focusNode: _focusNode,
             autofocus: !textEditOpen,
-            onKeyEvent: (node, event) {
-              if (textEditOpen) return KeyEventResult.ignored;
-              if (event is! KeyDownEvent) return KeyEventResult.ignored;
-              final context_ = context.read<EditorContext>();
-              if (context_.tool.onKeyEvent(context_, event)) {
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
-            },
+            onKeyEvent: _handleKeyEvent,
             child: widget.child,
           ),
         ),
       ),
     );
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (widget.textEditOpen) return KeyEventResult.ignored;
+
+    final editor = context.read<EditorContext>();
+    if (event.logicalKey == LogicalKeyboardKey.space) {
+      if (event is KeyDownEvent) {
+        editor.tool.beginSpacePan();
+        return KeyEventResult.handled;
+      }
+      if (event is KeyUpEvent) {
+        editor.tool.endSpacePan();
+        return KeyEventResult.handled;
+      }
+    }
+
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    return editor.tool.onKeyEvent(editor, event)
+        ? KeyEventResult.handled
+        : KeyEventResult.ignored;
   }
 }
