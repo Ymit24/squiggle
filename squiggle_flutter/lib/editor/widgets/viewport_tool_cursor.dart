@@ -121,11 +121,13 @@ class _ViewportToolCursorState extends State<ViewportToolCursor> {
     final world = _worldFromGlobal(global);
     if (world == null) return;
     final next = _mouseCursorFor(
-      widget.context.tool.resolveCursor(
-        widget.context,
-        world,
-        widget.context.camera,
-      ),
+      widget.context.tool.isSpacePanning
+          ? EditorCursor.grab
+          : widget.context.tool.resolveCursor(
+              widget.context,
+              world,
+              widget.context.camera,
+            ),
     );
     if (next == _cursor) return;
     setState(() => _cursor = next);
