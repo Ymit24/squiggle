@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +48,9 @@ class SquiggleApp extends StatelessWidget {
                   title: 'Squiggle',
                   theme: SquiggleThemeData.dark(),
                   debugShowCheckedModeBanner: false,
-                  routerConfig: appRouter.config(),
+                  routerConfig: appRouter.config(
+                    deepLinkBuilder: _initialDeepLink,
+                  ),
                 ),
               ),
             ),
@@ -55,5 +58,14 @@ class SquiggleApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Starts on the active document instead of the library. The coordinator
+  /// creates a blank document when none exist, so this also covers first run.
+  DeepLink _initialDeepLink(PlatformDeepLink deepLink) {
+    final id = activeDocument.activeId;
+    return deepLink.initial && id != null
+        ? DeepLink.single(EditorRoute(id: id))
+        : deepLink;
   }
 }
