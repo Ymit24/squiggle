@@ -65,6 +65,8 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.escape): ClearSelectionIntent(),
+  SingleActivator(LogicalKeyboardKey.keyA, meta: true): SelectAllIntent(),
+  SingleActivator(LogicalKeyboardKey.keyA, control: true): SelectAllIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, meta: true):
       CopySelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, control: true):
@@ -136,6 +138,17 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
               onInvoke: (_) {
                 if (!textEditOpen) {
                   context.read<EditorContext>().selection.clearSelection();
+                }
+                return null;
+              },
+            ),
+            SelectAllIntent: CallbackAction<SelectAllIntent>(
+              onInvoke: (_) {
+                if (!textEditOpen) {
+                  final editor = context.read<EditorContext>();
+                  editor.selection.setSelection(
+                    editor.document.nodes.map((node) => node.id),
+                  );
                 }
                 return null;
               },
