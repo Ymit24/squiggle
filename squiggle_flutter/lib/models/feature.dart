@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 
+export 'feature_kinds/binding_capable.dart';
 export 'feature_kinds/feature_kind.dart';
 export 'feature_kinds/fill_color_capable.dart';
 export 'feature_kinds/fill_type_capable.dart';
@@ -60,6 +61,9 @@ class Feature extends Node {
   double get height => size.height;
 
   @override
+  Iterable<NodeId> get references => kind.references;
+
+  @override
   data.Feature toDataModel() {
     return data.Feature(
       id: id.value,
@@ -95,6 +99,13 @@ class Feature extends Node {
 
   @override
   bool hitTest(Offset worldPoint) => kind.hitTest(this, worldPoint);
+
+  @override
+  Offset outlinePointToward(Offset globalPoint) =>
+      kind.outlinePointToward(this, globalPoint);
+
+  @override
+  void referencesRemoved(Set<NodeId> ids) => kind.referencesRemoved(this, ids);
 
   @override
   bool intersectsRect(Rect rect) => kind.intersectsRect(this, rect);

@@ -6,6 +6,7 @@ import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/dragging_state.dart';
 import 'package:squiggle_flutter/tools/create_line_tool/placing_state.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 
 /// Distinguishes the initial click from dragging a new two-point line.
 class PendingPointerState extends InteractionState<CreateLineTool> {
@@ -18,21 +19,14 @@ class PendingPointerState extends InteractionState<CreateLineTool> {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final threshold = camera.screenLengthToWorldLength(kTouchSlop);
     if ((worldPosition - start).distance <= threshold) return;
 
     final state = DraggingState(parent: parent, start: start);
     parent.transition(state, context);
-    state.onPointerMove(
-      context,
-      worldPosition,
-      camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
-    );
+    state.onPointerMove(context, worldPosition, camera, modifiers: modifiers);
   }
 
   @override
@@ -40,8 +34,7 @@ class PendingPointerState extends InteractionState<CreateLineTool> {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     parent.transition(
       PlacingState(parent: parent, points: [start], previewTip: worldPosition),

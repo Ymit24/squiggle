@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/models/feature.dart';
+import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/group.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
@@ -31,6 +32,19 @@ abstract class Node {
   Document? get document => parent?.document;
 
   Offset get globalOrigin => origin + (parent?.globalOrigin ?? Offset.zero);
+
+  /// This node followed by all of its descendants, depth first.
+  Iterable<Node> get subtree sync* {
+    yield this;
+    if (this case final NodeContainer container) {
+      for (final child in container.children) {
+        yield* child.subtree;
+      }
+    }
+  }
+
+  /// Other nodes this node refers to by id.
+  Iterable<NodeId> get references => const [];
 
   /// Returns the union of [nodes] bounds in local world space.
   static Rect localBoundsOfNodes(List<Node> nodes) {
@@ -67,4 +81,13 @@ abstract class Node {
   void resize(Rect bounds);
 
   Offset center() => localBounds().center;
+
+  /// Where a ray from this node's center toward [globalPoint] crosses its
+  /// outline, in global space.
+  Offset outlinePointToward(Offset globalPoint) =>
+      rectOutlinePointToward(globalBounds(), globalPoint);
+
+  /// Called, as part of the same edit, just before the nodes in [ids] that
+  /// this node refers to are removed.
+  void referencesRemoved(Set<NodeId> ids) {}
 }

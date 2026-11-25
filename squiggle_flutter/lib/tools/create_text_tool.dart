@@ -7,6 +7,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 /// Click to place auto-sized text; drag to set the width it wraps at.
@@ -54,8 +55,7 @@ class CreateTextTool extends Tool implements DrawingTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _pressWorld = worldPosition;
     return true;
@@ -66,8 +66,7 @@ class CreateTextTool extends Tool implements DrawingTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final press = _pressWorld;
     if (press == null) return false;
@@ -84,8 +83,7 @@ class CreateTextTool extends Tool implements DrawingTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final rect = _dragRect;
     final fixedWidth = rect != null && rect.width > 0 ? rect.width : null;

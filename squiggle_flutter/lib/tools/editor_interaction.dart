@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 
 /// An optional capability for interactions that draw transient visuals.
 abstract interface class PaintableEditorInteraction {
@@ -27,32 +28,28 @@ abstract class EditorInteraction {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) => false;
 
   bool onPointerMove(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) => false;
 
   bool onPointerUp(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) => false;
 
   bool onPointerHover(
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) => false;
 
   bool onDoubleClick(

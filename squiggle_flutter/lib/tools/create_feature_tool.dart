@@ -8,6 +8,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
 
 class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
@@ -66,8 +67,7 @@ class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) => true;
 
   @override
@@ -75,12 +75,11 @@ class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     switch (_state) {
       case _Idle():
-        final bounds = isAltPressed
+        final bounds = modifiers.alt
             ? Rect.fromCenter(center: worldPosition, width: 1, height: 1)
             : Rect.fromLTWH(worldPosition.dx, worldPosition.dy, 1, 1);
         _state = _Dragging(
@@ -89,12 +88,7 @@ class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
         );
       case _Dragging(:final start, :final feature):
         feature.setBounds(
-          _boundsFromDrag(
-            start,
-            worldPosition,
-            isShiftPressed: isShiftPressed,
-            isAltPressed: isAltPressed,
-          ),
+          _boundsFromDrag(start, worldPosition, modifiers: modifiers),
         );
     }
     return true;
@@ -105,8 +99,7 @@ class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     if (_state case _Dragging(:final feature)) {
       context.history.run('Create feature', (transaction) {
@@ -128,16 +121,15 @@ class CreateFeatureTool extends Tool implements DrawingTool, BrushPreviewTool {
   Rect _boundsFromDrag(
     Offset start,
     Offset end, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
-    if (isAltPressed && isShiftPressed) {
+    if (modifiers.alt && modifiers.shift) {
       return squareCenterRectFromPoints(start, end);
     }
-    if (isAltPressed) {
+    if (modifiers.alt) {
       return centerRectFromPoints(start, end);
     }
-    if (isShiftPressed) {
+    if (modifiers.shift) {
       return squareRectFromPoints(start, end);
     }
     return Rect.fromPoints(start, end);

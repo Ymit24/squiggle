@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:data_models/data_models.dart' as data;
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
@@ -7,6 +8,7 @@ import 'package:squiggle_flutter/models/node.dart';
 import 'package:squiggle_flutter/models/node_id.dart';
 import 'package:squiggle_flutter/services/duplicate_nodes.dart';
 
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/translate_state.dart';
 
@@ -15,13 +17,16 @@ class DuplicateState extends SelectInteractionState {
     required super.parent,
     required this._start,
     required this._selectedNodes,
-    required this._originsAtDragStart,
+    required this._snapshotsAtDragStart,
     required this._selectionAlreadyMoved,
   });
 
   final Offset _start;
   final List<Node> _selectedNodes;
-  final Map<NodeId, Offset> _originsAtDragStart;
+
+  /// The originals as they were before the drag; restoring them also undoes
+  /// anything the move changed, such as detached line ends.
+  final Map<NodeId, data.Node> _snapshotsAtDragStart;
   final bool _selectionAlreadyMoved;
 
   @override
@@ -29,13 +34,12 @@ class DuplicateState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final totalMotion = constrainedMoveDelta(
       _start,
       worldPosition,
-      constrainToAxis: isShiftPressed,
+      constrainToAxis: modifiers.shift,
     );
     final clones = duplicateNodes(
       nodes: _selectedNodes,
@@ -44,7 +48,7 @@ class DuplicateState extends SelectInteractionState {
     );
 
     for (final node in _selectedNodes) {
-      node.origin = _originsAtDragStart[node.id]!;
+      node.restoreFromDataModel(_snapshotsAtDragStart[node.id]!);
     }
 
     final state = TranslateState(
@@ -60,12 +64,6 @@ class DuplicateState extends SelectInteractionState {
       hasDuplicated: true,
     );
     parent.transition(state, context);
-    state.onPointerMove(
-      context,
-      worldPosition,
-      camera,
-      isShiftPressed: isShiftPressed,
-      isAltPressed: isAltPressed,
-    );
+    state.onPointerMove(context, worldPosition, camera, modifiers: modifiers);
   }
 }

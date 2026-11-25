@@ -106,6 +106,12 @@ final class DocumentTransaction implements Transaction {
     if (nodes.isEmpty) return;
     _watchOrder();
     watch(nodes);
+    _notifyReferrers(
+      removed: {
+        for (final node in nodes.expand((node) => node.subtree)) node.id,
+      },
+      skip: nodes.map((node) => node.id).toSet(),
+    );
     container.removeAll(nodes.map((node) => node.id));
   }
 
@@ -151,6 +157,21 @@ final class DocumentTransaction implements Transaction {
     _ensureOpen();
     _apply(container, states: _before, order: _orderBefore);
     _isOpen = false;
+  }
+
+  /// Lets remaining children that refer to [removed] nodes react before they
+  /// go, capturing that reaction in this edit.
+  void _notifyReferrers({
+    required Set<NodeId> removed,
+    required Set<NodeId> skip,
+  }) {
+    for (final child in container.children) {
+      if (skip.contains(child.id) || !child.references.any(removed.contains)) {
+        continue;
+      }
+      watch([child]);
+      child.referencesRemoved(removed);
+    }
   }
 
   void _watchOrder() {

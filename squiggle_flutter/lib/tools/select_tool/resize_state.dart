@@ -5,6 +5,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/tools/editor_cursor.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 import 'package:squiggle_flutter/tools/select_tool/helpers.dart';
 import 'package:squiggle_flutter/tools/select_tool/idle_interaction_state.dart';
 import 'package:squiggle_flutter/tools/select_tool/interaction_state.dart';
@@ -55,15 +56,14 @@ class ResizeState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     final newBounds = getNewBounds(
       worldPosition - _resizeOffset,
       lockAspectRatio:
-          isShiftPressed ||
+          modifiers.shift ||
           (_policy.lockCornerAspect && _handle.handle.isCorner),
-      symmetric: isAltPressed,
+      symmetric: modifiers.alt,
     );
     _handle.node
       ..restoreFromDataModel(_snapshot)
@@ -86,8 +86,7 @@ class ResizeState extends SelectInteractionState {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     parent.transition(IdleInteractionState(parent: parent), context);
   }

@@ -103,7 +103,7 @@ class Document extends NodeContainer {
 
   /// Container bookkeeping: validate all IDs before registering a subtree.
   void registerSubtree(Node root) {
-    final nodes = _subtree(root).toList();
+    final nodes = root.subtree.toList();
     final ids = <NodeId>{};
     for (final node in nodes) {
       if (node.id == noId) continue;
@@ -122,7 +122,7 @@ class Document extends NodeContainer {
 
   /// Container bookkeeping: descendants leave the index with their root.
   void unregisterSubtree(Node root) {
-    for (final node in _subtree(root)) {
+    for (final node in root.subtree) {
       _nodesById.remove(node.id);
     }
   }
@@ -157,14 +157,5 @@ class Document extends NodeContainer {
     addNodes(copies);
     name = other.name;
     session = DocumentSession.fromDataModel(other.session.toDataModel());
-  }
-
-  Iterable<Node> _subtree(Node node) sync* {
-    yield node;
-    if (node is NodeContainer) {
-      for (final child in (node as NodeContainer).children) {
-        yield* _subtree(child);
-      }
-    }
   }
 }

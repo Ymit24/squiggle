@@ -3,6 +3,7 @@ import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/interaction_state.dart';
+import 'package:squiggle_flutter/tools/pointer_modifiers.dart';
 
 class PlacingState extends InteractionState<CreateLineTool> {
   PlacingState({
@@ -25,8 +26,7 @@ class PlacingState extends InteractionState<CreateLineTool> {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     _isPointerDown = true;
     parent.updatePreview(context, [...points, worldPosition]);
@@ -37,11 +37,10 @@ class PlacingState extends InteractionState<CreateLineTool> {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     if (!_isPointerDown) return;
-    _updateTip(context, worldPosition, isShiftPressed: isShiftPressed);
+    _updateTip(context, worldPosition, isShiftPressed: modifiers.shift);
   }
 
   @override
@@ -49,8 +48,7 @@ class PlacingState extends InteractionState<CreateLineTool> {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
     if (!_isPointerDown) return;
     _isPointerDown = false;
@@ -58,7 +56,7 @@ class PlacingState extends InteractionState<CreateLineTool> {
       parent.constrainedPoint(
         points.last,
         worldPosition,
-        isShiftPressed: isShiftPressed,
+        isShiftPressed: modifiers.shift,
       ),
     );
     parent.updatePreview(context, [...points, worldPosition]);
@@ -69,10 +67,9 @@ class PlacingState extends InteractionState<CreateLineTool> {
     EditorContext context,
     Offset worldPosition,
     Camera camera, {
-    required bool isShiftPressed,
-    required bool isAltPressed,
+    required PointerModifiers modifiers,
   }) {
-    _updateTip(context, worldPosition, isShiftPressed: isShiftPressed);
+    _updateTip(context, worldPosition, isShiftPressed: modifiers.shift);
   }
 
   @override

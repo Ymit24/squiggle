@@ -3,7 +3,8 @@ import 'dart:ui';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/camera.dart';
 import 'package:squiggle_flutter/models/feature.dart';
-import 'package:squiggle_flutter/models/feature_geometry.dart';
+import 'package:squiggle_flutter/models/node.dart';
+import 'package:squiggle_flutter/models/node_binding.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
 import 'package:squiggle_flutter/utils/painting.dart';
 
@@ -57,9 +58,28 @@ abstract final class SelectionPainter {
     if (node is! Feature || node.kind is! FeatureKindPolyline) return;
 
     final kind = node.kind as FeatureKindPolyline;
-    for (final point in worldPoints(node.origin, kind.localPoints)) {
-      paintVertexHandle(canvas, camera, point);
+    final points = kind.resolvedPoints(node);
+    // A binding whose target is gone is kept for undo but attaches nothing.
+    bool isAttached(NodeBinding? binding) =>
+        binding?.target(context.document) != null;
+    for (final (index, point) in points.indexed) {
+      final isBound =
+          (index == 0 && isAttached(kind.startBinding)) ||
+          (index == points.length - 1 && isAttached(kind.endBinding));
+      paintVertexHandle(canvas, camera, point, isBound: isBound);
     }
+  }
+
+  /// Boxes the node a dragged line end will bind to, just clear of its own
+  /// stroke.
+  static void paintBindTarget(Canvas canvas, Camera camera, Node target) {
+    canvas.drawRect(
+      target.globalBounds().inflate(camera.screenLengthToWorldLength(10)),
+      Paint()
+        ..color = SquiggleColors.accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = camera.screenLengthToWorldLength(2),
+    );
   }
 
   static void paintSelectionBox(
@@ -94,12 +114,19 @@ abstract final class SelectionPainter {
     }
   }
 
+  /// A bound line end is drawn filled so attachment is visible at a glance.
   static void paintVertexHandle(
     Canvas canvas,
     Camera camera,
-    Offset worldPoint,
-  ) {
-    _paintCircleHandleAtWorldCenter(canvas, camera, worldPoint);
+    Offset worldPoint, {
+    bool isBound = false,
+  }) {
+    _paintCircleHandleAtWorldCenter(
+      canvas,
+      camera,
+      worldPoint,
+      fill: isBound ? SquiggleColors.accent : SquiggleColors.base,
+    );
   }
 
   static void paintMarquee(Canvas canvas, Rect worldBounds) {
@@ -144,14 +171,15 @@ abstract final class SelectionPainter {
   static void _paintCircleHandleAtWorldCenter(
     Canvas canvas,
     Camera camera,
-    Offset center,
-  ) {
+    Offset center, {
+    required Color fill,
+  }) {
     final radius = camera.screenLengthToWorldLength(handleSize / 2);
     canvas.drawCircle(
       center,
       radius,
       Paint()
-        ..color = SquiggleColors.base
+        ..color = fill
         ..style = PaintingStyle.fill,
     );
     canvas.drawCircle(
