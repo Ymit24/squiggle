@@ -120,7 +120,7 @@ class EditorContext extends ChangeNotifier {
   }
 
   void cancelInteraction() {
-    tool.cancelInteraction(this);
+    tool.activeTool.cancelInteraction(this);
   }
 
   void undo() {
