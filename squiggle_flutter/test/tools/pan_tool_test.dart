@@ -104,4 +104,38 @@ void main() {
     expect(context.selection.selectedNodeIds, [nodeId]);
     expect(camera.location, const Offset(-50, -40));
   });
+
+  test('pressing space mid-drag does not override the active tool cursor', () {
+    final context = EditorContext(document: Document());
+    addTearDown(context.dispose);
+    final camera = context.camera;
+    final selectTool = SelectTool();
+    context.setTool(selectTool);
+
+    context.tool.onPointerDown(
+      context,
+      Offset.zero,
+      camera,
+      isShiftPressed: false,
+      isAltPressed: false,
+    );
+    context.tool.beginSpacePan();
+
+    expect(
+      context.tool.resolveCursor(context, Offset.zero, camera),
+      selectTool.resolveCursor(context, Offset.zero, camera),
+    );
+
+    context.tool.onPointerUp(
+      context,
+      Offset.zero,
+      camera,
+      isShiftPressed: false,
+      isAltPressed: false,
+    );
+    expect(
+      context.tool.resolveCursor(context, Offset.zero, camera),
+      EditorCursor.grab,
+    );
+  });
 }

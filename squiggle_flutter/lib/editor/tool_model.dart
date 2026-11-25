@@ -24,6 +24,9 @@ class ToolModel extends ChangeNotifier {
   /// stays set until pointer up so releasing space mid-drag keeps panning.
   bool _isSpacePanGesture = false;
 
+  /// Whether the current pointer gesture is owned by [_activeTool].
+  bool _isActiveToolGesture = false;
+
   Tool get activeTool => _activeTool;
 
   bool get isLocked => _isLocked;
@@ -32,7 +35,8 @@ class ToolModel extends ChangeNotifier {
 
   Tool get _pointerTool => _isSpacePanGesture ? _spacePanTool : _activeTool;
 
-  bool get _showsPanCursor => _isSpacePanning || _isSpacePanGesture;
+  bool get _showsPanCursor =>
+      _isSpacePanGesture || (_isSpacePanning && !_isActiveToolGesture);
 
   void toggleLock() {
     _isLocked = !_isLocked;
@@ -72,6 +76,7 @@ class ToolModel extends ChangeNotifier {
     required bool isAltPressed,
   }) {
     _isSpacePanGesture = _isSpacePanning;
+    _isActiveToolGesture = !_isSpacePanGesture;
     _pointerTool.onPointerDown(
       context,
       worldPosition,
@@ -123,6 +128,7 @@ class ToolModel extends ChangeNotifier {
       isAltPressed: isAltPressed,
     );
     _isSpacePanGesture = false;
+    _isActiveToolGesture = false;
     notifyListeners();
   }
 
@@ -154,6 +160,7 @@ class ToolModel extends ChangeNotifier {
   void cancelInteraction(EditorContext context) {
     _pointerTool.cancelInteraction(context);
     _isSpacePanGesture = false;
+    _isActiveToolGesture = false;
   }
 
   EditorCursor resolveCursor(

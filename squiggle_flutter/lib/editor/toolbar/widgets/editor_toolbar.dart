@@ -59,15 +59,6 @@ class EditorToolbar extends StatelessWidget {
                       const Divider(),
                       const Gap(),
                       Button(
-                        iconAsset: 'assets/icons/arrow_selector_tool.svg',
-                        hotkey: '1',
-                        tooltip: 'Select',
-                        shortcuts: const ['V', '1'],
-                        isActive: activeTool is SelectTool,
-                        onPressed: () => editor.setTool(SelectTool()),
-                      ),
-                      const Gap(),
-                      Button(
                         icon: LucideIcons.hand,
                         hotkey: 'H',
                         tooltip: 'Pan',
@@ -75,6 +66,15 @@ class EditorToolbar extends StatelessWidget {
                         isActive:
                             activeTool is PanTool || editor.tool.isSpacePanning,
                         onPressed: () => editor.setTool(PanTool()),
+                      ),
+                      const Gap(),
+                      Button(
+                        iconAsset: 'assets/icons/arrow_selector_tool.svg',
+                        hotkey: '1',
+                        tooltip: 'Select',
+                        shortcuts: const ['V', '1'],
+                        isActive: activeTool is SelectTool,
+                        onPressed: () => editor.setTool(SelectTool()),
                       ),
                       const Gap(),
                       const Divider(),
