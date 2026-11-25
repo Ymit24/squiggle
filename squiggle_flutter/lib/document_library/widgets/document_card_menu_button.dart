@@ -6,13 +6,11 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 class DocumentCardMenuButton extends StatelessWidget {
   const DocumentCardMenuButton({
     super.key,
-    required this.canDelete,
     required this.onRename,
     required this.onDelete,
     required this.onOpenChanged,
   });
 
-  final bool canDelete;
   final VoidCallback onRename;
   final VoidCallback onDelete;
   final ValueChanged<bool> onOpenChanged;
@@ -25,13 +23,12 @@ class DocumentCardMenuButton extends StatelessWidget {
         icon: Icons.drive_file_rename_outline,
         onTap: onRename,
       ),
-      if (canDelete)
-        LibraryMenuItem(
-          label: 'Delete',
-          icon: Icons.delete_outline_rounded,
-          danger: true,
-          onTap: onDelete,
-        ),
+      LibraryMenuItem(
+        label: 'Delete',
+        icon: Icons.delete_outline_rounded,
+        danger: true,
+        onTap: onDelete,
+      ),
     ];
 
     return LibraryMenuAnchor(

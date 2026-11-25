@@ -112,10 +112,15 @@ void main() {
       expect(context.document.nodes, hasLength(1));
     });
 
-    test('does not delete the last remaining document', () async {
+    test('deletes the last remaining document', () async {
       expect(documentList.documents, hasLength(1));
       await active.deleteDocument(documentList.documents.first.id);
+      expect(documentList.documents, isEmpty);
+      expect(active.activeId, isNull);
+
+      await active.createDocument();
       expect(documentList.documents, hasLength(1));
+      expect(active.activeId, documentList.documents.single.id);
     });
 
     test('autosave does not re-read or notify the document list', () async {

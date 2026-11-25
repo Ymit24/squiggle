@@ -13,7 +13,6 @@ class DocumentCard extends StatefulWidget {
     super.key,
     required this.document,
     required this.isCurrent,
-    required this.canDelete,
     required this.onOpen,
     required this.onRename,
     required this.onDelete,
@@ -21,7 +20,6 @@ class DocumentCard extends StatefulWidget {
 
   final DocumentInfo document;
   final bool isCurrent;
-  final bool canDelete;
   final VoidCallback onOpen;
   final VoidCallback onRename;
   final VoidCallback onDelete;
@@ -133,7 +131,6 @@ class _DocumentCardState extends State<DocumentCard> {
                           child: IgnorePointer(
                             ignoring: !(_elevated || widget.isCurrent),
                             child: DocumentCardMenuButton(
-                              canDelete: widget.canDelete,
                               onRename: widget.onRename,
                               onDelete: widget.onDelete,
                               onOpenChanged: (open) =>
@@ -227,13 +224,12 @@ class _DocumentCardState extends State<DocumentCard> {
           icon: Icons.drive_file_rename_outline,
           onTap: widget.onRename,
         ),
-        if (widget.canDelete)
-          LibraryMenuItem(
-            label: 'Delete',
-            icon: Icons.delete_outline_rounded,
-            danger: true,
-            onTap: widget.onDelete,
-          ),
+        LibraryMenuItem(
+          label: 'Delete',
+          icon: Icons.delete_outline_rounded,
+          danger: true,
+          onTap: widget.onDelete,
+        ),
       ],
     );
   }
