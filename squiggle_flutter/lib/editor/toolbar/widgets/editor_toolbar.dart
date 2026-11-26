@@ -63,8 +63,7 @@ class EditorToolbar extends StatelessWidget {
                         hotkey: 'H',
                         tooltip: 'Pan',
                         shortcuts: const ['H'],
-                        isActive:
-                            activeTool is PanTool || editor.tool.isSpacePanning,
+                        isActive: activeTool is PanTool,
                         onPressed: () => editor.setTool(PanTool()),
                       ),
                       const Gap(),

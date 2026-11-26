@@ -113,9 +113,6 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
   @override
   void didUpdateWidget(ToolShortcuts oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.textEditOpen) {
-      context.read<EditorContext>().tool.endSpacePan();
-    }
     if (oldWidget.textEditOpen && !widget.textEditOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -296,32 +293,18 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
           child: Focus(
             focusNode: _focusNode,
             autofocus: !textEditOpen,
-            onKeyEvent: _handleKeyEvent,
+            onKeyEvent: (node, event) {
+              if (widget.textEditOpen) return KeyEventResult.ignored;
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              final editor = context.read<EditorContext>();
+              return editor.tool.onKeyEvent(editor, event)
+                  ? KeyEventResult.handled
+                  : KeyEventResult.ignored;
+            },
             child: widget.child,
           ),
         ),
       ),
     );
-  }
-
-  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (widget.textEditOpen) return KeyEventResult.ignored;
-
-    final editor = context.read<EditorContext>();
-    if (event.logicalKey == LogicalKeyboardKey.space) {
-      if (event is KeyDownEvent) {
-        editor.tool.beginSpacePan();
-        return KeyEventResult.handled;
-      }
-      if (event is KeyUpEvent) {
-        editor.tool.endSpacePan();
-        return KeyEventResult.handled;
-      }
-    }
-
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    return editor.tool.onKeyEvent(editor, event)
-        ? KeyEventResult.handled
-        : KeyEventResult.ignored;
   }
 }

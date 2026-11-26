@@ -12,28 +12,13 @@ class ToolModel extends ChangeNotifier {
 
   Tool _activeTool;
   bool _isLocked = false;
-  bool _isSpacePanning = false;
 
   Tool get activeTool => _activeTool;
 
   bool get isLocked => _isLocked;
 
-  bool get isSpacePanning => _isSpacePanning;
-
   void toggleLock() {
     _isLocked = !_isLocked;
-    notifyListeners();
-  }
-
-  void beginSpacePan() {
-    if (_isSpacePanning) return;
-    _isSpacePanning = true;
-    notifyListeners();
-  }
-
-  void endSpacePan() {
-    if (!_isSpacePanning) return;
-    _isSpacePanning = false;
     notifyListeners();
   }
 

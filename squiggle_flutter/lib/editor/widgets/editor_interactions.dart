@@ -50,7 +50,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
   Offset? _pointerInCanvas;
   int? _pointerDownButtons;
   bool _isPrimaryDragging = false;
-  bool _isSpacePanning = false;
 
   Offset? _secondaryPointerDownAt;
   bool _isSecondaryDragging = false;
@@ -248,11 +247,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _isPrimaryDragging = true;
     _pointerInCanvas = _canvasLocal(event);
 
-    if (widget.context.tool.isSpacePanning) {
-      _isSpacePanning = true;
-      return;
-    }
-
     final world = _screenToWorld(event);
     if (world == null) return;
 
@@ -278,11 +272,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
   void _onLeftPointerUpdate(PointerMoveEvent event) {
     _pointerInCanvas = _canvasLocal(event);
 
-    if (_isSpacePanning) {
-      widget.context.panByScreenDelta(event.delta);
-      return;
-    }
-
     final world = _screenToWorld(event);
     if (world == null) return;
 
@@ -297,10 +286,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _onLeftPointerUp(PointerUpEvent event) {
     _isPrimaryDragging = false;
-    if (_isSpacePanning) {
-      _isSpacePanning = false;
-      return;
-    }
 
     final world = _screenToWorld(event);
     if (world == null) return;
@@ -316,10 +301,6 @@ class _EditorInteractionsState extends State<EditorInteractions>
 
   void _onLeftPointerCancel(PointerCancelEvent event) {
     _isPrimaryDragging = false;
-    if (_isSpacePanning) {
-      _isSpacePanning = false;
-      return;
-    }
     widget.context.cancelInteraction();
   }
 
