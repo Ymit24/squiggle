@@ -71,6 +71,17 @@ class Editor extends StatelessWidget {
                       ],
                     ),
                   ),
+                  Positioned(
+                    top: context.squiggleTheme.spacing.overlayTop,
+                    right: context.squiggleTheme.spacing.overlaySide,
+                    child: SquiggleButton(
+                      onPressed: () => editorContext.openPreferences(context),
+                      icon: Icons.settings_rounded,
+                      label: 'Settings',
+                      variant: SquiggleButtonVariant.secondary,
+                      compact: true,
+                    ),
+                  ),
                   const EditorToolbar(),
                   Positioned(
                     left: 0,

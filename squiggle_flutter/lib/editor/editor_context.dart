@@ -13,6 +13,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
+import 'package:squiggle_flutter/widgets/preferences_panel.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
@@ -73,6 +74,9 @@ class EditorContext extends ChangeNotifier {
     }
     return null;
   }
+
+  Future<void> openPreferences(BuildContext context) =>
+      showPreferencesPanel(context);
 
   void openContextMenuAt(
     BuildContext context,
