@@ -108,6 +108,11 @@ class EditorContext extends ChangeNotifier {
   /// Notifies observers that the camera or viewport changed.
   void notifyViewportChanged() => notifyListeners();
 
+  void panByScreenDelta(Offset delta) {
+    camera.panByScreenDelta(delta);
+    notifyViewportChanged();
+  }
+
   /// World point at the center of the current viewport, if known.
   Offset? worldCenterAtViewportCenter() {
     if (viewportSize == Size.zero) return null;

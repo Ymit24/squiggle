@@ -17,6 +17,10 @@ class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();
 }
 
+class ActivatePanToolIntent extends Intent {
+  const ActivatePanToolIntent();
+}
+
 class ToggleToolLockIntent extends Intent {
   const ToggleToolLockIntent();
 }

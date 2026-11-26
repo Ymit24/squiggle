@@ -14,6 +14,7 @@ class ToolModel extends ChangeNotifier {
   bool _isLocked = false;
 
   Tool get activeTool => _activeTool;
+
   bool get isLocked => _isLocked;
 
   void toggleLock() {

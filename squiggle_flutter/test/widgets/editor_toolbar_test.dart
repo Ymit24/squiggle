@@ -13,6 +13,7 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 void main() {
@@ -111,6 +112,7 @@ void main() {
     expectActive('3');
     for (final (tool, hotkey) in [
       (SelectTool(), '1'),
+      (PanTool(), 'H'),
       (CreateFeatureTool.rect(), '2'),
       (CreateFeatureTool.circle(), '3'),
       (CreateLineTool(), '4'),
@@ -217,6 +219,7 @@ void main() {
     for (final tooltip in [
       'Lock tool  Q',
       'Select  V · 1',
+      'Pan  H',
       'Rectangle  R · 2',
       'Ellipse  C · 3',
       'Line  L · 4',
@@ -226,7 +229,7 @@ void main() {
     ]) {
       expect(find.byTooltip(tooltip), findsOneWidget, reason: tooltip);
     }
-    expect(find.byType(Tooltip), findsNWidgets(8));
+    expect(find.byType(Tooltip), findsNWidgets(9));
 
     await pumpToolbar(TargetPlatform.linux);
     expect(find.byTooltip('Undo  Ctrl+Z'), findsOneWidget);

@@ -12,6 +12,7 @@ import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _brushKeys = [
@@ -52,6 +53,7 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyD, control: true):
       DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyH): ActivatePanToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyQ): ToggleToolLockIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
@@ -193,6 +195,12 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 return null;
               },
             ),
+            ActivatePanToolIntent: CallbackAction<ActivatePanToolIntent>(
+              onInvoke: (_) {
+                context.read<EditorContext>().setTool(PanTool());
+                return null;
+              },
+            ),
             ActivateCreateRectToolIntent:
                 CallbackAction<ActivateCreateRectToolIntent>(
                   onInvoke: (_) {
@@ -286,13 +294,12 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             focusNode: _focusNode,
             autofocus: !textEditOpen,
             onKeyEvent: (node, event) {
-              if (textEditOpen) return KeyEventResult.ignored;
+              if (widget.textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
-              final context_ = context.read<EditorContext>();
-              if (context_.tool.onKeyEvent(context_, event)) {
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
+              final editor = context.read<EditorContext>();
+              return editor.tool.onKeyEvent(editor, event)
+                  ? KeyEventResult.handled
+                  : KeyEventResult.ignored;
             },
             child: widget.child,
           ),
