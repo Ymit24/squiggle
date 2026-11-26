@@ -87,6 +87,10 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyY, control: true): RedoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, meta: true): PasteImageIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, control: true): PasteImageIntent(),
+  SingleActivator(LogicalKeyboardKey.comma, meta: true):
+      OpenPreferencesIntent(),
+  SingleActivator(LogicalKeyboardKey.comma, control: true):
+      OpenPreferencesIntent(),
 };
 
 /// Keyboard shortcuts for tool activation.
@@ -151,6 +155,14 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                   editor.selection.setSelection(
                     editor.document.nodes.map((node) => node.id),
                   );
+                }
+                return null;
+              },
+            ),
+            OpenPreferencesIntent: CallbackAction<OpenPreferencesIntent>(
+              onInvoke: (_) {
+                if (!textEditOpen) {
+                  context.read<EditorContext>().openPreferences(context);
                 }
                 return null;
               },
@@ -307,4 +319,8 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
       ),
     );
   }
+}
+
+class OpenPreferencesIntent extends Intent {
+  const OpenPreferencesIntent();
 }
