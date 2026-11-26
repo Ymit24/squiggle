@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/preference_builder.dart';
+import 'package:squiggle_flutter/widgets/squiggle_switch.dart';
 
 /// Toggles the world-space grid drawn behind the editor canvas.
 class GridVisibilityPreference extends StatelessWidget {
@@ -55,16 +56,10 @@ class GridVisibilityPreference extends StatelessWidget {
                   ],
                 ),
               ),
-              Switch(
+              SquiggleSwitch(
                 value: value != 'false',
-                onChanged: (visible) => database.preferencesDao.setValue(
-                  preferenceKey,
-                  '$visible',
-                ),
-                activeThumbColor: colors.base,
-                activeTrackColor: colors.text,
-                inactiveThumbColor: colors.subtext0,
-                inactiveTrackColor: colors.surface1,
+                onChanged: (visible) =>
+                    database.preferencesDao.setValue(preferenceKey, '$visible'),
               ),
             ],
           ),

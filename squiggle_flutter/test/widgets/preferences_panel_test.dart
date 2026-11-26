@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/widgets/preferences_panel.dart';
+import 'package:squiggle_flutter/widgets/squiggle_switch.dart';
 
 import '../support/test_database.dart';
 
@@ -42,8 +43,9 @@ void main() {
     expect(await database.preferencesDao.getValue('themeMode'), 'dark');
   });
 
-  testWidgets('grid visibility toggle reads and persists the preference',
-      (tester) async {
+  testWidgets('grid visibility toggle reads and persists the preference', (
+    tester,
+  ) async {
     final database = createTestDatabase();
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
@@ -64,13 +66,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Show grid'), findsOneWidget);
-    final toggle = find.byType(Switch);
-    expect(tester.widget<Switch>(toggle).value, isFalse);
+    final toggle = find.byType(SquiggleSwitch);
+    expect(tester.widget<SquiggleSwitch>(toggle).value, isFalse);
 
     await tester.tap(toggle);
     await tester.pumpAndSettle();
 
-    expect(await database.preferencesDao.getValue('grid-lines-visible'), 'true');
-    expect(tester.widget<Switch>(toggle).value, isTrue);
+    expect(
+      await database.preferencesDao.getValue('grid-lines-visible'),
+      'true',
+    );
+    expect(tester.widget<SquiggleSwitch>(toggle).value, isTrue);
   });
 }
