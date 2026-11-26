@@ -41,4 +41,36 @@ void main() {
 
     expect(await database.preferencesDao.getValue('themeMode'), 'dark');
   });
+
+  testWidgets('grid visibility toggle reads and persists the preference',
+      (tester) async {
+    final database = createTestDatabase();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await database.close();
+    });
+    await database.preferencesDao.setValue('grid-lines-visible', 'false');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: SquiggleThemeData.dark(),
+        home: Provider<AppDatabase>.value(
+          value: database,
+          child: const Scaffold(body: PreferencesPanel()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Show grid'), findsOneWidget);
+    final toggle = find.byType(Switch);
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+
+    expect(await database.preferencesDao.getValue('grid-lines-visible'), 'true');
+    expect(tester.widget<Switch>(toggle).value, isTrue);
+  });
 }

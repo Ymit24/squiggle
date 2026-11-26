@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/grid_visibility_preference.dart';
 import 'package:squiggle_flutter/widgets/theme_mode_preference.dart';
 
 /// Settings dialog holding user preferences.
@@ -29,6 +30,8 @@ class PreferencesPanel extends StatelessWidget {
                 children: [
                   Text('Appearance', style: theme.typography.sectionLabel),
                   const ThemeModePreference(),
+                  Text('Canvas', style: theme.typography.sectionLabel),
+                  const GridVisibilityPreference(),
                 ],
               ),
             ),
