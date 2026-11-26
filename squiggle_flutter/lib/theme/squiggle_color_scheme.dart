@@ -12,6 +12,24 @@ const squiggleSelectionFillColor = Color(0x1AA8B3C2);
 const squiggleDangerColor = Color.fromARGB(255, 242, 139, 139);
 const squiggleOnDangerColor = Color.fromARGB(255, 217, 95, 95);
 
+const squiggleLightBaseColor = Color(0xFFF7F7F7);
+const squiggleLightMantleColor = Color(0xFFEEEEEE);
+const squiggleLightSurface0Color = Color(0xFFE2E2E2);
+const squiggleLightSurface1Color = Color(0xFFCCCCCC);
+const squiggleLightSubtext0Color = Color(0xFF5F5F5F);
+const squiggleLightTextColor = Color(0xFF1E1E1E);
+const squiggleLightAccentColor = Color(0xFF3F5875);
+const squiggleLightSelectionFillColor = Color(0x223F5875);
+const squiggleLightDangerColor = Color(0xFFC0392B);
+const squiggleLightOnDangerColor = Color(0xFFA5281B);
+
+const squiggleCanvasColor = Color(0xFF171717);
+const squiggleGridMinorColor = Color(0xFF252525);
+const squiggleGridMajorColor = Color(0xFF363636);
+const squiggleLightCanvasColor = Color(0xFFECECEC);
+const squiggleLightGridMinorColor = Color(0xFFDADADA);
+const squiggleLightGridMajorColor = Color(0xFFC6C6C6);
+
 /// Semantic UI color tokens for Squiggle's dark graphite theme.
 @immutable
 class SquiggleColorScheme {
@@ -26,6 +44,9 @@ class SquiggleColorScheme {
     required this.selectionFill,
     required this.danger,
     required this.onDanger,
+    required this.canvasBackground,
+    required this.canvasGridMinor,
+    required this.canvasGridMajor,
   });
 
   final Color base;
@@ -38,6 +59,9 @@ class SquiggleColorScheme {
   final Color selectionFill;
   final Color danger;
   final Color onDanger;
+  final Color canvasBackground;
+  final Color canvasGridMinor;
+  final Color canvasGridMajor;
 
   static const dark = SquiggleColorScheme(
     base: squiggleBaseColor,
@@ -50,6 +74,25 @@ class SquiggleColorScheme {
     selectionFill: squiggleSelectionFillColor,
     danger: squiggleDangerColor,
     onDanger: squiggleOnDangerColor,
+    canvasBackground: squiggleCanvasColor,
+    canvasGridMinor: squiggleGridMinorColor,
+    canvasGridMajor: squiggleGridMajorColor,
+  );
+
+  static const light = SquiggleColorScheme(
+    base: squiggleLightBaseColor,
+    mantle: squiggleLightMantleColor,
+    surface0: squiggleLightSurface0Color,
+    surface1: squiggleLightSurface1Color,
+    subtext0: squiggleLightSubtext0Color,
+    text: squiggleLightTextColor,
+    accent: squiggleLightAccentColor,
+    selectionFill: squiggleLightSelectionFillColor,
+    danger: squiggleLightDangerColor,
+    onDanger: squiggleLightOnDangerColor,
+    canvasBackground: squiggleLightCanvasColor,
+    canvasGridMinor: squiggleLightGridMinorColor,
+    canvasGridMajor: squiggleLightGridMajorColor,
   );
 
   SquiggleColorScheme copyWith({
@@ -63,6 +106,9 @@ class SquiggleColorScheme {
     Color? selectionFill,
     Color? danger,
     Color? onDanger,
+    Color? canvasBackground,
+    Color? canvasGridMinor,
+    Color? canvasGridMajor,
   }) {
     return SquiggleColorScheme(
       base: base ?? this.base,
@@ -75,6 +121,9 @@ class SquiggleColorScheme {
       selectionFill: selectionFill ?? this.selectionFill,
       danger: danger ?? this.danger,
       onDanger: onDanger ?? this.onDanger,
+      canvasBackground: canvasBackground ?? this.canvasBackground,
+      canvasGridMinor: canvasGridMinor ?? this.canvasGridMinor,
+      canvasGridMajor: canvasGridMajor ?? this.canvasGridMajor,
     );
   }
 
@@ -90,6 +139,21 @@ class SquiggleColorScheme {
       selectionFill: Color.lerp(selectionFill, other.selectionFill, t)!,
       danger: Color.lerp(danger, other.danger, t)!,
       onDanger: Color.lerp(onDanger, other.onDanger, t)!,
+      canvasBackground: Color.lerp(
+        canvasBackground,
+        other.canvasBackground,
+        t,
+      )!,
+      canvasGridMinor: Color.lerp(
+        canvasGridMinor,
+        other.canvasGridMinor,
+        t,
+      )!,
+      canvasGridMajor: Color.lerp(
+        canvasGridMajor,
+        other.canvasGridMajor,
+        t,
+      )!,
     );
   }
 }
