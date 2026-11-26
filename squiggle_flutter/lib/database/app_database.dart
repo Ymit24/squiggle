@@ -41,7 +41,7 @@ class AppDatabase extends _$AppDatabase {
   final DateTime Function() clock;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -53,6 +53,8 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(preferences);
         await _seedPreferences();
+      } else if (from < 3) {
+        await preferencesDao.setValue('themeMode', 'system');
       }
     },
     // SQLite ignores foreign keys unless enabled per connection; without this
@@ -60,8 +62,10 @@ class AppDatabase extends _$AppDatabase {
     beforeOpen: (details) => customStatement('PRAGMA foreign_keys = ON'),
   );
 
-  Future<void> _seedPreferences() =>
-      preferencesDao.setValue('grid-lines-visible', 'true');
+  Future<void> _seedPreferences() async {
+    await preferencesDao.setValue('grid-lines-visible', 'true');
+    await preferencesDao.setValue('themeMode', 'system');
+  }
 
   static void _configureConnection(Database database) {
     database

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:squiggle_flutter/editor/editor_context.dart';
 import 'package:squiggle_flutter/models/document.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
+import 'package:squiggle_flutter/theme/theme.dart';
 import 'package:squiggle_flutter/utils/grid.dart';
 
 /// Paints a [Document]'s nodes on an infinite world-space grid.
@@ -13,11 +14,13 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     super.key,
     required this.context,
     required this.imageRepository,
+    required this.colors,
     this.showGrid = true,
   });
 
   final EditorContext context;
   final ImageRepository imageRepository;
+  final SquiggleColorScheme colors;
   final bool showGrid;
 
   @override
@@ -25,6 +28,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     return RenderDocumentCanvas(
       context: this.context,
       imageRepository: imageRepository,
+      colors: colors,
       gridVisible: showGrid,
     );
   }
@@ -37,6 +41,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     renderObject
       ..context = this.context
       ..imageRepository = imageRepository
+      ..colors = colors
       ..showGrid = showGrid
       ..markNeedsPaint();
   }
@@ -46,6 +51,7 @@ class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
     required this._context,
     required this._imageRepository,
+    required this._colors,
     bool gridVisible = true,
   }) : _showGrid = gridVisible;
 
@@ -53,11 +59,18 @@ class RenderDocumentCanvas extends RenderBox {
 
   ImageRepository _imageRepository;
 
+  SquiggleColorScheme _colors;
+
   bool _showGrid;
 
   StreamSubscription<void>? _imageRepaintSubscription;
 
-  static const Color _canvasColor = Color(0xFF171717);
+  SquiggleColorScheme get colors => _colors;
+  set colors(SquiggleColorScheme value) {
+    if (identical(_colors, value)) return;
+    _colors = value;
+    markNeedsPaint();
+  }
 
   bool get showGrid => _showGrid;
   set showGrid(bool value) {
@@ -126,6 +139,8 @@ class RenderDocumentCanvas extends RenderBox {
         size: size,
         location: _context.camera.location,
         zoom: _context.camera.zoom,
+        minorColor: _colors.canvasGridMinor,
+        majorColor: _colors.canvasGridMajor,
       );
     }
     _paintNodes(canvas, document);
@@ -164,7 +179,10 @@ class RenderDocumentCanvas extends RenderBox {
   }
 
   void _drawBackground(Canvas canvas) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = _canvasColor);
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = _colors.canvasBackground,
+    );
   }
 
   void _paintNodes(Canvas canvas, Document document) {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/theme_mode_preference.dart';
 
-/// Empty preferences panel dialog.
+/// Settings dialog holding user preferences.
 class PreferencesPanel extends StatelessWidget {
   const PreferencesPanel({super.key});
 
@@ -15,14 +16,21 @@ class PreferencesPanel extends StatelessWidget {
       elevation: 0,
       child: SizedBox(
         width: spacing.menuWidth,
-        height: 160,
         child: DecoratedBox(
           decoration: theme.decorations.floatingPanel(),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(theme.radii.floatingPanel),
             child: Padding(
               padding: EdgeInsets.all(spacing.panelPadding),
-              child: const SizedBox.shrink(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                spacing: spacing.panelSectionSpacing,
+                children: [
+                  Text('Appearance', style: theme.typography.sectionLabel),
+                  const ThemeModePreference(),
+                ],
+              ),
             ),
           ),
         ),

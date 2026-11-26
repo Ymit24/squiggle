@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
 class DocumentPreviewPlaceholder extends StatefulWidget {
   const DocumentPreviewPlaceholder({super.key});
@@ -30,6 +30,7 @@ class _DocumentPreviewPlaceholderState extends State<DocumentPreviewPlaceholder>
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.squiggleTheme.colors;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -37,8 +38,8 @@ class _DocumentPreviewPlaceholderState extends State<DocumentPreviewPlaceholder>
           borderRadius: BorderRadius.circular(10),
           child: ColoredBox(
             color: Color.lerp(
-              SquiggleColors.base,
-              SquiggleColors.surface0,
+              colors.base,
+              colors.surface0,
               _controller.value,
             )!,
             child: const SizedBox.expand(),

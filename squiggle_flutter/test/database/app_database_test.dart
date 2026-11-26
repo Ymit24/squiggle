@@ -41,5 +41,12 @@ void main() {
         'true',
       );
     });
+
+    test('seeds themeMode preference to system on create', () async {
+      final database = AppDatabase(NativeDatabase.memory());
+      addTearDown(database.close);
+
+      expect(await database.preferencesDao.getValue('themeMode'), 'system');
+    });
   });
 }
