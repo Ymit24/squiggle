@@ -78,4 +78,41 @@ void main() {
     );
     expect(tester.widget<SquiggleSwitch>(toggle).value, isTrue);
   });
+
+  testWidgets('close button dismisses the panel', (tester) async {
+    final database = createTestDatabase();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await database.close();
+    });
+
+    await tester.pumpWidget(
+      Provider<AppDatabase>.value(
+        value: database,
+        child: MaterialApp(
+          theme: SquiggleThemeData.dark(),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => const PreferencesPanel(),
+                ),
+                child: const Text('Open settings'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open settings'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PreferencesPanel), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PreferencesPanel), findsNothing);
+  });
 }
