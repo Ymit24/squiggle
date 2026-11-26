@@ -54,6 +54,11 @@ class RenderDocumentCanvas extends RenderBox {
   ImageRepository _imageRepository;
 
   bool _showGrid;
+
+  StreamSubscription<void>? _imageRepaintSubscription;
+
+  static const Color _canvasColor = Color(0xFF171717);
+
   bool get showGrid => _showGrid;
   set showGrid(bool value) {
     if (_showGrid == value) return;
@@ -61,9 +66,6 @@ class RenderDocumentCanvas extends RenderBox {
     markNeedsPaint();
   }
 
-  StreamSubscription<void>? _imageRepaintSubscription;
-
-  static const Color _canvasColor = Color(0xFF171717);
   EditorContext get context => _context;
   set context(EditorContext value) {
     if (identical(_context, value)) return;
