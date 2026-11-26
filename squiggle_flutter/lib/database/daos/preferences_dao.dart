@@ -16,6 +16,12 @@ class PreferencesDao extends DatabaseAccessor<AppDatabase>
     return row?.value;
   }
 
+  Stream<String?> watchValue(String key) {
+    return (select(
+      preferences,
+    )..where((t) => t.key.equals(key))).watchSingleOrNull().map((r) => r?.value);
+  }
+
   Future<void> setValue(String key, String value) => into(preferences)
       .insertOnConflictUpdate(PreferencesCompanion.insert(key: key, value: value));
 }

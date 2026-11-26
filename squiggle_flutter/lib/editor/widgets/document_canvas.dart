@@ -13,16 +13,19 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     super.key,
     required this.context,
     required this.imageRepository,
+    this.showGrid = true,
   });
 
   final EditorContext context;
   final ImageRepository imageRepository;
+  final bool showGrid;
 
   @override
   RenderDocumentCanvas createRenderObject(BuildContext context) {
     return RenderDocumentCanvas(
       context: this.context,
       imageRepository: imageRepository,
+      showGrid: showGrid,
     );
   }
 
@@ -34,6 +37,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     renderObject
       ..context = this.context
       ..imageRepository = imageRepository
+      ..showGrid = showGrid
       ..markNeedsPaint();
   }
 }
@@ -42,11 +46,20 @@ class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
     required this._context,
     required this._imageRepository,
-  });
+    bool showGrid = true,
+  }) : _showGrid = showGrid;
 
   EditorContext _context;
 
   ImageRepository _imageRepository;
+
+  bool _showGrid;
+  bool get showGrid => _showGrid;
+  set showGrid(bool value) {
+    if (_showGrid == value) return;
+    _showGrid = value;
+    markNeedsPaint();
+  }
 
   StreamSubscription<void>? _imageRepaintSubscription;
 
@@ -105,12 +118,14 @@ class RenderDocumentCanvas extends RenderBox {
 
     canvas.save();
     _applyWorldTransform(canvas);
-    paintAdaptiveGrid(
-      canvas,
-      size: size,
-      location: _context.camera.location,
-      zoom: _context.camera.zoom,
-    );
+    if (_showGrid) {
+      paintAdaptiveGrid(
+        canvas,
+        size: size,
+        location: _context.camera.location,
+        zoom: _context.camera.zoom,
+      );
+    }
     _paintNodes(canvas, document);
     _context.tool.activeTool.paint(canvas, camera, _context, _imageRepository);
     canvas.restore();
