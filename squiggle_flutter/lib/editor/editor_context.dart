@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/brush_controller.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -75,8 +75,10 @@ class EditorContext extends ChangeNotifier {
     return null;
   }
 
-  Future<void> openPreferences(BuildContext context) =>
-      showPreferencesPanel(context);
+  Future<void> openPreferences(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (context) => const PreferencesPanel(),
+  );
 
   void openContextMenuAt(
     BuildContext context,
