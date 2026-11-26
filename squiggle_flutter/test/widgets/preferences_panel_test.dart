@@ -27,14 +27,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Theme: System'), findsOneWidget);
+    expect(find.text('System'), findsOneWidget);
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
+    expect(
+      (tester.renderObject(find.text('System')) as RenderBox).size.height,
+      lessThan(24),
+      reason: 'segment labels stay on one line',
+    );
 
-    await tester.tap(find.text('Theme: System'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
 
     expect(await database.preferencesDao.getValue('themeMode'), 'dark');
-    expect(find.text('Theme: Dark'), findsOneWidget);
   });
 }
