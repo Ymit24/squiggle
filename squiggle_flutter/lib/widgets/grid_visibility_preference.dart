@@ -57,6 +57,7 @@ class GridVisibilityPreference extends StatelessWidget {
                 ),
               ),
               SquiggleSwitch(
+                label: 'Show grid',
                 value: value != 'false',
                 onChanged: (visible) =>
                     database.preferencesDao.setValue(preferenceKey, '$visible'),

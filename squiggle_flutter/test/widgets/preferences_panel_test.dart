@@ -68,6 +68,7 @@ void main() {
     expect(find.text('Show grid'), findsOneWidget);
     final toggle = find.byType(SquiggleSwitch);
     expect(tester.widget<SquiggleSwitch>(toggle).value, isFalse);
+    expect(_namedToggle(toggled: false), findsOneWidget);
 
     await tester.tap(toggle);
     await tester.pumpAndSettle();
@@ -77,6 +78,7 @@ void main() {
       'true',
     );
     expect(tester.widget<SquiggleSwitch>(toggle).value, isTrue);
+    expect(_namedToggle(toggled: true), findsOneWidget);
   });
 
   testWidgets('close button dismisses the panel', (tester) async {
@@ -116,3 +118,10 @@ void main() {
     expect(find.byType(PreferencesPanel), findsNothing);
   });
 }
+
+Finder _namedToggle({required bool toggled}) => find.byWidgetPredicate(
+  (widget) =>
+      widget is Semantics &&
+      widget.properties.label == 'Show grid' &&
+      widget.properties.toggled == toggled,
+);

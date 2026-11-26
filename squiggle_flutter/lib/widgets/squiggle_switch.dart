@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/theme.dart';
 
-const _trackWidth = 36.0;
-const _trackHeight = 20.0;
-const _thumbInset = 3.0;
-const _duration = Duration(milliseconds: 120);
-
 /// Compact desktop-style on/off switch themed with Squiggle's color tokens.
 class SquiggleSwitch extends StatefulWidget {
   const SquiggleSwitch({
     super.key,
+    required this.label,
     required this.value,
     required this.onChanged,
   });
 
+  /// Accessible name announced with the on/off state.
+  final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
 
@@ -27,10 +25,13 @@ class _SquiggleSwitchState extends State<SquiggleSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.squiggleTheme.colors;
-    final radius = BorderRadius.circular(_trackHeight / 2);
+    final theme = context.squiggleTheme;
+    final switches = theme.switches;
+    final colors = theme.colors;
+    final radius = BorderRadius.circular(switches.trackHeight / 2);
 
     return Semantics(
+      label: widget.label,
       toggled: widget.value,
       onTap: _toggle,
       child: FocusableActionDetector(
@@ -47,24 +48,24 @@ class _SquiggleSwitchState extends State<SquiggleSwitch> {
           child: GestureDetector(
             onTap: _toggle,
             child: AnimatedContainer(
-              duration: _duration,
-              width: _trackWidth,
-              height: _trackHeight,
-              padding: const EdgeInsets.all(_thumbInset),
+              duration: switches.transitionDuration,
+              width: switches.trackWidth,
+              height: switches.trackHeight,
+              padding: EdgeInsets.all(switches.thumbInset),
               decoration: BoxDecoration(
                 color: _trackColor(colors),
                 borderRadius: radius,
                 border: _focused ? Border.all(color: colors.accent) : null,
               ),
               child: AnimatedAlign(
-                duration: _duration,
+                duration: switches.transitionDuration,
                 curve: Curves.easeOut,
                 alignment: widget.value
                     ? Alignment.centerRight
                     : Alignment.centerLeft,
                 child: Container(
-                  width: _trackHeight - _thumbInset * 2,
-                  height: _trackHeight - _thumbInset * 2,
+                  width: switches.thumbSize,
+                  height: switches.thumbSize,
                   decoration: BoxDecoration(
                     color: widget.value ? colors.base : colors.subtext0,
                     shape: BoxShape.circle,
