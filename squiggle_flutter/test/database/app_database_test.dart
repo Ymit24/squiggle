@@ -31,5 +31,15 @@ void main() {
       addTearDown(second.close);
       expect(await second.appStateDao.activeDocumentId(), 'doc-1');
     });
+
+    test('seeds grid-lines-visible preference to true on create', () async {
+      final database = AppDatabase(NativeDatabase.memory());
+      addTearDown(database.close);
+
+      expect(
+        await database.preferencesDao.getValue('grid-lines-visible'),
+        'true',
+      );
+    });
   });
 }
