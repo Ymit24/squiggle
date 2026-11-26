@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 
-/// Shows the preferences panel as a modal dialog layered on top of the app.
-Future<void> showPreferencesPanel(BuildContext context) {
-  return showDialog<void>(
-    context: context,
-    builder: (context) => const PreferencesPanel(),
-  );
-}
-
 /// Empty preferences panel dialog.
 class PreferencesPanel extends StatelessWidget {
   const PreferencesPanel({super.key});
