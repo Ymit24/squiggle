@@ -25,7 +25,7 @@ class DocumentCanvas extends LeafRenderObjectWidget {
     return RenderDocumentCanvas(
       context: this.context,
       imageRepository: imageRepository,
-      showGrid: showGrid,
+      gridVisible: showGrid,
     );
   }
 
@@ -46,8 +46,8 @@ class RenderDocumentCanvas extends RenderBox {
   RenderDocumentCanvas({
     required this._context,
     required this._imageRepository,
-    bool showGrid = true,
-  }) : _showGrid = showGrid;
+    bool gridVisible = true,
+  }) : _showGrid = gridVisible;
 
   EditorContext _context;
 
