@@ -9,6 +9,7 @@ import 'package:squiggle_flutter/repositories/active_document_coordinator.dart';
 import 'package:squiggle_flutter/repositories/document_list_notifier.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/preference_builder.dart';
 
 class SquiggleApp extends StatelessWidget {
   const SquiggleApp({
@@ -44,12 +45,18 @@ class SquiggleApp extends StatelessWidget {
               create: (context) => documentList,
               child: ChangeNotifierProvider(
                 create: (context) => activeDocument,
-                child: MaterialApp.router(
-                  title: 'Squiggle',
-                  theme: SquiggleThemeData.dark(),
-                  debugShowCheckedModeBanner: false,
-                  routerConfig: appRouter.config(
-                    deepLinkBuilder: _initialDeepLink,
+                child: PreferenceBuilder(
+                  preferenceKey: 'themeMode',
+                  initialValue: 'system',
+                  builder: (context, value) => MaterialApp.router(
+                    title: 'Squiggle',
+                    theme: SquiggleThemeData.light(),
+                    darkTheme: SquiggleThemeData.dark(),
+                    themeMode: _themeMode(value),
+                    debugShowCheckedModeBanner: false,
+                    routerConfig: appRouter.config(
+                      deepLinkBuilder: _initialDeepLink,
+                    ),
                   ),
                 ),
               ),
@@ -59,6 +66,12 @@ class SquiggleApp extends StatelessWidget {
       ),
     );
   }
+
+  ThemeMode _themeMode(String? value) => switch (value) {
+    'light' => ThemeMode.light,
+    'dark' => ThemeMode.dark,
+    _ => ThemeMode.system,
+  };
 
   /// Starts on the active document instead of the library. The coordinator
   /// creates a blank document when none exist, so this also covers first run.

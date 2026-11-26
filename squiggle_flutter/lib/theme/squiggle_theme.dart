@@ -34,6 +34,17 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
     ),
   );
 
+  static final light = SquiggleTheme(
+    colors: SquiggleColorScheme.light,
+    spacing: SquiggleSpacing.standard,
+    radii: SquiggleRadii.standard,
+    typography: const SquiggleTypography(colors: SquiggleColorScheme.light),
+    decorations: const SquiggleDecorations(
+      colors: SquiggleColorScheme.light,
+      radii: SquiggleRadii.standard,
+    ),
+  );
+
   @override
   SquiggleTheme copyWith({
     SquiggleColorScheme? colors,
@@ -79,6 +90,32 @@ abstract final class SquiggleThemeData {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: squiggle.colors.base,
       colorScheme: ColorScheme.dark(
+        surface: squiggle.colors.base,
+        onSurface: squiggle.colors.text,
+        primary: squiggle.colors.accent,
+        onPrimary: squiggle.colors.base,
+        outline: squiggle.colors.surface1,
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: squiggle.decorations.tooltip(),
+        textStyle: squiggle.typography.tooltip,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        verticalOffset: 24,
+        preferBelow: true,
+        waitDuration: const Duration(milliseconds: 500),
+        exitDuration: const Duration(milliseconds: 100),
+      ),
+      extensions: [squiggle],
+    );
+  }
+
+  static ThemeData light() {
+    final squiggle = SquiggleTheme.light;
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: squiggle.colors.base,
+      colorScheme: ColorScheme.light(
         surface: squiggle.colors.base,
         onSurface: squiggle.colors.text,
         primary: squiggle.colors.accent,

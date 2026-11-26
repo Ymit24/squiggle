@@ -12,6 +12,17 @@ const squiggleSelectionFillColor = Color(0x1AA8B3C2);
 const squiggleDangerColor = Color.fromARGB(255, 242, 139, 139);
 const squiggleOnDangerColor = Color.fromARGB(255, 217, 95, 95);
 
+const squiggleLightBaseColor = Color(0xFFF7F7F7);
+const squiggleLightMantleColor = Color(0xFFEEEEEE);
+const squiggleLightSurface0Color = Color(0xFFE2E2E2);
+const squiggleLightSurface1Color = Color(0xFFCCCCCC);
+const squiggleLightSubtext0Color = Color(0xFF5F5F5F);
+const squiggleLightTextColor = Color(0xFF1E1E1E);
+const squiggleLightAccentColor = Color(0xFF3F5875);
+const squiggleLightSelectionFillColor = Color(0x223F5875);
+const squiggleLightDangerColor = Color(0xFFC0392B);
+const squiggleLightOnDangerColor = Color(0xFFA5281B);
+
 /// Semantic UI color tokens for Squiggle's dark graphite theme.
 @immutable
 class SquiggleColorScheme {
@@ -50,6 +61,19 @@ class SquiggleColorScheme {
     selectionFill: squiggleSelectionFillColor,
     danger: squiggleDangerColor,
     onDanger: squiggleOnDangerColor,
+  );
+
+  static const light = SquiggleColorScheme(
+    base: squiggleLightBaseColor,
+    mantle: squiggleLightMantleColor,
+    surface0: squiggleLightSurface0Color,
+    surface1: squiggleLightSurface1Color,
+    subtext0: squiggleLightSubtext0Color,
+    text: squiggleLightTextColor,
+    accent: squiggleLightAccentColor,
+    selectionFill: squiggleLightSelectionFillColor,
+    danger: squiggleLightDangerColor,
+    onDanger: squiggleLightOnDangerColor,
   );
 
   SquiggleColorScheme copyWith({
