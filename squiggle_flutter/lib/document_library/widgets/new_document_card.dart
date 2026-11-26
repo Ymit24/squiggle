@@ -83,7 +83,7 @@ class _NewDocumentCardState extends State<NewDocumentCard> {
                   child: Icon(
                     Icons.add_rounded,
                     size: 28,
-                    color: _active ? Colors.black87 : colors.text,
+                    color: _active ? colors.base : colors.text,
                   ),
                 ),
                 const SizedBox(height: 14),

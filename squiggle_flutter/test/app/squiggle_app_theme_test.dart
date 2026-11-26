@@ -59,6 +59,10 @@ void main() {
       theme().extension<SquiggleTheme>()!.colors.base,
       SquiggleColorScheme.dark.base,
     );
+    expect(
+      theme().extension<SquiggleTheme>()!.colors.canvasBackground,
+      SquiggleColorScheme.dark.canvasBackground,
+    );
 
     await tester.runAsync(
       () => database.preferencesDao.setValue('themeMode', 'light'),
@@ -69,6 +73,10 @@ void main() {
     expect(
       theme().extension<SquiggleTheme>()!.colors.base,
       SquiggleColorScheme.light.base,
+    );
+    expect(
+      theme().extension<SquiggleTheme>()!.colors.canvasBackground,
+      SquiggleColorScheme.light.canvasBackground,
     );
   });
 }
