@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:squiggle_flutter/models/feature.dart';
 import 'package:squiggle_flutter/models/feature_geometry.dart';
 import 'package:squiggle_flutter/models/feature_kinds/inspector_field.dart';
@@ -13,6 +14,8 @@ import 'package:squiggle_flutter/painting/text_painter.dart' as text_painter;
 import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/document_colors.dart';
 import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+
+export 'feature_action.dart';
 
 part 'feature_kind_circle.dart';
 part 'feature_kind_image.dart';
@@ -29,6 +32,10 @@ sealed class FeatureKind {
   Iterable<InspectorField> buildInspectorFields({Feature? feature}) {
     return [];
   }
+
+  /// One-off commands for [feature], offered when every selected feature
+  /// shares them.
+  Iterable<FeatureAction> buildActions(Feature feature) => const [];
 
   FeatureKind clone();
 

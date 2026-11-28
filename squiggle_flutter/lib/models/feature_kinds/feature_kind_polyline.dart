@@ -125,6 +125,24 @@ final class FeatureKindPolyline extends FeatureKind
     feature.size = feature.localBounds().size;
   }
 
+  @override
+  Iterable<FeatureAction> buildActions(Feature feature) => [
+    if (canClose && isClosed)
+      FeatureAction(
+        key: 'openShape',
+        label: 'Open Shape',
+        icon: LucideIcons.spline,
+        run: () => setClosed(feature, false),
+      ),
+    if (canClose && !isClosed)
+      FeatureAction(
+        key: 'closeShape',
+        label: 'Close Shape',
+        icon: LucideIcons.pentagon,
+        run: () => setClosed(feature, true),
+      ),
+  ];
+
   void setPoint(Feature feature, int pointIndex, Offset worldPosition) {
     final points = worldPoints(feature.origin, localPoints);
     if (pointIndex < 0 || pointIndex >= points.length) return;
