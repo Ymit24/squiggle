@@ -6,5 +6,6 @@ export 'package:squiggle_flutter/theme/squiggle_decorations.dart';
 export 'package:squiggle_flutter/theme/squiggle_menu_item_style.dart';
 export 'package:squiggle_flutter/theme/squiggle_radii.dart';
 export 'package:squiggle_flutter/theme/squiggle_spacing.dart';
+export 'package:squiggle_flutter/theme/squiggle_switch_tokens.dart';
 export 'package:squiggle_flutter/theme/squiggle_theme.dart';
 export 'package:squiggle_flutter/theme/squiggle_typography.dart';
