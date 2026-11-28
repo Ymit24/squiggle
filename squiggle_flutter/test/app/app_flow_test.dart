@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:squiggle_flutter/app/app_router.dart';
@@ -17,7 +16,7 @@ import '../support/test_database.dart';
 
 void main() {
   testWidgets(
-    'opens a document from the library and saves edits to the database',
+    'starts in the last active document and saves edits to the database',
     (tester) async {
       tester.view.physicalSize = const Size(1400, 900);
       tester.view.devicePixelRatio = 1;
@@ -51,10 +50,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Sketch'), findsOneWidget);
-      expect(find.text('Untitled'), findsNothing);
-
-      await _openFromLibrary(tester, 'Sketch');
+      expect(find.byType(EditorPage), findsOneWidget);
       final opened = await _first(tester, database);
       expect(active.activeId, opened.id);
 
@@ -116,7 +112,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await _openFromLibrary(tester, 'Sketch');
+    expect(find.byType(EditorPage), findsOneWidget);
 
     // The database answers in real time, so alternate real waits with pumps
     // until a tap's queries and the UI they lead to have settled.
@@ -176,12 +172,3 @@ void main() {
 
 Future<DocumentInfo> _first(WidgetTester tester, AppDatabase database) async =>
     (await tester.runAsync(() => database.documentsDao.list()))!.first;
-
-/// Library cards also handle double taps, so a single tap only fires once the
-/// double-tap window has passed.
-Future<void> _openFromLibrary(WidgetTester tester, String name) async {
-  await tester.tap(find.text(name));
-  await tester.pump(kDoubleTapTimeout);
-  await tester.pumpAndSettle();
-  expect(find.byType(EditorPage), findsOneWidget);
-}

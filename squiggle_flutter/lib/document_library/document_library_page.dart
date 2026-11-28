@@ -167,8 +167,6 @@ class _DocumentLibraryPageState extends State<DocumentLibraryPage> {
                                         return DocumentCard(
                                           document: document,
                                           isCurrent: document.id == currentId,
-                                          canDelete:
-                                              documentList.documents.length > 1,
                                           onOpen: () =>
                                               _openDocument(document.id),
                                           onRename: () => _renameDocument(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:squiggle_flutter/database/app_database.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/brush_wheel_geometry.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel.dart';
 import 'package:squiggle_flutter/editor/brush_wheel/widgets/brush_wheel_add_slot.dart';
@@ -14,6 +15,8 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
+
+import '../support/test_database.dart';
 
 void main() {
   setUpAll(() {
@@ -27,6 +30,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final database = createTestDatabase();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await database.close();
+    });
     await tester.pumpWidget(
       MaterialApp(
         theme: SquiggleThemeData.dark(),
@@ -34,6 +42,7 @@ void main() {
           providers: [
             Provider<EditorContext>.value(value: editor),
             Provider<ImageRepository>(create: (_) => ImageRepository()),
+            Provider<AppDatabase>.value(value: database),
           ],
           child: Scaffold(
             body: Editor(editorContext: editor, onBackToLibrary: () {}),

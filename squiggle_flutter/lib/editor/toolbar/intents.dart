@@ -17,6 +17,10 @@ class ActivateSelectToolIntent extends Intent {
   const ActivateSelectToolIntent();
 }
 
+class ActivatePanToolIntent extends Intent {
+  const ActivatePanToolIntent();
+}
+
 class ToggleToolLockIntent extends Intent {
   const ToggleToolLockIntent();
 }
@@ -43,6 +47,10 @@ class DeleteSelectedFeaturesIntent extends Intent {
 
 class ClearSelectionIntent extends Intent {
   const ClearSelectionIntent();
+}
+
+class SelectAllIntent extends Intent {
+  const SelectAllIntent();
 }
 
 class PasteImageIntent extends Intent {

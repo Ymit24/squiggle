@@ -10,6 +10,7 @@ import 'package:squiggle_flutter/theme/squiggle_theme.dart';
 import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 /// Floating toolbar overlay, matching rust-version layout and styling.
@@ -56,6 +57,15 @@ class EditorToolbar extends StatelessWidget {
                       ),
                       const Gap(),
                       const Divider(),
+                      const Gap(),
+                      Button(
+                        icon: LucideIcons.hand,
+                        hotkey: 'H',
+                        tooltip: 'Pan',
+                        shortcuts: const ['H'],
+                        isActive: activeTool is PanTool,
+                        onPressed: () => editor.setTool(PanTool()),
+                      ),
                       const Gap(),
                       Button(
                         iconAsset: 'assets/icons/arrow_selector_tool.svg',

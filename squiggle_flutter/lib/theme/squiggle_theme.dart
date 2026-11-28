@@ -4,6 +4,7 @@ import 'package:squiggle_flutter/theme/squiggle_color_scheme.dart';
 import 'package:squiggle_flutter/theme/squiggle_decorations.dart';
 import 'package:squiggle_flutter/theme/squiggle_radii.dart';
 import 'package:squiggle_flutter/theme/squiggle_spacing.dart';
+import 'package:squiggle_flutter/theme/squiggle_switch_tokens.dart';
 import 'package:squiggle_flutter/theme/squiggle_typography.dart';
 
 /// Central theme extension bundling Squiggle UI tokens.
@@ -15,6 +16,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
     required this.radii,
     required this.typography,
     required this.decorations,
+    required this.switches,
   });
 
   final SquiggleColorScheme colors;
@@ -22,6 +24,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
   final SquiggleRadii radii;
   final SquiggleTypography typography;
   final SquiggleDecorations decorations;
+  final SquiggleSwitchTokens switches;
 
   static final dark = SquiggleTheme(
     colors: SquiggleColorScheme.dark,
@@ -32,6 +35,19 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
       colors: SquiggleColorScheme.dark,
       radii: SquiggleRadii.standard,
     ),
+    switches: SquiggleSwitchTokens.standard,
+  );
+
+  static final light = SquiggleTheme(
+    colors: SquiggleColorScheme.light,
+    spacing: SquiggleSpacing.standard,
+    radii: SquiggleRadii.standard,
+    typography: const SquiggleTypography(colors: SquiggleColorScheme.light),
+    decorations: const SquiggleDecorations(
+      colors: SquiggleColorScheme.light,
+      radii: SquiggleRadii.standard,
+    ),
+    switches: SquiggleSwitchTokens.standard,
   );
 
   @override
@@ -41,6 +57,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
     SquiggleRadii? radii,
     SquiggleTypography? typography,
     SquiggleDecorations? decorations,
+    SquiggleSwitchTokens? switches,
   }) {
     final nextColors = colors ?? this.colors;
     return SquiggleTheme(
@@ -54,6 +71,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
             colors: nextColors,
             radii: radii ?? this.radii,
           ),
+      switches: switches ?? this.switches,
     );
   }
 
@@ -66,6 +84,7 @@ class SquiggleTheme extends ThemeExtension<SquiggleTheme> {
       radii: radii.lerp(other.radii, t),
       typography: typography.lerp(other.typography, t),
       decorations: decorations.lerp(other.decorations, t),
+      switches: switches,
     );
   }
 }
@@ -79,6 +98,32 @@ abstract final class SquiggleThemeData {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: squiggle.colors.base,
       colorScheme: ColorScheme.dark(
+        surface: squiggle.colors.base,
+        onSurface: squiggle.colors.text,
+        primary: squiggle.colors.accent,
+        onPrimary: squiggle.colors.base,
+        outline: squiggle.colors.surface1,
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: squiggle.decorations.tooltip(),
+        textStyle: squiggle.typography.tooltip,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        verticalOffset: 24,
+        preferBelow: true,
+        waitDuration: const Duration(milliseconds: 500),
+        exitDuration: const Duration(milliseconds: 100),
+      ),
+      extensions: [squiggle],
+    );
+  }
+
+  static ThemeData light() {
+    final squiggle = SquiggleTheme.light;
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: squiggle.colors.base,
+      colorScheme: ColorScheme.light(
         surface: squiggle.colors.base,
         onSurface: squiggle.colors.text,
         primary: squiggle.colors.accent,

@@ -12,6 +12,7 @@ import 'package:squiggle_flutter/tools/create_feature_tool.dart';
 import 'package:squiggle_flutter/tools/create_line_tool.dart';
 import 'package:squiggle_flutter/tools/create_text_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
+import 'package:squiggle_flutter/tools/pan_tool.dart';
 import 'package:squiggle_flutter/tools/select_tool/select_tool.dart';
 
 const _brushKeys = [
@@ -52,6 +53,7 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyD, control: true):
       DuplicateSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyV): ActivateSelectToolIntent(),
+  SingleActivator(LogicalKeyboardKey.keyH): ActivatePanToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyQ): ToggleToolLockIntent(),
   SingleActivator(LogicalKeyboardKey.keyR): ActivateCreateRectToolIntent(),
   SingleActivator(LogicalKeyboardKey.keyC): ActivateCreateCircleToolIntent(),
@@ -65,6 +67,8 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.backspace): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteSelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.escape): ClearSelectionIntent(),
+  SingleActivator(LogicalKeyboardKey.keyA, meta: true): SelectAllIntent(),
+  SingleActivator(LogicalKeyboardKey.keyA, control: true): SelectAllIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, meta: true):
       CopySelectedFeaturesIntent(),
   SingleActivator(LogicalKeyboardKey.keyC, control: true):
@@ -83,6 +87,10 @@ final _toolShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyY, control: true): RedoDocumentIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, meta: true): PasteImageIntent(),
   SingleActivator(LogicalKeyboardKey.keyV, control: true): PasteImageIntent(),
+  SingleActivator(LogicalKeyboardKey.comma, meta: true):
+      OpenPreferencesIntent(),
+  SingleActivator(LogicalKeyboardKey.comma, control: true):
+      OpenPreferencesIntent(),
 };
 
 /// Keyboard shortcuts for tool activation.
@@ -140,6 +148,25 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
                 return null;
               },
             ),
+            SelectAllIntent: CallbackAction<SelectAllIntent>(
+              onInvoke: (_) {
+                if (!textEditOpen) {
+                  final editor = context.read<EditorContext>();
+                  editor.selection.setSelection(
+                    editor.document.nodes.map((node) => node.id),
+                  );
+                }
+                return null;
+              },
+            ),
+            OpenPreferencesIntent: CallbackAction<OpenPreferencesIntent>(
+              onInvoke: (_) {
+                if (!textEditOpen) {
+                  context.read<EditorContext>().openPreferences(context);
+                }
+                return null;
+              },
+            ),
             ActivateBrushIntent: CallbackAction<ActivateBrushIntent>(
               onInvoke: (intent) {
                 final editor = context.read<EditorContext>();
@@ -177,6 +204,12 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             ActivateSelectToolIntent: CallbackAction<ActivateSelectToolIntent>(
               onInvoke: (_) {
                 context.read<EditorContext>().setTool(SelectTool());
+                return null;
+              },
+            ),
+            ActivatePanToolIntent: CallbackAction<ActivatePanToolIntent>(
+              onInvoke: (_) {
+                context.read<EditorContext>().setTool(PanTool());
                 return null;
               },
             ),
@@ -273,13 +306,12 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
             focusNode: _focusNode,
             autofocus: !textEditOpen,
             onKeyEvent: (node, event) {
-              if (textEditOpen) return KeyEventResult.ignored;
+              if (widget.textEditOpen) return KeyEventResult.ignored;
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
-              final context_ = context.read<EditorContext>();
-              if (context_.tool.onKeyEvent(context_, event)) {
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
+              final editor = context.read<EditorContext>();
+              return editor.tool.onKeyEvent(editor, event)
+                  ? KeyEventResult.handled
+                  : KeyEventResult.ignored;
             },
             child: widget.child,
           ),
@@ -287,4 +319,8 @@ class _ToolShortcutsState extends State<ToolShortcuts> {
       ),
     );
   }
+}
+
+class OpenPreferencesIntent extends Intent {
+  const OpenPreferencesIntent();
 }

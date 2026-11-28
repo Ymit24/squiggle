@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:squiggle_flutter/editor/brush_controller.dart';
 import 'package:squiggle_flutter/editor/history/history.dart';
 import 'package:squiggle_flutter/editor/selection_model.dart';
@@ -13,6 +13,7 @@ import 'package:squiggle_flutter/repositories/image_repository.dart';
 import 'package:squiggle_flutter/tools/brush_preview_tool.dart';
 import 'package:squiggle_flutter/tools/drawing_tool.dart';
 import 'package:squiggle_flutter/tools/tool.dart';
+import 'package:squiggle_flutter/widgets/preferences_panel.dart';
 import 'package:squiggle_flutter/widgets/squiggle_context_menu.dart';
 
 /// Top-level editor state, owned by the document UI and passed around to
@@ -74,6 +75,11 @@ class EditorContext extends ChangeNotifier {
     return null;
   }
 
+  Future<void> openPreferences(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (context) => const PreferencesPanel(),
+  );
+
   void openContextMenuAt(
     BuildContext context,
     Offset localScreenPosition,
@@ -107,6 +113,11 @@ class EditorContext extends ChangeNotifier {
 
   /// Notifies observers that the camera or viewport changed.
   void notifyViewportChanged() => notifyListeners();
+
+  void panByScreenDelta(Offset delta) {
+    camera.panByScreenDelta(delta);
+    notifyViewportChanged();
+  }
 
   /// World point at the center of the current viewport, if known.
   Offset? worldCenterAtViewportCenter() {

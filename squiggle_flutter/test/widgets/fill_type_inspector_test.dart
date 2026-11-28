@@ -63,13 +63,13 @@ void main() {
         context.brushes.active.applyTo(kind);
         expect((kind as FillTypeCapable).fillType, FillType.solid);
       }
-      final line = features.last.kind;
-      context.brushes.active.applyTo(line);
+      final line = features.last;
       expect(
-        line.buildInspectorFields().any(
-          (field) => field.fieldKey == 'fillType',
-        ),
+        line.kind
+            .buildInspectorFields(feature: line)
+            .any((field) => field.fieldKey == 'fillType'),
         isFalse,
+        reason: 'open lines hide fill',
       );
     },
   );

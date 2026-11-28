@@ -6,7 +6,8 @@ import 'package:squiggle_flutter/editor/widgets/editor_interactions.dart';
 import 'package:squiggle_flutter/editor/widgets/pointer_claims.dart';
 import 'package:squiggle_flutter/editor/widgets/viewport_tool_cursor.dart';
 import 'package:squiggle_flutter/repositories/image_repository.dart';
-import 'package:squiggle_flutter/theme/squiggle_colors.dart';
+import 'package:squiggle_flutter/theme/squiggle_theme.dart';
+import 'package:squiggle_flutter/widgets/preference_builder.dart';
 
 /// Full-area viewport with scroll/pinch pan and zoom over a [DocumentCanvas].
 class DocumentViewport extends StatefulWidget {
@@ -29,6 +30,7 @@ class _DocumentViewportState extends State<DocumentViewport> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.squiggleTheme.colors;
     return ListenableBuilder(
       listenable: widget.editorContext.textEdit,
       builder: (context, _) {
@@ -48,14 +50,20 @@ class _DocumentViewportState extends State<DocumentViewport> {
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: SquiggleColors.base,
+                    color: colors.base,
                     child: ViewportToolCursor(
                       context: widget.editorContext,
                       canvasKey: _canvasKey,
-                      child: DocumentCanvas(
-                        key: _canvasKey,
-                        context: widget.editorContext,
-                        imageRepository: widget.imageRepository,
+                      child: PreferenceBuilder(
+                        preferenceKey: 'grid-lines-visible',
+                        initialValue: 'true',
+                        builder: (context, value) => DocumentCanvas(
+                          key: _canvasKey,
+                          context: widget.editorContext,
+                          imageRepository: widget.imageRepository,
+                          colors: colors,
+                          showGrid: value != 'false',
+                        ),
                       ),
                     ),
                   ),
