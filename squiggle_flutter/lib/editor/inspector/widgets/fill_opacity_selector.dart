@@ -31,9 +31,10 @@ class FillOpacitySelector extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         SizedBox(
-          width: 40,
+          width: 52,
           child: Text(
             isMixed ? 'Mixed' : '${(value * 100).round()}%',
+            maxLines: 1,
             textAlign: TextAlign.end,
             style: theme.typography.inputText,
           ),
