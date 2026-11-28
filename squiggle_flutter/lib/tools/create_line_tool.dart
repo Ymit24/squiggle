@@ -27,7 +27,10 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     if (feature == null) return;
 
     final previous = feature.kind as FeatureKindPolyline;
-    final freshKind = FeatureKindPolyline(previous.localPoints);
+    final freshKind = FeatureKindPolyline(
+      previous.localPoints,
+      isClosed: previous.isClosed,
+    );
     context.brushes.active.applyTo(freshKind);
     feature.kind = freshKind;
   }
@@ -158,34 +161,53 @@ class CreateLineTool extends Tool implements DrawingTool, BrushPreviewTool {
     required bool isShiftPressed,
   }) => isShiftPressed ? snapPointTo45DegreeAngle(origin, point) : point;
 
-  void finish(EditorContext context, List<Offset> points) {
+  void finish(
+    EditorContext context,
+    List<Offset> points, {
+    bool isClosed = false,
+  }) {
     if (points.length >= 2) {
-      commit(context, points);
+      commit(context, points, isClosed: isClosed);
     }
     _reset();
     context.resetToSelectTool();
   }
 
-  void commit(EditorContext context, List<Offset> worldPoints) {
+  void commit(
+    EditorContext context,
+    List<Offset> worldPoints, {
+    bool isClosed = false,
+  }) {
     final feature = _previewFeature ?? _buildFeature(context, worldPoints);
-    _setFeaturePoints(feature, worldPoints);
+    _setFeaturePoints(feature, worldPoints, isClosed: isClosed);
     context.history.run('Create feature', (transaction) {
       transaction.add(feature);
     });
     context.selectCreatedFeature(feature);
   }
 
-  void updatePreview(EditorContext context, List<Offset> worldPoints) {
+  void updatePreview(
+    EditorContext context,
+    List<Offset> worldPoints, {
+    bool isClosed = false,
+  }) {
     final feature = _previewFeature ??= _buildFeature(context, worldPoints);
-    _setFeaturePoints(feature, worldPoints);
+    _setFeaturePoints(feature, worldPoints, isClosed: isClosed);
   }
 
-  void _setFeaturePoints(Feature feature, List<Offset> worldPoints) {
-    (feature.kind as FeatureKindPolyline).setGeometry(
-      feature,
-      origin: worldPoints.first,
-      localPoints: localPointsFromWorld(worldPoints, worldPoints.first),
-    );
+  void _setFeaturePoints(
+    Feature feature,
+    List<Offset> worldPoints, {
+    required bool isClosed,
+  }) {
+    // Closing changes the bounds padding, so set it before the geometry.
+    (feature.kind as FeatureKindPolyline)
+      ..isClosed = isClosed
+      ..setGeometry(
+        feature,
+        origin: worldPoints.first,
+        localPoints: localPointsFromWorld(worldPoints, worldPoints.first),
+      );
   }
 
   void _reset() {
