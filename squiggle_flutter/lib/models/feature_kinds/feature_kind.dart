@@ -64,6 +64,19 @@ FillType _fillTypeFromDataModel(Map<String, dynamic> content) =>
       fallback: FillType.solid,
     );
 
+double _fillOpacityFromDataModel(Map<String, dynamic> content) {
+  if (!content.containsKey('fillOpacity')) return defaultFillOpacity;
+  return decodeStyleNumber(content['fillOpacity']).clamp(0.0, 1.0).toDouble();
+}
+
+InspectorField _fillOpacityField(FillColorCapable kind) =>
+    InspectorFillOpacityField(
+      fieldKey: 'fillOpacity',
+      label: 'Fill Opacity',
+      value: kind.fillOpacity,
+      onOpacityChanged: (opacity) => kind.fillOpacity = opacity,
+    );
+
 StrokeType _strokeTypeFromDataModel(Map<String, dynamic> content) =>
     decodeStyleEnum(
       content['strokeType'],

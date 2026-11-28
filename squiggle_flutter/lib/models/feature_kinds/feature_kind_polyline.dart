@@ -16,6 +16,7 @@ final class FeatureKindPolyline extends FeatureKind
     this.endEndCap = LineEndCap.rounded,
     this.isClosed = false,
     this.fillColor = defaultFeatureFillColor,
+    this.fillOpacity = defaultFillOpacity,
     this.fillType = FillType.solid,
   }) : localPoints = List.of(localPoints);
 
@@ -34,6 +35,7 @@ final class FeatureKindPolyline extends FeatureKind
         fillColor: content.containsKey('fillColor')
             ? _colorFromDataModel(content, 'fillColor')
             : defaultFeatureFillColor,
+        fillOpacity: _fillOpacityFromDataModel(content),
         fillType: _fillTypeFromDataModel(content),
       );
 
@@ -55,6 +57,9 @@ final class FeatureKindPolyline extends FeatureKind
 
   @override
   Color fillColor;
+
+  @override
+  double fillOpacity;
 
   @override
   FillType fillType;
@@ -93,6 +98,7 @@ final class FeatureKindPolyline extends FeatureKind
     'endEndCap': endEndCap.name,
     'isClosed': isClosed,
     'fillColor': fillColor.toARGB32(),
+    'fillOpacity': fillOpacity,
     'fillType': fillType.name,
   };
 
@@ -106,6 +112,7 @@ final class FeatureKindPolyline extends FeatureKind
     endEndCap: endEndCap,
     isClosed: isClosed,
     fillColor: fillColor,
+    fillOpacity: fillOpacity,
     fillType: fillType,
   );
 
@@ -233,7 +240,7 @@ final class FeatureKindPolyline extends FeatureKind
 
     final path = _pathFor(feature);
     if (isClosed) {
-      paintFill(canvas, path, Paint()..color = fillColor, fillType);
+      paintFill(canvas, path, Paint()..color = fillPaintColor, fillType);
     }
 
     if (hasVisibleStroke) {
@@ -294,6 +301,7 @@ final class FeatureKindPolyline extends FeatureKind
           value: fillType,
           onTypeChanged: (type) => fillType = type,
         ),
+        _fillOpacityField(this),
       ],
       if (showsEndCaps) ...[
         InspectorEndCapField(

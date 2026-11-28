@@ -43,6 +43,7 @@ void main() {
         'endEndCap': LineEndCap.rounded.name,
         'isClosed': false,
         'fillColor': kind.fillColor.toARGB32(),
+        'fillOpacity': 1.0,
         'fillType': 'solid',
       });
     });
@@ -168,11 +169,24 @@ void main() {
         expect(keys(open), containsAll(['startEndCap', 'endEndCap']));
         expect(keys(open), isNot(contains('fillColor')));
         final closed = closedTriangle();
-        expect(keys(closed), containsAll(['fillColor', 'fillType']));
+        expect(
+          keys(closed),
+          containsAll(['fillColor', 'fillType', 'fillOpacity']),
+        );
         expect(keys(closed), isNot(contains('endEndCap')));
-        expect({
-          for (final field in open.kind.buildInspectorFields()) field.fieldKey,
-        }, containsAll(['fillColor', 'fillType', 'startEndCap', 'endEndCap']));
+        expect(
+          {
+            for (final field in open.kind.buildInspectorFields())
+              field.fieldKey,
+          },
+          containsAll([
+            'fillColor',
+            'fillType',
+            'fillOpacity',
+            'startEndCap',
+            'endEndCap',
+          ]),
+        );
       },
     );
   });
