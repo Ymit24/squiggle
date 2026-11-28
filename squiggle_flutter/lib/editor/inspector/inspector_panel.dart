@@ -35,7 +35,11 @@ class InspectorPanel extends StatelessWidget {
             ? editorContext.drawingInspectorKind
             : null;
 
-        if (selectedNodes.isEmpty && drawingKind == null) {
+        final showLayoutActions = selectedNodes.length >= 2;
+
+        if (drawingKind == null &&
+            selectedFeatures.isEmpty &&
+            !showLayoutActions) {
           return const SizedBox.shrink();
         }
 
@@ -67,7 +71,7 @@ class InspectorPanel extends StatelessWidget {
                         editorContext: editorContext,
                         kind: drawingKind,
                       ),
-                    if (selectedNodes.isNotEmpty)
+                    if (showLayoutActions)
                       InspectorLayoutActions(
                         editorContext: editorContext,
                         nodes: selectedNodes.toList(),
