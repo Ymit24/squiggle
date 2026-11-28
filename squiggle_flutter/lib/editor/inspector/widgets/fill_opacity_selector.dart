@@ -24,6 +24,7 @@ class FillOpacitySelector extends StatelessWidget {
           child: Slider(
             value: value,
             onChanged: onChanged,
+            padding: const EdgeInsets.symmetric(vertical: 8),
             activeColor: theme.colors.text,
             inactiveColor: theme.colors.surface1,
           ),
