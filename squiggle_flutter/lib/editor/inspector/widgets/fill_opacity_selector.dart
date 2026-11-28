@@ -29,7 +29,7 @@ class FillOpacitySelector extends StatelessWidget {
             inactiveColor: theme.colors.surface1,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         SizedBox(
           width: 40,
           child: Text(
