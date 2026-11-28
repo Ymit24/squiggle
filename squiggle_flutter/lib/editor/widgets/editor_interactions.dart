@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -148,15 +149,7 @@ class _EditorInteractionsState extends State<EditorInteractions>
         if (velocity.distance < kMinFlingVelocity) return;
         _flingController.fling(velocity);
       },
-      onPointerSignal: (event) {
-        if (event is! PointerScrollEvent) return;
-        _flingController.stop();
-        final focal = _canvasLocal(event);
-        if (focal == null) return;
-        final factor = math.exp(-event.scrollDelta.dy * 0.002);
-        _camera.zoomToward(focal, 1 / factor);
-        widget.context.notifyViewportChanged();
-      },
+      onPointerSignal: _onPointerSignal,
       onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
       child: widget.child,
     );
@@ -192,6 +185,39 @@ class _EditorInteractionsState extends State<EditorInteractions>
     _camera.zoom = newZoom;
     _camera.location =
         _initialLocation + focal * (prevZoom - newZoom) - event.pan * newZoom;
+    widget.context.notifyViewportChanged();
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    final focal = _canvasLocal(event);
+    if (focal == null) return;
+
+    _flingController.stop();
+    if (event is PointerScaleEvent) {
+      _camera.zoomToward(focal, event.scale);
+    } else if (event is PointerScrollEvent) {
+      if (kIsWeb &&
+          (HardwareKeyboard.instance.isMetaPressed ||
+              HardwareKeyboard.instance.isControlPressed)) {
+        if (event.scrollDelta.dy == 0) return;
+        final factor = math.exp(-event.scrollDelta.dy * 0.002);
+        _camera.zoomToward(focal, factor);
+      } else if (kIsWeb || event.kind == PointerDeviceKind.trackpad) {
+        // Browsers, especially Firefox, can't reliably identify trackpads.
+        // Treat plain scrolling as canvas pan on web so two-finger scrolling
+        // works even when the event is reported as a mouse wheel.
+        _camera.panByScreenDelta(event.scrollDelta);
+      } else if (event.scrollDelta.dy != 0) {
+        final factor = math.exp(event.scrollDelta.dy * 0.002);
+        _camera.zoomToward(focal, factor);
+      } else {
+        return;
+      }
+    } else {
+      return;
+    }
+
+    event.respond(allowPlatformDefault: false);
     widget.context.notifyViewportChanged();
   }
 
