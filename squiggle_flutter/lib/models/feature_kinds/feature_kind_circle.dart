@@ -11,6 +11,7 @@ final class FeatureKindCircle extends FeatureKind
   FeatureKindCircle({
     this.strokeColor = defaultFeatureStrokeColor,
     this.fillColor = defaultFeatureFillColor,
+    this.fillOpacity = defaultFillOpacity,
     this.fillType = FillType.solid,
     this.strokeWidth = defaultStrokeWidth,
     this.strokeType = StrokeType.solid,
@@ -24,6 +25,7 @@ final class FeatureKindCircle extends FeatureKind
       FeatureKindCircle(
         strokeColor: _colorFromDataModel(content, 'strokeColor'),
         fillColor: _colorFromDataModel(content, 'fillColor'),
+        fillOpacity: _fillOpacityFromDataModel(content),
         fillType: _fillTypeFromDataModel(content),
         strokeWidth: _doubleFromDataModel(content, 'strokeWidth'),
         strokeType: _strokeTypeFromDataModel(content),
@@ -44,6 +46,9 @@ final class FeatureKindCircle extends FeatureKind
 
   @override
   Color fillColor;
+
+  @override
+  double fillOpacity;
 
   @override
   FillType fillType;
@@ -67,6 +72,7 @@ final class FeatureKindCircle extends FeatureKind
     'type': 'circle',
     'strokeColor': strokeColor.toARGB32(),
     'fillColor': fillColor.toARGB32(),
+    'fillOpacity': fillOpacity,
     'fillType': fillType.name,
     'strokeWidth': strokeWidth,
     'strokeType': strokeType.name,
@@ -80,6 +86,7 @@ final class FeatureKindCircle extends FeatureKind
   FeatureKindCircle clone() => FeatureKindCircle(
     strokeColor: strokeColor,
     fillColor: fillColor,
+    fillOpacity: fillOpacity,
     fillType: fillType,
     strokeWidth: strokeWidth,
     strokeType: strokeType,
@@ -104,7 +111,7 @@ final class FeatureKindCircle extends FeatureKind
   void paint(Feature feature, Canvas canvas, ImageRepository imageRepository) {
     final bounds = feature.localBounds();
     final path = Path()..addOval(bounds);
-    paintFill(canvas, path, Paint()..color = fillColor, fillType);
+    paintFill(canvas, path, Paint()..color = fillPaintColor, fillType);
     paintStroke(
       canvas,
       path,
@@ -152,6 +159,7 @@ final class FeatureKindCircle extends FeatureKind
         value: fillType,
         onTypeChanged: (type) => fillType = type,
       ),
+      _fillOpacityField(this),
       InspectorStrokeTypeField(
         fieldKey: 'strokeType',
         label: 'Stroke Type',
